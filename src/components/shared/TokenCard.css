@@ -1,0 +1,117 @@
+/* ─────────────────────────────────────────────
+   출동대 토큰 카드
+   draggable pill — 배치 영역 어디서든 동일한 모양
+   ─────────────────────────────────────────────*/
+
+/* 래퍼: 배지 오버레이를 위한 포지셔닝 컨텍스트 */
+.token-card-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.token-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  transition: opacity 0.1s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+
+.token-card:active {
+  cursor: grabbing;
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+/* ─── 색상별 토큰 스타일 ─── */
+.token-card--red {
+  background: #2a0808;
+  color: #f4a0a0;
+  border: 1px solid #6a1818;
+}
+
+.token-card--yellow {
+  background: #2a2008;
+  color: #f4d870;
+  border: 1px solid #6a5010;
+}
+
+.token-card--green {
+  background: #082010;
+  color: #80dd90;
+  border: 1px solid #1a5a28;
+}
+
+.token-card--vehicle {
+  background: #1c1408;
+  color: #ccaa66;
+  border: 1px solid #4a3818;
+}
+
+.token-card--agency {
+  background: #140e20;
+  color: #bb99dd;
+  border: 1px solid #3a2a5a;
+}
+
+/* ─── 건물 구역 / 방면 내 compact 사이즈 ─── */
+.zone-cell .token-card,
+.face-general-zone .token-card {
+  font-size: 1.5rem;
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+/* ─────────────────────────────────────────────
+   상태 배지 오버레이
+   토큰 위에 고정 — pointer-events: none 으로
+   드래그 동작 방해 없음
+   ─────────────────────────────────────────────*/
+
+.token-badge-overlay {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: 3px;
+  white-space: nowrap;
+  z-index: 6;
+}
+
+.token-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(10, 10, 20, 0.88);
+  border: 1px solid rgba(120, 110, 180, 0.45);
+  border-radius: 3px;
+  padding: 1px 5px;
+  gap: 0;
+  backdrop-filter: blur(2px);
+}
+
+.token-badge__line {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #e8e6ff;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+.token-badge__line--sub {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #b0aed0;
+}

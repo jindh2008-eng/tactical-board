@@ -1,0 +1,140 @@
+/* ─────────────────────────────────────────────
+   건물 정보 입력 바
+   중앙 컬럼 상단에 위치하는 다크 툴바
+   ─────────────────────────────────────────────*/
+.config-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px;
+  background-color: #2a2620;
+  border-bottom: 2px solid #4e4a42;
+  flex-shrink: 0;
+}
+
+.config-bar__title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #9a9690;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+
+/* ─── 섹션 구분선 ──────────────────────────── */
+.config-bar__divider {
+  width: 1px;
+  height: 16px;
+  background-color: #4e4a42;
+  flex-shrink: 0;
+}
+
+/* ─── 입력 필드 묶음 ───────────────────────── */
+.config-bar__field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  cursor: default;
+}
+
+.config-bar__label {
+  font-size: 0.62rem;
+  color: #7a7670;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 화점층 레이블 — 적색 계열로 강조 */
+.config-bar__label--fire {
+  color: #c07060;
+}
+
+/* 계단실 연기 레이블 — 회청색 계열 */
+.config-bar__label--smoke {
+  color: #8090a8;
+}
+
+/* ─── 숫자 입력 ────────────────────────────── */
+.config-bar__input {
+  width: 40px;
+  padding: 2px 5px;
+  background-color: #1a1814;
+  border: 1px solid #4e4a42;
+  border-radius: 2px;
+  color: #e8e4da;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.config-bar__input::-webkit-inner-spin-button,
+.config-bar__input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.config-bar__input:focus {
+  border-color: #7a9ab8;
+  background-color: #0e1420;
+}
+
+/* 화점층 입력 — 붉은 테두리로 구분 */
+.config-bar__input--fire {
+  border-color: #7a3a30;
+  color: #f0a090;
+}
+
+.config-bar__input--fire:focus {
+  border-color: #c06050;
+  background-color: #1a0e0c;
+  color: #f8c0b0;
+}
+
+/* ─── 셀렉트 ───────────────────────────────── */
+.config-bar__select {
+  padding: 2px 4px;
+  background-color: #1a1814;
+  border: 1px solid #4e4a42;
+  border-radius: 2px;
+  color: #e8e4da;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.config-bar__select:focus {
+  border-color: #7a9ab8;
+}
+
+.config-bar__unit {
+  font-size: 0.6rem;
+  color: #5a5650;
+}
+
+/* ─── 적용 버튼 ────────────────────────────── */
+.config-bar__apply {
+  padding: 3px 12px;
+  background-color: #3a5a7a;
+  border: 1px solid #5a7a9a;
+  border-radius: 2px;
+  color: #dce8f0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 4px;
+  transition: background-color 0.1s;
+}
+
+.config-bar__apply:hover  { background-color: #4a6a8a; }
+.config-bar__apply:active { background-color: #2a4a6a; }

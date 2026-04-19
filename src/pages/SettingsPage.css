@@ -1,0 +1,85 @@
+/* ─────────────────────────────────────────────
+   설정 페이지
+   ─────────────────────────────────────────────*/
+
+.settings-page {
+  padding: 24px 32px;
+  color: var(--color-text);
+  overflow-y: auto;
+  height: 100%;
+  max-width: 960px;
+}
+
+.settings-page__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ── 섹션 ── */
+
+.settings-page__section {
+  margin-bottom: 32px;
+}
+
+.settings-page__section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* 건물 정보 섹션: config-bar 를 인라인 flex → block으로 전환 */
+.settings-page__section .config-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 12px 16px;
+}
+
+/* ── 힌트 텍스트 ── */
+
+.settings-page__hint {
+  font-size: 0.78rem;
+  color: var(--color-text-dim);
+  margin-bottom: 14px;
+}
+
+/* ── 프리셋 서브 블록 (A/B 구분) ── */
+
+.settings-page__preset-block {
+  margin-bottom: 20px;
+}
+
+.settings-page__sub-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 5px;
+}
+
+.settings-page__sub-hint {
+  font-size: 0.74rem;
+  color: var(--color-text-dim);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* ── 플레이스홀더 ── */
+
+.settings-page__placeholder {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  padding: 10px 14px;
+  border: 1px dashed var(--color-border);
+  border-radius: 3px;
+}

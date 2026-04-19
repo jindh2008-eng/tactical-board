@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(cd \"D:\\\\\\\\claude\\\\\\\\tactical-board\")",
+      "Bash(node -e ' *)",
+      "Bash(npx vite *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5173)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(taskkill /PID 24416 /F)",
+      "Bash(npm install:*)"
+    ]
+  }
+}

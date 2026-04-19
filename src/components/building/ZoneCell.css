@@ -1,0 +1,454 @@
+/* ─────────────────────────────────────────────
+   드롭 타겟 하이라이트
+   ─────────────────────────────────────────────*/
+.zone-cell.drop-target--active {
+  outline: 2px dashed rgba(100, 180, 255, 0.6) !important;
+  outline-offset: -2px;
+  background-color: rgba(100, 180, 255, 0.10) !important;
+}
+
+/* ─────────────────────────────────────────────
+   구역 내 토큰 컨테이너
+   ─────────────────────────────────────────────*/
+.zone-cell__tokens {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px 4px;
+  z-index: 3;
+}
+
+/* ─────────────────────────────────────────────
+   구역 셀 공통
+   ─────────────────────────────────────────────*/
+.zone-cell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.12s ease;
+  cursor: default;
+  border-right: 1px solid var(--ctr-border-soft);
+}
+
+.zone-cell:last-child {
+  border-right: none;
+}
+
+/* ─────────────────────────────────────────────
+   좌/우 구역 — 110px 고정
+   ─────────────────────────────────────────────*/
+.zone-cell--left,
+.zone-cell--right {
+  flex: 0 0 110px;
+  background-color: var(--ctr-surface);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent          0px,
+    transparent          16px,
+    rgba(0, 0, 0, 0.04)  16px,
+    rgba(0, 0, 0, 0.04)  17px
+  );
+}
+
+.zone-cell--left:hover,
+.zone-cell--right:hover {
+  background-color: #e4eef6;
+  outline: 1px solid #7aaccc inset;
+}
+
+/* ─────────────────────────────────────────────
+   중앙 구역 — 남은 공간 전부
+   ─────────────────────────────────────────────*/
+.zone-cell--center {
+  flex: 1;
+  background-color: var(--ctr-surface);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent          0px,
+    transparent          16px,
+    rgba(0, 0, 0, 0.04)  16px,
+    rgba(0, 0, 0, 0.04)  17px
+  );
+}
+
+.zone-cell--center:hover {
+  background-color: #e4eef6;
+  outline: 1px solid #7aaccc inset;
+}
+
+/* ─────────────────────────────────────────────
+   계단실 (stair)
+   배경·패턴은 StairDiagram SVG가 담당.
+   셀 자체는 투명 — SVG의 rect fill(#f2efe7)이 배경 역할.
+   ─────────────────────────────────────────────*/
+/* 계단실은 항상 좌측 고정
+   border-right 없음 — 오른쪽 벽선은 StairDiagram SVG 내부에서 렌더링.
+   open 상태: 문 구간 벽선 없음 / closed 상태: 두꺼운 bar */
+.zone-cell--stair {
+  flex: 0 0 110px;
+  border-left:  none;
+  cursor: default;
+  background-color: transparent;
+}
+
+/* ─────────────────────────────────────────────
+   계단실 도면 SVG — 셀 전체를 채우도록 절대 배치
+   ─────────────────────────────────────────────*/
+.stair-diagram {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  shape-rendering: crispEdges;
+}
+
+.stair-door-toggle {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  font-size: 0.6rem;
+  font-weight: 800;
+
+  padding: 2px 6px;
+  border-radius: 4px;
+
+  border: 1px solid rgba(0,0,0,0.5);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+
+  transition: all 0.15s ease;
+}
+
+/* 🔒 닫힘 (기본 상태) */
+.stair-door-toggle--closed {
+  background: #000;       /* 검정 */
+  color: #fff;
+  border-color: #000;
+}
+
+/* 🟢 열림 (강조 상태) */
+.stair-door-toggle--open {
+  background: #2e7d32;    /* 녹색 */
+  color: #fff;
+  border-color: #1b5e20;
+}
+
+/* hover 효과 */
+.stair-door-toggle:hover {
+  transform: scale(1.05);
+}
+/* ─────────────────────────────────────────────
+   방화문 열림/닫힘 토글 버튼
+   계단 SVG 위(z-index 상단) 좌측 상단에 고정.
+   ─────────────────────────────────────────────
+.stair-door-toggle {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  z-index: 10;
+
+  font-size: 0.48rem;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1.2;
+  letter-spacing: 0;
+
+  padding: 1px 3px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  background: rgba(255, 255, 255, 0.78);
+  color: #444;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.stair-door-toggle:hover {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 0, 0, 0.45);
+}
+
+/* 닫힘 상태 — 어두운 배경으로 강조 
+.stair-door-toggle--closed {
+  background: rgba(50, 42, 34, 0.88);
+  color: #f0ece4;
+  border-color: rgba(0, 0, 0, 0.55);
+}
+
+.stair-door-toggle--closed:hover {
+  background: rgba(70, 60, 48, 0.95);
+} */
+
+/* ─────────────────────────────────────────────
+   계단실 연기 오버레이
+   ─────────────────────────────────────────────*/
+.zone-cell__stair-smoke {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+
+  /* 진한 회청 그라데이션 — SVG가 비치되 연기 유입이 한눈에 보이게 */
+  background: linear-gradient(
+    to bottom,
+    rgba(110, 115, 135, 0.78) 0%,
+    rgba(120, 125, 145, 0.62) 55%,
+    rgba(130, 135, 150, 0.45) 100%
+  );
+
+  /* 셀 경계를 흐린 청회 inset shadow로 강조 */
+  box-shadow:
+    inset 0 0 0 1.5px rgba(80, 90, 120, 0.55),
+    inset 0 3px 6px rgba(60, 65, 90, 0.30);
+}
+
+/* 연기 시작층 아이콘 — 오버레이 위에 작게 표시 */
+.zone-cell__stair-smoke-entry {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  z-index: 3;
+  font-size: 0.75rem;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+/* ─────────────────────────────────────────────
+   구역 레이블 (좌측: 단위지휘관 / 우측: 화재상황)
+   ─────────────────────────────────────────────*/
+.zone-cell__zone-label {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(80, 80, 80, 0.35);
+
+  pointer-events: none;
+  user-select: none;
+
+  letter-spacing: 0.02em;
+  text-align: center;
+
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────────
+   상태 오버레이
+   ─────────────────────────────────────────────*/
+.zone-cell--fire {
+  background-color: #f0d0b0 !important;
+  background-image: none !important;
+  border-right-color: #c06030 !important;
+  box-shadow: inset 0 0 0 1.5px #d05020;
+}
+
+.zone-cell--smoke {
+  background-color: #d8d4d0 !important;
+  background-image: none !important;
+  border-right-color: #8888a0 !important;
+}
+
+/* ─────────────────────────────────────────────
+   아이콘 (화염, 연기)
+   ─────────────────────────────────────────────*/
+.zone-cell__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* ─────────────────────────────────────────────
+   화재상황 패널 (우측 구역 전용)
+   ─────────────────────────────────────────────*/
+.zone-cell__fire-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* 드롭다운 — 구역 상단에 absolute 고정, 중립 스타일 */
+.zone-cell__fire-select {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  left: 3px;
+
+  font-size: 0.58rem;
+  font-family: inherit;
+  padding: 2px 4px;
+  height: 18px;
+
+  background-color: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 3px;
+  color: #444;
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* 커스텀 화살표 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 7px 5px;
+  padding-right: 14px;
+  line-height: 1;
+}
+
+.zone-cell__fire-select:hover {
+  background-color: rgba(255, 255, 255, 0.90);
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.zone-cell__fire-select:focus {
+  outline: none;
+  border-color: rgba(100, 140, 180, 0.70);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* ─────────────────────────────────────────────
+   화재단계별 배경색 (우측 구역 전용)
+   ─────────────────────────────────────────────*/
+.zone-cell--fs-extension-peak {
+  background-color: #e07a5f !important;
+  background-image: none !important;
+}
+
+.zone-cell--fs-peak {
+  background-color: #edb9a8 !important;
+  background-image: none !important;
+}
+
+.zone-cell--fs-half {
+  background-color: #edb9a8 !important;
+  background-image: none !important;
+}
+
+.zone-cell--fs-initial {
+  background-color: #efe0b5 !important;
+  background-image: none !important;
+}
+
+.zone-cell--fs-complete {
+  background-color: #d9d9d9 !important;
+  background-image: none !important;
+}
+
+/* ─────────────────────────────────────────────
+   화재단계 셀
+   select 아래 공간 전체를 차지.
+   화염 이미지(뒤) + 텍스트(앞) 레이어 구조.
+   ─────────────────────────────────────────────*/
+.fire-cell {
+  position: absolute;
+  top: 24px;        /* select top(3) + height(18) + gap(3) */
+  bottom: 2px;
+  left: 0;
+  right: 0;
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── 화염 이미지 — 셀 80% 크기, 뒤쪽 배치 ──── */
+/* 수정 위치: width/height 값을 바꾸면 크기 조절 */
+.fire-bg-icon {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 80%;        /* ← 화염 크기 조절 */
+  height: 80%;       /* ← 화염 크기 조절 */
+  object-fit: contain;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 초진 — CSS filter로 검정 화염 처리 */
+/* 수정 위치: filter 값을 바꾸면 색조 조절 */
+.fire-bg-icon--dark {
+  filter: grayscale(1) brightness(0.12) contrast(1.4);
+}
+
+.fire-label {
+  position: relative;
+  z-index: 2;
+
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.2;
+  word-break: keep-all;
+  padding: 0 3px;
+
+  letter-spacing: 0.5px;
+
+  /* 핵심: 검은 외곽선 */
+  color: #fff;
+  text-shadow:
+    0 0 4px rgba(0,0,0,0.9),
+    0 0 8px rgba(0,0,0,0.7),
+    0 0 2px rgba(0,0,0,1);
+}
+
+
+/* --- 단계별 글자색 (최종 안정형) --- */
+
+/* 🔥 최성기 + 연소확대 / 최성기 / 50% → 동일 처리 */
+.zone-cell--fs-extension-peak .fire-label,
+.zone-cell--fs-peak .fire-label,
+.zone-cell--fs-half .fire-label {
+  color: #fff;
+  text-shadow:
+    0 0 4px rgba(0,0,0,0.9),
+    0 0 8px rgba(0,0,0,0.7),
+    0 0 2px rgba(0,0,0,1);
+}
+
+/* ⚫ 초진 (검정 화염 대응) */
+.zone-cell--fs-initial .fire-label {
+  color: #fff;
+  text-shadow:
+    0 0 3px rgba(0,0,0,1),
+    0 0 1px rgba(0,0,0,1);
+}
+
+/* ⚪ 완진 (배경 단순 → 일반 텍스트) */
+.zone-cell--fs-complete .fire-label {
+  color: #111;
+  text-shadow: none;
+}

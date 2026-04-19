@@ -1,0 +1,177 @@
+/* ─────────────────────────────────────────────
+   전역 리셋 & 폰트
+   ─────────────────────────────────────────────*/
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* ── 좌/우 패널 (다크 테마) ────────────────── */
+  --color-bg:        #080c12;
+  --color-surface:   #0e1420;
+  --color-border:    #2a3a4a;
+  --color-text:      #c8d8e8;
+  --color-text-dim:  #6a8aaa;
+  --color-accent:    #4488cc;
+  --color-header-bg: #0a1018;
+
+  /* ── 중앙 작전 영역 (라이트 테마) ──────────── */
+  --ctr-bg:           #dedad0;
+  --ctr-surface:      #f0ece2;
+  --ctr-border-hard:  #4e4a42;
+  --ctr-border-mid:   #8a8680;
+  --ctr-border-soft:  #cac6bc;
+  --ctr-stair-bg:     #b8b4a8;
+  --ctr-label-bg:     #38342e;
+  --ctr-label-text:   #e8e4da;
+  --ctr-text-dim:     #7a7670;
+  --ctr-roof-bg:      #e4e0d4;
+
+  --font-main: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─────────────────────────────────────────────
+   공통 패널 — 좌/우 패널 기반 스타일
+   ─────────────────────────────────────────────*/
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1.5px solid var(--color-border);
+  border-radius: 3px;
+}
+
+.panel__header {
+  background-color: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-border);
+  padding: 5px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────
+   앱 쉘 — 네비게이션 + 콘텐츠 영역
+   ─────────────────────────────────────────────*/
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ── 상단 네비게이션 바 ── */
+.app-nav {
+  flex-shrink: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  background-color: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-nav__brand {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.08em;
+  margin-right: 12px;
+}
+
+.app-nav__links {
+  display: flex;
+  gap: 2px;
+}
+
+.app-nav__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 3px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.app-nav__link:hover {
+  background-color: #1a2a3a;
+  color: var(--color-text);
+}
+
+.app-nav__link--active {
+  background-color: var(--color-accent);
+  color: #fff;
+}
+
+/* ── 라우트 콘텐츠 영역 ── */
+.app-content {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────
+   실행 페이지 레이아웃 — 3열 그리드
+   좌(220px) | 중앙(1fr) | 우(200px)
+   ─────────────────────────────────────────────*/
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr 200px;
+  grid-template-rows: 1fr;
+  width: 100%;
+  height: 100%;
+  gap: 5px;
+  padding: 6px;
+  background-color: var(--color-bg);
+}
+
+/* ─────────────────────────────────────────────
+   중앙 컬럼: [전술영역] [직전대기]
+   (건물정보 바는 설정 페이지로 이동)
+   ─────────────────────────────────────────────*/
+.center-column {
+  display: grid;
+  grid-template-rows: 1fr;
+  gap: 0;
+  overflow: hidden;
+  background-color: var(--ctr-bg);
+  border-radius: 4px;
+}
+
+/* ─────────────────────────────────────────────
+   좌/우 패널 공통
+   ─────────────────────────────────────────────*/
+.left-panel,
+.right-panel {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: #2a3a4a; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #3a5a7a; }

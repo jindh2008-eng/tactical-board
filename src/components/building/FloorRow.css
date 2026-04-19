@@ -1,0 +1,102 @@
+/* ─────────────────────────────────────────────
+   층 행 — 층 경계선이 핵심 시각 요소
+
+   flex: 1 → 건물 높이(100%)를 전체 층수로 균등 분배.
+   고정 높이 대신 공간을 나눠 갖는 방식.
+   ─────────────────────────────────────────────*/
+.floor-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border-bottom: 1.5px solid var(--ctr-border-mid);
+  flex: 1;
+  min-height: 0;
+}
+
+.floor-row:last-of-type {
+  border-bottom: none;
+}
+
+/* 지하층 — 약간 어둡게 */
+.floor-row--basement {
+  background-color: #e4e0d4;
+}
+
+
+/* ─────────────────────────────────────────────
+   층 번호 레이블 (좌측 고정 컬럼)
+   ─────────────────────────────────────────────*/
+.floor-row__label {
+  width: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ctr-label-bg);
+  border-right: 2px solid var(--ctr-border-hard);
+} 
+
+.floor-row__label-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.05em;
+  line-height: 1.05;
+  text-align: center;
+  white-space: pre-line;     /* \n 줄바꿈 적용 */
+  user-select: none;
+
+  text-shadow:
+    0 0 3px rgba(0,0,0,0.9),
+    0 0 6px rgba(0,0,0,0.7);
+}
+/*
+.floor-row__label-text {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--ctr-label-text);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  user-select: none;
+} */
+
+/* 지하층 레이블 */
+.floor-row--basement .floor-row__label {
+  background-color: #252018;
+}
+
+/* ─────────────────────────────────────────────
+   압축 범위 행 (isRange === true)
+   ─────────────────────────────────────────────*/
+.floor-row--range .floor-row__label {
+  background-color: #2e2a24;
+}
+
+.floor-row__label-text--range {
+  font-size: 1.35rem;
+  line-height: 0.95;
+}
+
+.floor-row--range .floor-row__zones {
+  background: repeating-linear-gradient(
+    135deg,
+    transparent          0px,
+    transparent          6px,
+    rgba(0, 0, 0, 0.05)  6px,
+    rgba(0, 0, 0, 0.05)  7px
+  );
+}
+
+/* ─────────────────────────────────────────────
+   구역 컨테이너
+   ─────────────────────────────────────────────*/
+.floor-row__zones {
+  display: flex;
+  flex: 1;
+}

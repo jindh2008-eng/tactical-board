@@ -1,0 +1,17 @@
+.medical-post {
+  border: 1.5px solid #2a5a3a;
+  background-color: #0e1a12;
+}
+
+.medical-post__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.medical-post__placeholder {
+  font-size: 0.65rem;
+  color: #3a6a4a;
+  letter-spacing: 0.08em;
+}

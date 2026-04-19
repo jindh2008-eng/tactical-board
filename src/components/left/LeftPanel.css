@@ -1,0 +1,70 @@
+/* ─────────────────────────────────────────────
+   좌측 패널 컨테이너 (220px 열)
+   출동대 섹션 / 구조대상자 섹션 2분할
+   ─────────────────────────────────────────────*/
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ─── 섹션 공통 ─── */
+.left-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 출동대 섹션 — 화면의 60% */
+.left-panel__section--unit {
+  flex: 6 1 0;
+}
+
+/* 구조대상자 섹션 — 화면의 40% */
+.left-panel__section--victim {
+  flex: 4 1 0;
+  border-top: 1px solid #2a1a08;
+  padding-top: 4px;
+}
+
+/* ─── 출동대 섹션 내 레이아웃 ─── */
+
+/* 1. 출동대 생성 — 콘텐츠 높이에 맞춤, 넘치면 50%까지 */
+.left-panel__section--unit > *:nth-child(1) {
+  flex: 0 0 auto;
+  max-height: 52%;
+  overflow: hidden;
+}
+
+/* 2. 출동대현황 — 유연하게 자람 */
+.left-panel__section--unit > *:nth-child(2) {
+  flex: 2 1 0;
+  min-height: 36px;
+  overflow: hidden;
+}
+
+/* 3. 자원대기소/대기1단계/직전대기 */
+.left-panel__section--unit > *:nth-child(3) {
+  flex: 3 1 0;
+  min-height: 54px;
+  overflow: hidden;
+}
+
+/* ─── 구조대상자 섹션 내 레이아웃 ─── */
+
+/* 4. 구조대상자 생성 — 콘텐츠 높이 */
+.left-panel__section--victim > *:nth-child(1) {
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+/* 5. 구조대상자현황 — 남은 공간 */
+.left-panel__section--victim > *:nth-child(2) {
+  flex: 1 1 0;
+  min-height: 36px;
+  overflow: hidden;
+}

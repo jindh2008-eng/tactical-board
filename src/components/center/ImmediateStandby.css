@@ -1,0 +1,30 @@
+/* 직전대기 — 중앙 라이트 테마에 맞춤 */
+.immediate-standby {
+  border: 1.5px solid var(--ctr-border-mid);
+  background-color: var(--ctr-bg);
+  height: 100%;
+  border-radius: 3px;
+}
+
+.immediate-standby .panel__header {
+  background-color: rgba(0,0,0,0.1);
+  border-bottom: 1px solid var(--ctr-border-soft);
+  color: var(--ctr-label-bg);
+  letter-spacing: 0.1em;
+}
+
+.immediate-standby__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+  gap: 8px;
+  padding: 4px 12px;
+}
+
+.immediate-standby__placeholder {
+  font-size: 0.65rem;
+  color: var(--ctr-border-mid);
+  letter-spacing: 0.06em;
+}

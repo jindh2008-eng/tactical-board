@@ -1,0 +1,94 @@
+/* ─────────────────────────────────────────────
+   구조대상자 토큰 카드
+   2줄 텍스트 구조 — 출동대 토큰과 시각적으로 구분
+   ─────────────────────────────────────────────*/
+
+.victim-card-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.victim-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px 2px;
+  border-radius: 3px;
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  transition: opacity 0.1s, transform 0.1s;
+  line-height: 1.25;
+  min-width: 52px;
+}
+
+.victim-card:active {
+  cursor: grabbing;
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+.victim-card__top {
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.victim-card__bottom {
+  font-size: 0.6rem;
+  font-weight: 500;
+  opacity: 0.85;
+  letter-spacing: 0.02em;
+}
+
+/* ─── 상태별 색상 ─── */
+
+/* 생존자 (경상, 중상, 기본) */
+.victim-card--alive {
+  background: #1a1000;
+  color: #ffaa55;
+  border: 1px solid #6a4010;
+}
+
+/* 고립 */
+.victim-card--isolated {
+  background: #1a1600;
+  color: #ffdd44;
+  border: 1px solid #6a5a00;
+}
+
+/* 의식없음 */
+.victim-card--unconscious {
+  background: #200808;
+  color: #ff8888;
+  border: 1px solid #6a1818;
+}
+
+/* 사망 */
+.victim-card--dead {
+  background: #141414;
+  color: #888888;
+  border: 1px solid #404040;
+}
+
+/* 기타 (사람 아님: 반려견, 물건 등) */
+.victim-card--custom {
+  background: #0e1218;
+  color: #88aacc;
+  border: 1px solid #2a4060;
+}
+
+/* ─── 건물 구역 / 방면 내 사이즈 조정 ─── */
+.zone-cell .victim-card,
+.face-general-zone .victim-card {
+  font-size: inherit;
+  padding: 2px 6px 2px;
+}
+
+.zone-cell .victim-card__top {
+  font-size: 0.65rem;
+}
+.zone-cell .victim-card__bottom {
+  font-size: 0.58rem;
+}

@@ -1,0 +1,11 @@
+/* index.css — 기본 리셋만 담당. 나머지는 App.css에서 관리 */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}

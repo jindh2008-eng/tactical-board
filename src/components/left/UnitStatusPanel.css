@@ -1,0 +1,43 @@
+/* ─────────────────────────────────────────────
+   출동대현황 — 토큰 표시용 placeholder 패널
+   ─────────────────────────────────────────────*/
+.unit-status-panel {
+  border-color: #2a4a3a;
+  background-color: #0a1410;
+}
+
+.unit-status-panel__body {
+  flex: 1;
+  padding: 6px 8px;
+  overflow-y: auto;
+}
+
+.unit-status-panel__columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  align-content: start;
+}
+
+.unit-status-panel__col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.unit-status-panel__placeholder {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #2a4a3a;
+  padding-top: 8px;
+}
+
+/* ─── 드롭 피드백 ─── */
+.unit-status-panel__body.drop-target--active {
+  outline: 2px dashed rgba(100, 180, 255, 0.5);
+  outline-offset: -2px;
+  background-color: rgba(100, 180, 255, 0.06) !important;
+}

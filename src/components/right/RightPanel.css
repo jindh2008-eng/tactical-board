@@ -1,0 +1,17 @@
+/* ─────────────────────────────────────────────
+   우측 패널 컨테이너
+   App 그리드 200px 열을 채움
+   ─────────────────────────────────────────────*/
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 지휘정보: 상단 40% */
+.right-panel > *:nth-child(1) { flex: 0 0 40%;  overflow: hidden; }
+
+/* 로그 패널: 나머지 */
+.right-panel > *:nth-child(2) { flex: 1;         overflow: hidden; }

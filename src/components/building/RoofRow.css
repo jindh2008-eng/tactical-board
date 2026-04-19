@@ -1,0 +1,39 @@
+/* ─────────────────────────────────────────────
+   옥상 행 — 일반 층과 동일한 flex:1 높이
+   ─────────────────────────────────────────────*/
+.roof-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border-bottom: 2px solid var(--ctr-border-mid);
+  flex: 1;
+  min-height: 0;
+}
+
+.roof-row__label {
+  width: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--ctr-label-text);
+  background-color: var(--ctr-label-bg);
+  border-right: 2px solid var(--ctr-border-hard);
+  letter-spacing: 0.06em;
+}
+
+/* 옥상 구역 컨테이너 — 옥상 배경색 위에 ZoneCell 렌더링 */
+.roof-row__zones {
+  display: flex;
+  flex: 1;
+  background-color: var(--ctr-roof-bg);
+}
+
+/* 옥상의 좌/우 구역은 배경을 투명 처리하여 옥상 배경색이 보이게 */
+.roof-row__zones .zone-cell--left,
+.roof-row__zones .zone-cell--right {
+  background-color: transparent;
+  background-image: none;
+}

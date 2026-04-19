@@ -1,0 +1,33 @@
+/* ─────────────────────────────────────────────
+   구조대상자 현황 패널
+   ─────────────────────────────────────────────*/
+.victim-panel {
+  border-color: #3a2a18;
+  background-color: #0c0a06;
+}
+
+.victim-panel__body {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px;
+  padding: 6px;
+  overflow-y: auto;
+  transition: background-color 0.1s;
+  min-height: 36px;
+}
+
+.victim-panel__placeholder {
+  font-size: 0.65rem;
+  color: #4a3520;
+  align-self: center;
+  width: 100%;
+  text-align: center;
+}
+
+.victim-panel__body.drop-target--active {
+  background-color: #1a1206;
+  outline: 1px dashed #7a5020;
+  outline-offset: -2px;
+}

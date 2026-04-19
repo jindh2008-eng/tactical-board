@@ -1,0 +1,152 @@
+/* ─────────────────────────────────────────────
+   출동대 생성 패널
+   ─────────────────────────────────────────────*/
+.unit-creator {
+  border-color: #2a3a5a;
+  background-color: #0a1018;
+}
+
+.unit-creator__body {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 7px 8px;
+  overflow-y: auto;
+}
+
+/* ─────────────────────────────────────────────
+   그룹
+   ─────────────────────────────────────────────*/
+.creator-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.creator-group__label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-bottom: 2px;
+  border-bottom: 1px solid;
+}
+
+.creator-group__label--activity {
+  color: #5a9aee;
+  border-color: #1a3a6a;
+}
+
+.creator-group__label--vehicle {
+  color: #cc9944;
+  border-color: #4a3010;
+}
+
+.creator-group__label--agency {
+  color: #aa88cc;
+  border-color: #3a2a5a;
+}
+
+/* ─────────────────────────────────────────────
+   버튼 목록 / 직접입력
+   ─────────────────────────────────────────────*/
+.creator-group__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.creator-group__custom {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.creator-custom-input {
+  flex: 1;
+  font-size: 0.68rem;
+  font-family: inherit;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background-color: #140e20;
+  color: #cc99ee;
+  border: 1px solid #3a2a5a;
+  outline: none;
+  min-width: 0;
+}
+
+.creator-custom-input::placeholder {
+  color: #5a4a6a;
+}
+
+.creator-custom-input:focus {
+  border-color: #6a4a9a;
+}
+
+/* ─────────────────────────────────────────────
+   버튼 공통
+   ─────────────────────────────────────────────*/
+.creator-btn {
+  font-size: 0.68rem;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.1s, border-color 0.1s;
+}
+
+/* ─── 활동대 색상 ─── */
+.creator-btn--red {
+  color: #f4a0a0;
+  background-color: #2a0808;
+  border: 1px solid #6a1818;
+}
+.creator-btn--red:hover {
+  background-color: #3e0e0e;
+  border-color: #aa2828;
+}
+
+.creator-btn--yellow {
+  color: #f4d870;
+  background-color: #2a2008;
+  border: 1px solid #6a5010;
+}
+.creator-btn--yellow:hover {
+  background-color: #3e300e;
+  border-color: #aa8020;
+}
+
+.creator-btn--green {
+  color: #80dd90;
+  background-color: #082010;
+  border: 1px solid #1a5a28;
+}
+.creator-btn--green:hover {
+  background-color: #0e3018;
+  border-color: #2a8a40;
+}
+
+/* ─── 차량 색상 ─── */
+.creator-btn--vehicle {
+  color: #ccaa66;
+  background-color: #1c1408;
+  border: 1px solid #4a3818;
+}
+.creator-btn--vehicle:hover {
+  background-color: #261c0e;
+  border-color: #7a5a28;
+}
+
+/* ─── 유관기관 / 직접입력 색상 ─── */
+.creator-btn--agency {
+  color: #bb99dd;
+  background-color: #140e20;
+  border: 1px solid #3a2a5a;
+}
+.creator-btn--agency:hover {
+  background-color: #1e1430;
+  border-color: #6a4a9a;
+}

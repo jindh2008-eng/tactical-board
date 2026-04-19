@@ -1,0 +1,137 @@
+/* ─────────────────────────────────────────────
+   전술 상황판 전체 영역 — 3열 CSS Grid
+
+   목표:
+   - 좌/우(B,D면) 영역을 기존보다 크게 확대
+   - 중앙 건물 영역은 더 좁게 축소
+   - B/D면과 건물 사이 공백이 거의 없도록 gap 최소화
+   - C/A면은 중앙 열과 동일 폭 유지
+   ───────────────────────────────────────────── */
+.tactical-area {
+  display: grid;
+
+  /* 기존: 130px 1fr 130px */
+  /* 변경: 좌우를 크게 늘리고, 중앙은 상대적으로 축소 */
+  grid-template-columns: 180px 0.62fr 180px;
+
+  /* C면 / 중앙 / A면 */
+  grid-template-rows: 68px 1fr 166px;
+
+  align-content: start;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--ctr-bg);
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────────
+   명시적 셀 배치
+   ───────────────────────────────────────────── */
+
+/* C면 — col 2, row 1 */
+.tactical-area > .exterior-zone--c {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+
+/* B면 — col 1, row 2 — 지상층(옥상 포함) 높이만 차지 */
+.tactical-area > .exterior-zone--b {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  align-self: start;
+  height: var(--above-pct, 100%);
+}
+
+/* 건물 — col 2, row 2 */
+.tactical-area__building {
+  grid-column: 2;
+  grid-row: 2;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+/* D면 — col 3, row 2 — 지상층(옥상 포함) 높이만 차지 */
+.tactical-area > .exterior-zone--d {
+  grid-column: 3;
+  grid-row: 2;
+  min-width: 0;
+  align-self: start;
+  height: var(--above-pct, 100%);
+}
+
+/* A면 — col 2, row 3 */
+.tactical-area > .exterior-zone--a {
+  grid-column: 2;
+  grid-row: 3;
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────────
+   건물 본체
+
+   목표:
+   - 중앙 셀 안에서 건물 가로폭을 더 줄임
+   - 세로는 부모 영역을 꽉 채움
+   - 중앙 정렬 유지
+   ───────────────────────────────────────────── */
+.building-body {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 2.5px solid var(--ctr-border-hard);
+  background-color: var(--ctr-surface);
+  overflow: hidden;
+  box-sizing: border-box;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* ─────────────────────────────────────────────
+   1층 바닥 슬래브 — B면 좌측 ~ D면 우측 전폭
+   grid row 2 안에 absolute로 배치.
+   top: calc(--above-pct - 9px) → 슬래브 하단이 지상/지하 경계에 정렬.
+   ───────────────────────────────────────────── */
+.tactical-area__slab {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  position: relative;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tactical-area__slab::before {
+  content: '';
+  position: absolute;
+  /* 슬래브 하단 = 지상/지하 경계선 */
+  top: calc(var(--above-pct, 100%) - 9px);
+  left: 0;
+  right: 0;
+  height: 9px;
+
+  background-color: #9e9488;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent          0px,
+    transparent          3px,
+    rgba(0, 0, 0, 0.28)  3px,
+    rgba(0, 0, 0, 0.28)  4px
+  );
+  border-top:    2px solid #6e6258;
+  border-bottom: 1px solid #5a5148;
+}

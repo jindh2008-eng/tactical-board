@@ -1,0 +1,227 @@
+/* ─────────────────────────────────────────────
+   토큰 우클릭 컨텍스트 메뉴 (TCM)
+   position: fixed; portal → document.body
+   ─────────────────────────────────────────────*/
+
+.tcm {
+  position: fixed;
+  z-index: 9999;
+  min-width: 180px;
+  max-width: 240px;
+  background: #1a1a22;
+  border: 1px solid #3a3a4a;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  font-size: 0.78rem;
+  color: #d0cfe0;
+  user-select: none;
+}
+
+/* 헤더 — 토큰 이름 */
+.tcm__header {
+  padding: 6px 12px 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #2e2e3e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 일반 메뉴 항목 */
+.tcm__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  color: #d0cfe0;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.tcm__item:hover,
+.tcm__item--active {
+  background: #2a2a38;
+}
+
+/* 프리셋 스크롤 영역 */
+.tcm__preset-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 공통/전용 섹션 */
+.tcm__preset-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 4px;
+}
+
+/* 섹션 레이블 (공통 / 진압대 전용 등) */
+.tcm__section-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #4488aa;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 2px 3px;
+}
+
+.tcm__arrow {
+  font-size: 0.6rem;
+  color: #666;
+}
+
+/* 구분선 */
+.tcm__separator {
+  height: 1px;
+  background: #2e2e3e;
+  margin: 2px 0;
+}
+
+.tcm__divider {
+  height: 1px;
+  background: #2e2e3e;
+  margin: 6px 0;
+}
+
+/* 서브 패널 */
+.tcm__sub {
+  background: #14141c;
+  border-top: 1px solid #2e2e3e;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tcm__sub-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #666;
+  letter-spacing: 0.04em;
+  padding: 0 2px 2px;
+}
+
+/* 프리셋 버튼 */
+.tcm__preset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 5px 8px;
+  background: #1e1e2a;
+  border: 1px solid #333345;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+  gap: 1px;
+}
+
+.tcm__preset-btn:hover {
+  background: #2a2a3c;
+  border-color: #5555aa;
+}
+
+.tcm__preset-line1 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e0dff0;
+}
+
+.tcm__preset-line2 {
+  font-size: 0.65rem;
+  color: #9090b0;
+}
+
+/* 직접 입력 */
+.tcm__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 7px;
+  background: #1a1a26;
+  border: 1px solid #3a3a50;
+  border-radius: 3px;
+  color: #d0cfe0;
+  font-size: 0.75rem;
+  outline: none;
+}
+
+.tcm__input:focus {
+  border-color: #6655cc;
+  background: #1e1e2e;
+}
+
+.tcm__input::placeholder {
+  color: #555566;
+}
+
+.tcm__confirm-btn {
+  align-self: flex-end;
+  padding: 4px 14px;
+  background: #4433aa;
+  border: none;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.tcm__confirm-btn:hover:not(:disabled) {
+  background: #5544cc;
+}
+
+.tcm__confirm-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 배지 삭제 버튼 */
+.tcm__badge-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 5px 8px;
+  background: #1e1e2a;
+  border: 1px solid #333345;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s;
+  gap: 8px;
+}
+
+.tcm__badge-remove-btn:hover {
+  background: #2e1a1a;
+  border-color: #883333;
+}
+
+.tcm__badge-remove-text {
+  font-size: 0.72rem;
+  color: #ccc;
+  text-align: left;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tcm__badge-remove-x {
+  font-size: 0.9rem;
+  color: #aa4444;
+  flex-shrink: 0;
+  font-weight: 700;
+}

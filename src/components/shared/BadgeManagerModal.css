@@ -1,0 +1,230 @@
+/* ─────────────────────────────────────────────
+   배지 프리셋 관리 모달 (BMM)
+   ─────────────────────────────────────────────*/
+
+/* 반투명 오버레이 */
+.bmm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 모달 본체 */
+.bmm {
+  background: #1a1a24;
+  border: 1px solid #3a3a50;
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+  width: 440px;
+  max-width: 95vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 헤더 */
+.bmm__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid #2e2e40;
+  flex-shrink: 0;
+}
+
+.bmm__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #d0cfe0;
+  letter-spacing: 0.03em;
+}
+
+.bmm__close-btn {
+  background: none;
+  border: none;
+  color: #777;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.1s;
+}
+
+.bmm__close-btn:hover {
+  color: #ccc;
+}
+
+/* 섹션 공통 */
+.bmm__section {
+  padding: 14px 16px;
+  border-bottom: 1px solid #252535;
+  flex-shrink: 0;
+}
+
+.bmm__section--list {
+  flex: 1;
+  overflow-y: auto;
+  border-bottom: none;
+}
+
+.bmm__section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #8080a0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bmm__count {
+  background: #333;
+  color: #aaa;
+  font-size: 0.65rem;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* 새 추가 행 */
+.bmm__add-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* 입력 필드 */
+.bmm__input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 9px;
+  background: #14141e;
+  border: 1px solid #363650;
+  border-radius: 4px;
+  color: #d0cfe0;
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.bmm__input:focus {
+  border-color: #6655cc;
+  background: #17172a;
+}
+
+.bmm__input::placeholder {
+  color: #44445a;
+}
+
+/* 버튼 공통 */
+.bmm__btn {
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #3a3a50;
+  background: #252535;
+  color: #c0bfe0;
+  white-space: nowrap;
+  transition: background 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+}
+
+.bmm__btn:hover:not(:disabled) {
+  background: #303048;
+}
+
+.bmm__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bmm__btn--primary {
+  background: #4433aa;
+  border-color: #5544cc;
+  color: #fff;
+}
+
+.bmm__btn--primary:hover:not(:disabled) {
+  background: #5544cc;
+}
+
+.bmm__btn--danger {
+  background: #3a1414;
+  border-color: #6a2222;
+  color: #f09090;
+}
+
+.bmm__btn--danger:hover:not(:disabled) {
+  background: #4a1a1a;
+  border-color: #883333;
+}
+
+/* 프리셋 목록 */
+.bmm__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bmm__preset-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #16161f;
+  border: 1px solid #2a2a3a;
+  border-radius: 5px;
+}
+
+/* 수정 모드 */
+.bmm__edit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bmm__row-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* 프리셋 미리보기 */
+.bmm__preset-preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.bmm__preview-line1 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #d0cfe0;
+}
+
+.bmm__preview-line2 {
+  font-size: 0.68rem;
+  color: #8888aa;
+}
+
+/* 빈 상태 */
+.bmm__empty {
+  padding: 20px;
+  text-align: center;
+  color: #555570;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}

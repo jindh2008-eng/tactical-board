@@ -1,0 +1,121 @@
+/* ─────────────────────────────────────────────
+   외곽 작전 공간 — 외부 컨테이너
+   항상 flex-column: [테이프?] [콘텐츠] [테이프?]
+   통제선은 A면에만 렌더링됨
+   ─────────────────────────────────────────────*/
+.exterior-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background-color: var(--ctr-bg);
+  border: 1.5px dashed var(--ctr-border-soft);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.exterior-zone--primary {
+  border-color: #b0a898;
+}
+
+/* ─────────────────────────────────────────────
+   콘텐츠 영역
+   ─────────────────────────────────────────────*/
+.exterior-zone__content {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* A면/C면: 가로 행 배열 */
+.exterior-zone--horizontal .exterior-zone__content {
+  flex-direction: row;
+  align-items: stretch;
+  padding: 5px 8px;
+  gap: 6px;
+}
+
+/* B면/D면: 세로 열 배열 */
+.exterior-zone--vertical .exterior-zone__content {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 5px 6px;
+  gap: 4px;
+}
+
+/* ─────────────────────────────────────────────
+   일반 방면 영역 (category: 'face')
+   방면 레이블(A면 등)을 중앙에 크게 반투명 표시.
+   ─────────────────────────────────────────────*/
+.face-general-zone {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  border: 1.5px dashed #a0a098;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.14s, border-color 0.14s;
+}
+
+.face-general-zone:hover {
+  background-color: rgba(255, 255, 255, 0.55);
+  border-color: #8a9aaa;
+  border-style: solid;
+}
+
+/* ─── 드롭 피드백 ─── */
+.face-general-zone.drop-target--active {
+  background-color: rgba(100, 180, 255, 0.15) !important;
+  border-color: rgba(100, 180, 255, 0.7) !important;
+  border-style: solid !important;
+}
+
+/* ─── 방면 토큰 컨테이너 ─── */
+.face-general-zone__tokens {
+  position: absolute;
+  bottom: 5px;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+  z-index: 2;
+}
+
+/* ─────────────────────────────────────────────
+   방면 레이블 — 워터마크형 배경 표시
+   크고 반투명하게 영역 중앙에 배치.
+   배경에 깔리는 인식용 글자로 기능.
+   ─────────────────────────────────────────────*/
+.face-general-zone__label {
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  /* 크기는 orientation별 오버라이드 */
+}
+
+/* A면/C면(가로): 공간이 충분하므로 크게 */
+.exterior-zone--horizontal .face-general-zone__label {
+  font-size: 2.4rem;
+}
+
+/* B면/D면(세로): 폭이 좁으므로 적당히 */
+.exterior-zone--vertical .face-general-zone__label {
+  font-size: 1.7rem;
+}
+
+/* 면별 색상 — 각 면의 특성색을 낮은 불투명도로 */
+.exterior-zone--a .face-general-zone__label { color: rgba(170, 80,  0,   0.28); }
+.exterior-zone--b .face-general-zone__label { color: rgba(20,  90,  160, 0.28); }
+.exterior-zone--c .face-general-zone__label { color: rgba(30,  110, 70,  0.28); }
+.exterior-zone--d .face-general-zone__label { color: rgba(100, 40,  160, 0.28); }
+
