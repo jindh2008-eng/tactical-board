@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback } from 'react';
 import type { VictimToken, CreateVictimInput, VictimCondition } from '../types/victim';
 import {
   buildVictim, randomVictim,
-  rebuildVictimDisplay, zoneKeyToLabel,
+  rebuildVictimDisplay, zoneKeyToLabel, zoneKeyToFullLabel,
 } from '../utils/victimUtils';
 
 // ─────────────────────────────────────────────
@@ -64,8 +64,16 @@ export function VictimProvider({ children }: { children: React.ReactNode }) {
   ) => {
     setVictims(prev => prev.map(v => {
       if (v.id !== victimId) return v;
+
+      // 임시의료소 이동 시, 아직 구조위치가 없으면 현재 위치를 구조위치로 보존.
+      // "어디서 구조됐는가"를 잃지 않도록 최초 1회만 기록.
+      const rescueLocation: string | undefined =
+        toZoneKey === 'medical-post' && !v.rescueLocation
+          ? [zoneKeyToFullLabel(v.zoneKey), v.subLocation].filter(Boolean).join(' ') || '위치미상'
+          : v.rescueLocation;
+
       const newLocation = toZoneKey ? zoneKeyToLabel(toZoneKey) : '';
-      const merged      = { ...v, zoneKey: toZoneKey, location: newLocation };
+      const merged      = { ...v, zoneKey: toZoneKey, location: newLocation, rescueLocation };
       const display     = rebuildVictimDisplay(merged);
       return { ...merged, ...display };
     }));

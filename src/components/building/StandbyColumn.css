@@ -1,0 +1,126 @@
+/* ─────────────────────────────────────────────
+   대기구역 독립 컬럼 — TacticalArea col 1
+   ─────────────────────────────────────────────*/
+
+.standby-column {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 6px;
+  background-color: var(--ctr-bg);
+  border: 1.5px dashed var(--ctr-border-soft);
+  border-radius: 3px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ══ 대기구역 박스 ══ */
+
+.standby-box {
+  flex: 1;
+  min-height: 0;
+  border: 1px dashed var(--ctr-border-soft);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.standby-box__header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--ctr-text-dim);
+  padding: 4px 10px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--ctr-border-soft);
+  flex-shrink: 0;
+}
+
+.standby-box__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 3px;
+  /* flow 레이아웃 — 토큰/victim 모두 자연스럽게 쌓임 */
+}
+
+.standby-box__placeholder {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--ctr-border-mid);
+  padding-top: 4px;
+}
+
+/* VictimCard가 flow 안에서 inline으로 보이도록 */
+.standby-box__body .victim-card-wrapper {
+  /* absPos가 없으면 wrapper 자체는 position:static — 그대로 flow에 참여 */
+  flex-shrink: 0;
+}
+
+/* TokenCard wrapper도 flow에 참여 */
+.standby-box__body .token-card-wrapper {
+  flex-shrink: 0;
+}
+
+/* ── 색상 구분 ── */
+
+.standby-box--medical {
+  border-color: #9abca0;
+  background: rgba(180, 230, 190, 0.18);
+}
+.standby-box--medical .standby-box__header {
+  color: #4a6e52;
+  background: rgba(160, 210, 170, 0.22);
+  border-bottom-color: #9abca0;
+}
+
+.standby-box--resource {
+  border-color: #c0a86a;
+  background: rgba(220, 190, 120, 0.14);
+}
+.standby-box--resource .standby-box__header {
+  color: #7a5e28;
+  background: rgba(200, 170, 100, 0.18);
+  border-bottom-color: #c0a86a;
+}
+
+.standby-box--standby1 {
+  border-color: #a09ac0;
+  background: rgba(180, 170, 220, 0.14);
+}
+.standby-box--standby1 .standby-box__header {
+  color: #504870;
+  background: rgba(160, 150, 200, 0.18);
+  border-bottom-color: #a09ac0;
+}
+
+.standby-box--imminent {
+  border-color: #c09090;
+  background: rgba(220, 170, 170, 0.14);
+}
+.standby-box--imminent .standby-box__header {
+  color: #784040;
+  background: rgba(200, 150, 150, 0.18);
+  border-bottom-color: #c09090;
+}
+
+/* ── 드롭 피드백 ── */
+
+.standby-box__body.drop-target--active {
+  outline: 2px dashed rgba(80, 150, 220, 0.6);
+  outline-offset: -2px;
+  background: rgba(100, 160, 230, 0.12) !important;
+}

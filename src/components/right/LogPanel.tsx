@@ -7,6 +7,7 @@ import './LogPanel.css';
 
 const STATIC_LABELS: Record<string, string> = {
   pool:               '대기(풀)',
+  'medical-post':     '임시의료소',
   'standby-resource': '자원대기소',
   'standby-standby1': '대기1단계',
   'standby-imminent': '직전대기',
@@ -52,10 +53,24 @@ export function LogPanel() {
           logs.map(entry => (
             <div key={entry.id} className="log-panel__entry">
               <span className="log-panel__time">{entry.timestamp}</span>
-              <span className="log-panel__token">{entry.tokenName}</span>
-              <span className="log-panel__route">
-                {zoneLabel(entry.fromZoneId)} → {zoneLabel(entry.toZoneId)}
+              <span className={[
+                'log-panel__token',
+                entry.tokenColor ? `log-panel__token--${entry.tokenColor}` : '',
+              ].filter(Boolean).join(' ')}>
+                {entry.tokenName}
               </span>
+              {entry.logType === 'rescue' ? (
+                <span className="log-panel__rescue-note">{entry.note}</span>
+              ) : (
+                <>
+                  <span className="log-panel__route">
+                    {zoneLabel(entry.fromZoneId)} → {zoneLabel(entry.toZoneId)}
+                  </span>
+                  {entry.note && (
+                    <span className="log-panel__note">{entry.note}</span>
+                  )}
+                </>
+              )}
             </div>
           ))
         )}

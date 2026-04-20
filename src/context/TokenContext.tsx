@@ -40,6 +40,13 @@ interface TokenContextValue {
     unitType?:   string,
   ) => void;
   moveToken:    (tokenId: string, toZoneKey: string | null, pos?: TokenPos) => void;
+  /**
+   * 구조 처리 — 출동대를 임시의료소로 이동하고 "구조중" 배지를 추가.
+   * 이동 로그에 구조대상자 정보를 note로 기록.
+   * @param tokenId     이동할 출동대 ID
+   * @param victimLabel 로그에 남길 구조대상자 표시명 (예: "남/40대/중상(212호)")
+   */
+  rescueUnit:   (tokenId: string, victimLabel: string) => void;
   addBadge:     (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
   removeBadge:  (tokenId: string, badgeId: string) => void;
   clearBadges:  (tokenId: string) => void;
@@ -121,6 +128,7 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
           logType:    'move',
           tokenId:    token.id,
           tokenName:  token.label,
+          tokenColor: token.color,
           fromZoneId: token.zoneKey ?? 'pool',
           toZoneId:   toZoneKey,
         };
@@ -136,6 +144,43 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
       }
       return { ...prev, [tokenId]: pos };
     });
+  }, []);
+
+  // ── 구조 처리 ────────────────────────────────
+  const rescueUnit = useCallback((tokenId: string, victimLabel: string) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
+    if (!token) return;
+
+    // 이동 + "구조중" 배지를 한 번의 setState로 처리
+    setTokens(prev => prev.map(t => {
+      if (t.id !== tokenId) return t;
+      return {
+        ...t,
+        zoneKey: 'medical-post',
+        badges:  [...t.badges, { id: uid(), line1: '구조중' }],
+      };
+    }));
+
+    // 절대 좌표 제거
+    setPositions(prev => {
+      const next = { ...prev };
+      delete next[tokenId];
+      return next;
+    });
+
+    // 구조 로그
+    const entry: LogEntry = {
+      id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp:  nowHHMM(),
+      logType:    'rescue',
+      tokenId:    token.id,
+      tokenName:  token.label,
+      tokenColor: token.color,
+      fromZoneId: token.zoneKey ?? 'pool',
+      toZoneId:   'medical-post',
+      note:       `${victimLabel} 구조대상자 → 구조, 임시의료소 이동`,
+    };
+    setLogs(prev => [entry, ...prev]);
   }, []);
 
   // ── 배지 (실행 중 임시 상태) ─────────────────
@@ -164,7 +209,7 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
   return (
     <TokenContext.Provider value={{
       tokens, logs, positions,
-      createToken, moveToken,
+      createToken, moveToken, rescueUnit,
       addBadge, removeBadge, clearBadges,
     }}>
       {children}

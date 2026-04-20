@@ -48,6 +48,9 @@ export function zoneKeyToLabel(zoneKey: string | null): string {
     return zoneKey.slice('face-'.length) + '면';
   }
 
+  // 임시의료소
+  if (zoneKey === 'medical-post') return '임시의료소';
+
   // 대기 구역 (구조대상자가 배치될 가능성은 낮지만 대비)
   if (zoneKey.startsWith('standby-')) {
     const map: Record<string, string> = {
@@ -69,6 +72,47 @@ export function zoneKeyToLabel(zoneKey: string | null): string {
 
   // 계단실은 명시
   return zoneType === 'stair' ? `${floorLabel} 계단` : floorLabel;
+}
+
+/**
+ * zoneKey 를 층+구역까지 포함한 상세 레이블로 변환.
+ * 구조위치(rescueLocation) 기록 전용.
+ *
+ * 예:
+ *   "3F-center" → "3F 중앙구역"
+ *   "3F-left"   → "3F 좌구역"
+ *   "3F-right"  → "3F 우구역"
+ *   "3F-stair"  → "3F 계단실"
+ *   "face-B"    → "B면"
+ *   "medical-post" → "임시의료소"
+ *   null        → ""
+ */
+const ZONE_AREA_LABELS: Record<string, string> = {
+  left:   '좌구역',
+  center: '중앙구역',
+  right:  '우구역',
+  stair:  '계단실',
+};
+
+export function zoneKeyToFullLabel(zoneKey: string | null): string {
+  if (!zoneKey) return '';
+  if (zoneKey === 'medical-post') return '임시의료소';
+  if (zoneKey.startsWith('face-')) return zoneKey.slice('face-'.length) + '면';
+  if (zoneKey.startsWith('standby-')) {
+    const map: Record<string, string> = {
+      'standby-resource': '자원대기소',
+      'standby-standby1': '대기1단계',
+      'standby-imminent': '직전대기',
+    };
+    return map[zoneKey] ?? zoneKey;
+  }
+  const dashIdx = zoneKey.indexOf('-');
+  if (dashIdx === -1) return zoneKey;
+  const floorId  = zoneKey.slice(0, dashIdx);
+  const zoneType = zoneKey.slice(dashIdx + 1);
+  const floorLabel = floorId === 'RF' ? '옥상' : floorId;
+  const areaLabel  = ZONE_AREA_LABELS[zoneType];
+  return areaLabel ? `${floorLabel} ${areaLabel}` : floorLabel;
 }
 
 // ─────────────────────────────────────────────

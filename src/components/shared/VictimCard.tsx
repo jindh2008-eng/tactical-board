@@ -1,8 +1,11 @@
 import { useState, useCallback } from 'react';
 import type { VictimPos, VictimUpdate } from '../../context/VictimContext';
 import { useVictims } from '../../context/VictimContext';
+import { useTokens } from '../../context/TokenContext';
+import type { UnitToken } from '../../types';
 import type { VictimToken } from '../../types/victim';
 import { VictimContextMenu } from './VictimContextMenu';
+import { zoneKeyToFullLabel } from '../../utils/victimUtils';
 import './VictimCard.css';
 
 interface Props {
@@ -23,7 +26,8 @@ function conditionMod(victim: VictimToken): string {
 }
 
 export function VictimCard({ victim, absPos }: Props) {
-  const { updateVictim } = useVictims();
+  const { updateVictim, moveVictim } = useVictims();
+  const { tokens, rescueUnit }       = useTokens();
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
 
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
@@ -42,7 +46,22 @@ export function VictimCard({ victim, absPos }: Props) {
   }
 
   const handleClose  = useCallback(() => setCtxMenu(null), []);
-  const handleUpdate = useCallback((u: VictimUpdate) => updateVictim(victim.id, u), [updateVictim, victim.id]);
+  const handleUpdate = useCallback(
+    (u: VictimUpdate) => updateVictim(victim.id, u),
+    [updateVictim, victim.id],
+  );
+
+  /** 구조 처리: 출동대 + 구조대상자 모두 임시의료소로 이동 */
+  const handleRescue = useCallback((unit: UnitToken) => {
+    const locationLabel = zoneKeyToFullLabel(victim.zoneKey);
+    const rescueLocLabel = [locationLabel, victim.subLocation]
+      .filter(Boolean)
+      .join(' ') || '위치미상';
+
+    rescueUnit(unit.id, rescueLocLabel);
+    moveVictim(victim.id, 'medical-post');
+    setCtxMenu(null);
+  }, [rescueUnit, moveVictim, victim]);
 
   const wrapperStyle: React.CSSProperties | undefined = absPos
     ? {
@@ -74,7 +93,9 @@ export function VictimCard({ victim, absPos }: Props) {
           victim={victim}
           x={ctxMenu.x}
           y={ctxMenu.y}
+          tokens={tokens}
           onUpdate={handleUpdate}
+          onRescue={handleRescue}
           onClose={handleClose}
         />
       )}

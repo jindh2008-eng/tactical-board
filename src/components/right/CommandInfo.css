@@ -31,14 +31,14 @@
 }
 
 .command-info__label {
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   color: #8888bb;
   flex: 1;
   letter-spacing: 0.03em;
 }
 
 .command-info__value {
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   color: #4a4a6a;
   flex-shrink: 0;
   min-width: 24px;

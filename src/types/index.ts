@@ -143,8 +143,9 @@ export interface UnitToken {
  * 로그 종류
  * 'move'       : 일반 이동 (A면으로 이동 등)
  * 'assignment' : 부서 지정 (B방면 1선펌프 부서 지정)
+ * 'rescue'     : 구조 처리 (구조대상자 → 임시의료소 이동)
  */
-export type LogType = 'move' | 'assignment';
+export type LogType = 'move' | 'assignment' | 'rescue';
 
 export interface LogEntry {
   id:             string;
@@ -152,6 +153,7 @@ export interface LogEntry {
   logType:        LogType;
   tokenId:        string;
   tokenName:      string;
+  tokenColor?:    TokenColor;
   fromZoneId:     string;
   toZoneId:       string;
   face?:          Face;

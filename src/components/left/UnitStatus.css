@@ -25,7 +25,7 @@
 }
 
 .creator-group__label {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -65,9 +65,9 @@
 
 .creator-custom-input {
   flex: 1;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-family: inherit;
-  padding: 3px 6px;
+  padding: 4px 7px;
   border-radius: 3px;
   background-color: #140e20;
   color: #cc99ee;
@@ -88,10 +88,10 @@
    버튼 공통
    ─────────────────────────────────────────────*/
 .creator-btn {
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-family: inherit;
   font-weight: 500;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 3px;
   cursor: pointer;
   white-space: nowrap;

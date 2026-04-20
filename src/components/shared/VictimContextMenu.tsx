@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { VictimToken, VictimCondition } from '../../types/victim';
 import { VICTIM_CONDITIONS } from '../../types/victim';
+import type { UnitToken } from '../../types';
 import type { VictimUpdate } from '../../context/VictimContext';
 import './VictimContextMenu.css';
 
@@ -9,17 +10,18 @@ interface Props {
   victim:   VictimToken;
   x:        number;
   y:        number;
+  tokens:   UnitToken[];
   onUpdate: (update: VictimUpdate) => void;
+  onRescue: (unit: UnitToken) => void;
   onClose:  () => void;
 }
 
-export function VictimContextMenu({ victim, x, y, onUpdate, onClose }: Props) {
+export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, onClose }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // 세부위치 편집 상태 (Enter 또는 ✓ 버튼으로 commit)
-  const [subDraft, setSubDraft] = useState(victim.subLocation);
-  // 라벨 편집 (custom only)
-  const [labelDraft, setLabelDraft] = useState(victim.customLabel ?? '');
+  const [subDraft,    setSubDraft]    = useState(victim.subLocation);
+  const [labelDraft,  setLabelDraft]  = useState(victim.customLabel ?? '');
+  const [showRescue,  setShowRescue]  = useState(false);
 
   // 외부 클릭 / Esc → 닫기
   useEffect(() => {
@@ -38,8 +40,8 @@ export function VictimContextMenu({ victim, x, y, onUpdate, onClose }: Props) {
   }, [onClose]);
 
   // 화면 경계 보정
-  const safeX = Math.min(x, window.innerWidth  - 218 - 8);
-  const safeY = Math.min(y, window.innerHeight - 260 - 8);
+  const safeX = Math.min(x, window.innerWidth  - 230 - 8);
+  const safeY = Math.min(y, window.innerHeight - 380 - 8);
 
   function applySubLocation() {
     onUpdate({ subLocation: subDraft.trim() });
@@ -53,7 +55,16 @@ export function VictimContextMenu({ victim, x, y, onUpdate, onClose }: Props) {
     onUpdate({ condition: c });
   }
 
-  const autoLocation = victim.location || null; // null = 미배치
+  // ── 구조 처리 관련 ────────────────────────────────
+  const isAlreadyRescued = victim.zoneKey === 'medical-post';
+
+  /** 같은 구역에 있는 출동대 중 이미 "구조중"이 아닌 것만 */
+  const rescuableUnits = victim.zoneKey
+    ? tokens.filter(t =>
+        t.zoneKey === victim.zoneKey &&
+        !t.badges.some(b => b.line1 === '구조중')
+      )
+    : [];
 
   return createPortal(
     <div
@@ -62,46 +73,69 @@ export function VictimContextMenu({ victim, x, y, onUpdate, onClose }: Props) {
       style={{ left: safeX, top: safeY }}
       onContextMenu={e => e.preventDefault()}
     >
-      {/* 헤더 */}
+      {/* ── 1. 환자정보 ─────────────────────────── */}
       <div className="vcm__header">
         <span className="vcm__header-top">{victim.displayTop}</span>
-        <span className="vcm__header-bottom">{victim.displayBottom}</span>
       </div>
 
-      {/* ── 자동 위치 (읽기전용) ───────────────── */}
-      <div className="vcm__section vcm__section--location-info">
-        <div className="vcm__section-label">배치 위치</div>
-        <span className={`vcm__auto-location ${!autoLocation ? 'vcm__auto-location--empty' : ''}`}>
-          {autoLocation ?? '미배치'}
-        </span>
+      {/* ── 2. 구조 처리 ────────────────────────── */}
+      <div className="vcm__section vcm__section--rescue">
+        <button
+          className={`vcm__rescue-toggle ${showRescue ? 'vcm__rescue-toggle--open' : ''}`}
+          onClick={() => setShowRescue(v => !v)}
+          disabled={isAlreadyRescued}
+        >
+          <span>{isAlreadyRescued ? '이미 임시의료소에 있습니다' : '구조 처리'}</span>
+          {!isAlreadyRescued && (
+            <span className="vcm__arrow">{showRescue ? '▲' : '▼'}</span>
+          )}
+        </button>
+
+        {showRescue && !isAlreadyRescued && (
+          <div className="vcm__rescue-list">
+            {rescuableUnits.length === 0 ? (
+              <div className="vcm__rescue-empty">
+                같은 공간에 구조 가능한<br />출동대가 없습니다
+              </div>
+            ) : (
+              rescuableUnits.map(unit => (
+                <button
+                  key={unit.id}
+                  className={`vcm__rescue-unit vcm__rescue-unit--${unit.color}`}
+                  onClick={() => { onRescue(unit); }}
+                >
+                  <span className="vcm__rescue-unit-name">{unit.label}</span>
+                  <span className="vcm__rescue-unit-arrow">→ 임시의료소</span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ── 세부위치 입력 (수동) ────────────────── */}
-      <div className="vcm__section">
-        <div className="vcm__section-label">세부위치</div>
-        <div className="vcm__input-row">
-          <input
-            className="vcm__input"
-            value={subDraft}
-            onChange={e => setSubDraft(e.target.value)}
-            onKeyDown={e => {
-              e.stopPropagation();
-              if (e.key === 'Enter') { applySubLocation(); onClose(); }
-            }}
-            placeholder="212호, 복도…"
-            maxLength={20}
-            autoFocus={victim.kind !== 'custom'}
-          />
-          <button
-            className="vcm__apply-btn"
-            onClick={() => { applySubLocation(); onClose(); }}
-          >
-            ✓
-          </button>
+      {/* ── 3. 상태 변경 (person) ───────────────── */}
+      {victim.kind === 'person' && (
+        <div className="vcm__section">
+          <div className="vcm__section-label">환자상태</div>
+          <div className="vcm__cond-grid">
+            {VICTIM_CONDITIONS.map(c => (
+              <button
+                key={c}
+                className={[
+                  'vcm__cond-btn',
+                  `vcm__cond-btn--${condClass(c)}`,
+                  victim.condition === c ? 'vcm__cond-btn--active' : '',
+                ].join(' ')}
+                onClick={() => applyCondition(c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* ── custom: 라벨 변경 ───────────────────── */}
+      {/* ── 3. 라벨 변경 (custom) ───────────────── */}
       {victim.kind === 'custom' && (
         <div className="vcm__section">
           <div className="vcm__section-label">라벨</div>
@@ -128,27 +162,30 @@ export function VictimContextMenu({ victim, x, y, onUpdate, onClose }: Props) {
         </div>
       )}
 
-      {/* ── person: 상태 변경 ───────────────────── */}
-      {victim.kind === 'person' && (
-        <div className="vcm__section">
-          <div className="vcm__section-label">상태</div>
-          <div className="vcm__cond-grid">
-            {VICTIM_CONDITIONS.map(c => (
-              <button
-                key={c}
-                className={[
-                  'vcm__cond-btn',
-                  `vcm__cond-btn--${condClass(c)}`,
-                  victim.condition === c ? 'vcm__cond-btn--active' : '',
-                ].join(' ')}
-                onClick={() => applyCondition(c)}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+      {/* ── 4. 세부위치 입력 ────────────────────── */}
+      <div className="vcm__section">
+        <div className="vcm__section-label">세부위치</div>
+        <div className="vcm__input-row">
+          <input
+            className="vcm__input"
+            value={subDraft}
+            onChange={e => setSubDraft(e.target.value)}
+            onKeyDown={e => {
+              e.stopPropagation();
+              if (e.key === 'Enter') { applySubLocation(); onClose(); }
+            }}
+            placeholder="212호, 복도…"
+            maxLength={20}
+            autoFocus={victim.kind !== 'custom'}
+          />
+          <button
+            className="vcm__apply-btn"
+            onClick={() => { applySubLocation(); onClose(); }}
+          >
+            ✓
+          </button>
         </div>
-      )}
+      </div>
     </div>,
     document.body,
   );

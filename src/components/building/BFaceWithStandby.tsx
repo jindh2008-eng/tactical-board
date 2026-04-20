@@ -7,7 +7,7 @@ import { VictimCard } from '../shared/VictimCard';
 import './BFaceWithStandby.css';
 
 // ─────────────────────────────────────────────
-// B면 일반 드롭 영역 (FaceGeneralZone과 동일한 로직, B면 전용)
+// B면 드롭 영역
 // ─────────────────────────────────────────────
 
 const DROP_NUDGE_X = 0;
@@ -83,93 +83,14 @@ function BFaceDropZone() {
 }
 
 // ─────────────────────────────────────────────
-// 대기 구역 박스 (B면 좌측, ctr 라이트 테마)
-// ─────────────────────────────────────────────
-
-interface StandbyBoxProps {
-  label:    string;
-  zoneKey:  string;
-  colorMod: string;
-}
-
-function BfaceStandbyBox({ label, zoneKey, colorMod }: StandbyBoxProps) {
-  const { tokens, moveToken } = useTokens();
-  const [isDragOver, setIsDragOver] = useState(false);
-
-  const zoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
-
-  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
-  }
-
-  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
-  }
-
-  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-    setIsDragOver(false);
-    const tokenId = e.dataTransfer.getData('tokenId');
-    if (tokenId) moveToken(tokenId, zoneKey);
-  }
-
-  return (
-    <div className={`bface-standby-box bface-standby-box--${colorMod}`}>
-      <div className="bface-standby-box__header">{label}</div>
-      <div
-        className={[
-          'bface-standby-box__body',
-          isDragOver ? 'drop-target--active' : '',
-        ].filter(Boolean).join(' ')}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {zoneTokens.length === 0 ? (
-          <span className="bface-standby-box__placeholder">―</span>
-        ) : (
-          <div className="bface-standby-box__tokens">
-            {zoneTokens.map(token => <TokenCard key={token.id} token={token} />)}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-const STANDBY_BOXES: StandbyBoxProps[] = [
-  { label: '임시의료소', zoneKey: 'medical-post',     colorMod: 'medical'  },
-  { label: '자원대기소', zoneKey: 'standby-resource',  colorMod: 'resource' },
-  { label: '대기1단계',  zoneKey: 'standby-standby1',  colorMod: 'standby1' },
-  { label: '직전대기',   zoneKey: 'standby-imminent',  colorMod: 'imminent' },
-];
-
-// ─────────────────────────────────────────────
-// BFaceWithStandby — B면 + 좌측 대기 구역 컬럼
+// BFaceWithStandby — B면 독립 컬럼 (대기구역 분리됨)
 // ─────────────────────────────────────────────
 
 export function BFaceWithStandby() {
   return (
-    <div className="exterior-zone exterior-zone--b exterior-zone--primary bface-with-standby">
-      <div className="bface-with-standby__layout">
-        {/* 좌측: 대기 구역 4개 */}
-        <div className="bface-with-standby__standby-col">
-          {STANDBY_BOXES.map(box => (
-            <BfaceStandbyBox key={box.zoneKey} {...box} />
-          ))}
-        </div>
-
-        {/* 구분선 */}
-        <div className="bface-with-standby__divider" />
-
-        {/* 우측: B면 드롭 영역 */}
-        <div className="bface-with-standby__face-wrap">
-          <BFaceDropZone />
-        </div>
+    <div className="exterior-zone exterior-zone--b exterior-zone--primary exterior-zone--vertical">
+      <div className="exterior-zone__content">
+        <BFaceDropZone />
       </div>
     </div>
   );

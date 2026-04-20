@@ -29,10 +29,19 @@ export interface VictimToken {
   ageGroup?:     VictimAgeGroup;
   condition?:    VictimCondition;
   customLabel?:  string;
-  /** 자동 위치: 토큰이 배치된 구역 레이블 (예: "3F", "A면"). 미배치 시 빈 문자열 */
+  /**
+   * 현재 위치: 토큰이 현재 있는 구역 레이블 (예: "3F", "임시의료소").
+   * 이동할 때마다 갱신됨.
+   */
   location:      string;
   /** 수동 세부위치: 사용자 직접 입력 (예: "212호", "복도"). 없으면 빈 문자열 */
   subLocation:   string;
+  /**
+   * 구조위치: 임시의료소로 이동하기 직전의 층+구역 레이블 (예: "3F 중앙구역 212호").
+   * 구조 처리 시 최초 1회 기록되며 이후 변경되지 않음.
+   * 구조현황통계·이동로그 등에서 "어디서 구조됐는가"의 기준으로 사용.
+   */
+  rescueLocation?: string;
   displayTop:    string;
   displayBottom: string;
   zoneKey:       string | null;
