@@ -3,6 +3,9 @@ import {
 } from 'react';
 import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge } from '../types';
 
+const MEDICAL_AUTO_MOVE_SEC = 30;
+const MEDICAL_TARGET_ZONE   = 'standby-imminent';
+
 // ─────────────────────────────────────────────
 // unitType 기본값 유도 (color 기반)
 // ─────────────────────────────────────────────
@@ -25,9 +28,10 @@ function defaultUnitType(color: TokenColor): string {
 export interface TokenPos { x: number; y: number; }
 
 interface TokenContextValue {
-  tokens:    UnitToken[];
-  logs:      LogEntry[];
-  positions: Record<string, TokenPos>;
+  tokens:             UnitToken[];
+  logs:               LogEntry[];
+  positions:          Record<string, TokenPos>;
+  medicalCountdowns:  Record<string, number>;   // tokenId → 남은 초
   /**
    * unitType: 출동대 종류 키 (e.g. 'suppression', 'pump', 'ladder').
    * 생략하면 color에서 자동 유도.
@@ -74,13 +78,32 @@ function uid(): string {
 // ─────────────────────────────────────────────
 
 export function TokenProvider({ children }: { children: React.ReactNode }) {
-  const [tokens,    setTokens]    = useState<UnitToken[]>([]);
-  const [logs,      setLogs]      = useState<LogEntry[]>([]);
-  const [positions, setPositions] = useState<Record<string, TokenPos>>({});
-  const counters  = useRef<Record<string, number>>({});
-  const tokensRef = useRef<UnitToken[]>([]);
+  const [tokens,            setTokens]            = useState<UnitToken[]>([]);
+  const [logs,              setLogs]              = useState<LogEntry[]>([]);
+  const [positions,         setPositions]         = useState<Record<string, TokenPos>>({});
+  const [medicalCountdowns, setMedicalCountdowns] = useState<Record<string, number>>({});
+  const counters       = useRef<Record<string, number>>({});
+  const tokensRef      = useRef<UnitToken[]>([]);
+  const medicalTimers  = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);
+
+  // 1초마다 medicalCountdowns 감소
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMedicalCountdowns(prev => {
+        const keys = Object.keys(prev);
+        if (keys.length === 0) return prev;
+        const next: Record<string, number> = {};
+        for (const k of keys) {
+          if (prev[k] > 1) next[k] = prev[k] - 1;
+          // 0이 되면 setTimeout이 이미 이동 처리하므로 항목 제거
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // ── 토큰 생성 ───────────────────────────────
   const createToken = useCallback((
@@ -116,6 +139,19 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
     if (!token) return;
 
     const zoneChanged = token.zoneKey !== toZoneKey;
+
+    // 임시의료소에서 다른 곳으로 수동 이동 시 타이머·카운트다운 취소
+    if (zoneChanged && token.zoneKey === 'medical-post') {
+      if (medicalTimers.current[tokenId]) {
+        clearTimeout(medicalTimers.current[tokenId]);
+        delete medicalTimers.current[tokenId];
+      }
+      setMedicalCountdowns(prev => {
+        const next = { ...prev };
+        delete next[tokenId];
+        return next;
+      });
+    }
 
     if (zoneChanged) {
       setTokens(prev =>
@@ -181,6 +217,41 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
       note:       `${victimLabel} 구조대상자 → 구조, 임시의료소 이동`,
     };
     setLogs(prev => [entry, ...prev]);
+
+    // 카운트다운 시작
+    setMedicalCountdowns(prev => ({ ...prev, [tokenId]: MEDICAL_AUTO_MOVE_SEC }));
+
+    // 기존 타이머가 있으면 취소 후 새로 등록
+    if (medicalTimers.current[tokenId]) clearTimeout(medicalTimers.current[tokenId]);
+    medicalTimers.current[tokenId] = setTimeout(() => {
+      delete medicalTimers.current[tokenId];
+      setMedicalCountdowns(prev => {
+        const next = { ...prev };
+        delete next[tokenId];
+        return next;
+      });
+      // moveToken 대신 직접 setState — 콜백 클로저 의존성 없이 처리
+      setTokens(prev => prev.map(t =>
+        t.id === tokenId && t.zoneKey === 'medical-post'
+          ? { ...t, zoneKey: MEDICAL_TARGET_ZONE }
+          : t
+      ));
+      setLogs(prev => {
+        const t = tokensRef.current.find(tk => tk.id === tokenId);
+        if (!t) return prev;
+        return [{
+          id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          timestamp:  nowHHMM(),
+          logType:    'move' as const,
+          tokenId:    t.id,
+          tokenName:  t.label,
+          tokenColor: t.color,
+          fromZoneId: 'medical-post',
+          toZoneId:   MEDICAL_TARGET_ZONE,
+          note:       '임시의료소 처치 완료 → 직전대기 자동 이동',
+        }, ...prev];
+      });
+    }, MEDICAL_AUTO_MOVE_SEC * 1000);
   }, []);
 
   // ── 배지 (실행 중 임시 상태) ─────────────────
@@ -208,7 +279,7 @@ export function TokenProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <TokenContext.Provider value={{
-      tokens, logs, positions,
+      tokens, logs, positions, medicalCountdowns,
       createToken, moveToken, rescueUnit,
       addBadge, removeBadge, clearBadges,
     }}>

@@ -27,6 +27,17 @@
   background: rgba(255, 255, 255, 0.18);
 }
 
+/* 임시의료소: 자원대기소·대기1단계 각각의 2배 높이 */
+.standby-box--medical-large {
+  flex: 4;
+}
+
+/* 자원대기소·대기1단계: 기본 flex:1 의 절반 */
+.standby-box--resource,
+.standby-box--standby1 {
+  flex: 1;
+}
+
 .standby-box__header {
   font-size: 0.7rem;
   font-weight: 700;
@@ -117,9 +128,65 @@
   border-bottom-color: #c09090;
 }
 
+/* ─────────────────────────────────────────────
+   임시의료소 좌/우 분리 레이아웃
+   ─────────────────────────────────────────────*/
+
+.medical-split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.medical-split__pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.medical-split__pane-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #3a5e42;
+  text-align: center;
+  padding: 2px 4px;
+  background: rgba(140, 200, 155, 0.18);
+  border-bottom: 1px solid rgba(154, 188, 160, 0.45);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.medical-split__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 5px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 3px;
+}
+
+.medical-split__divider {
+  width: 1px;
+  background: rgba(154, 188, 160, 0.5);
+  flex-shrink: 0;
+  margin: 4px 0;
+}
+
+.medical-split__body .victim-card-wrapper,
+.medical-split__body .token-card-wrapper {
+  flex-shrink: 0;
+}
+
 /* ── 드롭 피드백 ── */
 
-.standby-box__body.drop-target--active {
+.standby-box__body.drop-target--active,
+.medical-split__body.drop-target--active {
   outline: 2px dashed rgba(80, 150, 220, 0.6);
   outline-offset: -2px;
   background: rgba(100, 160, 230, 0.12) !important;

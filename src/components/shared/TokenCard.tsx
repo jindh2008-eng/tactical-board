@@ -46,6 +46,9 @@ export function TokenCard({ token, absPos }: Props) {
       }
     : undefined;
 
+  const { medicalCountdowns } = useTokens();
+  const countdown = token.zoneKey === 'medical-post' ? (medicalCountdowns[token.id] ?? null) : null;
+
   const hasBadges = token.badges.length > 0;
 
   return (
@@ -59,6 +62,11 @@ export function TokenCard({ token, absPos }: Props) {
                 {badge.line2 && <span className="token-badge__line token-badge__line--sub">{badge.line2}</span>}
               </div>
             ))}
+          </div>
+        )}
+        {countdown !== null && (
+          <div className="token-countdown" aria-label={`직전대기 이동까지 ${countdown}초`}>
+            {countdown}
           </div>
         )}
 

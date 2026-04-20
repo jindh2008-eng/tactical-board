@@ -7,8 +7,110 @@ import { RescueStats } from './RescueStats';
 import './StandbyColumn.css';
 
 // ─────────────────────────────────────────────
-// 대기구역 박스 — ZoneCell과 동일한 드롭 처리
-// 출동대 토큰 + 구조대상자 토큰 모두 수용
+// 드롭 패널 공통 훅
+// ─────────────────────────────────────────────
+
+function useDropPanel() {
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  function onDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDragOver(true);
+  }
+
+  function onDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  }
+
+  return { isDragOver, setIsDragOver, onDragOver, onDragLeave };
+}
+
+// ─────────────────────────────────────────────
+// 임시의료소 — 좌(구조대상자) / 우(출동대) 분리
+// ─────────────────────────────────────────────
+
+function MedicalPostBox() {
+  const { tokens, moveToken }   = useTokens();
+  const { victims, moveVictim } = useVictims();
+
+  const zoneKey     = 'medical-post';
+  const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
+  const zoneVictims = victims.filter(v => v.zoneKey === zoneKey);
+
+  // 좌측(구조대상자) 드롭
+  const victimPanel = useDropPanel();
+  function onVictimDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    victimPanel.setIsDragOver(false);
+    const victimId = e.dataTransfer.getData('victimId');
+    if (victimId) moveVictim(victimId, zoneKey);
+  }
+
+  // 우측(출동대) 드롭
+  const tokenPanel = useDropPanel();
+  function onTokenDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    tokenPanel.setIsDragOver(false);
+    const tokenId = e.dataTransfer.getData('tokenId');
+    if (tokenId) moveToken(tokenId, zoneKey);
+  }
+
+  return (
+    <div className="standby-box standby-box--medical standby-box--medical-large">
+      <div className="standby-box__header">임시의료소</div>
+
+      <div className="medical-split">
+        {/* 좌: 구조대상자 */}
+        <div className="medical-split__pane">
+          <div className="medical-split__pane-label">구조대상자</div>
+          <div
+            className={[
+              'medical-split__body',
+              victimPanel.isDragOver ? 'drop-target--active' : '',
+            ].filter(Boolean).join(' ')}
+            onDragOver={victimPanel.onDragOver}
+            onDragLeave={victimPanel.onDragLeave}
+            onDrop={onVictimDrop}
+          >
+            {zoneVictims.length === 0 ? (
+              <span className="standby-box__placeholder">―</span>
+            ) : (
+              zoneVictims.map(v => <VictimCard key={v.id} victim={v} />)
+            )}
+          </div>
+        </div>
+
+        <div className="medical-split__divider" />
+
+        {/* 우: 출동대 */}
+        <div className="medical-split__pane">
+          <div className="medical-split__pane-label">출동대</div>
+          <div
+            className={[
+              'medical-split__body',
+              tokenPanel.isDragOver ? 'drop-target--active' : '',
+            ].filter(Boolean).join(' ')}
+            onDragOver={tokenPanel.onDragOver}
+            onDragLeave={tokenPanel.onDragLeave}
+            onDrop={onTokenDrop}
+          >
+            {zoneTokens.length === 0 ? (
+              <span className="standby-box__placeholder">―</span>
+            ) : (
+              zoneTokens.map(t => <TokenCard key={t.id} token={t} />)
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// 일반 대기구역 박스
 // ─────────────────────────────────────────────
 
 interface StandbyBoxProps {
@@ -63,7 +165,7 @@ function StandbyBox({ label, zoneKey, colorMod }: StandbyBoxProps) {
           <span className="standby-box__placeholder">―</span>
         ) : (
           <>
-            {zoneTokens.map(token  => <TokenCard  key={token.id}  token={token}  />)}
+            {zoneTokens.map(token   => <TokenCard  key={token.id}  token={token}  />)}
             {zoneVictims.map(victim => <VictimCard key={victim.id} victim={victim} />)}
           </>
         )}
@@ -73,8 +175,10 @@ function StandbyBox({ label, zoneKey, colorMod }: StandbyBoxProps) {
 }
 
 // ─────────────────────────────────────────────
-// 좌측 운영패널 구역 목록
-// 직전대기는 TacticalArea row 3 (A면 좌측)으로 이동됨
+// StandbyColumn — TacticalArea col 1 좌측 운영패널
+//
+// 순서: 임시의료소(분할) → 구조현황통계 → 자원대기소 → 대기1단계
+// 직전대기는 ImminentStandby (TacticalArea col 2, row 3) 로 분리
 // ─────────────────────────────────────────────
 
 export const STANDBY_ZONE_KEYS = [
@@ -86,36 +190,18 @@ export const STANDBY_ZONE_KEYS = [
 
 export type StandbyZoneKey = typeof STANDBY_ZONE_KEYS[number];
 
-const STANDBY_BOXES: StandbyBoxProps[] = [
-  { label: '임시의료소', zoneKey: 'medical-post',    colorMod: 'medical'  },
-  { label: '자원대기소', zoneKey: 'standby-resource', colorMod: 'resource' },
-  { label: '대기1단계',  zoneKey: 'standby-standby1', colorMod: 'standby1' },
-];
-
-// ─────────────────────────────────────────────
-// StandbyColumn — TacticalArea col 1 좌측 운영패널
-//
-// 순서: 임시의료소 → 구조현황통계 → 자원대기소 → 대기1단계
-// 직전대기는 ImminentStandby (TacticalArea col 2, row 3) 로 분리
-// ─────────────────────────────────────────────
-
 export function StandbyColumn() {
   return (
     <div className="standby-column">
-      {/* 임시의료소 */}
-      <StandbyBox
-        label="임시의료소"
-        zoneKey="medical-post"
-        colorMod="medical"
-      />
+      {/* 임시의료소 — 좌(구조대상자) / 우(출동대) 분리 */}
+      <MedicalPostBox />
 
-      {/* 구조현황통계 — 임시의료소 바로 아래 */}
+      {/* 구조현황통계 */}
       <RescueStats />
 
-      {/* 자원대기소, 대기1단계 */}
-      {STANDBY_BOXES.slice(1).map(box => (
-        <StandbyBox key={box.zoneKey} {...box} />
-      ))}
+      {/* 자원대기소, 대기1단계 — 절반 높이 */}
+      <StandbyBox label="자원대기소" zoneKey="standby-resource" colorMod="resource" />
+      <StandbyBox label="대기1단계"  zoneKey="standby-standby1" colorMod="standby1" />
     </div>
   );
 }
