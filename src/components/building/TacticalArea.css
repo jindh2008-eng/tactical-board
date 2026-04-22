@@ -13,6 +13,7 @@
    row 3: A면  (166px)
    ───────────────────────────────────────────── */
 .tactical-area {
+  position: relative; /* EventLayer 절대위치 기준점 */
   display: grid;
 
   grid-template-columns: 320px 180px 0.62fr 180px;

@@ -1,6 +1,7 @@
-import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem } from '../types/settings';
+import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode } from '../types/settings';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP } from '../types/settings';
 import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../types/presets';
+import type { EventSetupItem } from '../types/events';
 
 // ─────────────────────────────────────────────
 // 타입
@@ -14,6 +15,10 @@ export interface WorkingPresets {
   dispatchSetup?:     DispatchSetup;           // 구버전 역호환을 위해 optional
   dispatchRoster?:    DispatchRosterItem[];    // 구버전 역호환을 위해 optional
   victimSetup?:       VictimSetupItem[];       // 구버전 역호환을 위해 optional
+  arrivalMode?:       ArrivalMode;             // 도착설정 방식
+  medicalPostChief?:  string;                  // 임시의료소장
+  stagingAreaChief?:  string;                  // 자원대기소장
+  eventSetup?:        EventSetupItem[];        // 이벤트 토큰 설정
 }
 
 /** 이름을 붙여 저장하는 설정 세트 */
@@ -28,6 +33,10 @@ export interface SettingsSet {
   dispatchSetup?:     DispatchSetup;           // 구버전 역호환을 위해 optional
   dispatchRoster?:    DispatchRosterItem[];    // 구버전 역호환을 위해 optional
   victimSetup?:       VictimSetupItem[];       // 구버전 역호환을 위해 optional
+  arrivalMode?:       ArrivalMode;             // 도착설정 방식
+  medicalPostChief?:  string;                  // 임시의료소장
+  stagingAreaChief?:  string;                  // 자원대기소장
+  eventSetup?:        EventSetupItem[];        // 이벤트 토큰 설정
 }
 
 // ─────────────────────────────────────────────
@@ -88,6 +97,9 @@ const EMPTY_WORKING: WorkingPresets = {
   dispatchSetup:      DEFAULT_DISPATCH_SETUP,
   dispatchRoster:     [],
   victimSetup:        [],
+  medicalPostChief:   '',
+  stagingAreaChief:   '',
+  eventSetup:         [],
 };
 
 export function loadWorkingPresets(): WorkingPresets {
@@ -111,13 +123,23 @@ export function loadWorkingPresets(): WorkingPresets {
         ? 'RF' as const
         : (v.floor != null && !isNaN(Number(v.floor))) ? Number(v.floor) : null,
     }));
+    // 구버전 dispatchSetup에 waterTank 필드가 없을 수 있으므로 기본값으로 보정
+    const rawSetup = parsed.dispatchSetup ?? DEFAULT_DISPATCH_SETUP;
+    const dispatchSetup: typeof rawSetup = {
+      ...rawSetup,
+      vehicles: { waterTank: 0, ...rawSetup.vehicles },
+    };
     return {
       sharedBadgePresets: parsed.sharedBadgePresets ?? [],
       unitBadgePresets:   parsed.unitBadgePresets   ?? [],
       timing:             parsed.timing         ?? DEFAULT_TIMING,
-      dispatchSetup:      parsed.dispatchSetup  ?? DEFAULT_DISPATCH_SETUP,
+      dispatchSetup,
       dispatchRoster:     parsed.dispatchRoster ?? [],
       victimSetup,
+      arrivalMode:        parsed.arrivalMode    ?? 'time',
+      medicalPostChief:   parsed.medicalPostChief  ?? '',
+      stagingAreaChief:   parsed.stagingAreaChief  ?? '',
+      eventSetup:         parsed.eventSetup        ?? [],
     };
   } catch {
     return EMPTY_WORKING;

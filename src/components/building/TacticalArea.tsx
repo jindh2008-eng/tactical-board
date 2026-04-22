@@ -5,6 +5,7 @@ import { ExteriorZone } from './ExteriorZone';
 import { BFaceWithStandby } from './BFaceWithStandby';
 import { StandbyColumn } from './StandbyColumn';
 import { ImminentStandby } from './ImminentStandby';
+import { EventLayer } from '../events/EventLayer';
 import './TacticalArea.css';
 
 interface Props {
@@ -74,6 +75,9 @@ export function TacticalArea({
 
       {/* row 3, col 3 — A면 (진입면) */}
       <ExteriorZone face="A" />
+
+      {/* 이벤트 토큰 오버레이 — position:absolute로 전체 위에 떠있음 */}
+      <EventLayer />
     </div>
   );
 }

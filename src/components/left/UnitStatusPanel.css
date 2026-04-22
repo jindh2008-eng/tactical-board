@@ -41,3 +41,71 @@
   outline-offset: -2px;
   background-color: rgba(100, 180, 255, 0.06) !important;
 }
+
+/* ─── 착대모드 1열 목록 ─── */
+.unit-status-panel__order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.usp-order-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  border-radius: 3px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.usp-order-row__card {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.usp-order-row__badge {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.usp-order-row__btns {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.usp-order-btn {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.64rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+.usp-order-btn--standby1 {
+  background: #1a3a4a;
+  border-color: #2a5a7a;
+  color: #7ac8f4;
+}
+.usp-order-btn--standby1:hover {
+  background: #204858;
+}
+
+.usp-order-btn--resource {
+  background: #2a2a1a;
+  border-color: #4a4a2a;
+  color: #c8c870;
+}
+.usp-order-btn--resource:hover {
+  background: #363620;
+}

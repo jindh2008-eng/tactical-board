@@ -138,7 +138,62 @@
   overflow: hidden;
 }
 
-/* 2컬럼: [명칭, 도착시간] */
+/* ── 도착설정 방식 라디오 ── */
+
+.dsp__mode-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dsp__mode-label {
+  font-size: 0.76rem;
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+}
+
+.dsp__mode-radios {
+  display: flex;
+  gap: 14px;
+}
+
+.dsp__radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.dsp__radio-label input[type='radio'] {
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* ── 착대 dropdown ── */
+
+.dsp__order-select {
+  width: 78px;
+  padding: 3px 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.dsp__order-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* 2컬럼: [명칭, 도착시간/착대] */
 .dsp__roster-head,
 .dsp__roster-row {
   display: grid;
@@ -161,7 +216,8 @@
   text-transform: uppercase;
 }
 
-.dsp__rh--time {
+.dsp__rh--time,
+.dsp__rh--order {
   text-align: right;
 }
 
@@ -190,9 +246,20 @@
   color: var(--color-text-dim);
 }
 
-.dsp__rc--time {
+.dsp__rc--time,
+.dsp__rc--order,
+.dsp__rc--auto {
   display: flex;
   justify-content: flex-end;
+}
+
+/* 연동 차량 AUTO 배지 */
+.dsp__rc--auto {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-text-dim);
+  opacity: 0.6;
 }
 
 .dsp__time-input {

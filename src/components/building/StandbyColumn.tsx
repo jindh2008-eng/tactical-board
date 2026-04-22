@@ -1,10 +1,20 @@
 import { useState } from 'react';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
+import { useSettings } from '../../store/settingsStore';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { RescueStats } from './RescueStats';
 import './StandbyColumn.css';
+
+// ─────────────────────────────────────────────
+// 차량 unitType 집합
+// ─────────────────────────────────────────────
+
+const VEHICLE_UNIT_TYPES = new Set([
+  'pump', 'water_tank', 'rescue_vehicle', 'aerial', 'ladder',
+  'smoke_exhaust', 'hazmat', 'wildfire', 'command', 'vehicle',
+]);
 
 // ─────────────────────────────────────────────
 // 드롭 패널 공통 훅
@@ -29,12 +39,43 @@ function useDropPanel() {
 }
 
 // ─────────────────────────────────────────────
-// 임시의료소 — 좌(구조대상자) / 우(출동대) 분리
+// 소장 선택 드롭다운
+// ─────────────────────────────────────────────
+
+interface ChiefSelectorProps {
+  value:    string;
+  onChange: (name: string) => void;
+  zoneKey:  string;
+}
+
+function ChiefSelector({ value, onChange, zoneKey }: ChiefSelectorProps) {
+  const { tokens } = useTokens();
+  const options = tokens.filter(t => t.zoneKey === zoneKey && !VEHICLE_UNIT_TYPES.has(t.unitType));
+
+  return (
+    <div className="standby-chief">
+      <select
+        className="standby-chief__select"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      >
+        <option value="">소장 미지정</option>
+        {options.map(t => (
+          <option key={t.id} value={t.label}>{t.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// 임시의료소 — 소장 + 좌(구조대상자) / 우(출동대) 분리
 // ─────────────────────────────────────────────
 
 function MedicalPostBox() {
   const { tokens, moveToken }   = useTokens();
   const { victims, moveVictim } = useVictims();
+  const { medicalPostChief, updateMedicalPostChief } = useSettings();
 
   const zoneKey     = 'medical-post';
   const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
@@ -60,7 +101,10 @@ function MedicalPostBox() {
 
   return (
     <div className="standby-box standby-box--medical standby-box--medical-large">
-      <div className="standby-box__header">임시의료소</div>
+      <div className="standby-box__header standby-box__header--chief">
+        <span className="standby-box__title">임시의료소</span>
+        <ChiefSelector value={medicalPostChief} onChange={updateMedicalPostChief} zoneKey="medical-post" />
+      </div>
 
       <div className="medical-split">
         {/* 좌: 구조대상자 */}
@@ -110,65 +154,93 @@ function MedicalPostBox() {
 }
 
 // ─────────────────────────────────────────────
-// 일반 대기구역 박스
+// 2열 대기구역 박스 (자원대기소 / 대기1단계)
+// 차량(좌) | 출동대(우) 분리 표시
 // ─────────────────────────────────────────────
 
-interface StandbyBoxProps {
-  label:    string;
-  zoneKey:  string;
-  colorMod: string;
+interface SplitStandbyBoxProps {
+  label:          string;
+  zoneKey:        string;
+  colorMod:       string;
+  chief?:         string;
+  onChiefChange?: (name: string) => void;
 }
 
-function StandbyBox({ label, zoneKey, colorMod }: StandbyBoxProps) {
-  const { tokens, moveToken }   = useTokens();
-  const { victims, moveVictim } = useVictims();
-  const [isDragOver, setIsDragOver] = useState(false);
+function SplitStandbyBox({ label, zoneKey, colorMod, chief, onChiefChange }: SplitStandbyBoxProps) {
+  const { tokens, moveToken } = useTokens();
 
-  const zoneTokens  = tokens.filter(t => t.zoneKey  === zoneKey);
-  const zoneVictims = victims.filter(v => v.zoneKey === zoneKey);
-  const isEmpty     = zoneTokens.length === 0 && zoneVictims.length === 0;
+  const zoneTokens    = tokens.filter(t => t.zoneKey === zoneKey);
+  const vehicleTokens = zoneTokens.filter(t =>  VEHICLE_UNIT_TYPES.has(t.unitType));
+  const unitTokens    = zoneTokens.filter(t => !VEHICLE_UNIT_TYPES.has(t.unitType));
 
-  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+  const vehicleCol = useDropPanel();
+  const unitCol    = useDropPanel();
+
+  function onVehicleColDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
+    vehicleCol.setIsDragOver(false);
+    const tokenId = e.dataTransfer.getData('tokenId');
+    if (tokenId) moveToken(tokenId, zoneKey);
   }
 
-  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
-  }
-
-  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+  function onUnitColDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    setIsDragOver(false);
-    const tokenId  = e.dataTransfer.getData('tokenId');
-    const victimId = e.dataTransfer.getData('victimId');
-    if (tokenId)  moveToken(tokenId,   zoneKey);
-    if (victimId) moveVictim(victimId, zoneKey);
+    unitCol.setIsDragOver(false);
+    const tokenId = e.dataTransfer.getData('tokenId');
+    if (tokenId) moveToken(tokenId, zoneKey);
   }
 
   return (
     <div className={`standby-box standby-box--${colorMod}`}>
-      <div className="standby-box__header">{label}</div>
-      <div
-        className={[
-          'standby-box__body',
-          isDragOver ? 'drop-target--active' : '',
-        ].filter(Boolean).join(' ')}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {isEmpty ? (
-          <span className="standby-box__placeholder">―</span>
-        ) : (
-          <>
-            {zoneTokens.map(token   => <TokenCard  key={token.id}  token={token}  />)}
-            {zoneVictims.map(victim => <VictimCard key={victim.id} victim={victim} />)}
-          </>
+      <div className="standby-box__header standby-box__header--chief">
+        <span className="standby-box__title">{label}</span>
+        {chief !== undefined && onChiefChange && (
+          <ChiefSelector value={chief} onChange={onChiefChange} zoneKey={zoneKey} />
         )}
+      </div>
+
+      <div className="standby-split">
+        {/* 좌: 차량 */}
+        <div className="standby-split__col">
+          <div className="standby-split__col-label">차량</div>
+          <div
+            className={[
+              'standby-split__body',
+              vehicleCol.isDragOver ? 'drop-target--active' : '',
+            ].filter(Boolean).join(' ')}
+            onDragOver={vehicleCol.onDragOver}
+            onDragLeave={vehicleCol.onDragLeave}
+            onDrop={onVehicleColDrop}
+          >
+            {vehicleTokens.length === 0 ? (
+              <span className="standby-box__placeholder">―</span>
+            ) : (
+              vehicleTokens.map(t => <TokenCard key={t.id} token={t} />)
+            )}
+          </div>
+        </div>
+
+        <div className="standby-split__divider" />
+
+        {/* 우: 출동대 */}
+        <div className="standby-split__col">
+          <div className="standby-split__col-label">출동대</div>
+          <div
+            className={[
+              'standby-split__body',
+              unitCol.isDragOver ? 'drop-target--active' : '',
+            ].filter(Boolean).join(' ')}
+            onDragOver={unitCol.onDragOver}
+            onDragLeave={unitCol.onDragLeave}
+            onDrop={onUnitColDrop}
+          >
+            {unitTokens.length === 0 ? (
+              <span className="standby-box__placeholder">―</span>
+            ) : (
+              unitTokens.map(t => <TokenCard key={t.id} token={t} />)
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -177,7 +249,7 @@ function StandbyBox({ label, zoneKey, colorMod }: StandbyBoxProps) {
 // ─────────────────────────────────────────────
 // StandbyColumn — TacticalArea col 1 좌측 운영패널
 //
-// 순서: 임시의료소(분할) → 구조현황통계 → 자원대기소 → 대기1단계
+// 순서: 임시의료소(소장+분할) → 구조현황통계 → 자원대기소(2열) → 대기1단계(2열)
 // 직전대기는 ImminentStandby (TacticalArea col 2, row 3) 로 분리
 // ─────────────────────────────────────────────
 
@@ -191,17 +263,31 @@ export const STANDBY_ZONE_KEYS = [
 export type StandbyZoneKey = typeof STANDBY_ZONE_KEYS[number];
 
 export function StandbyColumn() {
+  const { stagingAreaChief, updateStagingAreaChief } = useSettings();
+
   return (
     <div className="standby-column">
-      {/* 임시의료소 — 좌(구조대상자) / 우(출동대) 분리 */}
+      {/* 임시의료소 — 소장 선택 + 구조대상자/출동대 분리 */}
       <MedicalPostBox />
 
       {/* 구조현황통계 */}
       <RescueStats />
 
-      {/* 자원대기소, 대기1단계 — 절반 높이 */}
-      <StandbyBox label="자원대기소" zoneKey="standby-resource" colorMod="resource" />
-      <StandbyBox label="대기1단계"  zoneKey="standby-standby1" colorMod="standby1" />
+      {/* 자원대기소 — 2열: 차량(좌) / 출동대(우) + 소장 지정 */}
+      <SplitStandbyBox
+        label="자원대기소"
+        zoneKey="standby-resource"
+        colorMod="resource"
+        chief={stagingAreaChief}
+        onChiefChange={updateStagingAreaChief}
+      />
+
+      {/* 대기1단계 — 2열: 차량(좌) / 출동대(우) */}
+      <SplitStandbyBox
+        label="대기1단계"
+        zoneKey="standby-standby1"
+        colorMod="standby1"
+      />
     </div>
   );
 }

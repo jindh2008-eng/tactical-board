@@ -18,6 +18,7 @@ const LABEL_COUNTER_DEFS = [
   { baseKey: '굴절차', regex: /^굴절차(\d+)호$/ },
   { baseKey: '배연차', regex: /^배연차(\d+)호$/ },
   { baseKey: '지휘차', regex: /^지휘차(\d+)호$/ },
+  { baseKey: '물탱크', regex: /^물탱크(\d+)호$/ },
 ] as const;
 
 /** roster unitType → TokenColor */
@@ -81,6 +82,7 @@ export function initCountersFromRoster(
     { unitType: 'ladder',         baseKey: '굴절차' },
     { unitType: 'smokeExhaust',   baseKey: '배연차' },
     { unitType: 'command',        baseKey: '지휘차' },
+    { unitType: 'water_tank',     baseKey: '물탱크' },
   ] as const;
 
   const counters: Record<string, number> = {};

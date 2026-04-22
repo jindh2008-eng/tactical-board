@@ -9,6 +9,7 @@
 
 import type { UnitToken, LogEntry } from '../types';
 import type { VictimToken } from '../types/victim';
+import type { EventStatus } from '../types/events';
 
 // ─────────────────────────────────────────────
 // 위치 타입
@@ -158,6 +159,33 @@ export function loadTrainingSession(): TrainingSessionState | null {
 }
 
 // ─────────────────────────────────────────────
+// 이벤트 토큰 세션 저장 / 복원
+// ─────────────────────────────────────────────
+
+const KEY_EVENTS = 'tactical-board.runtime.events';
+
+export interface EventSessionState {
+  positions: Record<string, { x: number; y: number }>;
+  statuses:  Record<string, EventStatus>;
+}
+
+export function saveEventSession(state: EventSessionState): void {
+  try {
+    sessionStorage.setItem(KEY_EVENTS, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+export function loadEventSession(): EventSessionState | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_EVENTS);
+    if (!raw) return null;
+    return JSON.parse(raw) as EventSessionState;
+  } catch {
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────
 // 전체 초기화 (새 훈련 시작 시 호출)
 // ─────────────────────────────────────────────
 
@@ -166,5 +194,6 @@ export function clearRuntimeSession(): void {
     sessionStorage.removeItem(KEY_TOKENS);
     sessionStorage.removeItem(KEY_VICTIMS);
     sessionStorage.removeItem(KEY_TRAINING);
+    sessionStorage.removeItem(KEY_EVENTS);
   } catch { /* ignore */ }
 }

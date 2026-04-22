@@ -1,0 +1,142 @@
+/* ─────────────────────────────────────────────
+   이벤트 토큰 카드
+   — EventOverlay 내 position: absolute 배치
+   ─────────────────────────────────────────────*/
+
+.event-token {
+  position: absolute;
+  display:  inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 5px 2px 5px;
+  border-radius: 3px;
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 20;
+  min-width: 96px;
+  height: 26px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.1s;
+}
+
+.event-token:active {
+  cursor: grabbing;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* ── 상태별 배경 ── */
+
+/* 미지정(-): 중립 회색 */
+.event-token[data-status='-'] {
+  background: #3a3a40;
+  border: 1px solid rgba(160, 160, 170, 0.3);
+}
+
+.event-token[data-status='화재'] {
+  background: #b83010;
+  border: 1px solid rgba(255, 180, 100, 0.4);
+}
+
+.event-token[data-status='폭발'] {
+  background: #8b0000;
+  border: 2px solid #ff5555;
+  box-shadow: 0 0 8px rgba(255, 60, 60, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.event-token[data-status='초진'] {
+  background: #2a2a2a;
+  border: 1px solid #555;
+}
+
+.event-token[data-status='완진'] {
+  background: #2a4a6a;
+  border: 1px solid rgba(100, 160, 210, 0.35);
+}
+
+/* ── 아이콘 ── */
+
+.event-token__icon {
+  width:  14px;
+  height: 14px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* 화재: 정상 */
+.event-token[data-status='화재'] .event-token__icon {
+  filter: none;
+}
+
+/* 폭발: 붉게 강조 */
+.event-token[data-status='폭발'] .event-token__icon {
+  filter: brightness(2) saturate(3) hue-rotate(-20deg);
+}
+
+/* 초진: 검은 실루엣 */
+.event-token[data-status='초진'] .event-token__icon {
+  filter: grayscale(1) brightness(0.15);
+}
+
+/* ── 이름 ── */
+
+.event-token__label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-token[data-status='-']     .event-token__label { color: rgba(180, 180, 185, 0.8); }
+.event-token[data-status='화재']  .event-token__label,
+.event-token[data-status='폭발']  .event-token__label { color: rgba(255, 255, 255, 0.95); }
+.event-token[data-status='초진']  .event-token__label { color: rgba(200, 200, 200, 0.85); }
+.event-token[data-status='완진']  .event-token__label { color: rgba(160, 210, 240, 0.9); }
+
+/* ── 상태 드롭다운 ── */
+
+.event-token__select {
+  font-size: 0.6rem;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 1px 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  outline: none;
+  letter-spacing: 0.03em;
+}
+
+/* 상태별 드롭다운 색상 */
+.event-token[data-status='-']     .event-token__select {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(160, 160, 170, 0.4);
+  color: rgba(180, 180, 185, 0.85);
+}
+
+.event-token[data-status='화재']  .event-token__select {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 180, 100, 0.5);
+  color: rgba(255, 220, 160, 0.95);
+}
+
+.event-token[data-status='폭발']  .event-token__select {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 100, 100, 0.6);
+  color: rgba(255, 180, 180, 0.95);
+}
+
+.event-token[data-status='초진']  .event-token__select {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(120, 120, 120, 0.5);
+  color: rgba(180, 180, 180, 0.9);
+}
+
+.event-token[data-status='완진']  .event-token__select {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(100, 160, 210, 0.45);
+  color: rgba(140, 200, 240, 0.9);
+}

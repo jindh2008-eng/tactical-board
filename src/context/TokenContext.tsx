@@ -2,7 +2,7 @@ import {
   createContext, useContext, useState, useCallback, useEffect, useRef,
 } from 'react';
 import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge } from '../types';
-import type { DispatchRosterItem } from '../types/settings';
+import type { DispatchRosterItem, ArrivalMode } from '../types/settings';
 import { rosterItemToToken, initCountersFromRoster, computeCountersFromTokens } from '../utils/dispatchArrival';
 import {
   saveTokenSession, loadTokenSession,
@@ -94,21 +94,13 @@ function uid(): string {
 // 로스터 초기화 헬퍼
 // ─────────────────────────────────────────────
 
+/**
+ * 로스터 → 초기 토큰 배열.
+ * 훈련 시작 전에는 모든 출동대를 pool(미도착) 상태로 둔다.
+ * arrivalSec 값에 관계없이 zoneKey = null.
+ */
 function buildInitialTokens(roster: DispatchRosterItem[]): UnitToken[] {
-  return roster.map(item => {
-    const zoneKey = item.arrivalSec <= 0 ? ARRIVAL_TARGET_ZONE : null;
-    return rosterItemToToken(item, zoneKey);
-  });
-}
-
-function buildInitialArrivalCountdowns(roster: DispatchRosterItem[]): Record<string, number> {
-  const result: Record<string, number> = {};
-  for (const item of roster) {
-    if (item.arrivalSec > 0) {
-      result[`roster-${item.id}`] = item.arrivalSec;
-    }
-  }
-  return result;
+  return roster.map(item => rosterItemToToken(item, null));
 }
 
 // ─────────────────────────────────────────────
@@ -119,10 +111,20 @@ export function TokenProvider({
   children,
   timingConfig,
   initialRoster,
+  started = false,
+  arrivalMode = 'time',
 }: {
   children:       React.ReactNode;
   timingConfig?:  Partial<TimingConfig>;
   initialRoster?: DispatchRosterItem[];
+  /**
+   * 훈련 시작 여부 (TrainingContext.status === 'running').
+   * false: 출동대 전원 pool 대기, 도착 타이머 미작동.
+   * true:  도착 타이머 작동, arrivalSec 경과 시 대기1단계 자동 이동.
+   */
+  started?: boolean;
+  /** 도착설정 방식. 'order' 모드에서는 타이머 자동 이동 비활성화. */
+  arrivalMode?: ArrivalMode;
 }) {
   // ── 세션 데이터 1회 로드 (최초 렌더에서만) ──────────────────────────
   const sessionDataRef = useRef<
@@ -142,16 +144,16 @@ export function TokenProvider({
 
   // counters: 세션 복원 > roster 기반 초기화 순
   const counters = useRef<Record<string, number>>({});
-  // 초기화는 아래 useState 후 동기적으로 처리하기 위해 빈 객체로 시작
-  // (useState 초기화 함수에서 세팅)
+
+  // 도착 타이머가 이미 등록되었는지 추적 (중복 등록 방지)
+  const timersStartedRef = useRef(false);
 
   // ── 상태 초기화 ──────────────────────────────────────────────────────
 
   const [tokens, setTokens] = useState<UnitToken[]>(() => {
     const s = getSession();
     if (s && s.tokens.length > 0) {
-      // counters: 세션 값과 실제 토큰 레이블에서 계산한 값 중 큰 쪽 사용
-      // (세션 저장 누락이나 수동 토큰 레이블 불일치를 보정)
+      // 세션 복원: counters = 세션값과 토큰 레이블 계산값 중 큰 쪽
       const fromSession = s.counters;
       const fromLabels  = computeCountersFromTokens(s.tokens);
       const merged: Record<string, number> = { ...fromSession };
@@ -161,7 +163,7 @@ export function TokenProvider({
       counters.current = merged;
       return s.tokens;
     }
-    // counters는 roster에서 초기화
+    // 신규 초기화: counters는 roster에서, 토큰은 전원 pool
     counters.current = initialRoster?.length ? initCountersFromRoster(initialRoster) : {};
     return initialRoster?.length ? buildInitialTokens(initialRoster) : [];
   });
@@ -177,7 +179,10 @@ export function TokenProvider({
   });
 
   const [medicalCountdowns, setMedicalCountdowns] = useState<Record<string, number>>({});
-  const [moveCountdowns,    setMoveCountdowns]    = useState<Record<string, number>>(() => {
+
+  const moveTargetAtRef = useRef<Record<string, number>>({});
+
+  const [moveCountdowns, setMoveCountdowns] = useState<Record<string, number>>(() => {
     const s = getSession();
     if (s && s.tokens.length > 0 && s.moveTargetAt) {
       const now = Date.now();
@@ -194,10 +199,16 @@ export function TokenProvider({
     return {};
   });
 
+  /**
+   * 도착 카운트다운:
+   *  - started=false (훈련 미시작): 항상 빈 객체 (타이머 미작동)
+   *  - started=true + 세션 복원: 세션의 arrivalTargetAt → 남은 초
+   *  - started=true + 신규: start 시점 useEffect에서 설정
+   */
   const [arrivalCountdowns, setArrivalCountdowns] = useState<Record<string, number>>(() => {
+    if (!started) return {};
     const s = getSession();
     if (s && s.tokens.length > 0) {
-      // arrivalTargetAt → 남은 초 변환
       const now = Date.now();
       const result: Record<string, number> = {};
       for (const [id, targetAt] of Object.entries(s.arrivalTargetAt)) {
@@ -206,13 +217,11 @@ export function TokenProvider({
       }
       return result;
     }
-    return initialRoster?.length ? buildInitialArrivalCountdowns(initialRoster) : {};
+    return {};
   });
 
   // arrivalTargetAt ref — 절대 시각 보관 (저장 시 사용)
   const arrivalTargetAtRef = useRef<Record<string, number>>({});
-  // moveTargetAt ref — 이동 카운트다운 완료 절대 시각 보관
-  const moveTargetAtRef = useRef<Record<string, number>>({});
 
   const tokensRef     = useRef<UnitToken[]>([]);
   const medicalTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -227,8 +236,21 @@ export function TokenProvider({
 
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);
 
-  // ── arrival 타이머 등록 ─────────────────────────────────────────────
+  // ── 타이머 전체 정리 (언마운트 시) ─────────────────────────────────
   useEffect(() => {
+    return () => {
+      Object.values(medicalTimers.current).forEach(clearTimeout);
+      Object.values(moveTimers.current).forEach(clearTimeout);
+      Object.values(arrivalTimers.current).forEach(clearTimeout);
+    };
+  }, []);
+
+  // ── arrival 타이머 등록 — 훈련 시작(started=true) 시에만 실행 ───────
+  useEffect(() => {
+    // started=false, 이미 타이머 등록, 또는 착대모드 → 건너뜀
+    if (!started || timersStartedRef.current || arrivalMode === 'order') return;
+    timersStartedRef.current = true;
+
     const s = getSession();
     const hasSession = s !== null && s.tokens.length > 0;
 
@@ -269,7 +291,7 @@ export function TokenProvider({
     }
 
     if (hasSession && s) {
-      // 경로 A: 세션 복원 — arrivalTargetAt 기반으로 타이머 재등록
+      // ── 경로 A: 세션 복원 — arrivalTargetAt 기반으로 타이머 재등록 ──
       const now = Date.now();
       for (const [tokenId, targetAt] of Object.entries(s.arrivalTargetAt)) {
         const delayMs = targetAt - now;
@@ -306,21 +328,53 @@ export function TokenProvider({
         }
       }
     } else {
-      // 경로 B: 신규 초기화 — roster 기반
+      // ── 경로 B: 신규 훈련 시작 — roster 기반 ──────────────────────
+
       const now = Date.now();
+
+      // arrivalSec <= 0 인 출동대 → 즉시 대기1단계 배치
+      const immediateIds: string[] = [];
+      for (const item of initialRosterRef.current) {
+        if (item.arrivalSec <= 0) immediateIds.push(`roster-${item.id}`);
+      }
+      if (immediateIds.length > 0) {
+        setTokens(prev => prev.map(t =>
+          immediateIds.includes(t.id) && t.zoneKey === null
+            ? { ...t, zoneKey: ARRIVAL_TARGET_ZONE }
+            : t,
+        ));
+        setLogs(prev => {
+          const entries: LogEntry[] = immediateIds.map(tokenId => {
+            const token = tokensRef.current.find(t => t.id === tokenId);
+            return {
+              id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              timestamp:  nowHHMM(),
+              logType:    'move' as const,
+              tokenId:    tokenId,
+              tokenName:  token?.label ?? tokenId,
+              tokenColor: token?.color ?? 'red',
+              fromZoneId: 'pool',
+              toZoneId:   ARRIVAL_TARGET_ZONE,
+              note:       '훈련 시작 시 현장 대기 → 대기1단계 자동 배치',
+            };
+          });
+          return [...entries, ...prev];
+        });
+      }
+
+      // arrivalSec > 0 인 출동대 → 카운트다운 후 자동 이동
+      const initialCountdowns: Record<string, number> = {};
       for (const item of initialRosterRef.current) {
         if (item.arrivalSec <= 0) continue;
         const targetAt = now + item.arrivalSec * 1000;
         scheduleArrival(`roster-${item.id}`, item.arrivalSec * 1000, targetAt);
+        initialCountdowns[`roster-${item.id}`] = item.arrivalSec;
+      }
+      if (Object.keys(initialCountdowns).length > 0) {
+        setArrivalCountdowns(initialCountdowns);
       }
     }
-
-    return () => {
-      Object.values(medicalTimers.current).forEach(clearTimeout);
-      Object.values(moveTimers.current).forEach(clearTimeout);
-      Object.values(arrivalTimers.current).forEach(clearTimeout);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [started, arrivalMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 1초 카운트다운 감소 ─────────────────────────────────────────────
   useEffect(() => {
@@ -356,14 +410,11 @@ export function TokenProvider({
   // ── sessionStorage 저장 (500ms debounce) ────────────────────────────
   useEffect(() => {
     const timer = setTimeout(() => {
-      // arrivalTargetAt: ref 값 우선, 없으면 현재 카운트다운에서 추정
       const now = Date.now();
       const arrivalTargetAt: Record<string, number> = {};
       for (const [id, secs] of Object.entries(arrivalCountdowns)) {
         arrivalTargetAt[id] = arrivalTargetAtRef.current[id] ?? (now + secs * 1000);
       }
-
-      // moveTargetAt: ref 에서 직접 읽음 (항상 절대 시각)
       const moveTargetAt: Record<string, number> = { ...moveTargetAtRef.current };
 
       saveTokenSession({
@@ -453,7 +504,6 @@ export function TokenProvider({
         };
         setLogs(prev => [entry, ...prev]);
 
-        // suppressMoveCountdown: arrival 자동도착은 이동중 표시 없음
         if (!opts?.suppressMoveCountdown) {
           const moveSec  = timingRef.current.moveTimeSec;
           const targetAt = Date.now() + moveSec * 1000;

@@ -48,21 +48,26 @@ export interface DispatchSetup {
     ladder:       number;  // 굴절차
     smokeExhaust: number;  // 배연차
     command:      number;  // 지휘차
+    waterTank:    number;  // 물탱크
   };
 }
 
 export const DEFAULT_DISPATCH_SETUP: DispatchSetup = {
   units:    { suppression: 0, rescue: 0, ems: 0 },
-  vehicles: { aerial: 0, ladder: 0, smokeExhaust: 0, command: 0 },
+  vehicles: { aerial: 0, ladder: 0, smokeExhaust: 0, command: 0, waterTank: 0 },
 };
 
-/** 출동대 사전설정 로스터 항목 — 이름별 도착시간 포함 */
+/** 도착설정 방식 — 훈련 전체에 하나만 적용 */
+export type ArrivalMode = 'time' | 'order';
+
+/** 출동대 사전설정 로스터 항목 */
 export interface DispatchRosterItem {
-  id:         string;
-  name:       string;        // '진압1대', '펌프1호', …
-  unitType:   string;        // 'suppression' | 'rescue' | 'ems' | 'pump' | 'rescue_vehicle' | 'ambulance' | 'aerial' | 'ladder' | 'smokeExhaust' | 'command'
-  linkedTo:   string | null; // 연동 활동대 ID (자동 연동 차량일 때), 나머지는 null
-  arrivalSec: number;        // 도착 예정 시간(초)
+  id:           string;
+  name:         string;        // '진압1대', '펌프1호', …
+  unitType:     string;        // 'suppression' | 'rescue' | 'ems' | 'pump' | 'rescue_vehicle' | 'aerial' | 'ladder' | 'smokeExhaust' | 'command'
+  linkedTo:     string | null; // 연동 활동대 ID (자동 연동 차량일 때), 나머지는 null
+  arrivalSec:   number;        // [시간설정 모드] 도착 예정 시간(초)
+  arrivalOrder: number;        // [착대설정 모드] 착대 순서 (1~10, 기본 1)
 }
 
 // ─────────────────────────────────────────────

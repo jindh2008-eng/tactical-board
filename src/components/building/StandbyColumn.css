@@ -17,7 +17,6 @@
 /* ══ 대기구역 박스 ══ */
 
 .standby-box {
-  flex: 1;
   min-height: 0;
   border: 1px dashed var(--ctr-border-soft);
   border-radius: 3px;
@@ -27,16 +26,22 @@
   background: rgba(255, 255, 255, 0.18);
 }
 
-/* 임시의료소: 자원대기소·대기1단계 각각의 2배 높이 */
+/*
+  높이 비율 (총 flex = 3+1.5+1.5 = 6, RescueStats는 flex-shrink:0 고정 높이)
+  임시의료소: flex 3  (기존 4에서 축소)
+  자원대기소: flex 1.5 (기존 1에서 1.5배 확대)
+  대기1단계:  flex 1.5 (기존 1에서 1.5배 확대)
+*/
 .standby-box--medical-large {
-  flex: 4;
+  flex: 3;
 }
 
-/* 자원대기소·대기1단계: 기본 flex:1 의 절반 */
 .standby-box--resource,
 .standby-box--standby1 {
-  flex: 1;
+  flex: 1.5;
 }
+
+/* ── 헤더 기본 ── */
 
 .standby-box__header {
   font-size: 0.7rem;
@@ -53,6 +58,57 @@
   flex-shrink: 0;
 }
 
+/* ── 소장 포함 헤더 (flex 행) ── */
+
+.standby-box__header--chief {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 6px 3px 10px;
+  text-align: left;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.standby-box__title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+/* ── 소장 선택 드롭다운 ── */
+
+.standby-chief {
+  flex-shrink: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.standby-chief__select {
+  font-size: 0.6rem;
+  font-family: inherit;
+  padding: 1px 3px;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  color: inherit;
+  opacity: 0.8;
+  cursor: pointer;
+  max-width: 80px;
+  min-width: 0;
+}
+
+.standby-chief__select:focus {
+  outline: none;
+  opacity: 1;
+}
+
+/* ── 단일 body (기존 호환) ── */
+
 .standby-box__body {
   flex: 1;
   min-height: 0;
@@ -62,7 +118,6 @@
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 3px;
-  /* flow 레이아웃 — 토큰/victim 모두 자연스럽게 쌓임 */
 }
 
 .standby-box__placeholder {
@@ -75,13 +130,7 @@
   padding-top: 4px;
 }
 
-/* VictimCard가 flow 안에서 inline으로 보이도록 */
-.standby-box__body .victim-card-wrapper {
-  /* absPos가 없으면 wrapper 자체는 position:static — 그대로 flow에 참여 */
-  flex-shrink: 0;
-}
-
-/* TokenCard wrapper도 flow에 참여 */
+.standby-box__body .victim-card-wrapper,
 .standby-box__body .token-card-wrapper {
   flex-shrink: 0;
 }
@@ -92,7 +141,8 @@
   border-color: #9abca0;
   background: rgba(180, 230, 190, 0.18);
 }
-.standby-box--medical .standby-box__header {
+.standby-box--medical .standby-box__header,
+.standby-box--medical .standby-box__header--chief {
   color: #4a6e52;
   background: rgba(160, 210, 170, 0.22);
   border-bottom-color: #9abca0;
@@ -102,7 +152,8 @@
   border-color: #c0a86a;
   background: rgba(220, 190, 120, 0.14);
 }
-.standby-box--resource .standby-box__header {
+.standby-box--resource .standby-box__header,
+.standby-box--resource .standby-box__header--chief {
   color: #7a5e28;
   background: rgba(200, 170, 100, 0.18);
   border-bottom-color: #c0a86a;
@@ -112,7 +163,8 @@
   border-color: #a09ac0;
   background: rgba(180, 170, 220, 0.14);
 }
-.standby-box--standby1 .standby-box__header {
+.standby-box--standby1 .standby-box__header,
+.standby-box--standby1 .standby-box__header--chief {
   color: #504870;
   background: rgba(160, 150, 200, 0.18);
   border-bottom-color: #a09ac0;
@@ -126,6 +178,78 @@
   color: #784040;
   background: rgba(200, 150, 150, 0.18);
   border-bottom-color: #c09090;
+}
+
+/* ─────────────────────────────────────────────
+   2열 분리 구조 (자원대기소 / 대기1단계)
+   좌: 차량 | 우: 출동대
+   ─────────────────────────────────────────────*/
+
+.standby-split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.standby-split__col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.standby-split__col-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.standby-split__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 3px 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 2px;
+}
+
+.standby-split__body .token-card-wrapper,
+.standby-split__body .victim-card-wrapper {
+  flex-shrink: 0;
+}
+
+.standby-split__divider {
+  width: 1px;
+  flex-shrink: 0;
+  margin: 3px 0;
+}
+
+/* 구분선 색상 — 구역별 */
+.standby-box--resource .standby-split__divider {
+  background: rgba(192, 168, 106, 0.45);
+}
+.standby-box--standby1 .standby-split__divider {
+  background: rgba(160, 154, 192, 0.45);
+}
+
+/* 열 레이블 색상 — 구역별 */
+.standby-box--resource .standby-split__col-label {
+  color: #7a5e28;
+}
+.standby-box--standby1 .standby-split__col-label {
+  color: #504870;
 }
 
 /* ─────────────────────────────────────────────
@@ -186,7 +310,8 @@
 /* ── 드롭 피드백 ── */
 
 .standby-box__body.drop-target--active,
-.medical-split__body.drop-target--active {
+.medical-split__body.drop-target--active,
+.standby-split__body.drop-target--active {
   outline: 2px dashed rgba(80, 150, 220, 0.6);
   outline-offset: -2px;
   background: rgba(100, 160, 230, 0.12) !important;

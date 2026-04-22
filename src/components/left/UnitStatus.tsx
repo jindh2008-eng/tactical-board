@@ -33,6 +33,7 @@ const VEHICLE_ITEMS: VehicleItem[] = [
   { name: '산불진화차', unitType: 'wildfire'       },
 ];
 
+
 // ─── 유관기관 ─────────────────────────────────────────
 const AGENCY_ITEMS = ['지휘차', '시청', '경찰','보건소', '군부대', '한전', '가스'];
 

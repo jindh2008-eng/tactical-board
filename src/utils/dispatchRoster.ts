@@ -18,14 +18,17 @@ export function mmssToSecs(raw: string, fallback = 0): number {
 // ─── 로스터 빌더 ─────────────────────────────────────────────────
 
 interface RosterEntry {
-  name:     string;
-  unitType: string;
-  linkedTo: string | null;
+  name:       string;
+  unitType:   string;
+  linkedTo:   string | null;
 }
 
 /**
  * dispatchSetup에서 로스터를 재생성한다.
- * 동일 이름 항목의 ID·도착시간은 prevRoster에서 이어받는다.
+ * 동일 이름 항목의 ID·도착시간·착대순서는 prevRoster에서 이어받는다.
+ *
+ * 구급대는 차량을 자동 연동하지 않는다.
+ * (진압대 → 펌프, 구조대 → 구조차만 자동 연동)
  */
 export function buildRoster(
   setup: DispatchSetup,
@@ -33,22 +36,23 @@ export function buildRoster(
 ): DispatchRosterItem[] {
   const prevByName = new Map(prevRoster.map(r => [r.name, r]));
 
-  // 활동대 + 자동 연동 차량
+  // 활동대 정의 — hasVehicle: true 인 경우만 차량 자동 연동
   const activityDefs = [
-    { count: setup.units.suppression, unitLabel: '진압', unitType: 'suppression', vehLabel: '펌프', vehType: 'pump' },
-    { count: setup.units.rescue,      unitLabel: '구조', unitType: 'rescue',      vehLabel: '구조차', vehType: 'rescue_vehicle' },
-    { count: setup.units.ems,         unitLabel: '구급', unitType: 'ems',         vehLabel: '구급차', vehType: 'ambulance' },
+    { count: setup.units.suppression, unitLabel: '진압', unitType: 'suppression', vehLabel: '펌프',   vehType: 'pump',           hasVehicle: true  },
+    { count: setup.units.rescue,      unitLabel: '구조', unitType: 'rescue',      vehLabel: '구조차', vehType: 'rescue_vehicle', hasVehicle: true  },
+    { count: setup.units.ems,         unitLabel: '구급', unitType: 'ems',         vehLabel: '',       vehType: '',              hasVehicle: false },
   ] as const;
 
-  // 두 패스로 처리: 먼저 활동대 ID 결정 후 차량 linkedTo 할당
-  type PendingUnit = { unitEntry: RosterEntry; vehEntry: RosterEntry };
+  type PendingUnit = { unitEntry: RosterEntry; vehEntry: RosterEntry | null };
   const pendingUnits: PendingUnit[] = [];
 
   for (const def of activityDefs) {
     for (let i = 1; i <= def.count; i++) {
       pendingUnits.push({
         unitEntry: { name: `${def.unitLabel}${i}대`, unitType: def.unitType, linkedTo: null },
-        vehEntry:  { name: `${def.vehLabel}${i}호`,  unitType: def.vehType,  linkedTo: null /* filled below */ },
+        vehEntry:  def.hasVehicle
+          ? { name: `${def.vehLabel}${i}호`, unitType: def.vehType, linkedTo: null }
+          : null,
       });
     }
   }
@@ -58,33 +62,48 @@ export function buildRoster(
   for (const { unitEntry, vehEntry } of pendingUnits) {
     const prevUnit = prevByName.get(unitEntry.name);
     const unitId   = prevUnit?.id ?? generateId();
-    const unitSec  = prevUnit?.arrivalSec ?? 0;
-    result.push({ id: unitId, name: unitEntry.name, unitType: unitEntry.unitType, linkedTo: null, arrivalSec: unitSec });
+    result.push({
+      id:           unitId,
+      name:         unitEntry.name,
+      unitType:     unitEntry.unitType,
+      linkedTo:     null,
+      arrivalSec:   prevUnit?.arrivalSec   ?? 0,
+      arrivalOrder: prevUnit?.arrivalOrder ?? 1,
+    });
 
-    const prevVeh  = prevByName.get(vehEntry.name);
-    const vehId    = prevVeh?.id ?? generateId();
-    const vehSec   = prevVeh?.arrivalSec ?? unitSec;
-    result.push({ id: vehId, name: vehEntry.name, unitType: vehEntry.unitType, linkedTo: unitId, arrivalSec: vehSec });
+    if (vehEntry) {
+      const prevVeh = prevByName.get(vehEntry.name);
+      result.push({
+        id:           prevVeh?.id ?? generateId(),
+        name:         vehEntry.name,
+        unitType:     vehEntry.unitType,
+        linkedTo:     unitId,
+        arrivalSec:   prevVeh?.arrivalSec   ?? (prevUnit?.arrivalSec ?? 0),
+        arrivalOrder: prevVeh?.arrivalOrder ?? (prevUnit?.arrivalOrder ?? 1),
+      });
+    }
   }
 
   // 별도 차량
   const vehicleDefs = [
-    { key: 'aerial'       as const, prefix: '고가',  unitType: 'aerial' },
-    { key: 'ladder'       as const, prefix: '굴절',  unitType: 'ladder' },
-    { key: 'smokeExhaust' as const, prefix: '배연',  unitType: 'smokeExhaust' },
-    { key: 'command'      as const, prefix: '지휘',  unitType: 'command' },
+    { key: 'aerial'       as const, prefix: '고가',    unitType: 'aerial' },
+    { key: 'ladder'       as const, prefix: '굴절',    unitType: 'ladder' },
+    { key: 'smokeExhaust' as const, prefix: '배연',    unitType: 'smokeExhaust' },
+    { key: 'command'      as const, prefix: '지휘',    unitType: 'command' },
+    { key: 'waterTank'    as const, prefix: '물탱크',  unitType: 'water_tank' },
   ];
 
   for (const def of vehicleDefs) {
     for (let i = 1; i <= setup.vehicles[def.key]; i++) {
-      const name    = `${def.prefix}${i}호`;
-      const prev    = prevByName.get(name);
+      const name = `${def.prefix}${i}호`;
+      const prev = prevByName.get(name);
       result.push({
-        id:         prev?.id ?? generateId(),
+        id:           prev?.id ?? generateId(),
         name,
-        unitType:   def.unitType,
-        linkedTo:   null,
-        arrivalSec: prev?.arrivalSec ?? 0,
+        unitType:     def.unitType,
+        linkedTo:     null,
+        arrivalSec:   prev?.arrivalSec   ?? 0,
+        arrivalOrder: prev?.arrivalOrder ?? 1,
       });
     }
   }

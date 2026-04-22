@@ -5,6 +5,7 @@ import { SharedPresetPanel }    from '../components/settings/SharedPresetPanel';
 import { UnitPresetPanel }      from '../components/settings/UnitPresetPanel';
 import { DispatchSetupPanel }   from '../components/settings/DispatchSetupPanel';
 import { VictimSetupPanel }     from '../components/settings/VictimSetupPanel';
+import { EventSetupPanel }      from '../components/settings/EventSetupPanel';
 import './SettingsPage.css';
 
 /**
@@ -134,6 +135,16 @@ export function SettingsPage() {
           층 범위는 건물 정보의 층수 설정을 따릅니다.
         </p>
         <VictimSetupPanel />
+      </section>
+
+      {/* ── 이벤트 토큰 설정 ──────────────────── */}
+      <section className="settings-page__section">
+        <h3 className="settings-page__section-title">이벤트 토큰 설정</h3>
+        <p className="settings-page__hint">
+          실행창에 표시할 이벤트를 등록합니다. 체크된 항목만 실행창에 표시되며,
+          클릭으로 상태(화재·초진·완진·폭발)를 전환할 수 있습니다.
+        </p>
+        <EventSetupPanel />
       </section>
     </div>
   );

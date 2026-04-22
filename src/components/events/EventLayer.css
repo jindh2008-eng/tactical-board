@@ -1,0 +1,24 @@
+/* ─────────────────────────────────────────────
+   EventLayer — TacticalArea 전체를 덮는 오버레이
+   — 이벤트 토큰만 상호작용, 나머지는 pass-through
+   ─────────────────────────────────────────────*/
+
+.event-layer {
+  /* TacticalArea 전체 커버 */
+  position: absolute;
+  inset: 0;
+
+  /* 오버레이 자체는 마우스 이벤트 통과 */
+  pointer-events: none;
+
+  /* 토큰이 건물/구역 위에 표시되도록 */
+  z-index: 50;
+
+  /* 클리핑 허용 (TacticalArea overflow: hidden에 의해) */
+  overflow: hidden;
+}
+
+/* 토큰만 마우스 이벤트 활성화 */
+.event-layer .event-token {
+  pointer-events: all;
+}
