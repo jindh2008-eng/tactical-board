@@ -61,6 +61,11 @@ interface Props {
   floorId:          FloorId;
   stairSmoke?:      boolean;
   stairSmokeEntry?: boolean;
+  /**
+   * true = 이 층은 복수 층이 묶인 요약 행.
+   * 출동대 토큰은 그대로 드롭 가능하지만 구조대상자는 드롭·렌더 불가.
+   */
+  isRange?:         boolean;
 }
 
 // ─────────────────────────────────────────────
@@ -133,7 +138,7 @@ const DROP_NUDGE_Y = 0;  // 양수 = 아래,   음수 = 위
 // ZoneCell
 // ─────────────────────────────────────────────
 
-export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = false }: Props) {
+export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = false, isRange = false }: Props) {
   const isStair  = zone.id === 'stair';
   const isRight  = zone.id === 'right';
   const hasFire  = !!zone.status.fire;
@@ -149,15 +154,24 @@ export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = 
   // 구조대상자 토큰
   const { victims, victimPositions, moveVictim } = useVictims();
 
-  const isDropTarget = zone.acceptsTokens && !isRight;
-  const zoneKey      = `${floorId}-${zone.id}`;
-  const zoneTokens   = isDropTarget ? tokens.filter(t => t.zoneKey === zoneKey)  : [];
-  const zoneVictims  = isDropTarget ? victims.filter(v => v.zoneKey === zoneKey) : [];
+  const isDropTarget       = zone.acceptsTokens && !isRight;
+  // 요약 행(isRange)에는 구조대상자 배치 불가 — 출동대 토큰만 허용
+  const isVictimDropTarget = isDropTarget && !isRange;
+  const zoneKey            = `${floorId}-${zone.id}`;
+  const zoneTokens         = isDropTarget        ? tokens.filter(t => t.zoneKey === zoneKey)  : [];
+  const zoneVictims        = isVictimDropTarget  ? victims.filter(v => v.zoneKey === zoneKey) : [];
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     if (!isDropTarget) return;
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    // dragover 중 getData()는 보안상 불가능 → types 배열로 victimId 키 존재 판별
+    const hasVictim = e.dataTransfer.types.includes('victimid');
+    if (isRange && hasVictim) {
+      // 요약 행에 구조대상자를 드래그 → 거부 커서
+      e.dataTransfer.dropEffect = 'none';
+    } else {
+      e.dataTransfer.dropEffect = 'move';
+    }
     setIsDragOver(true);
   }
 
@@ -186,8 +200,8 @@ export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = 
     const x = Math.max(tokenW / 2, Math.min(rect.width  - tokenW / 2, rawX));
     const y = Math.max(tokenH / 2, Math.min(rect.height - tokenH / 2, rawY));
 
-    if (tokenId)  moveToken(tokenId,   zoneKey, { x, y });
-    if (victimId) moveVictim(victimId, zoneKey, { x, y });
+    if (tokenId)                      moveToken(tokenId,   zoneKey, { x, y });
+    if (victimId && !isRange)         moveVictim(victimId, zoneKey, { x, y });
   }
 
   // 옥상(RF)에는 화재상황 패널 표시하지 않음
@@ -223,7 +237,7 @@ export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = 
           onClick={() => setDoorState(d => d === 'open' ? 'closed' : 'open')}
           title={doorState === 'open' ? '방화문 열림 — 클릭하여 닫기' : '방화문 닫힘 — 클릭하여 열기'}
         >
-          {doorState === 'open' ? '열림' : '닫힘'}
+          {doorState === 'open' ? 'Open' : 'Close'}
         </button>
       )}
 

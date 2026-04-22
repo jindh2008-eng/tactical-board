@@ -1,0 +1,65 @@
+/* ─────────────────────────────────────────────
+   PlayPage — 실행 페이지 레이아웃
+   ─────────────────────────────────────────────*/
+
+.play-page {
+  display:        flex;
+  flex-direction: column;
+  height:         100vh;
+  overflow:       hidden;
+}
+
+/* 상단 바 */
+.play-topbar {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         4px 12px;
+  background:      #111118;
+  border-bottom:   1px solid #2a2a3a;
+  flex-shrink:     0;
+  height:          32px;
+  gap:             12px;
+}
+
+.play-topbar__title {
+  font-size:      0.75rem;
+  font-weight:    600;
+  color:          #8888aa;
+  letter-spacing: 0.05em;
+  white-space:    nowrap;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+}
+
+.play-topbar__reset-btn {
+  padding:          3px 10px;
+  border:           1px solid #3a3050;
+  border-radius:    3px;
+  background:       #1e1830;
+  color:            #aa88dd;
+  font-size:        0.70rem;
+  font-weight:      600;
+  cursor:           pointer;
+  white-space:      nowrap;
+  transition:       background 0.1s, border-color 0.1s;
+  letter-spacing:   0.02em;
+}
+
+.play-topbar__reset-btn:hover {
+  background:   #2a2040;
+  border-color: #6040a0;
+  color:        #cc99ff;
+}
+
+.play-topbar__reset-btn:active {
+  background: #150e28;
+}
+
+/* .app: flex 자식으로서 높이를 flex가 결정하도록 height 재정의 */
+.play-page .app {
+  flex:       1 1 0;
+  min-height: 0;       /* flex 부모에서 height: 100% 상속을 차단 */
+  height:     auto;    /* App.css 의 height: 100% 재정의 */
+  overflow:   hidden;
+}

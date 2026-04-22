@@ -9,15 +9,13 @@ import './RescueStats.css';
 // 개별 목록 대신 증상별·구역별 숫자 요약만 표시.
 // ─────────────────────────────────────────────
 
-const SHOW_CONDITIONS: VictimCondition[] = ['경상', '중상', '사망', '의식없음', '고립'];
+const SHOW_CONDITIONS: VictimCondition[] = ['경상', '중상', '의식없음'];
 
 function condClass(c: VictimCondition | undefined): string {
   switch (c) {
     case '경상':    return 'alive';
     case '중상':    return 'serious';
-    case '사망':    return 'dead';
     case '의식없음': return 'unconscious';
-    case '고립':    return 'isolated';
     default:        return 'unknown';
   }
 }

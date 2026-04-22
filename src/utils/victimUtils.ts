@@ -144,14 +144,78 @@ export function buildDisplayBottom(location: string, subLocation: string): strin
 export function rebuildVictimDisplay(
   victim: VictimToken,
 ): Pick<VictimToken, 'displayTop' | 'displayBottom'> {
-  const displayBottom = buildDisplayBottom(victim.location, victim.subLocation);
-
   const displayTop =
     victim.kind === 'person'
       ? [victim.gender, victim.ageGroup, victim.condition].filter(Boolean).join('/')
       : victim.customLabel?.trim() || '기타';
 
+  // 위치 줄: buildLocationLine 이 있으면 그것을, 없으면 기존 방식
+  // (lazy import 방지를 위해 inline 재현)
+  const displayBottom = buildVictimDisplayLine(victim);
+
   return { displayTop, displayBottom };
+}
+
+/**
+ * 구조대상자 위치 표시 두 번째 줄 (슬래시 구분 형식)
+ *
+ * 층/면/상세위치 조합. 있는 것만 포함.
+ * 예: "3층/A면/창문", "3층/205호", "A면/공터", "복도"
+ */
+export function buildVictimDisplayLine(victim: VictimToken): string {
+  const parts: string[] = [];
+  const loc = victim.location.trim();
+
+  // ① 층: location 에서 파싱
+  const floorDisplay = locationToFloorDisplay(loc);
+  if (floorDisplay) {
+    parts.push(floorDisplay);
+  }
+
+  // ② 면
+  if (victim.face) {
+    parts.push(`${victim.face}면`);
+  } else if (!floorDisplay && /^[A-D]면$/.test(loc)) {
+    // face 필드 없이 위치가 "A면" 형태인 경우
+    parts.push(loc);
+  }
+
+  // ③ 상세위치
+  const detail = getVictimDetail(victim);
+  if (detail) parts.push(detail);
+
+  // 아무것도 없으면 location 원문 또는 빈 문자열
+  if (parts.length === 0 && loc && !/^[A-D]면$/.test(loc)) {
+    parts.push(loc);
+  }
+
+  return parts.join('/');
+}
+
+/** zone 레이블 → 한글 층 표시 변환 */
+function locationToFloorDisplay(loc: string): string | null {
+  if (!loc) return null;
+  if (loc === 'RF') return '옥상';
+  const above = loc.match(/^(\d+)F$/);
+  if (above) return `${above[1]}층`;
+  const below = loc.match(/^B(\d+)$/);
+  if (below) return `B${below[1]}층`;
+  return null;
+}
+
+/** victim 상세위치 텍스트 추출 */
+function getVictimDetail(victim: VictimToken): string {
+  // 명시적 detailLocation 우선
+  if (victim.detailLocation !== undefined) return victim.detailLocation.trim();
+  // face 없으면 subLocation 그대로 사용
+  if (!victim.face) return victim.subLocation.trim();
+  // face 있으면 "X면 / " 접두어 제거
+  const prefix = `${victim.face}면`;
+  const sub = victim.subLocation.trim();
+  if (sub.startsWith(prefix)) {
+    return sub.slice(prefix.length).replace(/^\s*\/\s*/, '').trim();
+  }
+  return sub;
 }
 
 // ─────────────────────────────────────────────

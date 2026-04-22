@@ -10,7 +10,7 @@
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   padding: 7px 8px;
   overflow-y: auto;
 }
@@ -22,6 +22,24 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+/* 그룹별 배경색 구분 */
+.creator-group--activity {
+  background: rgba(255, 80, 80, 0.07);
+  border: 1px solid rgba(255, 80, 80, 0.28);
+}
+
+.creator-group--vehicle {
+  background: rgba(255, 180, 0, 0.07);
+  border: 1px solid rgba(255, 180, 0, 0.28);
+}
+
+.creator-group--agency {
+  background: rgba(150, 100, 255, 0.07);
+  border: 1px solid rgba(150, 100, 255, 0.28);
 }
 
 .creator-group__label {

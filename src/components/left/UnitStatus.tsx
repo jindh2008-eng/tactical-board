@@ -34,7 +34,7 @@ const VEHICLE_ITEMS: VehicleItem[] = [
 ];
 
 // ─── 유관기관 ─────────────────────────────────────────
-const AGENCY_ITEMS = ['지휘차', '시청', '경찰', '군부대', '한전', '가스'];
+const AGENCY_ITEMS = ['지휘차', '시청', '경찰','보건소', '군부대', '한전', '가스'];
 
 // ─────────────────────────────────────────────
 // UnitStatus
@@ -73,7 +73,7 @@ export function UnitStatus() {
       <div className="unit-creator__body">
 
         {/* 활동대 */}
-        <div className="creator-group">
+        <div className="creator-group creator-group--activity">
           <div className="creator-group__label creator-group__label--activity">활동대</div>
           <div className="creator-group__buttons">
             {ACTIVITY_ITEMS.map(item => (
@@ -91,7 +91,7 @@ export function UnitStatus() {
         </div>
 
         {/* 차량 */}
-        <div className="creator-group">
+        <div className="creator-group creator-group--vehicle">
           <div className="creator-group__label creator-group__label--vehicle">차량</div>
           <div className="creator-group__buttons">
             {VEHICLE_ITEMS.map(item => (
@@ -109,7 +109,7 @@ export function UnitStatus() {
         </div>
 
         {/* 유관기관 */}
-        <div className="creator-group">
+        <div className="creator-group creator-group--agency">
           <div className="creator-group__label creator-group__label--agency">유관기관</div>
           <div className="creator-group__buttons">
             {AGENCY_ITEMS.map(name => (
@@ -127,7 +127,7 @@ export function UnitStatus() {
         </div>
 
         {/* 직접입력 */}
-        <div className="creator-group">
+        <div className="creator-group creator-group--agency">
           <div className="creator-group__label creator-group__label--agency">직접입력</div>
           <div className="creator-group__custom">
             <input

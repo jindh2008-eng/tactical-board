@@ -96,6 +96,22 @@
   color: #f8c0b0;
 }
 
+/* 대상명 텍스트 입력 — 더 넓게 */
+.config-bar__input--name {
+  width: 110px;
+  text-align: left;
+}
+
+/* 화점층 셀렉트 — 붉은 계열 */
+.config-bar__select--fire {
+  border-color: #7a3a30;
+  color: #f0a090;
+}
+
+.config-bar__select--fire:focus {
+  border-color: #c06050;
+}
+
 /* ─── 셀렉트 ───────────────────────────────── */
 .config-bar__select {
   padding: 2px 4px;

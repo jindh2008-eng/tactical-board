@@ -126,13 +126,19 @@ export interface BadgePreset {
 }
 
 export interface UnitToken {
-  id:       string;         // 고유 ID
-  label:    string;         // 표시 이름 (진압1대, 펌프2호 등)
-  type:     TokenType;      // 토큰 종류
-  color:    TokenColor;     // 색상 키
-  unitType: string;         // 출동대 종류 키 (e.g. 'suppression', 'pump', 'ladder')
-  zoneKey:  string | null;  // 현재 위치 구역 키 (null = pool/출동대현황)
-  badges:   TokenBadge[];   // 부착된 상태 배지 목록
+  id:       string;                    // 고유 ID
+  label:    string;                    // 표시 이름 (진압1대, 펌프2호 등)
+  type:     TokenType;                 // 토큰 종류
+  color:    TokenColor;                // 색상 키
+  unitType: string;                    // 출동대 종류 키 (e.g. 'suppression', 'pump', 'ladder')
+  zoneKey:  string | null;             // 현재 위치 구역 키 (null = pool/출동대현황)
+  badges:   TokenBadge[];              // 부착된 상태 배지 목록
+  /**
+   * 생성 경로
+   * 'roster' : dispatchRoster 기반 자동 생성
+   * 'manual' : 사용자가 실행 중 직접 생성
+   */
+  source:   'roster' | 'manual';
 }
 
 // ─────────────────────────────────────────────

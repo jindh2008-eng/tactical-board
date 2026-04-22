@@ -139,3 +139,19 @@
   z-index: 7;
   letter-spacing: 0;
 }
+
+/* 이동중 카운트다운 — 구조중과 동일 위치, 색상만 구분 */
+.token-countdown--move {
+  background: #3a6ea8;
+  border-color: #6a9fd8;
+}
+
+/* 도착 대기 카운트다운 — pool 패널에서만 표시, 초록 계열 */
+.token-countdown--arrival {
+  background: #1a4a2a;
+  border-color: #3a9a5a;
+  color: #88eea8;
+  min-width: 34px;   /* MM:SS 표시용 */
+  font-size: 0.60rem;
+  letter-spacing: 0.02em;
+}

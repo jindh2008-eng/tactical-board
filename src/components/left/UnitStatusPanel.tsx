@@ -5,13 +5,25 @@ import './UnitStatusPanel.css';
 
 /** 출동대현황 — pool(미배치) 토큰 목록 + 반환 드롭 영역
  *
+ * pool 토큰은 arrival countdown 오름차순으로 정렬한다.
+ *   - countdown이 있는 토큰: 도착 임박 순 (작은 값 먼저)
+ *   - countdown이 없는 토큰: 뒤쪽 배치 (수동 생성 토큰)
+ *
  * 2열 세로 정렬: 우측 열을 먼저 채우고 이후 좌측 열을 채움.
  */
 export function UnitStatusPanel() {
-  const { tokens, moveToken } = useTokens();
+  const { tokens, moveToken, arrivalCountdowns } = useTokens();
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const poolTokens  = tokens.filter(t => t.zoneKey === null);
+  // pool 토큰 필터 후 arrival countdown 오름차순 정렬
+  const poolTokens = tokens
+    .filter(t => t.zoneKey === null)
+    .sort((a, b) => {
+      const ca = arrivalCountdowns[a.id] ?? Infinity;
+      const cb = arrivalCountdowns[b.id] ?? Infinity;
+      return ca - cb;
+    });
+
   const n           = poolTokens.length;
   const rightTokens = poolTokens.slice(0, Math.ceil(n / 2));
   const leftTokens  = poolTokens.slice(Math.ceil(n / 2));

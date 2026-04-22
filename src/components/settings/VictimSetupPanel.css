@@ -1,0 +1,193 @@
+/* ─────────────────────────────────────────────
+   구조대상자 생성 설정 패널 (vsp)
+   ─────────────────────────────────────────────*/
+
+.vsp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── 헤더 ── */
+
+.vsp__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vsp__count {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+}
+
+.vsp__add-btn {
+  padding: 5px 14px;
+  background: #1a3a1a;
+  border: 1px solid #2a5a2a;
+  border-radius: 3px;
+  color: #88cc88;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.vsp__add-btn:hover {
+  background: #224422;
+}
+
+/* ── 빈 상태 ── */
+
+.vsp__empty {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  padding: 18px;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 4px;
+}
+
+/* ── 테이블 ── */
+
+.vsp__table {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* 8컬럼: [#, 성별, 나이, 상태, 면, 층, 상세위치, X] */
+.vsp__thead,
+.vsp__row {
+  display: grid;
+  grid-template-columns: 24px 52px 1fr 1fr 48px 52px 1.4fr 28px;
+  gap: 4px;
+  align-items: center;
+  padding: 5px 8px;
+}
+
+/* 헤더 행 */
+.vsp__thead {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.vsp__th {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vsp__th--idx,
+.vsp__th--del {
+  text-align: center;
+}
+
+/* 데이터 행 */
+.vsp__row {
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.vsp__row:last-of-type {
+  border-bottom: none;
+}
+
+.vsp__row:nth-child(even) {
+  background: var(--color-surface);
+}
+
+/* 셀 */
+.vsp__cell {
+  display: flex;
+  align-items: center;
+}
+
+.vsp__cell--idx {
+  justify-content: center;
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+}
+
+.vsp__cell--del {
+  justify-content: center;
+}
+
+/* ── 셀렉트 ── */
+
+.vsp__select {
+  width: 100%;
+  padding: 3px 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.vsp__select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* ── 텍스트 입력 (상세위치) ── */
+
+.vsp__text-input {
+  width: 100%;
+  padding: 3px 5px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-family: inherit;
+}
+
+.vsp__text-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.vsp__text-input::placeholder {
+  color: var(--color-text-dim);
+  opacity: 0.6;
+}
+
+/* ── 삭제 버튼 ── */
+
+.vsp__del-btn {
+  width: 22px;
+  height: 22px;
+  background: #3a1414;
+  border: 1px solid #6a2222;
+  border-radius: 3px;
+  color: #f09090;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+
+.vsp__del-btn:hover {
+  background: #4a1a1a;
+}
+
+/* ── 요약 줄 ── */
+
+.vsp__summary {
+  padding: 5px 10px;
+  font-size: 0.68rem;
+  color: var(--color-text-dim);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}

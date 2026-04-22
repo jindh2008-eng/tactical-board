@@ -44,6 +44,7 @@ export function FloorRow({ floor, stairSmokeStartFloor = null }: Props) {
             key={zone.id}
             zone={zone}
             floorId={floor.id}
+            isRange={floor.isRange}
             stairSmoke={zone.id === 'stair' ? stairHasSmoke : false}
             stairSmokeEntry={zone.id === 'stair' ? isSmokeBoundary : false}
           />

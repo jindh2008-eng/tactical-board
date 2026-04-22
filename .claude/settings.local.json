@@ -12,7 +12,8 @@
       "Bash(findstr :5173)",
       "Bash(curl -s http://localhost:5173)",
       "Bash(taskkill /PID 24416 /F)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(echo \"Exit: $?\")"
     ]
   }
 }

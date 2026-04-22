@@ -1,0 +1,218 @@
+/* ─────────────────────────────────────────────
+   출동대 생성 설정 패널 (dsp)
+   ─────────────────────────────────────────────*/
+
+.dsp {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── 그룹 카드 ── */
+
+.dsp__group {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dsp__group-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dsp__group-hint {
+  font-size: 0.74rem;
+  color: var(--color-text-dim);
+  margin: -2px 0 2px;
+}
+
+/* ── 행 ── */
+
+.dsp__row,
+.dsp__auto-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.dsp__label {
+  font-size: 0.82rem;
+  color: var(--color-text);
+  flex: 1;
+}
+
+/* ── 스테퍼 ── */
+
+.dsp__stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dsp__step-btn {
+  width: 26px;
+  height: 26px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.dsp__step-btn:hover {
+  background: #2a3040;
+  border-color: var(--color-accent);
+}
+
+.dsp__num-input {
+  width: 48px;
+  text-align: center;
+  padding: 3px 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.dsp__num-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* Chrome 등 스피너 숨김 */
+.dsp__num-input::-webkit-inner-spin-button,
+.dsp__num-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+/* ── 자동 연동 안내 ── */
+
+.dsp__auto-info {
+  font-size: 0.78rem;
+  color: var(--color-text-dim);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  border-radius: 3px;
+  padding: 3px 12px;
+  min-width: 110px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── 출동 목록 ── */
+
+.dsp__roster-empty {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  padding: 12px;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 4px;
+}
+
+.dsp__roster {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* 2컬럼: [명칭, 도착시간] */
+.dsp__roster-head,
+.dsp__roster-row {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 10px;
+}
+
+.dsp__roster-head {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dsp__rh {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dsp__rh--time {
+  text-align: right;
+}
+
+.dsp__roster-row {
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dsp__roster-row:last-of-type {
+  border-bottom: none;
+}
+
+/* 연동 차량 행 — 들여쓰기 + 배경 약화 */
+.dsp__roster-row--linked {
+  background: var(--color-surface);
+  padding-left: 22px;
+}
+
+.dsp__rc--name {
+  font-size: 0.8rem;
+  color: var(--color-text);
+}
+
+.dsp__roster-row--linked .dsp__rc--name {
+  font-size: 0.76rem;
+  color: var(--color-text-dim);
+}
+
+.dsp__rc--time {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dsp__time-input {
+  width: 72px;
+  padding: 3px 6px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-family: inherit;
+  text-align: center;
+}
+
+.dsp__time-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.dsp__roster-row--linked .dsp__time-input {
+  color: var(--color-text-dim);
+  border-style: dashed;
+}

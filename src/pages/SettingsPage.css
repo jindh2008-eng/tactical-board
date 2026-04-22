@@ -74,6 +74,38 @@
   line-height: 1.5;
 }
 
+/* ── 타이밍 설정 ── */
+
+.settings-page__timing-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.settings-page__timing-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--color-text);
+}
+
+.settings-page__timing-input {
+  width: 80px;
+  padding: 4px 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.settings-page__timing-input:focus {
+  outline: none;
+  border-color: var(--color-accent, #4a90d9);
+}
+
 /* ── 플레이스홀더 ── */
 
 .settings-page__placeholder {

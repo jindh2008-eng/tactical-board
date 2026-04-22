@@ -195,8 +195,7 @@ function condClass(c: VictimCondition): string {
   switch (c) {
     case '경상':    return 'alive';
     case '중상':    return 'alive';
-    case '고립':    return 'isolated';
     case '의식없음': return 'unconscious';
-    case '사망':    return 'dead';
+    default:        return '';
   }
 }

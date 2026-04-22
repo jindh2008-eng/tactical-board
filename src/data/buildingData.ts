@@ -229,6 +229,80 @@ export function buildDisplayFloors(
 }
 
 // ─────────────────────────────────────────────
+// 배치 가능 층 목록 (구조대상자 전용)
+//
+// 화면에서 "요약 행(isRange)"으로 묶인 층은 개별 셀이 없으므로
+// 구조대상자를 배치할 수 없다. 실제로 개별 행으로 렌더링되는 층만 반환.
+// 'RF'는 항상 포함.
+// ─────────────────────────────────────────────
+
+/**
+ * 구조대상자가 배치 가능한 층 목록을 반환한다.
+ *
+ * - 'RF' = 옥상 (항상 포함)
+ * - 양수  = 지상층 번호
+ * - 음수  = 지하층 번호 (-1 = B1)
+ * 반환 순서: 옥상 → 높은 지상층 → 낮은 지상층 → 지하층
+ */
+export function buildPlaceableFloors(
+  config:    BuildingConfig,
+  fireFloor: number,
+): Array<number | 'RF'> {
+  const result: Array<number | 'RF'> = [];
+  const floors = buildDisplayFloors(config, fireFloor);
+  for (const df of floors) {
+    if (df.isRange) continue; // 요약 행은 제외
+    if (df.id === 'RF') {
+      result.push('RF');
+    } else if (df.isBasement) {
+      // isBasement 행: startFloor ≤ endFloor ≤ -1
+      result.push(df.startFloor); // 음수 (예: -1 = B1)
+    } else {
+      result.push(df.endFloor); // 양수
+    }
+  }
+  return result;
+}
+
+/**
+ * 구조대상자를 실제로 드롭할 수 있는 zoneKey 집합을 반환한다.
+ *
+ * - 건물 내부: 개별 렌더링 층의 stair·left·center 구역
+ * - 외곽 방면: face-A ~ face-D
+ * - 특수 구역: medical-post, standby-*
+ * 이 집합에 없는 zoneKey 는 유효하지 않으며 pool 로 이동해야 한다.
+ */
+export function buildValidVictimZoneKeys(
+  config:    BuildingConfig,
+  fireFloor: number,
+): Set<string> {
+  const valid = new Set<string>();
+  const floors = buildDisplayFloors(config, fireFloor);
+
+  for (const df of floors) {
+    if (df.isRange) continue;
+    for (const zone of df.zones) {
+      if (!zone.acceptsTokens || zone.id === 'right') continue;
+      valid.add(`${df.id}-${zone.id}`);
+    }
+  }
+
+  // 외곽 방면
+  valid.add('face-A');
+  valid.add('face-B');
+  valid.add('face-C');
+  valid.add('face-D');
+
+  // 특수 구역
+  valid.add('medical-post');
+  valid.add('standby-resource');
+  valid.add('standby-standby1');
+  valid.add('standby-imminent');
+
+  return valid;
+}
+
+// ─────────────────────────────────────────────
 // 층 높이 계산
 //
 // 현재 요구사항:

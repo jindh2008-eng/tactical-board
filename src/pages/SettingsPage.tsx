@@ -3,6 +3,8 @@ import { BuildingConfigPanel }  from '../components/building/BuildingConfigPanel
 import { SettingsLibraryPanel } from '../components/settings/SettingsLibraryPanel';
 import { SharedPresetPanel }    from '../components/settings/SharedPresetPanel';
 import { UnitPresetPanel }      from '../components/settings/UnitPresetPanel';
+import { DispatchSetupPanel }   from '../components/settings/DispatchSetupPanel';
+import { VictimSetupPanel }     from '../components/settings/VictimSetupPanel';
 import './SettingsPage.css';
 
 /**
@@ -21,6 +23,9 @@ export function SettingsPage() {
     updateBuildingConfig,
     updateFireFloor,
     updateStairSmoke,
+    updateTargetName,
+    timing,
+    updateTiming,
   } = useSettings();
 
   return (
@@ -43,6 +48,8 @@ export function SettingsPage() {
           onFireFloorChange={updateFireFloor}
           stairSmokeStartFloor={building.stairSmokeStartFloor}
           onStairSmokeChange={updateStairSmoke}
+          targetName={building.targetName}
+          onTargetNameChange={updateTargetName}
         />
       </section>
 
@@ -73,16 +80,60 @@ export function SettingsPage() {
         </div>
       </section>
 
-      {/* ── 출동대 기본 설정 ──────────────────── */}
+      {/* ── 타이밍 설정 ───────────────────────── */}
       <section className="settings-page__section">
-        <h3 className="settings-page__section-title">출동대 기본 설정</h3>
-        <p className="settings-page__placeholder">추후 확장 예정 — 진압/구조/구급 기본 생성 옵션</p>
+        <h3 className="settings-page__section-title">타이밍 설정</h3>
+        <p className="settings-page__hint">
+          출동대 행동에 적용되는 시간(초)입니다. 최소 1초.
+        </p>
+        <div className="settings-page__timing-row">
+          <label className="settings-page__timing-label">
+            구조 처리 시간(초)
+            <input
+              className="settings-page__timing-input"
+              type="number"
+              min={1}
+              value={timing.rescueTimeSec}
+              onChange={e => {
+                const v = Math.max(1, parseInt(e.target.value, 10) || 1);
+                updateTiming({ rescueTimeSec: v });
+              }}
+            />
+          </label>
+          <label className="settings-page__timing-label">
+            이동 시간(초)
+            <input
+              className="settings-page__timing-input"
+              type="number"
+              min={1}
+              value={timing.moveTimeSec}
+              onChange={e => {
+                const v = Math.max(1, parseInt(e.target.value, 10) || 1);
+                updateTiming({ moveTimeSec: v });
+              }}
+            />
+          </label>
+        </div>
       </section>
 
-      {/* ── 구조대상자 설정 ───────────────────── */}
+      {/* ── 출동대 생성 설정 ──────────────────── */}
       <section className="settings-page__section">
-        <h3 className="settings-page__section-title">구조대상자 설정</h3>
-        <p className="settings-page__placeholder">추후 확장 예정 — 랜덤 생성 옵션 · 상태 목록 관리</p>
+        <h3 className="settings-page__section-title">출동대 생성 설정</h3>
+        <p className="settings-page__hint">
+          실행 시 초기 배치할 출동대 수량을 사전에 설정합니다.
+          펌프·구조차·구급차는 활동대 수량과 자동 연동됩니다.
+        </p>
+        <DispatchSetupPanel />
+      </section>
+
+      {/* ── 구조대상자 생성 설정 ──────────────── */}
+      <section className="settings-page__section">
+        <h3 className="settings-page__section-title">구조대상자 생성 설정</h3>
+        <p className="settings-page__hint">
+          실행 시 초기 배치할 구조대상자 목록을 사전에 입력합니다.
+          층 범위는 건물 정보의 층수 설정을 따릅니다.
+        </p>
+        <VictimSetupPanel />
       </section>
     </div>
   );

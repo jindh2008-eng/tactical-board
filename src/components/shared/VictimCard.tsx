@@ -18,9 +18,7 @@ function conditionMod(victim: VictimToken): string {
   if (victim.kind === 'custom') return 'victim-card--custom';
   if (!victim.condition)        return '';
   switch (victim.condition) {
-    case '사망':    return 'victim-card--dead';
     case '의식없음': return 'victim-card--unconscious';
-    case '고립':    return 'victim-card--isolated';
     default:        return 'victim-card--alive';
   }
 }
@@ -81,10 +79,14 @@ export function VictimCard({ victim, absPos }: Props) {
           draggable
           onDragStart={handleDragStart}
           onContextMenu={handleContextMenu}
-          title={`${victim.displayTop} / ${victim.displayBottom}`}
+          title={[victim.displayTop, victim.displayBottom].filter(Boolean).join(' · ')}
         >
           <span className="victim-card__top">{victim.displayTop}</span>
-          <span className="victim-card__bottom">{victim.displayBottom}</span>
+          {(victim.originDisplayBottom ?? victim.displayBottom) && (
+            <span className="victim-card__bottom">
+              {victim.originDisplayBottom ?? victim.displayBottom}
+            </span>
+          )}
         </div>
       </div>
 
