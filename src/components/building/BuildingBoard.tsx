@@ -4,6 +4,7 @@ import {
   buildDisplayFloors,
   calcMinRowHeight,
 } from '../../data/buildingData';
+import { BuildingStateProvider } from '../../context/BuildingStateContext';
 import { FloorRow } from './FloorRow';
 import './BuildingBoard.css';
 
@@ -18,21 +19,30 @@ export function BuildingBoard({
   fireFloor            = 1,
   stairSmokeStartFloor = null,
 }: Props) {
-  const floors   = buildDisplayFloors(config, fireFloor);
-  const minRowPx = calcMinRowHeight();
+  const floors     = buildDisplayFloors(config, fireFloor);
+  const minRowPx   = calcMinRowHeight();
+  const allFloorIds = floors.map(f => f.id);
 
   return (
-    <div
-      className="building-body"
-      style={{ '--min-row-height': `${minRowPx}px` } as React.CSSProperties}
+    <BuildingStateProvider
+      allFloorIds={allFloorIds}
+      stairSmokeStartFloor={stairSmokeStartFloor}
+      aboveGroundFloors={config.aboveGroundFloors}
     >
-      {floors.map(floor => (
-        <FloorRow
-          key={floor.id}
-          floor={floor}
-          stairSmokeStartFloor={stairSmokeStartFloor}
-        />
-      ))}
-    </div>
+      <div
+        className="building-body"
+        style={{ '--min-row-height': `${minRowPx}px` } as React.CSSProperties}
+      >
+        {floors.map(floor => (
+          <FloorRow
+            key={floor.id}
+            floor={floor}
+            stairSmokeStartFloor={stairSmokeStartFloor}
+            fireFloor={fireFloor}
+            aboveGroundFloors={config.aboveGroundFloors}
+          />
+        ))}
+      </div>
+    </BuildingStateProvider>
   );
 }

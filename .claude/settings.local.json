@@ -17,7 +17,8 @@
       "Bash(grep -n \"label\\\\|진압\\\\|구조\\\\|구급\\\\|대$\" /Users/daehyun/dev/tactical-board/src/context/TokenContext.tsx)",
       "Bash(grep -rn \"진압\\\\|대$\\\\|label.*대\\\\|makeLabel\\\\|formatLabel\\\\|labelFn\" /Users/daehyun/dev/tactical-board/src/utils/)",
       "Bash(lsof -ti:5173)",
-      "Bash(grep -E \"\\\\.\\(tsx|ts|css\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts|css\\)$\")",
+      "Bash(curl -s http://localhost:5174)"
     ]
   }
 }

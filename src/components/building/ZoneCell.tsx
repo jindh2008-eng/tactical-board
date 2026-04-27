@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import ReactDOM from 'react-dom';
-import type { Zone, FloorId } from '../../types';
+import type { Zone, FloorId, DoorState, FireStatus } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
+import { useBuildingState } from '../../context/BuildingStateContext';
+import type { SmokeLevel } from '../../context/BuildingStateContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import './ZoneCell.css';
@@ -10,8 +12,6 @@ import './ZoneCell.css';
 // ─────────────────────────────────────────────
 // 화재단계 정의
 // ─────────────────────────────────────────────
-
-type FireStatus = 'extension-peak' | 'peak' | 'half' | 'initial' | 'complete';
 
 interface StageMeta {
   label:     string;
@@ -112,11 +112,6 @@ function FlameImage({ dark = false }: { dark?: boolean }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// 방화문 상태
-// ─────────────────────────────────────────────
-export type DoorState = 'open' | 'closed';
-
 const WALL_X      = 98.75;
 const WALL_STROKE = 2.5;
 const DOOR_STROKE = 7;
@@ -124,15 +119,14 @@ const DOOR_TOP    = 65;
 const DOOR_BOTTOM = 99;
 
 interface Props {
-  zone:             Zone;
-  floorId:          FloorId;
-  stairSmoke?:      boolean;
-  stairSmokeEntry?: boolean;
+  zone:       Zone;
+  floorId:    FloorId;
+  smokeLevel?: SmokeLevel;
   /**
    * true = 이 층은 복수 층이 묶인 요약 행.
    * 출동대 토큰은 그대로 드롭 가능하지만 구조대상자는 드롭·렌더 불가.
    */
-  isRange?:         boolean;
+  isRange?:   boolean;
 }
 
 // ─────────────────────────────────────────────
@@ -205,15 +199,17 @@ const DROP_NUDGE_Y = 0;  // 양수 = 아래,   음수 = 위
 // ZoneCell
 // ─────────────────────────────────────────────
 
-export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = false, isRange = false }: Props) {
+export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }: Props) {
   const isStair  = zone.id === 'stair';
   const isRight  = zone.id === 'right';
   const hasFire  = !!zone.status.fire;
   const hasSmoke = !!zone.status.smoke;
   const hasState = hasFire || hasSmoke;
 
-  const [fireStatus,    setFireStatus]    = useState<FireStatus | null>(null);
-  const [doorState,     setDoorState]     = useState<DoorState>('open');
+  const { doorStates, fireStates, setDoorState: ctxSetDoor, setFireStatus: ctxSetFire } = useBuildingState();
+  const doorState  = doorStates[floorId]  ?? (floorId === 'RF' ? 'closed' : 'open');
+  const fireStatus = fireStates[floorId]  ?? null;
+
   const [isDragOver,    setIsDragOver]    = useState(false);
   const [fireRadialPos, setFireRadialPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -302,15 +298,22 @@ export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = 
       {isStair && (
         <button
           className={['stair-door-toggle', doorState === 'closed' ? 'stair-door-toggle--closed' : 'stair-door-toggle--open'].join(' ')}
-          onClick={() => setDoorState(d => d === 'open' ? 'closed' : 'open')}
+          onClick={() => ctxSetDoor(floorId, doorState === 'open' ? 'closed' : 'open')}
           title={doorState === 'open' ? '방화문 열림 — 클릭하여 닫기' : '방화문 닫힘 — 클릭하여 열기'}
         >
           {doorState === 'open' ? 'Open' : 'Close'}
         </button>
       )}
 
-      {isStair && stairSmoke     && <div className="zone-cell__stair-smoke" aria-label="연기 유입" />}
-      {isStair && stairSmokeEntry && <span className="zone-cell__stair-smoke-entry" aria-label="연기 유입 시작">💨</span>}
+      {isStair && smokeLevel !== 'none' && (
+        <div
+          className={[
+            'zone-cell__stair-smoke',
+            smokeLevel === 'weak' ? 'zone-cell__stair-smoke--weak' : '',
+          ].filter(Boolean).join(' ')}
+          aria-label="연기 유입"
+        />
+      )}
 
       {defaultLabel && <span className="zone-cell__zone-label">{defaultLabel}</span>}
 
@@ -336,7 +339,7 @@ export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = 
           cx={fireRadialPos.x}
           cy={fireRadialPos.y}
           current={fireStatus}
-          onSelect={setFireStatus}
+          onSelect={v => ctxSetFire(floorId, v)}
           onClose={() => setFireRadialPos(null)}
         />
       )}

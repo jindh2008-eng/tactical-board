@@ -1,30 +1,41 @@
 import type { DisplayFloor } from '../../types';
+import { useBuildingState, computeStairSmokeLevel } from '../../context/BuildingStateContext';
 import { ZoneCell } from './ZoneCell';
 import './FloorRow.css';
 
 interface Props {
   floor:                DisplayFloor;
   stairSmokeStartFloor?: number | null;
+  fireFloor?:           number;
+  aboveGroundFloors?:   number;
 }
 
-export function FloorRow({ floor, stairSmokeStartFloor = null }: Props) {
+export function FloorRow({
+  floor,
+  stairSmokeStartFloor  = null,
+  fireFloor             = 1,
+  aboveGroundFloors     = 1,
+}: Props) {
   const classes = [
     'floor-row',
     floor.isBasement ? 'floor-row--basement' : '',
     floor.isRange    ? 'floor-row--range'    : '',
   ].filter(Boolean).join(' ');
 
-  // 이 층의 계단실에 연기 표시 여부
-  // 옥상(RF): endFloor = aboveGroundFloors+1 이므로 선택한 층이 있으면 항상 true
-  // 묶음 행:  endFloor(상단 층)이 기준 이상이면 true — 범위 내 일부라도 연기가 있으면 표시
-  const stairHasSmoke =
-    stairSmokeStartFloor !== null && floor.endFloor >= stairSmokeStartFloor;
+  const { doorStates, fireStates } = useBuildingState();
 
-  // 연기 시작층 여부 — 해당 층에만 💨 아이콘 표시
-  const isSmokeBoundary =
-    stairSmokeStartFloor !== null &&
-    floor.startFloor <= stairSmokeStartFloor &&
-    floor.endFloor   >= stairSmokeStartFloor;
+  // RF의 endFloor = aboveGroundFloors + 1
+  const floorEndNum = floor.id === 'RF'
+    ? aboveGroundFloors + 1
+    : floor.endFloor;
+
+  const smokeLevel = computeStairSmokeLevel({
+    floorEndNum,
+    doorStates,
+    fireStates,
+    stairSmokeStartFloor,
+    fireFloor,
+  });
 
   return (
     <div className={classes}>
@@ -45,8 +56,7 @@ export function FloorRow({ floor, stairSmokeStartFloor = null }: Props) {
             zone={zone}
             floorId={floor.id}
             isRange={floor.isRange}
-            stairSmoke={zone.id === 'stair' ? stairHasSmoke : false}
-            stairSmokeEntry={zone.id === 'stair' ? isSmokeBoundary : false}
+            smokeLevel={zone.id === 'stair' ? smokeLevel : 'none'}
           />
         ))}
       </div>

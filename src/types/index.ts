@@ -175,3 +175,10 @@ export interface LogEntry {
 
 export type CommandStrategy = '공격' | '방어' | null;
 export type CommandMethod   = '고정' | '전진' | '이동' | null;
+
+// ─────────────────────────────────────────────
+// 건물 상태 타입 (계단실 문/화재단계)
+// ─────────────────────────────────────────────
+
+export type DoorState  = 'open' | 'closed';
+export type FireStatus = 'extension-peak' | 'peak' | 'half' | 'initial' | 'complete';
