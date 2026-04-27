@@ -7,12 +7,10 @@ import type {
   VictimToken,
   CreateVictimInput,
   VictimGender,
-  VictimAgeGroup,
   VictimCondition,
 } from '../types/victim';
 import {
   VICTIM_GENDERS,
-  VICTIM_AGE_GROUPS,
   VICTIM_CONDITIONS,
 } from '../types/victim';
 
@@ -89,7 +87,7 @@ export function zoneKeyToLabel(zoneKey: string | null): string {
  */
 const ZONE_AREA_LABELS: Record<string, string> = {
   left:   '좌구역',
-  center: '중앙구역',
+  center: '내부',
   right:  '우구역',
   stair:  '계단실',
 };
@@ -116,83 +114,10 @@ export function zoneKeyToFullLabel(zoneKey: string | null): string {
 }
 
 // ─────────────────────────────────────────────
-// displayBottom 조합
+// 위치 표시 텍스트 생성
 // ─────────────────────────────────────────────
 
-/**
- * 자동위치(location)와 수동 세부위치(subLocation)를 합쳐 하단 표시 텍스트 생성.
- *
- * 경우의 수:
- *   location="3F",  subLocation="212호" → "3F 212호"
- *   location="3F",  subLocation=""      → "3F"
- *   location="",    subLocation="212호" → "212호"
- *   location="",    subLocation=""      → "위치미상"
- */
-export function buildDisplayBottom(location: string, subLocation: string): string {
-  const loc = location.trim();
-  const sub = subLocation.trim();
-  if (loc && sub) return `${loc} ${sub}`;
-  if (loc)        return loc;
-  if (sub)        return sub;
-  return '위치미상';
-}
-
-// ─────────────────────────────────────────────
-// display 필드 재계산
-// ─────────────────────────────────────────────
-
-export function rebuildVictimDisplay(
-  victim: VictimToken,
-): Pick<VictimToken, 'displayTop' | 'displayBottom'> {
-  const displayTop =
-    victim.kind === 'person'
-      ? [victim.gender, victim.ageGroup, victim.condition].filter(Boolean).join('/')
-      : victim.customLabel?.trim() || '기타';
-
-  // 위치 줄: buildLocationLine 이 있으면 그것을, 없으면 기존 방식
-  // (lazy import 방지를 위해 inline 재현)
-  const displayBottom = buildVictimDisplayLine(victim);
-
-  return { displayTop, displayBottom };
-}
-
-/**
- * 구조대상자 위치 표시 두 번째 줄 (슬래시 구분 형식)
- *
- * 층/면/상세위치 조합. 있는 것만 포함.
- * 예: "3층/A면/창문", "3층/205호", "A면/공터", "복도"
- */
-export function buildVictimDisplayLine(victim: VictimToken): string {
-  const parts: string[] = [];
-  const loc = victim.location.trim();
-
-  // ① 층: location 에서 파싱
-  const floorDisplay = locationToFloorDisplay(loc);
-  if (floorDisplay) {
-    parts.push(floorDisplay);
-  }
-
-  // ② 면
-  if (victim.face) {
-    parts.push(`${victim.face}면`);
-  } else if (!floorDisplay && /^[A-D]면$/.test(loc)) {
-    // face 필드 없이 위치가 "A면" 형태인 경우
-    parts.push(loc);
-  }
-
-  // ③ 상세위치
-  const detail = getVictimDetail(victim);
-  if (detail) parts.push(detail);
-
-  // 아무것도 없으면 location 원문 또는 빈 문자열
-  if (parts.length === 0 && loc && !/^[A-D]면$/.test(loc)) {
-    parts.push(loc);
-  }
-
-  return parts.join('/');
-}
-
-/** zone 레이블 → 한글 층 표시 변환 */
+/** zone 레이블 → 한글 층 표시 */
 function locationToFloorDisplay(loc: string): string | null {
   if (!loc) return null;
   if (loc === 'RF') return '옥상';
@@ -203,19 +128,30 @@ function locationToFloorDisplay(loc: string): string | null {
   return null;
 }
 
-/** victim 상세위치 텍스트 추출 */
-function getVictimDetail(victim: VictimToken): string {
-  // 명시적 detailLocation 우선
-  if (victim.detailLocation !== undefined) return victim.detailLocation.trim();
-  // face 없으면 subLocation 그대로 사용
-  if (!victim.face) return victim.subLocation.trim();
-  // face 있으면 "X면 / " 접두어 제거
-  const prefix = `${victim.face}면`;
-  const sub = victim.subLocation.trim();
-  if (sub.startsWith(prefix)) {
-    return sub.slice(prefix.length).replace(/^\s*\/\s*/, '').trim();
+/**
+ * 위치 두 번째 줄 텍스트 — zoneKey 기반으로 파생.
+ * 형식: 층/면/상세위치 (있는 것만 `/` 연결)
+ * 예: "3층/A면/205호", "3층/복도", "A면/공터"
+ */
+export function buildVictimDisplayLine(victim: VictimToken): string {
+  const parts: string[] = [];
+  const loc = zoneKeyToLabel(victim.zoneKey);
+
+  const floorDisplay = locationToFloorDisplay(loc);
+  if (floorDisplay) parts.push(floorDisplay);
+
+  if (victim.face) {
+    parts.push(`${victim.face}면`);
+  } else if (!floorDisplay && /^[A-D]면$/.test(loc)) {
+    parts.push(loc);
   }
-  return sub;
+
+  const detail = victim.subLocation.trim();
+  if (detail) parts.push(detail);
+
+  if (parts.length === 0 && loc && !/^[A-D]면$/.test(loc)) parts.push(loc);
+
+  return parts.join('/');
 }
 
 // ─────────────────────────────────────────────
@@ -224,21 +160,17 @@ function getVictimDetail(victim: VictimToken): string {
 
 export function randomVictim(subLocation: string): VictimToken {
   const gender:    VictimGender    = pick(VICTIM_GENDERS);
-  const ageGroup:  VictimAgeGroup  = pick(VICTIM_AGE_GROUPS);
-  const condition: VictimCondition = pick(VICTIM_CONDITIONS);
-  const sub = subLocation.trim();
+  const age        = Math.floor(Math.random() * 65) + 10; // 10-74
+  const condition: VictimCondition = pick(['경상', '중상', '사망'] as const);
 
   return {
-    id:            uid(),
-    kind:          'person',
+    id:          uid(),
+    kind:        'person',
     gender,
-    ageGroup,
+    age,
     condition,
-    location:      '',        // 배치 전 — zone 드롭 시 자동 설정
-    subLocation:   sub,
-    displayTop:    `${gender}/${ageGroup}/${condition}`,
-    displayBottom: buildDisplayBottom('', sub),
-    zoneKey:       null,
+    subLocation: subLocation.trim(),
+    zoneKey:     null,
   };
 }
 
@@ -248,31 +180,31 @@ export function randomVictim(subLocation: string): VictimToken {
 
 export function buildVictim(input: CreateVictimInput): VictimToken {
   if (input.kind === 'person') {
-    const sub = input.subLocation.trim();
     return {
-      id:            uid(),
-      kind:          'person',
-      gender:        input.gender,
-      ageGroup:      input.ageGroup,
-      condition:     input.condition,
-      location:      '',
-      subLocation:   sub,
-      displayTop:    `${input.gender}/${input.ageGroup}/${input.condition}`,
-      displayBottom: buildDisplayBottom('', sub),
-      zoneKey:       null,
+      id:          uid(),
+      kind:        'person',
+      gender:      input.gender,
+      age:         input.age,
+      condition:   input.condition,
+      subLocation: input.subLocation.trim(),
+      zoneKey:     null,
+    };
+  } else if (input.kind === 'custom') {
+    return {
+      id:          uid(),
+      kind:        'custom',
+      customLabel: input.customLabel.trim() || '기타',
+      subLocation: input.subLocation.trim(),
+      zoneKey:     null,
     };
   } else {
-    const label = input.customLabel.trim() || '기타';
-    const sub   = input.subLocation.trim();
     return {
-      id:            uid(),
-      kind:          'custom',
-      customLabel:   label,
-      location:      '',
-      subLocation:   sub,
-      displayTop:    label,
-      displayBottom: buildDisplayBottom('', sub),
-      zoneKey:       null,
+      id:          uid(),
+      kind:        'group',
+      groupCount:  Math.min(6, Math.max(2, input.groupCount)),
+      condition:   input.condition,
+      subLocation: input.subLocation.trim(),
+      zoneKey:     null,
     };
   }
 }

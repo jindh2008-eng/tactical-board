@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReactDOM from 'react-dom';
 import type { Zone, FloorId } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
@@ -27,8 +28,74 @@ const FIRE_STAGE_META: Record<FireStatus, StageMeta> = {
   'complete':       { label: '완진',       bgClass: 'zone-cell--fs-complete',       showFlame: false, darkFlame: false },
 };
 
-const FIRE_STATUS_OPTIONS: { value: FireStatus; label: string }[] = Object.entries(FIRE_STAGE_META)
-  .map(([value, meta]) => ({ value: value as FireStatus, label: meta.label }));
+// ─────────────────────────────────────────────
+// 화재 원형 선택 메뉴
+// ─────────────────────────────────────────────
+
+const FIRE_RADIAL_RADIUS = 58;
+
+interface FireRadialItem {
+  value:     FireStatus | null;
+  label:     string;
+  showFlame: boolean;
+  darkFlame: boolean;
+}
+
+const FIRE_RADIAL_ITEMS: FireRadialItem[] = [
+  { value: 'extension-peak', label: '최성기',  showFlame: true,  darkFlame: false },
+  { value: 'peak',           label: '연소확대', showFlame: true,  darkFlame: false },
+  { value: 'half',           label: '50%',    showFlame: true,  darkFlame: false },
+  { value: 'initial',        label: '초진',    showFlame: true,  darkFlame: false },
+  { value: 'complete',       label: '완진',    showFlame: false, darkFlame: false },
+  { value: null,             label: ' - ',    showFlame: false, darkFlame: false },
+];
+
+function FireRadialMenu({ cx, cy, current, onSelect, onClose }: {
+  cx:       number;
+  cy:       number;
+  current:  FireStatus | null;
+  onSelect: (v: FireStatus | null) => void;
+  onClose:  () => void;
+}) {
+  return ReactDOM.createPortal(
+    <>
+      <div className="radial-backdrop" onMouseDown={onClose} />
+      <div className="radial-menu" style={{ left: cx, top: cy }}>
+        {FIRE_RADIAL_ITEMS.map((item, i) => {
+          const angleDeg = i * (360 / FIRE_RADIAL_ITEMS.length) - 90;
+          const angleRad = angleDeg * (Math.PI / 180);
+          const rx = Math.round(FIRE_RADIAL_RADIUS * Math.cos(angleRad));
+          const ry = Math.round(FIRE_RADIAL_RADIUS * Math.sin(angleRad));
+          const key = item.value ?? 'default';
+          const isActive = current === item.value;
+          return (
+            <button
+              key={key}
+              className={[
+                'fire-radial-item',
+                `fire-radial-item--${key}`,
+                isActive ? 'fire-radial-item--active' : '',
+              ].filter(Boolean).join(' ')}
+              style={{ transform: `translate(calc(-50% + ${rx}px), calc(-50% + ${ry}px))` }}
+              onMouseDown={e => { e.stopPropagation(); onSelect(item.value); onClose(); }}
+            >
+              {item.showFlame && (
+                <img
+                  className={['fire-ri__flame', item.darkFlame ? 'fire-ri__flame--dark' : ''].filter(Boolean).join(' ')}
+                  src="/fire.png"
+                  alt=""
+                  draggable={false}
+                />
+              )}
+              <span className="fire-ri__label">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </>,
+    document.body,
+  );
+}
 
 // ─────────────────────────────────────────────
 // 화염 이미지
@@ -118,8 +185,8 @@ function StairDiagram({
 // 구역 기본 라벨
 // ─────────────────────────────────────────────
 const ZONE_DEFAULT_LABELS: Partial<Record<string, string>> = {
-  left:  '단위지휘관',
-  right: '화재상황',
+  left:  '단위',
+  right: '화재',
 };
 
 // ─────────────────────────────────────────────
@@ -145,9 +212,10 @@ export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = 
   const hasSmoke = !!zone.status.smoke;
   const hasState = hasFire || hasSmoke;
 
-  const [fireStatus, setFireStatus] = useState<FireStatus | null>(null);
-  const [doorState,  setDoorState]  = useState<DoorState>('open');
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [fireStatus,    setFireStatus]    = useState<FireStatus | null>(null);
+  const [doorState,     setDoorState]     = useState<DoorState>('open');
+  const [isDragOver,    setIsDragOver]    = useState(false);
+  const [fireRadialPos, setFireRadialPos] = useState<{ x: number; y: number } | null>(null);
 
   // 출동대 토큰
   const { tokens, positions, moveToken } = useTokens();
@@ -250,25 +318,27 @@ export function ZoneCell({ zone, floorId, stairSmoke = false, stairSmokeEntry = 
       {showIcons && hasSmoke && <span className="zone-cell__icon" title="연기">💨</span>}
 
       {showFirePanel && (
-        <div className="zone-cell__fire-panel">
-          <select
-            className="zone-cell__fire-select"
-            value={fireStatus ?? ''}
-            onChange={e => setFireStatus((e.target.value as FireStatus) || null)}
-          >
-            <option value="">화재상황</option>
-            {FIRE_STATUS_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-
-          {stageMeta && (
+        <div
+          className="zone-cell__fire-panel"
+          onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setFireRadialPos({ x: e.clientX, y: e.clientY }); }}
+        >
+          {stageMeta ? (
             <div className="fire-cell">
               {stageMeta.showFlame && <FlameImage dark={stageMeta.darkFlame} />}
               <span className="fire-label">{stageMeta.label}</span>
             </div>
-          )}
+          ) : null}
         </div>
+      )}
+
+      {fireRadialPos && (
+        <FireRadialMenu
+          cx={fireRadialPos.x}
+          cy={fireRadialPos.y}
+          current={fireStatus}
+          onSelect={setFireStatus}
+          onClose={() => setFireRadialPos(null)}
+        />
       )}
 
       {/* 배치된 출동대 토큰 */}

@@ -1,9 +1,28 @@
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { SettingsProvider, useSettings } from './store/settingsStore';
 import { TrainingProvider, useTraining } from './context/TrainingContext';
+import { UIOverlayProvider, useUIOverlay } from './context/UIOverlayContext';
 import { SettingsPage } from './pages/SettingsPage';
 import { PlayPage }     from './pages/PlayPage';
 import './App.css';
+
+// ── 오버레이 버튼 (출동대 추가 / 분석 / 로그) ──────────────────────────
+function NavOverlayButtons() {
+  const { openOverlay } = useUIOverlay();
+  return (
+    <div className="nav-overlay-btns">
+      <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('unit-add')}>
+        출동대 추가
+      </button>
+      <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('analysis')}>
+        분석
+      </button>
+      <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('log')}>
+        로그
+      </button>
+    </div>
+  );
+}
 
 // ── 훈련 컨트롤 바 (SettingsProvider + TrainingProvider 내부) ──────────
 function TrainingControls() {
@@ -20,6 +39,8 @@ function TrainingControls() {
 
   return (
     <div className="nav-training">
+      <NavOverlayButtons />
+      <div className="nav-training__divider" />
       <span className="nav-training__target">
         {building.targetName || '대상 미설정'}
       </span>
@@ -100,7 +121,9 @@ function App() {
     <BrowserRouter>
       <SettingsProvider>
         <TrainingProvider>
-          <AppShell />
+          <UIOverlayProvider>
+            <AppShell />
+          </UIOverlayProvider>
         </TrainingProvider>
       </SettingsProvider>
     </BrowserRouter>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { VictimGender, VictimAgeGroup, VictimCondition, VictimCreationMode } from '../../types/victim';
-import { VICTIM_GENDERS, VICTIM_AGE_GROUPS, VICTIM_CONDITIONS } from '../../types/victim';
+import type { VictimGender, VictimCondition, VictimCreationMode } from '../../types/victim';
+import { VICTIM_GENDERS, VICTIM_CONDITIONS } from '../../types/victim';
 import { useVictims } from '../../context/VictimContext';
 import './VictimCreator.css';
 
@@ -51,12 +51,12 @@ function RandomForm() {
 function ManualForm() {
   const { createVictim } = useVictims();
   const [gender,      setGender]      = useState<VictimGender>(VICTIM_GENDERS[0]);
-  const [ageGroup,    setAgeGroup]    = useState<VictimAgeGroup>(VICTIM_AGE_GROUPS[4]);
+  const [age,         setAge]         = useState(35);
   const [condition,   setCondition]   = useState<VictimCondition>(VICTIM_CONDITIONS[0]);
   const [subLocation, setSubLocation] = useState('');
 
   function handleCreate() {
-    createVictim({ kind: 'person', gender, ageGroup, condition, subLocation });
+    createVictim({ kind: 'person', gender, age, condition, subLocation });
     setSubLocation('');
   }
 
@@ -78,18 +78,17 @@ function ManualForm() {
         </div>
       </div>
 
-      {/* 나이대 */}
+      {/* 나이 */}
       <div className="vc-row">
-        <label className="vc-label">나이대</label>
-        <select
-          className="vc-select"
-          value={ageGroup}
-          onChange={e => setAgeGroup(e.target.value as VictimAgeGroup)}
-        >
-          {VICTIM_AGE_GROUPS.map(a => (
-            <option key={a} value={a}>{a}</option>
-          ))}
-        </select>
+        <label className="vc-label">나이</label>
+        <input
+          className="vc-input vc-input--narrow"
+          type="number"
+          min={1}
+          max={99}
+          value={age}
+          onChange={e => setAge(Math.min(99, Math.max(1, Number(e.target.value) || 1)))}
+        />
       </div>
 
       {/* 상태 */}
@@ -177,6 +176,56 @@ function CustomForm() {
 }
 
 // ─────────────────────────────────────────────
+// 다수 구조대상자 폼 (최소 2명, 최대 6명)
+// ─────────────────────────────────────────────
+
+function GroupForm() {
+  const { createVictim } = useVictims();
+  const [count,       setCount]       = useState(3);
+  const [subLocation, setSubLocation] = useState('');
+
+  function handleCreate() {
+    createVictim({ kind: 'group', groupCount: count, condition: '경상', subLocation });
+    setSubLocation('');
+  }
+
+  return (
+    <div className="vc-form">
+      <div className="vc-row">
+        <label className="vc-label">인원</label>
+        <div className="vc-toggle-group">
+          {([2, 3, 4, 5, 6, 7, 8, 9] as const).map(n => (
+            <button
+              key={n}
+              className={`vc-toggle ${count === n ? 'vc-toggle--active' : ''}`}
+              onClick={() => setCount(n)}
+            >
+              {n}명
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="vc-row">
+        <label className="vc-label">세부위치</label>
+        <input
+          className="vc-input"
+          placeholder={SUB_PLACEHOLDER}
+          value={subLocation}
+          onChange={e => setSubLocation(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleCreate()}
+          maxLength={20}
+        />
+      </div>
+      <div className="vc-row vc-row--right">
+        <button className="vc-btn vc-btn--create" onClick={handleCreate}>
+          생성
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // VictimCreator — 메인 패널
 // ─────────────────────────────────────────────
 
@@ -184,6 +233,7 @@ const MODE_LABELS: Record<VictimCreationMode, string> = {
   random: '랜덤',
   manual: '직접선택',
   custom: '기타',
+  group:  '다수',
 };
 
 export function VictimCreator() {
@@ -208,6 +258,7 @@ export function VictimCreator() {
         {mode === 'random' && <RandomForm />}
         {mode === 'manual' && <ManualForm />}
         {mode === 'custom' && <CustomForm />}
+        {mode === 'group'  && <GroupForm />}
       </div>
     </div>
   );

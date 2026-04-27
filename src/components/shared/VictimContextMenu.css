@@ -83,22 +83,22 @@
 }
 
 /* 상태별 색상 */
-.vcm__cond-btn--alive {
-  background: #1a1000;
-  color: #ffaa55;
-  border-color: #6a4010;
+.vcm__cond-btn--minor {
+  background: #0a180e;
+  color: #5cc87c;
+  border-color: #2a6a3a;
 }
 
-.vcm__cond-btn--isolated {
-  background: #1a1600;
-  color: #ffdd44;
-  border-color: #6a5a00;
+.vcm__cond-btn--critical {
+  background: #1a0808;
+  color: #e05050;
+  border-color: #6a1818;
 }
 
 .vcm__cond-btn--unconscious {
   background: #200808;
-  color: #ff8888;
-  border-color: #6a1818;
+  color: #cc3535;
+  border-color: #7a1010;
 }
 
 .vcm__cond-btn--dead {

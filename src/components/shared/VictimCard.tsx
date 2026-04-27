@@ -1,11 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import type { VictimPos, VictimUpdate } from '../../context/VictimContext';
 import { useVictims } from '../../context/VictimContext';
 import { useTokens } from '../../context/TokenContext';
 import type { UnitToken } from '../../types';
-import type { VictimToken } from '../../types/victim';
+import type { VictimToken, VictimCondition } from '../../types/victim';
 import { VictimContextMenu } from './VictimContextMenu';
-import { zoneKeyToFullLabel } from '../../utils/victimUtils';
+import { zoneKeyToFullLabel, buildVictimDisplayLine } from '../../utils/victimUtils';
 import './VictimCard.css';
 
 interface Props {
@@ -13,20 +14,81 @@ interface Props {
   absPos?: VictimPos;
 }
 
-/** 상태별 CSS 수식어 */
-function conditionMod(victim: VictimToken): string {
-  if (victim.kind === 'custom') return 'victim-card--custom';
-  if (!victim.condition)        return '';
-  switch (victim.condition) {
-    case '의식없음': return 'victim-card--unconscious';
-    default:        return 'victim-card--alive';
+function condKey(c: VictimCondition | undefined): string {
+  switch (c) {
+    case '경상': return 'minor';
+    case '중상': return 'critical';
+    case '사망': return 'dead';
+    default:     return 'minor';
   }
 }
+
+// ─── 개별 구조대상자 아이콘 ───────────────────────
+
+function MaleIcon() {
+  /* 픽토그램 — 머리 + 팔(직선) + 몸통 + 두 다리 */
+  return (
+    <svg className="victim-gender-icon victim-gender-icon--male" viewBox="0 0 14 26" fill="currentColor" aria-hidden="true">
+      <circle cx="7" cy="3" r="2.8"/>
+      {/* 왼팔 */}
+      <rect x="2.6" y="7" width="1.9" height="7.5" rx="0.6"/>
+      {/* 오른팔 */}
+      <rect x="9.5" y="7" width="1.9" height="7.5" rx="0.6"/>
+      {/* 몸통 */}
+      <rect x="5" y="7" width="4" height="8.5" rx="0.4"/>
+      {/* 왼다리 */}
+      <rect x="5" y="15.5" width="1.8" height="10.5" rx="0.6"/>
+      {/* 오른다리 */}
+      <rect x="7.2" y="15.5" width="1.8" height="10.5" rx="0.6"/>
+    </svg>
+  );
+}
+
+function FemaleIcon() {
+  /* 픽토그램 — 머리 + 팔(바깥 사선) + 상체 + A라인 치마 + 두 다리 */
+  return (
+    <svg className="victim-gender-icon victim-gender-icon--female" viewBox="0 0 14 26" fill="currentColor" aria-hidden="true">
+      <circle cx="7" cy="3" r="2.8"/>
+      {/* 왼팔 (바깥 사선) */}
+      <polygon points="5.2,7 6.4,7 4,14 2.8,14"/>
+      {/* 오른팔 (바깥 사선) */}
+      <polygon points="7.6,7 8.8,7 11.2,14 10,14"/>
+      {/* 상체 */}
+      <rect x="5.2" y="7" width="3.6" height="5.5" rx="0.4"/>
+      {/* A라인 치마 */}
+      <polygon points="4.8,12.5 0.5,22.5 13.5,22.5 9.2,12.5"/>
+      {/* 왼다리 */}
+      <rect x="3.8" y="22.5" width="2.2" height="3.5" rx="0.6"/>
+      {/* 오른다리 */}
+      <rect x="8" y="22.5" width="2.2" height="3.5" rx="0.6"/>
+    </svg>
+  );
+}
+
+// ─── 다수 구조대상자 아이콘 (소형) ───────────────
+
+function GroupPersonIcon() {
+  return (
+    <svg className="group-person-icon" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+      <circle cx="5" cy="3.5" r="2.8"/>
+      <path d="M0.5 13.5 Q0.5 8 5 8 Q9.5 8 9.5 13.5Z"/>
+    </svg>
+  );
+}
+
+// ─── 카드 본체 ───────────────────────────────────
 
 export function VictimCard({ victim, absPos }: Props) {
   const { updateVictim, moveVictim } = useVictims();
   const { tokens, rescueUnit }       = useTokens();
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
+  const [ctxMenu,     setCtxMenu]     = useState<{ x: number; y: number } | null>(null);
+  const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  function handleMouseEnter() {
+    if (wrapperRef.current) setTooltipRect(wrapperRef.current.getBoundingClientRect());
+  }
+  function handleMouseLeave() { setTooltipRect(null); }
 
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
     const el = e.currentTarget;
@@ -35,6 +97,7 @@ export function VictimCard({ victim, absPos }: Props) {
     e.dataTransfer.setData('tokenH', String(el.offsetHeight));
     e.dataTransfer.effectAllowed = 'move';
     setCtxMenu(null);
+    setTooltipRect(null);
   }
 
   function handleContextMenu(e: React.MouseEvent) {
@@ -49,7 +112,6 @@ export function VictimCard({ victim, absPos }: Props) {
     [updateVictim, victim.id],
   );
 
-  /** 구조 처리: 출동대 + 구조대상자 모두 임시의료소로 이동 */
   const handleRescue = useCallback((unit: UnitToken) => {
     const locationLabel = zoneKeyToFullLabel(victim.zoneKey);
     const rescueLocLabel = [locationLabel, victim.subLocation]
@@ -71,25 +133,128 @@ export function VictimCard({ victim, absPos }: Props) {
       }
     : undefined;
 
+  const displayTop =
+    victim.kind === 'person'
+      ? [victim.gender, victim.age, victim.condition].filter(v => v != null && v !== '').join('/')
+      : victim.kind === 'group' ? `다수 ${victim.groupCount ?? 2}명`
+      : victim.customLabel?.trim() || '기타';
+  const title = [displayTop, buildVictimDisplayLine(victim)].filter(Boolean).join(' · ');
+
+  // ── 개별 구조대상자 ─────────────────────────────
+  if (victim.kind === 'person') {
+    const ck = condKey(victim.condition);
+    const genderKey = victim.gender === '남' ? 'male' : 'female';
+    const subLoc = victim.subLocation.trim();
+    return (
+      <>
+        <div
+          className="victim-card-wrapper"
+          style={wrapperStyle}
+          ref={wrapperRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div
+            className={`victim-card victim-card--person victim-gender--${genderKey}`}
+            draggable
+            onDragStart={handleDragStart}
+            onContextMenu={handleContextMenu}
+            title={title}
+          >
+            {victim.gender === '남' ? <MaleIcon /> : <FemaleIcon />}
+            <span className="victim-card__subloc">{subLoc}</span>
+          </div>
+        </div>
+        {tooltipRect && ReactDOM.createPortal(
+          <div
+            className={`victim-tooltip-portal victim-cond--${ck}`}
+            style={{
+              position: 'fixed',
+              left:     Math.round(tooltipRect.left + tooltipRect.width / 2),
+              top:      Math.round(tooltipRect.top - 6),
+              transform: 'translate(-50%, -100%)',
+              zIndex:   9999,
+              pointerEvents: 'none',
+            }}
+          >
+            <span className="tooltip__age">{victim.age ?? '?'}세</span>
+            <span className="tooltip__cond">{victim.condition ?? '경상'}</span>
+          </div>,
+          document.body,
+        )}
+        {ctxMenu && (
+          <VictimContextMenu
+            victim={victim}
+            x={ctxMenu.x}
+            y={ctxMenu.y}
+            tokens={tokens}
+            onUpdate={handleUpdate}
+            onRescue={handleRescue}
+            onClose={handleClose}
+          />
+        )}
+      </>
+    );
+  }
+
+  // ── 다수 구조대상자 ─────────────────────────────
+  if (victim.kind === 'group') {
+    const count = victim.groupCount ?? 2;
+    return (
+      <>
+        <div className="victim-card-wrapper" style={wrapperStyle}>
+          <div
+            className="victim-card victim-card--group victim-cond--minor"
+            draggable
+            onDragStart={handleDragStart}
+            onContextMenu={handleContextMenu}
+            title={title}
+          >
+            <div className="group-icons">
+              {Array.from({ length: count }).map((_, i) => (
+                <GroupPersonIcon key={i} />
+              ))}
+            </div>
+            <div className="group-info">
+              <span className="group-info__count">{count}명</span>
+              <span className="group-info__cond">경상</span>
+            </div>
+          </div>
+        </div>
+        {ctxMenu && (
+          <VictimContextMenu
+            victim={victim}
+            x={ctxMenu.x}
+            y={ctxMenu.y}
+            tokens={tokens}
+            onUpdate={handleUpdate}
+            onRescue={handleRescue}
+            onClose={handleClose}
+          />
+        )}
+      </>
+    );
+  }
+
+  // ── 기타 (custom) ───────────────────────────────
   return (
     <>
       <div className="victim-card-wrapper" style={wrapperStyle}>
         <div
-          className={`victim-card ${conditionMod(victim)}`}
+          className="victim-card victim-card--custom"
           draggable
           onDragStart={handleDragStart}
           onContextMenu={handleContextMenu}
-          title={[victim.displayTop, victim.displayBottom].filter(Boolean).join(' · ')}
+          title={title}
         >
-          <span className="victim-card__top">{victim.displayTop}</span>
-          {(victim.originDisplayBottom ?? victim.displayBottom) && (
+          <span className="victim-card__top">{victim.customLabel?.trim() || '기타'}</span>
+          {(victim.originDisplayBottom ?? buildVictimDisplayLine(victim)) && (
             <span className="victim-card__bottom">
-              {victim.originDisplayBottom ?? victim.displayBottom}
+              {victim.originDisplayBottom ?? buildVictimDisplayLine(victim)}
             </span>
           )}
         </div>
       </div>
-
       {ctxMenu && (
         <VictimContextMenu
           victim={victim}

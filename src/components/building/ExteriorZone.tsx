@@ -64,7 +64,6 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
         isDragOver ? 'drop-target--active' : '',
       ].filter(Boolean).join(' ')}
       {...getFaceZoneDataAttrs(zone)}
-      title={`${zone.face}면 일반 이동 영역`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}

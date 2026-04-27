@@ -75,7 +75,12 @@ export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, on
     >
       {/* ── 1. 환자정보 ─────────────────────────── */}
       <div className="vcm__header">
-        <span className="vcm__header-top">{victim.displayTop}</span>
+        <span className="vcm__header-top">
+          {victim.kind === 'person'
+            ? [victim.gender, victim.age, victim.condition].filter(v => v != null && v !== '').join('/')
+            : victim.kind === 'group' ? `다수 ${victim.groupCount ?? 2}명`
+            : victim.customLabel?.trim() || '기타'}
+        </span>
       </div>
 
       {/* ── 2. 구조 처리 ────────────────────────── */}
@@ -193,9 +198,9 @@ export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, on
 
 function condClass(c: VictimCondition): string {
   switch (c) {
-    case '경상':    return 'alive';
-    case '중상':    return 'alive';
-    case '의식없음': return 'unconscious';
-    default:        return '';
+    case '경상': return 'minor';
+    case '중상': return 'critical';
+    case '사망': return 'dead';
+    default:     return '';
   }
 }

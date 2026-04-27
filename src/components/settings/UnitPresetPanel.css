@@ -156,6 +156,50 @@
 .upp__preset-preview {
   flex: 1;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.upp__preset-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ══ 색상 스와치 ══ */
+
+.upp__color-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.upp__color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.upp__color-swatch:hover {
+  transform: scale(1.2);
+}
+
+.upp__color-swatch--active {
+  border-color: #fff;
+  transform: scale(1.15);
+}
+
+.upp__preview-text {
+  display: flex;
   flex-direction: column;
   gap: 1px;
   min-width: 0;

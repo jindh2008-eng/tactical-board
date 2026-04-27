@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import type { SharedBadgePreset } from '../../types/presets';
-import { UNIT_TYPES } from '../../types/presets';
+import { UNIT_TYPES, PRESET_COLORS } from '../../types/presets';
+import type { TokenColor } from '../../types';
 import './SharedPresetPanel.css';
 
 /**
@@ -17,6 +18,7 @@ export function SharedPresetPanel() {
   const [newTop,     setNewTop]     = useState('');
   const [newBottom,  setNewBottom]  = useState('');
   const [newTargets, setNewTargets] = useState<string[]>([]);
+  const [newColor,   setNewColor]   = useState<TokenColor | undefined>(undefined);
   const [showForm,   setShowForm]   = useState(false);
 
   // ── 수정 상태 ──────────────────────────────
@@ -24,6 +26,7 @@ export function SharedPresetPanel() {
   const [editTop,     setEditTop]     = useState('');
   const [editBottom,  setEditBottom]  = useState('');
   const [editTargets, setEditTargets] = useState<string[]>([]);
+  const [editColor,   setEditColor]   = useState<TokenColor | undefined>(undefined);
 
   function toggleTarget(key: string, targets: string[], setTargets: (t: string[]) => void) {
     setTargets(targets.includes(key) ? targets.filter(t => t !== key) : [...targets, key]);
@@ -37,10 +40,12 @@ export function SharedPresetPanel() {
       topText:     top,
       bottomText:  newBottom.trim() || undefined,
       targetTypes: newTargets,
+      color:       newColor,
     });
     setNewTop('');
     setNewBottom('');
     setNewTargets([]);
+    setNewColor(undefined);
     setShowForm(false);
   }
 
@@ -50,6 +55,7 @@ export function SharedPresetPanel() {
     setEditTop(p.topText);
     setEditBottom(p.bottomText ?? '');
     setEditTargets([...p.targetTypes]);
+    setEditColor(p.color);
   }
 
   function saveEdit() {
@@ -58,6 +64,7 @@ export function SharedPresetPanel() {
       topText:     editTop.trim(),
       bottomText:  editBottom.trim() || undefined,
       targetTypes: editTargets,
+      color:       editColor,
     });
     setEditId(null);
   }
@@ -74,7 +81,7 @@ export function SharedPresetPanel() {
         </div>
         <button
           className={`spp__add-toggle ${showForm ? 'spp__add-toggle--active' : ''}`}
-          onClick={() => { setShowForm(s => !s); setNewTop(''); setNewBottom(''); setNewTargets([]); }}
+          onClick={() => { setShowForm(s => !s); setNewTop(''); setNewBottom(''); setNewTargets([]); setNewColor(undefined); }}
         >
           {showForm ? '취소' : '+ 추가'}
         </button>
@@ -99,6 +106,18 @@ export function SharedPresetPanel() {
               onChange={e => setNewBottom(e.target.value)}
               onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') handleAdd(); }}
             />
+          </div>
+          <div className="spp__color-row">
+            {PRESET_COLORS.map(c => (
+              <button
+                key={c.value}
+                type="button"
+                className={`spp__color-swatch${newColor === c.value ? ' spp__color-swatch--active' : ''}`}
+                style={{ background: c.bg }}
+                title={c.label}
+                onClick={() => setNewColor(prev => prev === c.value ? undefined : c.value)}
+              />
+            ))}
           </div>
           <div className="spp__targets-label">
             적용 대상 <span className="spp__targets-hint">(미선택 = 모든 출동대)</span>
@@ -153,6 +172,18 @@ export function SharedPresetPanel() {
                     onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') saveEdit(); }}
                   />
                 </div>
+                <div className="spp__color-row">
+                  {PRESET_COLORS.map(c => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      className={`spp__color-swatch${editColor === c.value ? ' spp__color-swatch--active' : ''}`}
+                      style={{ background: c.bg }}
+                      title={c.label}
+                      onClick={() => setEditColor(prev => prev === c.value ? undefined : c.value)}
+                    />
+                  ))}
+                </div>
                 <div className="spp__targets-label">
                   적용 대상 <span className="spp__targets-hint">(미선택 = 모든 출동대)</span>
                 </div>
@@ -179,6 +210,12 @@ export function SharedPresetPanel() {
               <>
                 <div className="spp__preview">
                   <div className="spp__preview-text">
+                    {p.color && (
+                      <span
+                        className="spp__preset-dot"
+                        style={{ background: PRESET_COLORS.find(c => c.value === p.color)?.bg }}
+                      />
+                    )}
                     <span className="spp__preview-top">{p.topText}</span>
                     {p.bottomText && <span className="spp__preview-bottom">{p.bottomText}</span>}
                   </div>

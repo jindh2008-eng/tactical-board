@@ -45,11 +45,11 @@
 }
 
 /* ─────────────────────────────────────────────
-   좌/우 구역 — 110px 고정
+   좌/우 구역 — 88px 고정 (기존 110px의 80%)
    ─────────────────────────────────────────────*/
 .zone-cell--left,
 .zone-cell--right {
-  flex: 0 0 110px;
+  flex: 0 0 88px;
   background-color: var(--ctr-surface);
   background-image: repeating-linear-gradient(
     to bottom,
@@ -124,7 +124,7 @@
   align-items: center;
   gap: 3px;
 
-  font-size: 0.6rem;
+  font-size: 0.68rem;
   font-weight: 800;
 
   padding: 2px 6px;
@@ -244,7 +244,7 @@
   align-items: center;
   justify-content: center;
 
-  font-size: 0.72rem;
+  font-size: 0.80rem;
   font-weight: 600;
   color: rgba(80, 80, 80, 0.35);
 
@@ -296,46 +296,18 @@
   z-index: 2;
 }
 
-/* 드롭다운 — 구역 상단에 absolute 고정, 중립 스타일 */
-.zone-cell__fire-select {
+/* 우클릭 힌트 */
+.fire-cell__hint {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  left: 3px;
-
-  font-size: 0.58rem;
-  font-family: inherit;
-  padding: 2px 4px;
-  height: 18px;
-
-  background-color: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(0, 0, 0, 0.22);
-  border-radius: 3px;
-  color: #444;
-  cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  /* 커스텀 화살표 */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 4px center;
-  background-size: 7px 5px;
-  padding-right: 14px;
-  line-height: 1;
-}
-
-.zone-cell__fire-select:hover {
-  background-color: rgba(255, 255, 255, 0.90);
-  border-color: rgba(0, 0, 0, 0.35);
-}
-
-.zone-cell__fire-select:focus {
-  outline: none;
-  border-color: rgba(100, 140, 180, 0.70);
-  background-color: rgba(255, 255, 255, 0.95);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.52rem;
+  color: rgba(100, 80, 60, 0.40);
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: 0.04em;
 }
 
 /* ─────────────────────────────────────────────
@@ -373,8 +345,8 @@
    ─────────────────────────────────────────────*/
 .fire-cell {
   position: absolute;
-  top: 24px;        /* select top(3) + height(18) + gap(3) */
-  bottom: 2px;
+  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
 
@@ -408,7 +380,7 @@
   position: relative;
   z-index: 2;
 
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   font-weight: 800;
   text-align: center;
   line-height: 1.2;
@@ -451,4 +423,89 @@
 .zone-cell--fs-complete .fire-label {
   color: #111;
   text-shadow: none;
+}
+
+/* ─────────────────────────────────────────────
+   화재 원형 선택 메뉴
+   .radial-backdrop / .radial-menu 는 EventTokenCard.css 에서 공유
+   ─────────────────────────────────────────────*/
+
+.fire-radial-item {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  pointer-events: all;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  background: rgba(25, 18, 10, 0.88);
+  transition: filter 0.1s, border-color 0.1s;
+  overflow: hidden;
+}
+
+.fire-radial-item:hover {
+  filter: brightness(1.25);
+  border-color: rgba(255, 255, 255, 0.40);
+}
+
+.fire-radial-item--active {
+  border-color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* 단계별 기본(비활성) 배경 — 초진은 어둡지 않게 */
+.fire-radial-item--initial { background: rgba(70, 55, 35, 0.88); }
+
+/* 단계별 활성 배경 */
+.fire-radial-item--extension-peak.fire-radial-item--active { background: #6a0800; }
+.fire-radial-item--peak.fire-radial-item--active           { background: #982818; }
+.fire-radial-item--half.fire-radial-item--active           { background: #b06030; }
+.fire-radial-item--initial.fire-radial-item--active        { background: #5a4828; }
+.fire-radial-item--complete.fire-radial-item--active       { background: #2a4a6a; }
+.fire-radial-item--default.fire-radial-item--active        { background: #3a3a42; }
+
+/* 화염 아이콘 */
+.fire-ri__flame {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.fire-ri__flame--dark {
+  filter: grayscale(1) brightness(0.15) contrast(1.4);
+}
+
+/* 단계 레이블 */
+.fire-ri__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1;
+  text-align: center;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.fire-radial-item--active .fire-ri__label {
+  color: #fff;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+/* 완진: 텍스트 색 */
+.fire-radial-item--complete .fire-ri__label,
+.fire-radial-item--complete.fire-radial-item--active .fire-ri__label {
+  color: rgba(160, 220, 255, 0.95);
+}
+
+/* 없음(-): 텍스트 색 */
+.fire-radial-item--default .fire-ri__label {
+  color: rgba(180, 180, 185, 0.85);
+  font-size: 0.80rem;
 }

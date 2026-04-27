@@ -45,14 +45,14 @@ export function UnitStatus() {
   const { createToken } = useTokens();
   const [customText, setCustomText] = useState('');
 
-  // 활동대: "진압대" → "진압1대"
+  // 활동대: "진압대" → "진압1"
   function makeActivity({ name, color, unitType }: ActivityItem) {
-    createToken(name, 'activity', color, n => `${name.slice(0, -1)}${n}대`, unitType);
+    createToken(name, 'activity', color, n => `${name.slice(0, -1)}${n}`, unitType);
   }
 
-  // 차량: "펌프" → "펌프1호"
+  // 차량: "펌프" → "펌프1"
   function makeVehicle({ name, unitType }: VehicleItem) {
-    createToken(name, 'vehicle', 'vehicle', n => `${name}${n}호`, unitType);
+    createToken(name, 'vehicle', 'vehicle', n => `${name}${n}`, unitType);
   }
 
   // 유관기관: 번호 없이 이름 그대로

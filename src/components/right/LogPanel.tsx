@@ -18,9 +18,9 @@ const STATIC_LABELS: Record<string, string> = {
 };
 
 const ZONE_NAMES: Record<string, string> = {
-  left:   '단위지휘관',
-  center: '중앙',
-  right:  '화재상황',
+  left:   '단위',
+  center: '내부',
+  right:  '화재',
   stair:  '계단실',
 };
 
@@ -40,41 +40,51 @@ function zoneLabel(zoneId: string): string {
 // LogPanel
 // ─────────────────────────────────────────────
 
-export function LogPanel() {
+interface LogPanelProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export function LogPanel({ collapsed, onToggle }: LogPanelProps) {
   const { logs } = useTokens();
 
   return (
-    <div className="panel log-panel">
-      <div className="panel__header">이동 로그</div>
-      <div className="log-panel__body">
-        {logs.length === 0 ? (
-          <span className="log-panel__empty">로그가 없습니다.</span>
-        ) : (
-          logs.map(entry => (
-            <div key={entry.id} className="log-panel__entry">
-              <span className="log-panel__time">{entry.timestamp}</span>
-              <span className={[
-                'log-panel__token',
-                entry.tokenColor ? `log-panel__token--${entry.tokenColor}` : '',
-              ].filter(Boolean).join(' ')}>
-                {entry.tokenName}
-              </span>
-              {entry.logType === 'rescue' ? (
-                <span className="log-panel__rescue-note">{entry.note}</span>
-              ) : (
-                <>
-                  <span className="log-panel__route">
-                    {zoneLabel(entry.fromZoneId)} → {zoneLabel(entry.toZoneId)}
-                  </span>
-                  {entry.note && (
-                    <span className="log-panel__note">{entry.note}</span>
-                  )}
-                </>
-              )}
-            </div>
-          ))
-        )}
+    <div className={`panel log-panel${collapsed ? ' log-panel--collapsed' : ''}`}>
+      <div className="panel__header panel__header--toggleable" onClick={onToggle}>
+        이동 로그
+        <span className="panel__toggle-icon">{collapsed ? '▼' : '▲'}</span>
       </div>
+      {!collapsed && (
+        <div className="log-panel__body">
+          {logs.length === 0 ? (
+            <span className="log-panel__empty">로그가 없습니다.</span>
+          ) : (
+            logs.map(entry => (
+              <div key={entry.id} className="log-panel__entry">
+                <span className="log-panel__time">{entry.timestamp}</span>
+                <span className={[
+                  'log-panel__token',
+                  entry.tokenColor ? `log-panel__token--${entry.tokenColor}` : '',
+                ].filter(Boolean).join(' ')}>
+                  {entry.tokenName}
+                </span>
+                {entry.logType === 'rescue' ? (
+                  <span className="log-panel__rescue-note">{entry.note}</span>
+                ) : (
+                  <>
+                    <span className="log-panel__route">
+                      {zoneLabel(entry.fromZoneId)} → {zoneLabel(entry.toZoneId)}
+                    </span>
+                    {entry.note && (
+                      <span className="log-panel__note">{entry.note}</span>
+                    )}
+                  </>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

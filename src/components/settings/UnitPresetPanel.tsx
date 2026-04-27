@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import type { UnitSpecificBadgePreset } from '../../types/presets';
-import { UNIT_TYPES } from '../../types/presets';
+import { UNIT_TYPES, PRESET_COLORS } from '../../types/presets';
+import type { TokenColor } from '../../types';
 import './UnitPresetPanel.css';
 
 /**
@@ -17,11 +18,13 @@ export function UnitPresetPanel() {
   // ── 프리셋 추가 ────────────────────────────
   const [newTop,    setNewTop]    = useState('');
   const [newBottom, setNewBottom] = useState('');
+  const [newColor,  setNewColor]  = useState<TokenColor | undefined>(undefined);
 
   // ── 프리셋 수정 ────────────────────────────
   const [editId,     setEditId]     = useState<string | null>(null);
   const [editTop,    setEditTop]    = useState('');
   const [editBottom, setEditBottom] = useState('');
+  const [editColor,  setEditColor]  = useState<TokenColor | undefined>(undefined);
 
   // 선택된 종류의 프리셋만 필터
   const currentPresets = unitBadgePresets.filter(p => p.unitType === selectedType);
@@ -34,15 +37,17 @@ export function UnitPresetPanel() {
   function handleAdd() {
     const top = newTop.trim();
     if (!top || !selectedType) return;
-    addUnitPreset({ unitType: selectedType, topText: top, bottomText: newBottom.trim() || undefined });
+    addUnitPreset({ unitType: selectedType, topText: top, bottomText: newBottom.trim() || undefined, color: newColor });
     setNewTop('');
     setNewBottom('');
+    setNewColor(undefined);
   }
 
   function startEdit(p: UnitSpecificBadgePreset) {
     setEditId(p.id);
     setEditTop(p.topText);
     setEditBottom(p.bottomText ?? '');
+    setEditColor(p.color);
   }
 
   function saveEdit() {
@@ -51,6 +56,7 @@ export function UnitPresetPanel() {
       unitType:   selectedType,
       topText:    editTop.trim(),
       bottomText: editBottom.trim() || undefined,
+      color:      editColor,
     });
     setEditId(null);
   }
@@ -107,6 +113,18 @@ export function UnitPresetPanel() {
             onChange={e => setNewBottom(e.target.value)}
             onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') handleAdd(); }}
           />
+          <div className="upp__color-row">
+            {PRESET_COLORS.map(c => (
+              <button
+                key={c.value}
+                type="button"
+                className={`upp__color-swatch${newColor === c.value ? ' upp__color-swatch--active' : ''}`}
+                style={{ background: c.bg }}
+                title={c.label}
+                onClick={() => setNewColor(prev => prev === c.value ? undefined : c.value)}
+              />
+            ))}
+          </div>
           <button
             className="upp__btn upp__btn--primary"
             onClick={handleAdd}
@@ -144,6 +162,18 @@ export function UnitPresetPanel() {
                       placeholder="아랫줄 (선택)"
                       onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') saveEdit(); }}
                     />
+                    <div className="upp__color-row">
+                      {PRESET_COLORS.map(c => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          className={`upp__color-swatch${editColor === c.value ? ' upp__color-swatch--active' : ''}`}
+                          style={{ background: c.bg }}
+                          title={c.label}
+                          onClick={() => setEditColor(prev => prev === c.value ? undefined : c.value)}
+                        />
+                      ))}
+                    </div>
                   </div>
                   <div className="upp__row-actions">
                     <button className="upp__btn upp__btn--primary" onClick={saveEdit} disabled={!editTop.trim()}>저장</button>
@@ -154,8 +184,16 @@ export function UnitPresetPanel() {
                 /* 표시 모드 */
                 <>
                   <div className="upp__preset-preview">
-                    <span className="upp__preview-top">{p.topText}</span>
-                    {p.bottomText && <span className="upp__preview-bottom">{p.bottomText}</span>}
+                    {p.color && (
+                      <span
+                        className="upp__preset-dot"
+                        style={{ background: PRESET_COLORS.find(c => c.value === p.color)?.bg }}
+                      />
+                    )}
+                    <div className="upp__preview-text">
+                      <span className="upp__preview-top">{p.topText}</span>
+                      {p.bottomText && <span className="upp__preview-bottom">{p.bottomText}</span>}
+                    </div>
                   </div>
                   <div className="upp__row-actions">
                     <button className="upp__btn" onClick={() => startEdit(p)}>수정</button>

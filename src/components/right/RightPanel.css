@@ -1,6 +1,5 @@
 /* ─────────────────────────────────────────────
    우측 패널 컨테이너
-   App 그리드 200px 열을 채움
    ─────────────────────────────────────────────*/
 .right-panel {
   display: flex;
@@ -10,8 +9,63 @@
   overflow: hidden;
 }
 
-/* 지휘정보: 상단 40% */
-.right-panel > *:nth-child(1) { flex: 0 0 40%;  overflow: hidden; }
+/* 지휘정보: 상단 40% (펼쳐진 상태일 때) */
+.right-panel > .command-info:not(.command-info--collapsed) { flex: 0 0 40%; overflow: hidden; }
+.right-panel > .command-info.command-info--collapsed       { flex: 0 0 auto; }
 
 /* 로그 패널: 나머지 */
-.right-panel > *:nth-child(2) { flex: 1;         overflow: hidden; }
+.right-panel > .log-panel:not(.log-panel--collapsed) { flex: 1; overflow: hidden; }
+.right-panel > .log-panel.log-panel--collapsed       { flex: 0 0 auto; }
+
+/* 전체 접기 버튼 */
+.right-panel__collapse-btn {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 4px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  cursor: pointer;
+  align-self: flex-end;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.right-panel__collapse-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+/* ─────────────────────────────────────────────
+   접힘 상태 — 슬림 세로 스트립
+   ─────────────────────────────────────────────*/
+.right-panel--collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 8px;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 3px;
+}
+
+.right-panel__expand-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  padding: 4px 3px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  writing-mode: initial;
+}
+
+.right-panel__expand-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}

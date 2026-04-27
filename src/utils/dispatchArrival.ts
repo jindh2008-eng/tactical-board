@@ -8,17 +8,17 @@ import type { UnitToken, TokenColor, TokenType } from '../types';
 
 /** label 파싱에 사용하는 공통 매핑 (roster 와 동일 기준) */
 const LABEL_COUNTER_DEFS = [
-  { baseKey: '진압대', regex: /^진압(\d+)대$/ },
-  { baseKey: '구조대', regex: /^구조(\d+)대$/ },
-  { baseKey: '구급대', regex: /^구급(\d+)대$/ },
-  { baseKey: '펌프',   regex: /^펌프(\d+)호$/ },
-  { baseKey: '구조차', regex: /^구조차(\d+)호$/ },
-  { baseKey: '구급차', regex: /^구급차(\d+)호$/ },
-  { baseKey: '고가차', regex: /^고가차(\d+)호$/ },
-  { baseKey: '굴절차', regex: /^굴절차(\d+)호$/ },
-  { baseKey: '배연차', regex: /^배연차(\d+)호$/ },
-  { baseKey: '지휘차', regex: /^지휘차(\d+)호$/ },
-  { baseKey: '물탱크', regex: /^물탱크(\d+)호$/ },
+  { baseKey: '진압대', regex: /^진압(\d+)$/ },
+  { baseKey: '구조대', regex: /^구조(\d+)$/ },
+  { baseKey: '구급대', regex: /^구급(\d+)$/ },
+  { baseKey: '펌프',   regex: /^펌프(\d+)$/ },
+  { baseKey: '구조차', regex: /^구조차(\d+)$/ },
+  { baseKey: '구급차', regex: /^구급차(\d+)$/ },
+  { baseKey: '고가차', regex: /^고가차(\d+)$/ },
+  { baseKey: '굴절차', regex: /^굴절차(\d+)$/ },
+  { baseKey: '배연차', regex: /^배연차(\d+)$/ },
+  { baseKey: '지휘차', regex: /^지휘차(\d+)$/ },
+  { baseKey: '물탱크', regex: /^물탱크(\d+)$/ },
 ] as const;
 
 /** roster unitType → TokenColor */

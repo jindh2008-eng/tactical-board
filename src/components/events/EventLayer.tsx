@@ -11,8 +11,8 @@ import './EventLayer.css';
 // ─────────────────────────────────────────────
 
 // 토큰 크기 (클램핑용)
-const TOKEN_W = 96;
-const TOKEN_H = 26;
+const TOKEN_W = 60;
+const TOKEN_H = 32;
 
 // 초기 배치 상수 (직전대기 좌측 영역)
 const COLS     = 3;
@@ -75,7 +75,7 @@ export function EventLayer() {
     <div className="event-layer" ref={layerRef}>
       {enabledEvents.map(ev => {
         const pos    = positions[ev.id];
-        const status = statuses[ev.id] ?? '화재';
+        const status = statuses[ev.id] ?? '-';
         if (!pos) return null; // 위치 초기화 전 렌더 안 함
         return (
           <EventTokenCard

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   좌측 패널 컨테이너 (220px 열)
+   좌측 패널 컨테이너 (300px 열)
    출동대 섹션 / 구조대상자 섹션 2분할
    ─────────────────────────────────────────────*/
 .left-panel {
@@ -8,6 +8,58 @@
   gap: 4px;
   height: 100%;
   overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────
+   접힘 상태 — 슬림 세로 스트립
+   ─────────────────────────────────────────────*/
+.left-panel--collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 8px;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 3px;
+}
+
+.left-panel__expand-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  padding: 4px 3px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.left-panel__expand-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+/* 전체 접기 버튼 — 패널 하단 */
+.left-panel__collapse-btn {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 4px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.left-panel__collapse-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
 }
 
 /* ─── 섹션 공통 ─── */

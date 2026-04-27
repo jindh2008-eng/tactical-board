@@ -4,7 +4,7 @@ import type { VictimSetupItem } from '../types/settings';
 import type { BuildingConfig } from '../types';
 import {
   buildVictim, randomVictim,
-  rebuildVictimDisplay, zoneKeyToLabel, zoneKeyToFullLabel,
+  buildVictimDisplayLine, zoneKeyToLabel, zoneKeyToFullLabel,
 } from '../utils/victimUtils';
 import {
   victimSetupToToken,
@@ -78,7 +78,7 @@ export function VictimProvider({
     if (v.zoneKey === null) return v;
     if (validZoneKeysRef.current.has(v.zoneKey)) return v;
     // 유효하지 않은 구역 → pool 이동
-    return { ...v, zoneKey: null, location: '' };
+    return { ...v, zoneKey: null };
   }
 
   // ── 구조대상자 상태 (세션 복원 우선) ─────────────────────────────────
@@ -148,26 +148,28 @@ export function VictimProvider({
     setVictims(prev => prev.map(v => {
       if (v.id !== victimId) return v;
 
+      // 구조위치 스냅샷 — 임시의료소 진입 시 1회만 기록
       const rescueLocation: string | undefined =
         toZoneKey === 'medical-post' && !v.rescueLocation
-          ? [zoneKeyToFullLabel(v.zoneKey), v.subLocation].filter(Boolean).join(' ') || '위치미상'
+          ? (() => {
+              const zoneLabel  = zoneKeyToFullLabel(v.zoneKey);
+              const subDisplay = v.face
+                ? [v.face + '면', v.subLocation].filter(Boolean).join(' / ')
+                : v.subLocation;
+              return [zoneLabel, subDisplay].filter(Boolean).join(' ') || '위치미상';
+            })()
           : v.rescueLocation;
 
-      const newLocation = toZoneKey ? zoneKeyToLabel(toZoneKey) : '';
-      const merged      = { ...v, zoneKey: toZoneKey, location: newLocation, rescueLocation };
-      const display     = rebuildVictimDisplay(merged);
-
-      // 특수 구역(임시의료소·대기): originDisplayBottom 그대로 유지
-      // 최초 실제 배치(건물 층·외곽 방면): originDisplayBottom 1회 기록
+      // 최초 실제 배치 시 위치 표시 스냅샷 — 특수 구역 제외
       const isSpecialZone =
         toZoneKey === null ||
         toZoneKey === 'medical-post' ||
         toZoneKey.startsWith('standby-');
       const originDisplayBottom =
         v.originDisplayBottom ??
-        (isSpecialZone ? undefined : display.displayBottom);
+        (isSpecialZone ? undefined : buildVictimDisplayLine({ ...v, zoneKey: toZoneKey }));
 
-      return { ...merged, ...display, originDisplayBottom };
+      return { ...v, zoneKey: toZoneKey, rescueLocation, originDisplayBottom };
     }));
 
     setVictimPositions(prev => {
@@ -180,14 +182,9 @@ export function VictimProvider({
     });
   }, []);
 
-  /** 상태·세부위치·라벨 변경 — display 자동 재계산 */
+  /** 상태·세부위치·라벨 변경 */
   const updateVictim = useCallback((victimId: string, update: VictimUpdate) => {
-    setVictims(prev => prev.map(v => {
-      if (v.id !== victimId) return v;
-      const merged  = { ...v, ...update };
-      const display = rebuildVictimDisplay(merged);
-      return { ...merged, ...display };
-    }));
+    setVictims(prev => prev.map(v => v.id !== victimId ? v : { ...v, ...update }));
   }, []);
 
   return (

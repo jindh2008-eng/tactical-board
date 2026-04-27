@@ -49,9 +49,9 @@ export function buildRoster(
   for (const def of activityDefs) {
     for (let i = 1; i <= def.count; i++) {
       pendingUnits.push({
-        unitEntry: { name: `${def.unitLabel}${i}대`, unitType: def.unitType, linkedTo: null },
+        unitEntry: { name: `${def.unitLabel}${i}`, unitType: def.unitType, linkedTo: null },
         vehEntry:  def.hasVehicle
-          ? { name: `${def.vehLabel}${i}호`, unitType: def.vehType, linkedTo: null }
+          ? { name: `${def.vehLabel}${i}`, unitType: def.vehType, linkedTo: null }
           : null,
       });
     }
@@ -95,7 +95,7 @@ export function buildRoster(
 
   for (const def of vehicleDefs) {
     for (let i = 1; i <= setup.vehicles[def.key]; i++) {
-      const name = `${def.prefix}${i}호`;
+      const name = `${def.prefix}${i}`;
       const prev = prevByName.get(name);
       result.push({
         id:           prev?.id ?? generateId(),

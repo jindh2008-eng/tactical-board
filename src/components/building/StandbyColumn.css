@@ -44,7 +44,7 @@
 /* ── 헤더 기본 ── */
 
 .standby-box__header {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   color: var(--ctr-text-dim);
@@ -72,7 +72,7 @@
 }
 
 .standby-box__title {
-  font-size: 0.7rem;
+  font-size: 0.92rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   color: inherit;
@@ -89,7 +89,7 @@
 }
 
 .standby-chief__select {
-  font-size: 0.6rem;
+  font-size: 0.68rem;
   font-family: inherit;
   padding: 1px 3px;
   background: transparent;
@@ -125,7 +125,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6rem;
+  font-size: 0.68rem;
   color: var(--ctr-border-mid);
   padding-top: 4px;
 }
@@ -202,7 +202,7 @@
 }
 
 .standby-split__col-label {
-  font-size: 0.58rem;
+  font-size: 0.64rem;
   font-weight: 600;
   text-align: center;
   padding: 2px 4px;
@@ -273,7 +273,7 @@
 }
 
 .medical-split__pane-label {
-  font-size: 0.6rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: #3a5e42;
   text-align: center;
@@ -305,6 +305,29 @@
 .medical-split__body .victim-card-wrapper,
 .medical-split__body .token-card-wrapper {
   flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────
+   BottomStandbyBoxes — col 1, row 3 (B면 아래)
+   자원대기소 + 대기1단계 세로 배치
+   ─────────────────────────────────────────────*/
+
+.bottom-standby-boxes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  padding: 4px;
+  background-color: var(--ctr-bg);
+  border: 1.5px dashed var(--ctr-border-soft);
+  border-radius: 3px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.bottom-standby-boxes > .standby-box {
+  flex: 1;
+  min-height: 0;
 }
 
 /* ── 드롭 피드백 ── */

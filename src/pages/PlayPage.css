@@ -3,12 +3,177 @@
    ─────────────────────────────────────────────*/
 
 .play-page {
-  height:   100%;
+  height: 100%;
   overflow: hidden;
 }
 
-/* .app: app-content 의 100% 높이를 그대로 채움 */
-.play-page .app {
-  height:   100%;
+/* ── 메인 레이아웃 컨테이너 ── */
+.play-layout {
+  position: relative;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
+  background-color: var(--color-bg);
+}
+
+/* ─────────────────────────────────────────────
+   좌측 Overlay Drawer — 자원대기소(상단) / 출동대현황(하단)
+   각각 독립적으로 열고 닫힘, 세로 탭으로 토글
+   ─────────────────────────────────────────────*/
+.left-drawer {
+  position: absolute;
+  left: 0;
+  width: 220px;
+  z-index: 20;
+  transform: translateX(-100%);
+  transition: transform 0.22s ease;
+}
+
+.left-drawer--resource {
+  top: 0;
+  height: 30%;
+}
+
+.left-drawer--unit {
+  top: 30%;
+  height: 70%;
+}
+
+.left-drawer--open {
+  transform: translateX(0);
+}
+
+/* 패널 내용 영역 */
+.left-drawer__panel {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--color-surface);
+  border-right: 1.5px solid var(--color-border);
+}
+
+/* 항상 보이는 세로 탭 — drawer 우측 가장자리에 부착 */
+.left-drawer__tab {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  height: 100%;
+  width: 20px;
+  z-index: 21;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  color: var(--color-text-dim);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  writing-mode: vertical-rl;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.left-drawer__tab:hover {
+  background-color: #1a2a3a;
+  color: var(--color-text);
+}
+
+.left-drawer--open .left-drawer__tab {
+  background-color: #1a2a3a;
+  color: var(--color-text);
+}
+
+/* ─────────────────────────────────────────────
+   자원대기소 패널 (좌측 드로어 상단)
+   ─────────────────────────────────────────────*/
+.resource-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.resource-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.resource-panel__title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.resource-panel__chief-select {
+  font-size: 0.68rem;
+  background: transparent;
+  color: var(--color-text-dim);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 1px 4px;
+  cursor: pointer;
+  max-width: 90px;
+}
+
+.resource-panel__body {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px;
+  padding: 6px;
+  overflow-y: auto;
+  min-height: 36px;
+  transition: background-color 0.1s;
+}
+
+.resource-panel__body.drop-target--active {
+  background-color: rgba(60, 100, 160, 0.15);
+  outline: 1px dashed #4a7ab0;
+  outline-offset: -2px;
+}
+
+.resource-panel__placeholder {
+  font-size: 0.70rem;
+  color: var(--color-text-dim);
+  align-self: center;
+  width: 100%;
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────
+   전술상황판 — 항상 전체 영역 차지, 4:3 비율
+   ─────────────────────────────────────────────*/
+.tactical-board-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/*
+ * aspect-ratio: 4/3 + height: 100% → 높이를 기준으로 너비 자동 계산
+ * max-width: 100%   → 컨테이너 폭을 초과하면 폭 기준으로 재조정
+ * 브라우저가 max-width 제약 시 aspect-ratio에 따라 height도 자동 축소됨
+ */
+.tactical-board-inner {
+  aspect-ratio: 4 / 3;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  overflow: hidden;
+  background-color: var(--ctr-bg);
+  border-radius: 4px;
 }

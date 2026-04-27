@@ -12,6 +12,11 @@ const COMMAND_ITEMS = [
   { key: 'control-center',   label: '통제단 가동 요청' },
 ];
 
+interface CommandInfoProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
 /**
  * CommandInfo — 지휘정보 패널
  *
@@ -19,19 +24,24 @@ const COMMAND_ITEMS = [
  * - 각 항목에 입력 필드, 버튼, 토글 상태 추가
  * - commandState를 상위에서 prop으로 받아 실제 데이터 표시
  */
-export function CommandInfo() {
+export function CommandInfo({ collapsed, onToggle }: CommandInfoProps) {
   return (
-    <div className="panel command-info">
-      <div className="panel__header">지휘정보</div>
-      <div className="command-info__body">
-        {COMMAND_ITEMS.map(item => (
-          <div key={item.key} className="command-info__row">
-            <span className="command-info__label">{item.label}</span>
-            {/* 향후: 실제 값 표시 또는 버튼으로 교체 */}
-            <span className="command-info__value">―</span>
-          </div>
-        ))}
+    <div className={`panel command-info${collapsed ? ' command-info--collapsed' : ''}`}>
+      <div className="panel__header panel__header--toggleable" onClick={onToggle}>
+        지휘정보
+        <span className="panel__toggle-icon">{collapsed ? '▼' : '▲'}</span>
       </div>
+      {!collapsed && (
+        <div className="command-info__body">
+          {COMMAND_ITEMS.map(item => (
+            <div key={item.key} className="command-info__row">
+              <span className="command-info__label">{item.label}</span>
+              {/* 향후: 실제 값 표시 또는 버튼으로 교체 */}
+              <span className="command-info__value">―</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

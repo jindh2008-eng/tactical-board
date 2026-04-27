@@ -15,7 +15,7 @@
 }
 
 .log-panel__empty {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   color: #2a4a4a;
   display: flex;
   align-items: center;
@@ -35,14 +35,14 @@
 }
 
 .log-panel__time {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: #3a6a6a;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
 
 .log-panel__token {
-  font-size: 0.75rem;
+  font-size: 0.80rem;
   color: #aabbcc;
   font-weight: 600;
   flex-shrink: 0;
@@ -52,24 +52,26 @@
 .log-panel__token--red    { color: #f4a0a0; }
 .log-panel__token--yellow { color: #f4d870; }
 .log-panel__token--green  { color: #80dd90; }
+.log-panel__token--blue   { color: #7ab0f0; }
+.log-panel__token--white  { color: #e8e8e8; }
 .log-panel__token--vehicle{ color: #ccaa66; }
 .log-panel__token--agency { color: #bb99dd; }
 
 .log-panel__route {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: #6a9a9a;
   flex: 1;
 }
 
 .log-panel__note {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   color: #5a7a7a;
   width: 100%;
   padding-left: 2px;
 }
 
 .log-panel__rescue-note {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: #f4c870;
   flex: 1;
 }

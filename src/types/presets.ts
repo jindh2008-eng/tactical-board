@@ -1,3 +1,25 @@
+import type { TokenColor } from './index';
+
+// ─────────────────────────────────────────────
+// 상태 프리셋 색상 옵션
+// ─────────────────────────────────────────────
+
+export interface PresetColorOption {
+  value: TokenColor;
+  label: string;
+  bg:    string;
+  border: string;
+  text:  string;
+}
+
+export const PRESET_COLORS: PresetColorOption[] = [
+  { value: 'red',    label: '빨강', bg: '#E53935', border: '#c62828', text: '#fff' },
+  { value: 'yellow', label: '노랑', bg: '#FBC02D', border: '#f9a825', text: '#000' },
+  { value: 'blue',   label: '파랑', bg: '#1565C0', border: '#0D47A1', text: '#fff' },
+  { value: 'white',  label: '흰색', bg: '#F5F5F5', border: '#bdbdbd', text: '#222' },
+  { value: 'green',  label: '추천', bg: '#43A047', border: '#2e7d32', text: '#fff' },
+];
+
 // ─────────────────────────────────────────────
 // 출동대 종류 정의
 // ─────────────────────────────────────────────
@@ -43,6 +65,7 @@ export interface SharedBadgePreset {
   topText: string;
   bottomText?: string;
   targetTypes: string[];
+  color?: TokenColor;
 }
 
 // ─────────────────────────────────────────────
@@ -54,4 +77,5 @@ export interface UnitSpecificBadgePreset {
   unitType: string;  // e.g. 'suppression', 'rescue', 'pump', 'ladder'
   topText: string;
   bottomText?: string;
+  color?: TokenColor;
 }

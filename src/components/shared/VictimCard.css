@@ -1,6 +1,5 @@
 /* ─────────────────────────────────────────────
    구조대상자 토큰 카드
-   2줄 텍스트 구조 — 출동대 토큰과 시각적으로 구분
    ─────────────────────────────────────────────*/
 
 .victim-card-wrapper {
@@ -8,19 +7,17 @@
   display: inline-block;
 }
 
+/* ── 카드 공통 베이스 ── */
+
 .victim-card {
   display: inline-flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 3px 8px 2px;
-  border-radius: 3px;
+  border-radius: 8px;
   cursor: grab;
   user-select: none;
-  white-space: nowrap;
   transition: opacity 0.1s, transform 0.1s;
-  line-height: 1.25;
-  min-width: 52px;
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 .victim-card:active {
@@ -29,66 +26,167 @@
   transform: scale(0.95);
 }
 
+/* ─────────────────────────────────────────────
+   개별 구조대상자 (person)
+   레이아웃: [성별아이콘] [상세위치]
+   ─────────────────────────────────────────────*/
+
+.victim-card--person {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  background: #ffffff;
+  color: #222;
+  position: relative;
+}
+
+/* 성별별 테두리 색상 */
+.victim-card--person.victim-gender--male   { border: 1.5px solid #90bfe0; }
+.victim-card--person.victim-gender--female { border: 1.5px solid #f0a0a0; }
+
+/* 성별 아이콘 */
+.victim-gender-icon {
+  flex-shrink: 0;
+  width: 12px;
+  height: 22px;
+  display: block;
+}
+
+.victim-gender-icon--male   { color: #1976d2; }
+.victim-gender-icon--female { color: #e53935; }
+
+/* 상세위치 텍스트 */
+.victim-card__subloc {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 64px;
+}
+
+/* ─────────────────────────────────────────────
+   호버 툴팁 — 포털 렌더링 (항상 최상단 표시)
+   ─────────────────────────────────────────────*/
+
+.victim-tooltip-portal {
+  background: rgba(15, 15, 25, 0.93);
+  border: 1px solid rgba(120, 110, 180, 0.45);
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.tooltip__age {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e8e6ff;
+}
+
+.tooltip__cond {
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.victim-tooltip-portal.victim-cond--minor    .tooltip__cond { color: #5cc87c; }
+.victim-tooltip-portal.victim-cond--critical .tooltip__cond { color: #f07070; }
+.victim-tooltip-portal.victim-cond--dead     .tooltip__cond { color: #aaaaaa; }
+
+/* ─────────────────────────────────────────────
+   다수 구조대상자 (group)
+   ─────────────────────────────────────────────*/
+
+.victim-card--group {
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 8px 5px;
+  gap: 3px;
+  background: #ffffff;
+  border: 1.5px solid #90bfe0;
+  color: #1976d2;
+  min-width: 50px;
+}
+
+.group-icons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  width: 100%;
+}
+
+.group-person-icon {
+  width: 10px;
+  height: 13px;
+  display: block;
+  color: inherit;
+}
+
+.group-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.group-info__count {
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.group-info__cond {
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────
+   기타 (custom)
+   ─────────────────────────────────────────────*/
+
+.victim-card--custom {
+  flex-direction: column;
+  padding: 3px 8px 2px;
+  background: #0e1218;
+  color: #88aacc;
+  border: 1px solid #2a4060;
+  min-width: 52px;
+}
+
 .victim-card__top {
-  font-size: 0.67rem;
+  font-size: 0.73rem;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 
 .victim-card__bottom {
-  font-size: 0.6rem;
+  font-size: 0.66rem;
   font-weight: 500;
   opacity: 0.85;
   letter-spacing: 0.02em;
 }
 
-/* ─── 상태별 색상 ─── */
+/* ─────────────────────────────────────────────
+   건물 구역 / 방면 내 크기 조정
+   ─────────────────────────────────────────────*/
 
-/* 생존자 (경상, 중상, 기본) */
-.victim-card--alive {
-  background: #1a1000;
-  color: #ffaa55;
-  border: 1px solid #6a4010;
-}
-
-/* 고립 */
-.victim-card--isolated {
-  background: #1a1600;
-  color: #ffdd44;
-  border: 1px solid #6a5a00;
-}
-
-/* 의식없음 */
-.victim-card--unconscious {
-  background: #200808;
-  color: #ff8888;
-  border: 1px solid #6a1818;
-}
-
-/* 사망 */
-.victim-card--dead {
-  background: #141414;
-  color: #888888;
-  border: 1px solid #404040;
-}
-
-/* 기타 (사람 아님: 반려견, 물건 등) */
-.victim-card--custom {
-  background: #0e1218;
-  color: #88aacc;
-  border: 1px solid #2a4060;
-}
-
-/* ─── 건물 구역 / 방면 내 사이즈 조정 ─── */
 .zone-cell .victim-card,
 .face-general-zone .victim-card {
   font-size: inherit;
-  padding: 2px 6px 2px;
+}
+
+.zone-cell .victim-card--person,
+.face-general-zone .victim-card--person {
+  padding: 3px 6px 2px 4px;
+  gap: 4px;
 }
 
 .zone-cell .victim-card__top {
-  font-size: 0.65rem;
+  font-size: 0.70rem;
 }
+
 .zone-cell .victim-card__bottom {
-  font-size: 0.58rem;
+  font-size: 0.64rem;
 }

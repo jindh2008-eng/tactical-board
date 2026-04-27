@@ -109,13 +109,14 @@ export interface FaceZone {
 // ─────────────────────────────────────────────
 
 export type TokenType  = 'activity' | 'vehicle' | 'agency' | 'custom';
-export type TokenColor = 'red' | 'yellow' | 'green' | 'vehicle' | 'agency';
+export type TokenColor = 'red' | 'yellow' | 'green' | 'blue' | 'white' | 'vehicle' | 'agency';
 
 /** 토큰에 직접 부착되는 상태 배지 (1~2줄 표시) */
 export interface TokenBadge {
   id:     string;
   line1:  string;
   line2?: string;
+  color?: TokenColor;
 }
 
 /** 재사용 가능한 배지 프리셋 (localStorage 유지) */
@@ -138,7 +139,8 @@ export interface UnitToken {
    * 'roster' : dispatchRoster 기반 자동 생성
    * 'manual' : 사용자가 실행 중 직접 생성
    */
-  source:   'roster' | 'manual';
+  source:      'roster' | 'manual';
+  lastMovedAt?: number;   // 마지막 이동 시각 (Date.now()) — recently-moved 강조용
 }
 
 // ─────────────────────────────────────────────

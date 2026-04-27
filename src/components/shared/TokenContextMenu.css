@@ -117,7 +117,8 @@
 /* 프리셋 버튼 */
 .tcm__preset-btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   align-items: flex-start;
   width: 100%;
   padding: 5px 8px;
@@ -132,6 +133,21 @@
 .tcm__preset-btn:hover {
   background: #2a2a3c;
   border-color: #5555aa;
+}
+
+.tcm__preset-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 3px;
+}
+
+.tcm__preset-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
 .tcm__preset-line1 {

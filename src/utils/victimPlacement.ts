@@ -4,8 +4,24 @@
  */
 
 import type { VictimSetupItem } from '../types/settings';
-import type { VictimFace, VictimToken } from '../types/victim';
-import { buildDisplayBottom } from './victimUtils';
+import type { VictimAgeGroup, VictimFace, VictimToken } from '../types/victim';
+
+const AGE_GROUP_RANGES: Record<VictimAgeGroup, [number, number]> = {
+  '소아':  [5,  11],
+  '10대': [12, 19],
+  '20대': [20, 29],
+  '30대': [30, 39],
+  '40대': [40, 49],
+  '50대': [50, 59],
+  '60대': [60, 69],
+  '70대': [70, 79],
+  '80대': [80, 87],
+};
+
+function ageGroupToAge(ag: VictimAgeGroup): number {
+  const [min, max] = AGE_GROUP_RANGES[ag];
+  return min + Math.floor(Math.random() * (max - min + 1));
+}
 
 /** VictimSetupItem.floor 에서 'RF' 의 location 문자열 */
 const RF_LOCATION = 'RF';
@@ -46,69 +62,6 @@ export function floorNumberToLabel(floor: number): string {
   return floor > 0 ? `${floor}층` : `B${-floor}층`;
 }
 
-/**
- * 구조대상자 위치 표시 두 번째 줄을 생성한다.
- *
- * 형식: 층/면/상세위치 (존재하는 항목만 `/` 로 연결)
- *
- * 우선순위:
- *   1. location 에서 층 레이블 추출 (zone 기준 "3F" → "3층")
- *   2. victim.face (명시적 방면)
- *   3. detailLocation (명시적 상세위치) 또는 subLocation 파싱 결과
- *
- * @param victim VictimToken 전체 객체
- */
-export function buildLocationLine(victim: VictimToken): string {
-  const parts: string[] = [];
-  const loc = victim.location.trim();
-
-  // ① 층
-  const floorDisplay = locationToFloorDisplay(loc);
-  if (floorDisplay) {
-    parts.push(floorDisplay);
-  }
-
-  // ② 면 (명시적 face 필드 우선)
-  if (victim.face) {
-    parts.push(`${victim.face}면`);
-  } else if (!floorDisplay && loc && `${victim.face}면` !== loc) {
-    // face가 없고 층도 아닌 위치(예: "A면", "임시의료소" 등)는 그대로 표시
-    // 단, 특수 구역(대기, 임시의료소)은 제외하고 face zone만 추가
-    if (/^[A-D]면$/.test(loc)) {
-      parts.push(loc);  // "A면" 형식
-    }
-  }
-
-  // ③ 상세위치: detailLocation > subLocation 파싱 순
-  const detail = getEffectiveDetail(victim);
-  if (detail) parts.push(detail);
-
-  return parts.join('/');
-}
-
-/**
- * 표시에 사용할 상세위치 문자열 추출.
- *
- * - detailLocation 이 있으면 그것을 사용 (가장 정확한 값)
- * - 없고 face 도 없으면 subLocation 을 그대로 사용 (수동 생성 victim)
- * - 없고 face 가 있으면 subLocation 에서 "X면 / " 접두어를 제거한 나머지
- */
-function getEffectiveDetail(victim: VictimToken): string {
-  if (victim.detailLocation !== undefined) {
-    return victim.detailLocation.trim();
-  }
-  if (!victim.face) {
-    return victim.subLocation.trim();
-  }
-  // face 는 있지만 detailLocation 이 없는 경우:
-  // subLocation 이 "A면 / 창문" 형태이면 "A면 / " 부분을 제거
-  const facePrefix = `${victim.face}면`;
-  const sub = victim.subLocation.trim();
-  if (sub.startsWith(facePrefix)) {
-    return sub.slice(facePrefix.length).replace(/^\s*\/\s*/, '').trim();
-  }
-  return sub;
-}
 
 // ─────────────────────────────────────────────
 // 오프셋 사전 정의
@@ -208,77 +161,32 @@ export function victimSetupZoneKey(floor: number | 'RF' | null, face: VictimFace
 }
 
 // ─────────────────────────────────────────────
-// subLocation 문자열 (표시/호환용)
-// ─────────────────────────────────────────────
-
-/**
- * face + detailLocation → subLocation 표시 문자열
- * 역호환 및 rescueLocation 기록용으로 유지.
- *
- * 예) 'A', '203호' → 'A면 / 203호'
- *     null, '203호' → '203호'
- *     'B', ''       → 'B면'
- *     null, ''      → ''
- */
-export function setupItemSubLocation(face: VictimFace | null, detailLocation: string): string {
-  const parts: string[] = [];
-  if (face) parts.push(`${face}면`);
-  const detail = detailLocation.trim();
-  if (detail) parts.push(detail);
-  return parts.join(' / ');
-}
-
-// ─────────────────────────────────────────────
 // VictimSetupItem → VictimToken
 // ─────────────────────────────────────────────
 
-/**
- * VictimSetupItem → VictimToken
- *
- * - zoneKey: floor 우선 → face 차순 → null(pool) 의 배치 우선순위 적용
- * - face: 명시적 필드로 저장
- * - detailLocation: 순수 상세위치 텍스트 저장 (subLocation 과 별도)
- * - displayBottom: 새 슬래시 형식 ("3층/A면/창문")
- */
 export function victimSetupToToken(item: VictimSetupItem): VictimToken {
   const zoneKey = victimSetupZoneKey(item.floor, item.face);
+  const age     = ageGroupToAge(item.ageGroup);
 
-  // location: zoneKey 에서 층 레이블 파생 (이동 시 변경됨)
-  let location = '';
-  if (item.floor !== null) {
-    location = item.floor === 'RF'
-      ? RF_LOCATION
-      : item.floor > 0 ? `${item.floor}F` : `B${-item.floor}`;
-  } else if (item.face !== null) {
-    location = `${item.face}면`;
-  }
-
-  const subLocation    = setupItemSubLocation(item.face, item.detailLocation);
-  const displayTop     = `${item.gender}/${item.ageGroup}/${item.condition}`;
-
-  // displayBottom: 새 슬래시 형식으로 사전 계산
+  // originDisplayBottom: 층/면/상세위치 슬래시 형식으로 1회 계산
   const bottomParts: string[] = [];
   if (item.floor !== null) {
     bottomParts.push(item.floor === 'RF' ? '옥상' : floorNumberToLabel(item.floor));
   }
-  if (item.face  !== null) bottomParts.push(`${item.face}면`);
+  if (item.face !== null) bottomParts.push(`${item.face}면`);
   const detail = item.detailLocation.trim();
   if (detail) bottomParts.push(detail);
-  const displayBottom = bottomParts.join('/') || buildDisplayBottom(location, subLocation);
+  const originDisplayBottom = bottomParts.length > 0 ? bottomParts.join('/') : undefined;
 
   return {
-    id:                 `victim-setup-${item.id}`,
-    kind:               'person',
-    gender:             item.gender,
-    ageGroup:           item.ageGroup,
-    condition:          item.condition,
-    face:               item.face,
-    detailLocation:     item.detailLocation,   // 원본 상세위치 보존
-    location,
-    subLocation,
-    displayTop,
-    displayBottom,
-    originDisplayBottom: displayBottom,        // 최초 구조위치 고정
+    id:                  `victim-setup-${item.id}`,
+    kind:                'person',
+    gender:              item.gender,
+    age,
+    condition:           item.condition,
+    face:                item.face,
+    subLocation:         item.detailLocation.trim(),
+    originDisplayBottom,
     zoneKey,
   };
 }

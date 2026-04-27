@@ -143,24 +143,24 @@ export function UnitStatusPanel() {
                 <div key={token.id} className="usp-order-row">
                   <div className="usp-order-row__card">
                     <TokenCard token={token} />
-                    {order != null && (
-                      <span className="usp-order-row__badge">{order}착대</span>
-                    )}
                   </div>
                   <div className="usp-order-row__btns">
+                    {order != null && (
+                      <span className="usp-order-row__badge">{order}</span>
+                    )}
                     <button
                       className="usp-order-btn usp-order-btn--standby1"
                       type="button"
                       onClick={() => handleButtonMove(token.id, ZONE_STANDBY1)}
                     >
-                      대기1단계
+                      대기
                     </button>
                     <button
                       className="usp-order-btn usp-order-btn--resource"
                       type="button"
                       onClick={() => handleButtonMove(token.id, ZONE_RESOURCE)}
                     >
-                      자원대기소
+                      자원
                     </button>
                   </div>
                 </div>

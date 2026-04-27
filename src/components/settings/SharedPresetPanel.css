@@ -241,6 +241,42 @@
   min-width: 0;
 }
 
+.spp__preset-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ══ 색상 스와치 ══ */
+
+.spp__color-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.spp__color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.spp__color-swatch:hover {
+  transform: scale(1.2);
+}
+
+.spp__color-swatch--active {
+  border-color: #fff;
+  transform: scale(1.15);
+}
+
 .spp__preview-text {
   display: flex;
   align-items: baseline;

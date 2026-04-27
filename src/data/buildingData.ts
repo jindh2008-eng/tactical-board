@@ -24,9 +24,9 @@ export const DEFAULT_BUILDING_CONFIG: BuildingConfig = {
 export function buildZones(): Zone[] {
   return [
     { id: 'stair',  label: '계단',    status: {}, acceptsTokens: true  },
-    { id: 'left',   label: '단위지휘관', status: {}, acceptsTokens: true  },
-    { id: 'center', label: '중앙',    status: {}, acceptsTokens: true  },
-    { id: 'right',  label: '화재상황', status: {}, acceptsTokens: false },
+    { id: 'left',   label: '단위',  status: {}, acceptsTokens: true  },
+    { id: 'center', label: '내부',  status: {}, acceptsTokens: true  },
+    { id: 'right',  label: '화재',  status: {}, acceptsTokens: false },
   ];
 }
 

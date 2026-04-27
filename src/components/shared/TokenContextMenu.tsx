@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { UnitToken, TokenBadge } from '../../types';
 import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../../types/presets';
-import { getUnitLabel } from '../../types/presets';
+import { getUnitLabel, PRESET_COLORS } from '../../types/presets';
 import './TokenContextMenu.css';
 
 type SubPanel = 'add' | 'remove' | null;
@@ -65,12 +65,12 @@ export function TokenContextMenu({
   const unitLabel = getUnitLabel(token.unitType);
 
   function handleAddShared(p: SharedBadgePreset) {
-    onAddBadge({ line1: p.topText, line2: p.bottomText });
+    onAddBadge({ line1: p.topText, line2: p.bottomText, color: p.color });
     onClose();
   }
 
   function handleAddUnit(p: UnitSpecificBadgePreset) {
-    onAddBadge({ line1: p.topText, line2: p.bottomText });
+    onAddBadge({ line1: p.topText, line2: p.bottomText, color: p.color });
     onClose();
   }
 
@@ -117,16 +117,22 @@ export function TokenContextMenu({
               {hasShared && (
                 <div className="tcm__preset-section">
                   <div className="tcm__section-label">공통</div>
-                  {matchingShared.map(p => (
-                    <button
-                      key={p.id}
-                      className="tcm__preset-btn"
-                      onClick={() => handleAddShared(p)}
-                    >
-                      <span className="tcm__preset-line1">{p.topText}</span>
-                      {p.bottomText && <span className="tcm__preset-line2">{p.bottomText}</span>}
-                    </button>
-                  ))}
+                  {matchingShared.map(p => {
+                    const col = p.color ? PRESET_COLORS.find(c => c.value === p.color) : null;
+                    return (
+                      <button
+                        key={p.id}
+                        className="tcm__preset-btn"
+                        onClick={() => handleAddShared(p)}
+                      >
+                        {col && <span className="tcm__preset-dot" style={{ background: col.bg }} />}
+                        <div className="tcm__preset-text">
+                          <span className="tcm__preset-line1">{p.topText}</span>
+                          {p.bottomText && <span className="tcm__preset-line2">{p.bottomText}</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -134,16 +140,22 @@ export function TokenContextMenu({
               {hasUnit && (
                 <div className="tcm__preset-section">
                   <div className="tcm__section-label">{unitLabel} 전용</div>
-                  {matchingUnit.map(p => (
-                    <button
-                      key={p.id}
-                      className="tcm__preset-btn"
-                      onClick={() => handleAddUnit(p)}
-                    >
-                      <span className="tcm__preset-line1">{p.topText}</span>
-                      {p.bottomText && <span className="tcm__preset-line2">{p.bottomText}</span>}
-                    </button>
-                  ))}
+                  {matchingUnit.map(p => {
+                    const col = p.color ? PRESET_COLORS.find(c => c.value === p.color) : null;
+                    return (
+                      <button
+                        key={p.id}
+                        className="tcm__preset-btn"
+                        onClick={() => handleAddUnit(p)}
+                      >
+                        {col && <span className="tcm__preset-dot" style={{ background: col.bg }} />}
+                        <div className="tcm__preset-text">
+                          <span className="tcm__preset-line1">{p.topText}</span>
+                          {p.bottomText && <span className="tcm__preset-line2">{p.bottomText}</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 

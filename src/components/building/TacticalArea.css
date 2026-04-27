@@ -1,25 +1,23 @@
 /* ─────────────────────────────────────────────
-   전술 상황판 전체 영역 — 4열 CSS Grid
+   전술 상황판 전체 영역 — 3열 CSS Grid
 
    열 구성:
-   col 1: 대기구역 (320px — 패널 270px + 우측 여백 50px)
-   col 2: B면      (180px 고정)
-   col 3: 건물     (0.62fr 유동)
-   col 4: D면      (180px 고정)
+   col 1: 좌측 (180px)  — 자원대기소+대기1단계 / B면 / 직전대기
+   col 2: 건물 (1fr)    — C면 / 건물 / A면
+   col 3: 우측 (180px)  — 임시의료소 / D면 / 구조활동통계
 
    행 구성:
-   row 1: C면  (68px)
-   row 2: 중앙 (1fr — 건물 높이)
-   row 3: A면  (166px)
+   row 1: 상단  (140px) — 자원대기소+대기1단계 / C면 / 임시의료소
+   row 2: 중앙  (1fr)   — B면 / 건물 / D면
+   row 3: 하단  (200px) — 직전대기 / A면 / 구조활동통계
    ───────────────────────────────────────────── */
 .tactical-area {
   position: relative; /* EventLayer 절대위치 기준점 */
   display: grid;
 
-  grid-template-columns: 320px 180px 0.62fr 180px;
-  grid-template-rows: 68px 1fr 166px;
+  grid-template-columns: 180px 1fr 180px;
+  grid-template-rows: 140px 1fr 200px;
 
-  align-content: start;
   gap: 2px;
   width: 100%;
   height: 100%;
@@ -33,95 +31,80 @@
    명시적 셀 배치
    ───────────────────────────────────────────── */
 
-/* C면 — col 3, row 1 */
-.tactical-area > .exterior-zone--c {
+/* 임시의료소 — col 3, rows 1+2 (140px + RF 높이) */
+.tactical-area__medical-post {
   grid-column: 3;
+  grid-row: 1 / 3;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tactical-area__medical-post > .standby-box {
+  flex: 1;
+  min-height: 0;
+}
+
+/* C면 — col 2, row 1 */
+.tactical-area > .exterior-zone--c {
+  grid-column: 2;
   grid-row: 1;
   min-width: 0;
 }
 
-/* 대기구역 — col 1, row 2 (패널 270px + 우측 여백 50px = 320px 트랙) */
-.tactical-area > .standby-column {
-  grid-column: 1;
-  grid-row: 2;
-  min-width: 0;
-  align-self: start;
-  height: var(--above-pct, 100%);
-  margin-right: 50px;
-}
-
-/* B면 — col 2, row 2 */
-.tactical-area > .exterior-zone--b {
-  grid-column: 2;
-  grid-row: 2;
-  min-width: 0;
-  align-self: start;
-  height: var(--above-pct, 100%);
-}
-
-/* 건물 — col 3, row 2 */
-.tactical-area__building {
+/* 구조활동통계 — col 3, 마지막 행 */
+.tactical-area__rescue-stats {
   grid-column: 3;
-  grid-row: 2;
+  grid-row: -2 / -1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tactical-area__rescue-stats > .rescue-stats {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* B면 — col 1, row 3 (옥상 제외 지상층 높이) */
+.tactical-area > .exterior-zone--b {
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+  align-self: stretch;
+  height: auto;
+}
+
+/* 건물 — col 2, rows 2~마지막전 (RF + 지상 + 지하) */
+.tactical-area__building {
+  grid-column: 2;
+  grid-row: 2 / -2;
   overflow: hidden;
   min-width: 0;
   min-height: 0;
-
   display: flex;
   align-items: stretch;
   justify-content: center;
 }
 
-/* D면 — col 4, row 2 */
+/* D면 — col 3, row 3 (옥상 제외 지상층 높이) */
 .tactical-area > .exterior-zone--d {
-  grid-column: 4;
-  grid-row: 2;
-  min-width: 0;
-  align-self: start;
-  height: var(--above-pct, 100%);
-}
-
-/* 직전대기 — col 2, row 3 (A면 좌측 보조 박스) */
-.tactical-area > .imminent-standby {
-  grid-column: 2;
-  grid-row: 3;
-  min-width: 0;
-}
-
-/* A면 — col 3, row 3 */
-.tactical-area > .exterior-zone--a {
   grid-column: 3;
   grid-row: 3;
   min-width: 0;
+  align-self: stretch;
+  height: auto;
 }
 
-/* ─────────────────────────────────────────────
-   건물 본체
-   ─────────────────────────────────────────────*/
-.building-body {
-  width: 100%;
-  height: 100%;
-  margin: 0 auto;
-
-  display: flex;
-  flex-direction: column;
-
-  border: 2.5px solid var(--ctr-border-hard);
-  background-color: var(--ctr-surface);
-  overflow: hidden;
-  box-sizing: border-box;
-
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.16),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-}
-
-/* ─────────────────────────────────────────────
-   1층 바닥 슬래브 — 대기구역(col1) ~ D면(col4) 전폭
-   ─────────────────────────────────────────────*/
+/* 1층 바닥 슬래브 — col 1~3 전폭, 건물과 동일 행 */
 .tactical-area__slab {
-  grid-column: 1 / 5;
-  grid-row: 2;
+  grid-column: 1 / 4;
+  grid-row: 2 / -2;
   position: relative;
   pointer-events: none;
   z-index: 10;
@@ -145,4 +128,48 @@
   );
   border-top:    2px solid #6e6258;
   border-bottom: 1px solid #5a5148;
+}
+
+/* 대기1단계 — col 1, rows 1+2 (140px + RF 높이) */
+.tactical-area__bottom-standby {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* A면 — col 2, 마지막 행 */
+.tactical-area > .exterior-zone--a {
+  grid-column: 2;
+  grid-row: -2 / -1;
+  min-width: 0;
+}
+
+/* 직전대기 — col 1, 마지막 행 */
+.tactical-area > .imminent-standby {
+  grid-column: 1;
+  grid-row: -2 / -1;
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────────
+   건물 본체
+   ─────────────────────────────────────────────*/
+.building-body {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 2.5px solid var(--ctr-border-hard);
+  background-color: var(--ctr-surface);
+  overflow: hidden;
+  box-sizing: border-box;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
 }

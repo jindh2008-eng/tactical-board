@@ -1,16 +1,66 @@
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import type { EventStatus } from '../../types/events';
-import { EVENT_STATUS_ORDER } from '../../types/events';
 import './EventTokenCard.css';
 
 // ─────────────────────────────────────────────
-// 이벤트 토큰 카드
-// — 마우스 드래그로 자유 이동
-// — 인라인 드롭다운으로 상태 선택
+// 원형 선택 메뉴
 // ─────────────────────────────────────────────
 
-const TOKEN_W = 96;
-const TOKEN_H = 26;
+const RADIAL_RADIUS = 54;
+
+const RADIAL_ITEMS: { value: EventStatus; label: string }[] = [
+  { value: '폭발',   label: '폭발'   },
+  { value: '최성기', label: '최성기' },
+  { value: '초진',   label: '초진'   },
+  { value: '완진',   label: '완진'   },
+  { value: '-',     label: '없음'   },
+];
+
+function RadialMenu({ cx, cy, current, onSelect, onClose }: {
+  cx:       number;
+  cy:       number;
+  current:  EventStatus;
+  onSelect: (s: EventStatus) => void;
+  onClose:  () => void;
+}) {
+  return ReactDOM.createPortal(
+    <>
+      <div className="radial-backdrop" onMouseDown={onClose} />
+      <div className="radial-menu" style={{ left: cx, top: cy }}>
+        {RADIAL_ITEMS.map((item, i) => {
+          const angleDeg = i * (360 / RADIAL_ITEMS.length) - 90; // 0° = 12시
+          const angleRad = angleDeg * (Math.PI / 180);
+          const rx = Math.round(RADIAL_RADIUS * Math.cos(angleRad));
+          const ry = Math.round(RADIAL_RADIUS * Math.sin(angleRad));
+          return (
+            <button
+              key={item.value}
+              className={[
+                'radial-item',
+                `radial-item--${item.value === '-' ? 'none' : item.value}`,
+                current === item.value ? 'radial-item--active' : '',
+              ].filter(Boolean).join(' ')}
+              style={{ transform: `translate(calc(-50% + ${rx}px), calc(-50% + ${ry}px))` }}
+              onMouseDown={e => { e.stopPropagation(); onSelect(item.value); onClose(); }}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </>,
+    document.body,
+  );
+}
+
+// ─────────────────────────────────────────────
+// EventTokenCard
+// — 드래그로 자유 이동, 우클릭으로 원형 상태 선택
+// ─────────────────────────────────────────────
+
+const TOKEN_W = 60;
+const TOKEN_H = 32;
 
 interface Props {
   id:             string;
@@ -24,11 +74,9 @@ interface Props {
 
 export function EventTokenCard({ id, label, status, x, y, onMove, onStatusChange }: Props) {
   const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const [radialCenter, setRadialCenter] = useState<{ x: number; y: number } | null>(null);
 
-  // ── 마우스 드래그 핸들러 ──────────────────────
   function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
-    // select / option 클릭 시 드래그 시작 안 함
-    if ((e.target as HTMLElement).closest('select')) return;
     e.preventDefault();
     e.stopPropagation();
 
@@ -36,7 +84,6 @@ export function EventTokenCard({ id, label, status, x, y, onMove, onStatusChange
     if (!container) return;
     const rect = container.getBoundingClientRect();
 
-    // 컨테이너 기준 현재 토큰 위치와 마우스 오프셋 계산
     dragOffsetRef.current = {
       x: e.clientX - rect.left - x,
       y: e.clientY - rect.top  - y,
@@ -61,35 +108,40 @@ export function EventTokenCard({ id, label, status, x, y, onMove, onStatusChange
     window.addEventListener('mouseup',   onMouseUp);
   }
 
-  // ── 아이콘: '-'(미지정)·'완진' 제외 ─────────────
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setRadialCenter({ x: e.clientX, y: e.clientY });
+  }
+
   const showIcon = status !== '-' && status !== '완진';
 
   return (
-    <div
-      className="event-token"
-      data-status={status}
-      style={{ left: x, top: y }}
-      onMouseDown={handleMouseDown}
-    >
-      {/* 아이콘 (완진 제외) */}
-      {showIcon && (
-        <img className="event-token__icon" src="/fire.png" alt="" draggable={false} />
-      )}
-
-      {/* 이름 */}
-      <span className="event-token__label">{label}</span>
-
-      {/* 상태 드롭다운 */}
-      <select
-        className="event-token__select"
-        value={status}
-        onChange={e => onStatusChange(id, e.target.value as EventStatus)}
-        onMouseDown={e => e.stopPropagation()}
+    <>
+      <div
+        className="event-token"
+        data-status={status}
+        style={{ left: x, top: y }}
+        onMouseDown={handleMouseDown}
+        onContextMenu={handleContextMenu}
       >
-        {EVENT_STATUS_ORDER.map(s => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-    </div>
+        {showIcon && (
+          <img className="event-token__icon" src="/fire.png" alt="" draggable={false} />
+        )}
+        <span className="event-token__label">
+          {label}{status !== '-' && <span className="event-token__status">-{status}</span>}
+        </span>
+      </div>
+
+      {radialCenter && (
+        <RadialMenu
+          cx={radialCenter.x}
+          cy={radialCenter.y}
+          current={status}
+          onSelect={s => onStatusChange(id, s)}
+          onClose={() => setRadialCenter(null)}
+        />
+      )}
+    </>
   );
 }

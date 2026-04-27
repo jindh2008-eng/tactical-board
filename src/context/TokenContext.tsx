@@ -68,9 +68,10 @@ interface TokenContextValue {
   ) => void;
   moveToken:   (tokenId: string, toZoneKey: string | null, pos?: TokenPos, opts?: MoveTokenOptions) => void;
   rescueUnit:  (tokenId: string, victimLabel: string) => void;
-  addBadge:    (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
-  removeBadge: (tokenId: string, badgeId: string) => void;
-  clearBadges: (tokenId: string) => void;
+  addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
+  removeBadge:       (tokenId: string, badgeId: string) => void;
+  clearBadges:       (tokenId: string) => void;
+  changeTokenColor:  (tokenId: string, color: TokenColor) => void;
 }
 
 const TokenContext = createContext<TokenContextValue | null>(null);
@@ -488,8 +489,9 @@ export function TokenProvider({
     }
 
     if (zoneChanged) {
+      const movedAt = Date.now();
       setTokens(prev =>
-        prev.map(t => t.id === tokenId ? { ...t, zoneKey: toZoneKey } : t)
+        prev.map(t => t.id === tokenId ? { ...t, zoneKey: toZoneKey, lastMovedAt: movedAt } : t)
       );
       if (toZoneKey !== null) {
         const entry: LogEntry = {
@@ -637,11 +639,17 @@ export function TokenProvider({
     ));
   }, []);
 
+  const changeTokenColor = useCallback((tokenId: string, color: TokenColor) => {
+    setTokens(prev => prev.map(t =>
+      t.id === tokenId ? { ...t, color } : t
+    ));
+  }, []);
+
   return (
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
       createToken, moveToken, rescueUnit,
-      addBadge, removeBadge, clearBadges,
+      addBadge, removeBadge, clearBadges, changeTokenColor,
     }}>
       {children}
     </TokenContext.Provider>

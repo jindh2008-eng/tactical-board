@@ -13,40 +13,61 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 8px;
-  border-radius: 3px;
-  font-size: 0.72rem;
+  min-width: 60px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 700;
+  line-height: 1;
   cursor: grab;
   user-select: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
-  transition: opacity 0.1s, transform 0.1s;
-  letter-spacing: 0.02em;
+  transition: opacity 0.12s, transform 0.12s;
+  letter-spacing: 0.01em;
 }
 
 .token-card:active {
   cursor: grabbing;
-  opacity: 0.7;
-  transform: scale(0.95);
+  opacity: 0.75;
+  transform: scale(0.93);
 }
 
 /* ─── 색상별 토큰 스타일 ─── */
+
+/* 진압대 */
 .token-card--red {
-  background: #2a0808;
-  color: #f4a0a0;
-  border: 1px solid #6a1818;
+  background: #E53935;
+  color: #FFFFFF;
+  border: 1px solid #c62828;
 }
 
+/* 구조대 */
 .token-card--yellow {
-  background: #2a2008;
-  color: #f4d870;
-  border: 1px solid #6a5010;
+  background: #FBC02D;
+  color: #000000;
+  border: 1px solid #f9a825;
 }
 
+/* 구급대 */
 .token-card--green {
-  background: #082010;
-  color: #80dd90;
-  border: 1px solid #1a5a28;
+  background: #43A047;
+  color: #FFFFFF;
+  border: 1px solid #2e7d32;
+}
+
+.token-card--blue {
+  background: #1565C0;
+  color: #FFFFFF;
+  border: 1px solid #0D47A1;
+}
+
+.token-card--white {
+  background: #F5F5F5;
+  color: #212121;
+  border: 1px solid #bdbdbd;
 }
 
 .token-card--vehicle {
@@ -61,12 +82,24 @@
   border: 1px solid #3a2a5a;
 }
 
-/* ─── 건물 구역 / 방면 내 compact 사이즈 ─── */
+/* ─── 배치 구역 내 compact 사이즈 ─────────────────────────────────────
+   건물 구역·방면·대기구역·임시의료소·출동대현황 공통 적용
+   ─────────────────────────────────────────────────────────────────── */
 .zone-cell .token-card,
-.face-general-zone .token-card {
-  font-size: 1.5rem;
-  padding: 1px 5px;
-  border-radius: 2px;
+.face-general-zone .token-card,
+.standby-box__body .token-card,
+.standby-box__tokens .token-card,
+.standby-split__body .token-card,
+.medical-split__body .token-card,
+.medical-post__body .token-card,
+.imminent-standby__body .token-card,
+.unit-status-panel .token-card,
+.resource-panel__body .token-card {
+  min-width: 0;
+  height: auto;
+  padding: 7px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
 }
 
 /* ─────────────────────────────────────────────
@@ -103,7 +136,7 @@
 }
 
 .token-badge__line {
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: #e8e6ff;
   line-height: 1.35;
@@ -111,7 +144,7 @@
 }
 
 .token-badge__line--sub {
-  font-size: 0.58rem;
+  font-size: 0.64rem;
   font-weight: 600;
   color: #b0aed0;
 }
@@ -121,22 +154,18 @@
    ─────────────────────────────────────────────*/
 
 .token-countdown {
-  position: absolute;
-  top: -7px;
-  right: -7px;
   min-width: 16px;
   height: 16px;
-  padding: 0 3px;
+  padding: 0 4px;
   border-radius: 8px;
   background: #b84040;
   border: 1px solid #e07070;
   color: #fff;
-  font-size: 0.58rem;
+  font-size: 0.64rem;
   font-weight: 700;
   line-height: 14px;
   text-align: center;
-  pointer-events: none;
-  z-index: 7;
+  white-space: nowrap;
   letter-spacing: 0;
 }
 
@@ -146,12 +175,20 @@
   border-color: #6a9fd8;
 }
 
+/* ─── 최근 이동 강조 ─── */
+.token-card--recently-moved {
+  box-shadow: 0 0 0 3px #2563eb, 0 0 0 6px rgba(37, 99, 235, 0.25), 0 4px 12px rgba(0,0,0,0.25);
+  transform: scale(1.06);
+  z-index: 999;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
 /* 도착 대기 카운트다운 — pool 패널에서만 표시, 초록 계열 */
 .token-countdown--arrival {
   background: #1a4a2a;
   border-color: #3a9a5a;
   color: #88eea8;
   min-width: 34px;   /* MM:SS 표시용 */
-  font-size: 0.60rem;
+  font-size: 0.66rem;
   letter-spacing: 0.02em;
 }

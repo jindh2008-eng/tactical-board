@@ -1,8 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import type { TokenPos } from '../../context/TokenContext';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
 import type { UnitToken, TokenBadge } from '../../types';
+import { PRESET_COLORS } from '../../types/presets';
 import { secsToMmss } from '../../utils/dispatchRoster';
 import { TokenContextMenu } from './TokenContextMenu';
 import './TokenCard.css';
@@ -13,10 +15,22 @@ interface Props {
 }
 
 export function TokenCard({ token, absPos }: Props) {
-  const { addBadge, removeBadge }                     = useTokens();
+  const { addBadge, removeBadge }    = useTokens();
   const { sharedBadgePresets, unitBadgePresets }       = useSettings();
 
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
+  const [ctxMenu,    setCtxMenu]    = useState<{ x: number; y: number } | null>(null);
+  const [isRecent,   setIsRecent]   = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // 이동 직후 2초 동안 강조
+  useEffect(() => {
+    if (!token.lastMovedAt) return;
+    const elapsed = Date.now() - token.lastMovedAt;
+    if (elapsed >= 2000) return;
+    setIsRecent(true);
+    const timer = setTimeout(() => setIsRecent(false), 2000 - elapsed);
+    return () => clearTimeout(timer);
+  }, [token.lastMovedAt]);
 
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
     const el = e.currentTarget;
@@ -34,7 +48,7 @@ export function TokenCard({ token, absPos }: Props) {
   }
 
   const handleClose       = useCallback(() => setCtxMenu(null), []);
-  const handleAddBadge    = useCallback((badge: Omit<TokenBadge, 'id'>) => addBadge(token.id, badge),    [addBadge,    token.id]);
+  const handleAddBadge    = useCallback((badge: Omit<TokenBadge, 'id'>) => addBadge(token.id, badge),      [addBadge,    token.id]);
   const handleRemoveBadge = useCallback((badgeId: string)               => removeBadge(token.id, badgeId), [removeBadge, token.id]);
 
   const wrapperStyle: React.CSSProperties | undefined = absPos
@@ -57,37 +71,64 @@ export function TokenCard({ token, absPos }: Props) {
 
   const hasBadges = token.badges.length > 0;
 
+  // 카운트다운 포털 위치 계산 — wrapper ref 기준 top-right 모서리
+  function countdownPortal(
+    className: string,
+    label: string,
+    content: React.ReactNode,
+  ): React.ReactNode {
+    const rect = wrapperRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    return ReactDOM.createPortal(
+      <div
+        className={`token-countdown ${className}`}
+        aria-label={label}
+        style={{
+          position:      'fixed',
+          left:          rect.right,
+          top:           rect.top,
+          transform:     'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          zIndex:        9999,
+        }}
+      >
+        {content}
+      </div>,
+      document.body,
+    );
+  }
+
   return (
     <>
-      <div className="token-card-wrapper" style={wrapperStyle}>
+      <div className="token-card-wrapper" style={wrapperStyle} ref={wrapperRef}>
         {hasBadges && (
           <div className="token-badge-overlay" aria-hidden="true">
-            {token.badges.map(badge => (
-              <div key={badge.id} className="token-badge">
-                <span className="token-badge__line">{badge.line1}</span>
-                {badge.line2 && <span className="token-badge__line token-badge__line--sub">{badge.line2}</span>}
-              </div>
-            ))}
-          </div>
-        )}
-        {medicalCountdown !== null && (
-          <div className="token-countdown" aria-label={`직전대기 이동까지 ${medicalCountdown}초`}>
-            구조중 {medicalCountdown}초
-          </div>
-        )}
-        {moveCountdown !== null && (
-          <div className="token-countdown token-countdown--move" aria-label={`이동 완료까지 ${moveCountdown}초`}>
-            이동중 {moveCountdown}초
-          </div>
-        )}
-        {arrivalCountdown !== null && (
-          <div className="token-countdown token-countdown--arrival" aria-label={`출동중 — 도착까지 ${secsToMmss(arrivalCountdown)}`}>
-            출동중 {secsToMmss(arrivalCountdown)}
+            {token.badges.map(badge => {
+              const col = badge.color ? PRESET_COLORS.find(c => c.value === badge.color) : null;
+              return (
+                <div
+                  key={badge.id}
+                  className="token-badge"
+                  style={col ? { background: col.bg, borderColor: col.border } : undefined}
+                >
+                  <span
+                    className="token-badge__line"
+                    style={col ? { color: col.text } : undefined}
+                  >{badge.line1}</span>
+                  {badge.line2 && (
+                    <span
+                      className="token-badge__line token-badge__line--sub"
+                      style={col ? { color: col.text, opacity: 0.85 } : undefined}
+                    >{badge.line2}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
         <div
-          className={`token-card token-card--${token.color}`}
+          className={`token-card token-card--${token.color}${isRecent ? ' token-card--recently-moved' : ''}`}
           draggable
           onDragStart={handleDragStart}
           onContextMenu={handleContextMenu}
@@ -96,6 +137,22 @@ export function TokenCard({ token, absPos }: Props) {
           {token.label}
         </div>
       </div>
+
+      {medicalCountdown !== null && countdownPortal(
+        '',
+        `직전대기 이동까지 ${medicalCountdown}초`,
+        `구조중 ${medicalCountdown}초`,
+      )}
+      {moveCountdown !== null && countdownPortal(
+        'token-countdown--move',
+        `이동 완료까지 ${moveCountdown}초`,
+        moveCountdown,
+      )}
+      {arrivalCountdown !== null && countdownPortal(
+        'token-countdown--arrival',
+        `출동중 — 도착까지 ${secsToMmss(arrivalCountdown)}`,
+        secsToMmss(arrivalCountdown),
+      )}
 
       {ctxMenu && (
         <TokenContextMenu
