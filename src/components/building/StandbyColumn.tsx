@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { useSettings } from '../../store/settingsStore';
@@ -66,11 +66,54 @@ function ChiefSelector({ value, onChange, zoneKey }: ChiefSelectorProps) {
 export function MedicalPostBox() {
   const { tokens, moveToken }   = useTokens();
   const { victims, moveVictim } = useVictims();
-  const { medicalPostChief, updateMedicalPostChief } = useSettings();
+
+  const [isInstalled,  setIsInstalled]  = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
 
   const zoneKey     = 'medical-post';
   const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
   const zoneVictims = victims.filter(v => v.zoneKey === zoneKey);
+
+  // selectedUnit 토큰이 구역을 벗어나면 자동 해제
+  useEffect(() => {
+    if (selectedUnit && !zoneTokens.some(t => t.label === selectedUnit)) {
+      setSelectedUnit(null);
+    }
+  }, [zoneTokens, selectedUnit]);
+
+  // 헤더 버튼: 설치/미설치 토글, OFF 시 selectedUnit 초기화
+  function handleButtonClick() {
+    if (isInstalled || selectedUnit !== null) {
+      setIsInstalled(false);
+      setSelectedUnit(null);
+    } else {
+      setIsInstalled(true);
+    }
+  }
+
+  // 토큰 클릭: selectedUnit 지정 (동일 토큰 재클릭 시 해제)
+  function handleTokenClick(label: string) {
+    if (selectedUnit === label) {
+      setSelectedUnit(null);
+    } else {
+      setSelectedUnit(label);
+      setIsInstalled(true);
+    }
+  }
+
+  // 버튼 표시 텍스트 및 색상 계산
+  let btnLabel:   string;
+  let btnVariant: 'none' | 'installed' | 'unit';
+  if (selectedUnit !== null) {
+    btnLabel   = selectedUnit;
+    btnVariant = 'unit';
+  } else if (isInstalled) {
+    btnLabel   = '설치';
+    btnVariant = 'installed';
+  } else {
+    btnLabel   = '미설치';
+    btnVariant = 'none';
+  }
 
   const panel = useDropPanel();
 
@@ -87,7 +130,12 @@ export function MedicalPostBox() {
     <div className="standby-box standby-box--medical standby-box--medical-large">
       <div className="standby-box__header standby-box__header--chief">
         <span className="standby-box__title">임시의료소</span>
-        <ChiefSelector value={medicalPostChief} onChange={updateMedicalPostChief} zoneKey="medical-post" />
+        <button
+          className={`medical-status-btn medical-status-btn--${btnVariant}`}
+          onClick={handleButtonClick}
+        >
+          {btnLabel}
+        </button>
       </div>
 
       <div
@@ -104,7 +152,18 @@ export function MedicalPostBox() {
         ) : (
           <>
             {zoneVictims.map(v => <VictimCard key={v.id} victim={v} />)}
-            {zoneTokens.map(t => <TokenCard key={t.id} token={t} />)}
+            {zoneTokens.map(t => (
+              <div
+                key={t.id}
+                className={[
+                  'medical-post__token-wrap',
+                  selectedUnit === t.label ? 'medical-post__token-wrap--selected' : '',
+                ].filter(Boolean).join(' ')}
+                onClick={() => handleTokenClick(t.label)}
+              >
+                <TokenCard token={t} />
+              </div>
+            ))}
           </>
         )}
       </div>

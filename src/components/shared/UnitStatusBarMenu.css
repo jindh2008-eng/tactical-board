@@ -1,0 +1,196 @@
+/* ─────────────────────────────────────────────
+   UnitStatusBarMenu (usbm)
+   출동대/차량 토큰 우클릭 → 가로 막대형 상태 메뉴
+   portal → document.body, position: fixed
+   ─────────────────────────────────────────────*/
+
+/* 백드롭 */
+.usbm__backdrop {
+  position: fixed;
+  inset:    0;
+  z-index:  9997;
+  cursor:   default;
+}
+
+/* 메뉴 컨테이너 */
+.usbm {
+  z-index:       9998;
+  background:    #14100a;
+  border:        1px solid #3a2818;
+  border-radius: 7px;
+  box-shadow:    0 6px 20px rgba(0, 0, 0, 0.65),
+                 0 2px 6px  rgba(0, 0, 0, 0.4);
+  overflow:      hidden;
+  user-select:   none;
+  font-family:   inherit;
+  min-width:     max-content;
+}
+
+/* ── 상태 버튼 바 ──────────────────────────── */
+
+.usbm__bar {
+  display:     flex;
+  align-items: center;
+  gap:         4px;
+  padding:     6px 8px;
+  flex-wrap:   nowrap;
+}
+
+.usbm__btn {
+  flex-shrink:     0;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             2px;
+  padding:         8px 13px;
+  border-radius:   5px;
+  border:          1.5px solid;
+  font-size:       0.78rem;
+  font-weight:     700;
+  font-family:     inherit;
+  cursor:          pointer;
+  white-space:     nowrap;
+  min-height:      38px;
+  letter-spacing:  0.02em;
+  transition:      filter 0.1s, border-color 0.12s;
+}
+
+.usbm__btn:hover {
+  filter: brightness(1.30);
+}
+
+/* 선택된 상태 */
+.usbm__btn--active {
+  filter: brightness(1.15);
+}
+
+/* 체크 아이콘 */
+.usbm__check {
+  font-size: 0.72rem;
+}
+
+/* 구분선 */
+.usbm__sep {
+  width:      1px;
+  height:     22px;
+  background: #3a2818;
+  flex-shrink: 0;
+  margin:     0 2px;
+}
+
+/* ── 송수 연결 버튼 ──────────────────────────── */
+
+.usbm__btn--water {
+  background:   #0e2030;
+  border-color: #1e66aa;
+  color:        #55aaee;
+}
+
+.usbm__btn--water:hover {
+  border-color: #44aaff;
+  color:        #88ccff;
+  filter:       brightness(1.25);
+}
+
+/* ── 메모(직접입력) 버튼 ─────────────────────── */
+
+.usbm__btn--note {
+  background:   #1a1028;
+  border-color: rgba(120, 100, 200, 0.50);
+  border-style: dashed;
+  color:        rgba(160, 150, 210, 0.90);
+}
+
+.usbm__btn--note:hover {
+  border-color: rgba(160, 130, 255, 0.80);
+  color:        rgba(200, 185, 255, 1);
+}
+
+/* 패널 열린 상태 */
+.usbm__btn--note-open {
+  border-style:  solid;
+  border-color:  rgba(160, 130, 255, 0.85) !important;
+  background:    rgba(40, 28, 80, 0.95) !important;
+  color:         rgba(200, 185, 255, 1)  !important;
+}
+
+/* 메모 있는 상태 */
+.usbm__btn--has-note {
+  border-style:  solid;
+  border-color:  rgba(80, 180, 120, 0.55);
+  background:    rgba(10, 30, 16, 0.90);
+  color:         rgba(100, 210, 150, 0.95);
+}
+
+/* ── 메모 입력 패널 ──────────────────────────── */
+
+.usbm__input-panel {
+  padding:        6px 10px 10px;
+  border-top:     1px solid #2a1e10;
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+}
+
+.usbm__input {
+  width:         100%;
+  box-sizing:    border-box;
+  padding:       6px 9px;
+  background:    #0e0c08;
+  border:        1px solid #4a3010;
+  border-radius: 4px;
+  color:         #cc9955;
+  font-size:     0.78rem;
+  font-family:   inherit;
+  outline:       none;
+  transition:    border-color 0.1s;
+}
+
+.usbm__input:focus {
+  border-color: #8a5520;
+}
+
+.usbm__input::placeholder {
+  color: #4a3520;
+}
+
+.usbm__input-row {
+  display:         flex;
+  justify-content: flex-end;
+  align-items:     center;
+  gap:             6px;
+}
+
+.usbm__clear-btn {
+  padding:       4px 11px;
+  background:    transparent;
+  border:        1px solid #6a2230;
+  border-radius: 3px;
+  color:         #cc4466;
+  font-size:     0.72rem;
+  font-family:   inherit;
+  cursor:        pointer;
+  transition:    background 0.1s;
+}
+
+.usbm__clear-btn:hover {
+  background: #2a0812;
+}
+
+.usbm__save-btn {
+  padding:       4px 14px;
+  background:    #4433aa;
+  border:        none;
+  border-radius: 3px;
+  color:         #fff;
+  font-size:     0.72rem;
+  font-weight:   700;
+  font-family:   inherit;
+  cursor:        pointer;
+  transition:    background 0.1s;
+}
+
+.usbm__save-btn:hover {
+  background: #5544cc;
+}
+

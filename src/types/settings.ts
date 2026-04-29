@@ -76,6 +76,20 @@ export interface DispatchRosterItem {
 
 export { VICTIM_FACES } from './victim';
 
+// ─────────────────────────────────────────────
+// 소화전 사전 설정 항목 (설정창 전용)
+// ─────────────────────────────────────────────
+
+export type HydrantSide = 'A' | 'B' | 'C' | 'D';
+
+/** 시나리오 설정용 소화전 항목. 실행 시 토큰으로 생성됨. */
+export interface HydrantSetupItem {
+  id:        string;
+  name:      string;       // 예: "59호"
+  side:      HydrantSide;  // 방면
+  distanceM: number;       // 거리(m)
+}
+
 /** 시나리오 설정용 구조대상자 항목. 실행 중 VictimToken과 별개. */
 export interface VictimSetupItem {
   id:             string;

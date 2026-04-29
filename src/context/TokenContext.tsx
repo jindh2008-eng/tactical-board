@@ -1,7 +1,7 @@
 import {
   createContext, useContext, useState, useCallback, useEffect, useRef,
 } from 'react';
-import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge } from '../types';
+import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge, StatusTag } from '../types';
 import type { DispatchRosterItem, ArrivalMode } from '../types/settings';
 import { rosterItemToToken, initCountersFromRoster, computeCountersFromTokens } from '../utils/dispatchArrival';
 import {
@@ -71,6 +71,8 @@ interface TokenContextValue {
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
   removeBadge:       (tokenId: string, badgeId: string) => void;
   clearBadges:       (tokenId: string) => void;
+  setStatusTag:      (tokenId: string, tag: StatusTag | null) => void;
+  setCustomNote:     (tokenId: string, note: string) => void;
   changeTokenColor:  (tokenId: string, color: TokenColor) => void;
 }
 
@@ -639,6 +641,18 @@ export function TokenProvider({
     ));
   }, []);
 
+  const setStatusTag = useCallback((tokenId: string, tag: StatusTag | null) => {
+    setTokens(prev => prev.map(t =>
+      t.id === tokenId ? { ...t, statusTag: tag ?? undefined } : t
+    ));
+  }, []);
+
+  const setCustomNote = useCallback((tokenId: string, note: string) => {
+    setTokens(prev => prev.map(t =>
+      t.id === tokenId ? { ...t, customNote: note || undefined } : t
+    ));
+  }, []);
+
   const changeTokenColor = useCallback((tokenId: string, color: TokenColor) => {
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, color } : t
@@ -649,7 +663,7 @@ export function TokenProvider({
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
       createToken, moveToken, rescueUnit,
-      addBadge, removeBadge, clearBadges, changeTokenColor,
+      addBadge, removeBadge, clearBadges, setStatusTag, setCustomNote, changeTokenColor,
     }}>
       {children}
     </TokenContext.Provider>

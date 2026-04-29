@@ -17,16 +17,15 @@ export const DEFAULT_BUILDING_CONFIG: BuildingConfig = {
 // ─────────────────────────────────────────────
 // 층별 구역 배열 생성
 //
-// 계단실은 항상 좌측 고정: [stair, left, right]
+// 계단실은 항상 좌측 고정: [stair, center, right]
 // Zone 배열의 순서 = 화면 렌더링 순서
 // ─────────────────────────────────────────────
 
 export function buildZones(): Zone[] {
   return [
-    { id: 'stair',  label: '계단',    status: {}, acceptsTokens: true  },
-    { id: 'left',   label: '단위',  status: {}, acceptsTokens: true  },
-    { id: 'center', label: '내부',  status: {}, acceptsTokens: true  },
-    { id: 'right',  label: '화재',  status: {}, acceptsTokens: false },
+    { id: 'stair',  label: '계단', status: {}, acceptsTokens: true  },
+    { id: 'center', label: '내부', status: {}, acceptsTokens: true  },
+    { id: 'right',  label: '화재', status: {}, acceptsTokens: false },
   ];
 }
 
@@ -267,7 +266,7 @@ export function buildPlaceableFloors(
 /**
  * 구조대상자를 실제로 드롭할 수 있는 zoneKey 집합을 반환한다.
  *
- * - 건물 내부: 개별 렌더링 층의 stair·left·center 구역
+ * - 건물 내부: 개별 렌더링 층의 stair·center 구역
  * - 외곽 방면: face-A ~ face-D
  * - 특수 구역: medical-post, standby-*
  * 이 집합에 없는 zoneKey 는 유효하지 않으며 pool 로 이동해야 한다.

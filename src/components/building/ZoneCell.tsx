@@ -7,6 +7,7 @@ import { useBuildingState } from '../../context/BuildingStateContext';
 import type { SmokeLevel } from '../../context/BuildingStateContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
+import { FlameIcon } from '../shared/FlameIcon';
 import './ZoneCell.css';
 
 // ─────────────────────────────────────────────
@@ -14,40 +15,38 @@ import './ZoneCell.css';
 // ─────────────────────────────────────────────
 
 interface StageMeta {
-  label:     string;
-  bgClass:   string;
-  showFlame: boolean;
-  darkFlame: boolean;
+  label:   string;
+  bgClass: string;
 }
 
 const FIRE_STAGE_META: Record<FireStatus, StageMeta> = {
-  'extension-peak': { label: '최성기',     bgClass: 'zone-cell--fs-extension-peak', showFlame: true,  darkFlame: false },
-  'peak':           { label: '연소확대',    bgClass: 'zone-cell--fs-peak',           showFlame: true,  darkFlame: false },
-  'half':           { label: '진화율 50%', bgClass: 'zone-cell--fs-half',           showFlame: true,  darkFlame: false },
-  'initial':        { label: '초진',       bgClass: 'zone-cell--fs-initial',        showFlame: true,  darkFlame: true  },
-  'complete':       { label: '완진',       bgClass: 'zone-cell--fs-complete',       showFlame: false, darkFlame: false },
+  'extension-peak': { label: '연소확대', bgClass: 'zone-cell--fs-extension-peak' },
+  'peak':           { label: '최성기',   bgClass: 'zone-cell--fs-peak'           },
+  'seventy':        { label: '70%',     bgClass: 'zone-cell--fs-seventy'         },
+  'half':           { label: '50%',     bgClass: 'zone-cell--fs-half'           },
+  'initial':        { label: '초진',    bgClass: 'zone-cell--fs-initial'        },
+  'complete':       { label: '완진',    bgClass: 'zone-cell--fs-complete'       },
 };
 
 // ─────────────────────────────────────────────
 // 화재 원형 선택 메뉴
 // ─────────────────────────────────────────────
 
-const FIRE_RADIAL_RADIUS = 58;
+const FIRE_RADIAL_RADIUS = 64;
 
 interface FireRadialItem {
-  value:     FireStatus | null;
-  label:     string;
-  showFlame: boolean;
-  darkFlame: boolean;
+  value: FireStatus | null;
+  label: string;
 }
 
 const FIRE_RADIAL_ITEMS: FireRadialItem[] = [
-  { value: 'extension-peak', label: '최성기',  showFlame: true,  darkFlame: false },
-  { value: 'peak',           label: '연소확대', showFlame: true,  darkFlame: false },
-  { value: 'half',           label: '50%',    showFlame: true,  darkFlame: false },
-  { value: 'initial',        label: '초진',    showFlame: true,  darkFlame: false },
-  { value: 'complete',       label: '완진',    showFlame: false, darkFlame: false },
-  { value: null,             label: ' - ',    showFlame: false, darkFlame: false },
+  { value: 'extension-peak', label: '연소확대' },
+  { value: 'peak',           label: '최성기'  },
+  { value: 'seventy',        label: '70%'    },
+  { value: 'half',           label: '50%'    },
+  { value: 'initial',        label: '초진'   },
+  { value: 'complete',       label: '완진'   },
+  { value: null,             label: ' - '   },
 ];
 
 function FireRadialMenu({ cx, cy, current, onSelect, onClose }: {
@@ -79,14 +78,7 @@ function FireRadialMenu({ cx, cy, current, onSelect, onClose }: {
               style={{ transform: `translate(calc(-50% + ${rx}px), calc(-50% + ${ry}px))` }}
               onMouseDown={e => { e.stopPropagation(); onSelect(item.value); onClose(); }}
             >
-              {item.showFlame && (
-                <img
-                  className={['fire-ri__flame', item.darkFlame ? 'fire-ri__flame--dark' : ''].filter(Boolean).join(' ')}
-                  src="/fire.png"
-                  alt=""
-                  draggable={false}
-                />
-              )}
+              {item.value && <FlameIcon status={item.value} size={22} />}
               <span className="fire-ri__label">{item.label}</span>
             </button>
           );
@@ -97,20 +89,6 @@ function FireRadialMenu({ cx, cy, current, onSelect, onClose }: {
   );
 }
 
-// ─────────────────────────────────────────────
-// 화염 이미지
-// ─────────────────────────────────────────────
-
-function FlameImage({ dark = false }: { dark?: boolean }) {
-  return (
-    <img
-      className={['fire-bg-icon', dark ? 'fire-bg-icon--dark' : ''].filter(Boolean).join(' ')}
-      src="/fire.png"
-      alt=""
-      aria-hidden="true"
-    />
-  );
-}
 
 const WALL_X      = 98.75;
 const WALL_STROKE = 2.5;
@@ -179,7 +157,6 @@ function StairDiagram({
 // 구역 기본 라벨
 // ─────────────────────────────────────────────
 const ZONE_DEFAULT_LABELS: Partial<Record<string, string>> = {
-  left:  '단위',
   right: '화재',
 };
 
@@ -323,11 +300,11 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
       {showFirePanel && (
         <div
           className="zone-cell__fire-panel"
-          onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setFireRadialPos({ x: e.clientX, y: e.clientY }); }}
+          onContextMenu={e => { e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setFireRadialPos({ x: r.left + r.width / 2, y: r.top + r.height / 2 }); }}
         >
-          {stageMeta ? (
+          {stageMeta && fireStatus ? (
             <div className="fire-cell">
-              {stageMeta.showFlame && <FlameImage dark={stageMeta.darkFlame} />}
+              <FlameIcon status={fireStatus} className="fire-bg-icon" />
               <span className="fire-label">{stageMeta.label}</span>
             </div>
           ) : null}

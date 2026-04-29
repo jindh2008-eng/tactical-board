@@ -7,18 +7,51 @@ const DROP_NUDGE_Y = 0;
 import { FACE_META, getFaceZones, getFaceZoneDataAttrs } from '../../data/faceZoneData';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
+import { useSettings } from '../../store/settingsStore';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
+import { HydrantIcon } from '../shared/HydrantIcon';
 import './ExteriorZone.css';
 
 // ─────────────────────────────────────────────
 // 일반 방면 영역 — 드롭 타겟 + 자유 위치 토큰
 // ─────────────────────────────────────────────
 
+// ── 소화전 코너 위치 ────────────────────────────────────────────
+// A면: 짝수 인덱스 → 좌측하단, 홀수 인덱스 → 우측하단
+// B면: 좌측하단, D면: 우측하단, C면: 좌측하단(기본)
+type HydrantCorner = 'bottom-left' | 'bottom-right';
+
+function getHydrantCorner(face: Face, index: number): HydrantCorner {
+  if (face === 'A') return index % 2 === 0 ? 'bottom-left' : 'bottom-right';
+  if (face === 'D') return 'bottom-right';
+  return 'bottom-left';   // B, C
+}
+
+function cornerStyle(corner: HydrantCorner): React.CSSProperties {
+  const base: React.CSSProperties = {
+    position:      'absolute',
+    bottom:        4,
+    display:       'flex',
+    flexDirection: 'column-reverse',
+    gap:           4,
+    zIndex:        3,
+  };
+  return corner === 'bottom-left'
+    ? { ...base, left: 4, alignItems: 'flex-start' }
+    : { ...base, right: 4, alignItems: 'flex-end' };
+}
+
 function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
   const { tokens, positions, moveToken }         = useTokens();
   const { victims, victimPositions, moveVictim } = useVictims();
+  const { hydrantSetup }                         = useSettings();
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // 이 방면에 배정된 소화전 필터링 후 코너별 그룹화
+  const faceHydrants = hydrantSetup.filter(h => h.side === face);
+  const leftHydrants  = faceHydrants.filter((_, i) => getHydrantCorner(face, i) === 'bottom-left');
+  const rightHydrants = faceHydrants.filter((_, i) => getHydrantCorner(face, i) === 'bottom-right');
 
   const zoneKey     = `face-${face}`;
   const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
@@ -78,6 +111,24 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
       {zoneVictims.map(victim => (
         <VictimCard key={victim.id} victim={victim} absPos={victimPositions[victim.id]} />
       ))}
+
+      {/* 소화전 아이콘 — 좌측하단 */}
+      {leftHydrants.length > 0 && (
+        <div style={cornerStyle('bottom-left')}>
+          {leftHydrants.map(h => (
+            <HydrantIcon key={h.id} id={h.id} name={h.name} distanceM={h.distanceM} />
+          ))}
+        </div>
+      )}
+
+      {/* 소화전 아이콘 — 우측하단 */}
+      {rightHydrants.length > 0 && (
+        <div style={cornerStyle('bottom-right')}>
+          {rightHydrants.map(h => (
+            <HydrantIcon key={h.id} id={h.id} name={h.name} distanceM={h.distanceM} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

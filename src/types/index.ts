@@ -13,7 +13,7 @@ export interface BuildingConfig {
 
 export type FloorId = string;
 
-export type ZoneId = 'left' | 'center' | 'right' | 'stair';
+export type ZoneId = 'center' | 'right' | 'stair';
 
 export interface ZoneStatus {
   fire?:     boolean;
@@ -126,6 +126,12 @@ export interface BadgePreset {
   line2?: string;
 }
 
+/** 사용자가 선택하는 단일 상태 태그 */
+export interface StatusTag {
+  label: string;
+  color: string;   // 색상 키 (e.g. 'blue', 'yellow', 'red')
+}
+
 export interface UnitToken {
   id:       string;                    // 고유 ID
   label:    string;                    // 표시 이름 (진압1대, 펌프2호 등)
@@ -133,7 +139,9 @@ export interface UnitToken {
   color:    TokenColor;                // 색상 키
   unitType: string;                    // 출동대 종류 키 (e.g. 'suppression', 'pump', 'ladder')
   zoneKey:  string | null;             // 현재 위치 구역 키 (null = pool/출동대현황)
-  badges:   TokenBadge[];              // 부착된 상태 배지 목록
+  badges:   TokenBadge[];              // 시스템 전용 상태 배지 (구조중 등)
+  statusTag?:  StatusTag;             // 사용자 선택 상태 태그 (1개, 토글)
+  customNote?: string;                 // 직접입력 메모 (말풍선 표시)
   /**
    * 생성 경로
    * 'roster' : dispatchRoster 기반 자동 생성
@@ -181,4 +189,4 @@ export type CommandMethod   = '고정' | '전진' | '이동' | null;
 // ─────────────────────────────────────────────
 
 export type DoorState  = 'open' | 'closed';
-export type FireStatus = 'extension-peak' | 'peak' | 'half' | 'initial' | 'complete';
+export type FireStatus = 'extension-peak' | 'peak' | 'seventy' | 'half' | 'initial' | 'complete';

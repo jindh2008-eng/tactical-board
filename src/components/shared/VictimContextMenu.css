@@ -248,3 +248,37 @@
 .vcm__rescue-unit--green  .vcm__rescue-unit-name { color: #80dd90; }
 .vcm__rescue-unit--vehicle .vcm__rescue-unit-name { color: #ccaa66; }
 .vcm__rescue-unit--agency  .vcm__rescue-unit-name { color: #bb99dd; }
+
+/* ── 구조 처리 목록 소제목 ──────────────────── */
+.vcm__rescue-sub-label {
+  font-size:      0.60rem;
+  font-weight:    700;
+  color:          #6a5030;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding:        5px 4px 2px;
+}
+.vcm__rescue-sub-label--face {
+  color:          #507060;
+  margin-top:     3px;
+}
+
+/* ── 외곽 방면 굴절차/고가차 버튼 ─────────── */
+.vcm__rescue-unit--face {
+  border-color: #2a4030;
+  background:   #0e1810;
+}
+.vcm__rescue-unit--face:hover {
+  background:   #182a1a;
+  border-color: #50aa70;
+}
+.vcm__rescue-unit--face .vcm__rescue-unit-name {
+  color:       #70cc90;
+  font-size:   0.73rem;
+}
+.vcm__rescue-unit-sub {
+  font-size:   0.64rem;
+  font-weight: 400;
+  color:       #507860;
+  margin-left: 1px;
+}

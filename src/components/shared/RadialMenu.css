@@ -1,0 +1,292 @@
+/* ═══════════════════════════════════════════════
+   RadialMenu (rm)
+   0×0 앵커 방식
+
+   구조:
+     .rm              → position:fixed; width:0; height:0
+     .rm__hub         → 중심 허브
+     .rm__preset-item → 단일 링 버튼 (RADIUS_RING=110px)
+                        프리셋 배지 + 직접입력 버튼 포함
+
+   위치: inline transform으로 렌더 시 1회 계산, 이후 불변
+   hover: filter/box-shadow만 변경, transform의 translate 유지
+   ═══════════════════════════════════════════════ */
+
+/* ── 백드롭 ───────────────────────────────────── */
+.rm__backdrop {
+  position: fixed;
+  inset:    0;
+  z-index:  9997;
+  cursor:   default;
+}
+
+/* ── 0×0 앵커 컨테이너 ───────────────────────── */
+.rm {
+  position:       fixed;
+  width:          0;
+  height:         0;
+  z-index:        9998;
+  pointer-events: none;
+}
+
+/* ── 가이드 링/연결선 ────────────────────────── */
+.rm__guide {
+  position:       absolute;
+  left:           0;
+  top:            0;
+  pointer-events: none;
+  z-index:        0;
+}
+
+.rm__guide-ring {
+  position:      absolute;
+  left:          0;
+  top:           0;
+  width:         220px;   /* RADIUS_RING(110) × 2 */
+  height:        220px;
+  border:        1.5px solid rgba(90, 75, 140, 0.20);
+  border-radius: 50%;
+  transform:     translate(-50%, -50%);
+}
+
+.rm__guide-line {
+  position:         absolute;
+  left:             0;
+  top:              0;
+  width:            105px;
+  height:           1.5px;
+  background:       rgba(90, 75, 140, 0.18);
+  transform-origin: left center;
+}
+.rm__guide-line--top    { transform: rotate(-90deg); }
+.rm__guide-line--right  { transform: rotate(0deg);   }
+.rm__guide-line--bottom { transform: rotate(90deg);  }
+.rm__guide-line--left   { transform: rotate(180deg); }
+
+/* .rm__hub / .rm__close — 중앙 허브 제거됨.
+   실제 TokenCard가 원래 위치에 그대로 표시되며
+   RadialMenu는 외부 링/버튼/안내선만 담당함. */
+
+/* ═══════════════════════════════════════════════
+   단일 링 — 프리셋 배지 + 직접입력 (RADIUS_RING = 110px)
+   각도 기반 균등 배치, transform은 인라인으로 고정
+   ═══════════════════════════════════════════════ */
+
+.rm__preset-item {
+  position:        absolute;
+  left:            0;
+  top:             0;
+  /* transform: 인라인 스타일로 각도 계산된 위치 고정 */
+  width:           50px;
+  height:          50px;
+  border-radius:   50%;
+  border:          2px solid rgba(200, 190, 230, 0.25);
+  background:      rgba(22, 20, 36, 0.90);
+  color:           rgba(200, 198, 225, 0.90);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             1px;
+  cursor:          pointer;
+  pointer-events:  all;
+  text-align:      center;
+  box-shadow:      0 2px 8px rgba(0, 0, 0, 0.5);
+  /* hover: filter만 변경, translate 건드리지 않음 */
+  transition:      filter 0.1s, border-color 0.1s, box-shadow 0.12s;
+}
+
+.rm__preset-item:hover {
+  filter:       brightness(1.25);
+  border-color: rgba(255, 255, 255, 0.55);
+  z-index:      1;
+}
+
+/* 적용된 상태 */
+.rm__preset-item--active {
+  border-color: rgba(255, 255, 255, 0.80) !important;
+  box-shadow:   0 0 10px rgba(255, 255, 255, 0.35),
+                inset 0 0 6px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 직접입력 버튼 */
+.rm__preset-item--custom {
+  border-style:  dashed;
+  border-color:  rgba(120, 100, 200, 0.45);
+  background:    rgba(26, 20, 50, 0.85);
+  color:         rgba(160, 150, 210, 0.90);
+}
+.rm__preset-item--custom:hover {
+  border-color: rgba(160, 130, 255, 0.80);
+  color:        rgba(200, 185, 255, 1);
+}
+
+/* 직접입력 패널 열린 상태 */
+.rm__preset-item--open {
+  border-style:  solid;
+  border-color:  rgba(160, 130, 255, 0.85) !important;
+  box-shadow:    0 0 0 3px rgba(130, 80, 220, 0.5) !important;
+  background:    rgba(40, 28, 80, 0.95) !important;
+}
+
+.rm__preset-label {
+  font-size:   0.60rem;
+  font-weight: 700;
+  line-height: 1.2;
+  max-width:   44px;
+  overflow:    hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rm__preset-sub {
+  font-size:   0.50rem;
+  font-weight: 600;
+  opacity:     0.78;
+  line-height: 1.1;
+  max-width:   44px;
+  overflow:    hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 메모 있는 직접입력 버튼 */
+.rm__preset-item--has-note {
+  border-style:  solid;
+  border-color:  rgba(80, 180, 120, 0.55);
+  background:    rgba(10, 30, 16, 0.90);
+  color:         rgba(100, 210, 150, 0.95);
+}
+.rm__preset-item--has-note:hover {
+  border-color: rgba(100, 220, 150, 0.85);
+}
+
+.rm__preset-sub--note {
+  color:       rgba(100, 210, 150, 0.88);
+  font-size:   0.48rem;
+  white-space: nowrap;
+}
+
+/* 적용된 프리셋 체크 표시 */
+.rm__preset-check {
+  position:    absolute;
+  top:         1px;
+  right:       3px;
+  font-size:   0.52rem;
+  font-weight: 900;
+  color:       rgba(255, 255, 255, 0.9);
+  line-height: 1;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ═══════════════════════════════════════════════
+   직접입력 서브 패널
+   left/right 는 인라인 스타일로 panelBaseR 기준 동적 결정
+   ═══════════════════════════════════════════════ */
+
+.rm__badge-panel {
+  position:   absolute;
+  top:        0;
+  transform:  translateY(-50%);
+  width:      220px;
+  background: #13121f;
+  border:     1px solid #3a3560;
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7);
+  pointer-events: all;
+  display:    flex;
+  flex-direction: column;
+  overflow:   hidden;
+}
+
+.rm__bp-header {
+  padding:     8px 12px 6px;
+  font-size:   0.68rem;
+  font-weight: 700;
+  color:       #7766bb;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #2a2848;
+  white-space: nowrap;
+}
+
+.rm__bp-section {
+  padding:        6px 10px 8px;
+  border-bottom:  1px solid #1e1d30;
+  display:        flex;
+  flex-direction: column;
+  gap:            3px;
+}
+.rm__bp-section:last-child { border-bottom: none; }
+
+.rm__bp-section-label {
+  font-size:      0.58rem;
+  font-weight:    700;
+  color:          #5566aa;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-bottom: 2px;
+}
+
+.rm__bp-remove-btn {
+  display:        flex;
+  align-items:    center;
+  justify-content: space-between;
+  padding:        4px 8px;
+  background:     #1e1820;
+  border:         1px solid #3a2a3e;
+  border-radius:  4px;
+  color:          #ccaac8;
+  font-size:      0.7rem;
+  cursor:         pointer;
+  transition:     background 0.1s;
+  gap:            6px;
+}
+.rm__bp-remove-btn:hover { background: #301822; border-color: #882244; }
+
+.rm__bp-remove-x { color: #cc4466; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+
+.rm__bp-input {
+  width:       100%;
+  box-sizing:  border-box;
+  padding:     4px 7px;
+  background:  #1a1928;
+  border:      1px solid #3a3858;
+  border-radius: 3px;
+  color:       #d0ceea;
+  font-size:   0.72rem;
+  outline:     none;
+}
+.rm__bp-input:focus        { border-color: #7766cc; background: #1e1d30; }
+.rm__bp-input::placeholder { color: #55547a; }
+
+.rm__bp-row {
+  display:         flex;
+  justify-content: flex-end;
+  gap:             5px;
+}
+
+.rm__bp-clear-btn {
+  padding:      3px 10px;
+  background:   transparent;
+  border:       1px solid #6a2230;
+  border-radius: 3px;
+  color:        #cc4466;
+  font-size:    0.7rem;
+  cursor:       pointer;
+  transition:   background 0.1s;
+}
+.rm__bp-clear-btn:hover { background: #2a0812; }
+
+.rm__bp-add-btn {
+  padding:     3px 12px;
+  background:  #4433aa;
+  border:      none;
+  border-radius: 3px;
+  color:       #fff;
+  font-size:   0.7rem;
+  font-weight: 700;
+  cursor:      pointer;
+  transition:  background 0.1s;
+}
+.rm__bp-add-btn:hover:not(:disabled) { background: #5544cc; }
+.rm__bp-add-btn:disabled { opacity: 0.35; cursor: not-allowed; }

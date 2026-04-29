@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { getFaceZones, getFaceZoneDataAttrs } from '../../data/faceZoneData';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
+import { useSettings } from '../../store/settingsStore';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
+import { HydrantIcon } from '../shared/HydrantIcon';
 import './BFaceWithStandby.css';
 
 // ─────────────────────────────────────────────
@@ -16,7 +18,11 @@ const DROP_NUDGE_Y = 0;
 function BFaceDropZone() {
   const { tokens, positions, moveToken }         = useTokens();
   const { victims, victimPositions, moveVictim } = useVictims();
+  const { hydrantSetup }                         = useSettings();
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // B면에 배정된 소화전 — 좌측하단 고정
+  const bHydrants = hydrantSetup.filter(h => h.side === 'B');
 
   const zones    = getFaceZones('B');
   const faceZone = zones.find(z => z.category === 'face')!;
@@ -78,6 +84,24 @@ function BFaceDropZone() {
       {zoneVictims.map(victim => (
         <VictimCard key={victim.id} victim={victim} absPos={victimPositions[victim.id]} />
       ))}
+
+      {/* 소화전 아이콘 — B면 좌측하단 */}
+      {bHydrants.length > 0 && (
+        <div style={{
+          position:      'absolute',
+          bottom:        4,
+          left:          4,
+          display:       'flex',
+          flexDirection: 'column-reverse',
+          gap:           4,
+          zIndex:        3,
+          alignItems:    'flex-start',
+        }}>
+          {bHydrants.map(h => (
+            <HydrantIcon key={h.id} id={h.id} name={h.name} distanceM={h.distanceM} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

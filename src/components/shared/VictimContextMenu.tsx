@@ -58,13 +58,39 @@ export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, on
   // ── 구조 처리 관련 ────────────────────────────────
   const isAlreadyRescued = victim.zoneKey === 'medical-post';
 
-  /** 같은 구역에 있는 출동대 중 이미 "구조중"이 아닌 것만 */
+  /**
+   * 피해자 층 추출.
+   * 건물 내부 zoneKey ("2F-center", "RF-stair", "B1-left") → floorId 반환.
+   * 외곽/특수 구역 → null.
+   */
+  const victimFloor = extractBuildingFloor(victim.zoneKey);
+
+  /**
+   * 구조 가능한 출동대.
+   * - 건물 내부: 피해자와 같은 floorId (층) 기준 매칭 (서브존 무관)
+   * - 외곽/특수: 완전 일치
+   */
   const rescuableUnits = victim.zoneKey
-    ? tokens.filter(t =>
-        t.zoneKey === victim.zoneKey &&
-        !t.badges.some(b => b.line1 === '구조중')
-      )
+    ? tokens.filter(t => {
+        if (t.badges.some(b => b.line1 === '구조중')) return false;
+        if (victimFloor && extractBuildingFloor(t.zoneKey) === victimFloor) return true;
+        return t.zoneKey === victim.zoneKey;
+      })
     : [];
+
+  /**
+   * 외곽 방면(A/B/C/D)에 배치된 굴절차·고가차.
+   * 이미 같은 구역 목록에 포함된 경우 중복 제외.
+   */
+  const rescuableUnitIds = new Set(rescuableUnits.map(u => u.id));
+  const faceRescuableUnits = tokens.filter(t =>
+    (t.unitType === 'ladder' || t.unitType === 'aerial') &&
+    extractFace(t.zoneKey) !== null &&
+    !t.badges.some(b => b.line1 === '구조중') &&
+    !rescuableUnitIds.has(t.id)
+  );
+
+  const hasAnyRescuable = rescuableUnits.length > 0 || faceRescuableUnits.length > 0;
 
   return createPortal(
     <div
@@ -98,21 +124,53 @@ export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, on
 
         {showRescue && !isAlreadyRescued && (
           <div className="vcm__rescue-list">
-            {rescuableUnits.length === 0 ? (
+            {!hasAnyRescuable ? (
               <div className="vcm__rescue-empty">
-                같은 공간에 구조 가능한<br />출동대가 없습니다
+                구조 가능한 출동대가 없습니다
               </div>
             ) : (
-              rescuableUnits.map(unit => (
-                <button
-                  key={unit.id}
-                  className={`vcm__rescue-unit vcm__rescue-unit--${unit.color}`}
-                  onClick={() => { onRescue(unit); }}
-                >
-                  <span className="vcm__rescue-unit-name">{unit.label}</span>
-                  <span className="vcm__rescue-unit-arrow">→ 임시의료소</span>
-                </button>
-              ))
+              <>
+                {/* 같은 구역 출동대 */}
+                {rescuableUnits.length > 0 && (
+                  <>
+                    <div className="vcm__rescue-sub-label">같은 구역</div>
+                    {rescuableUnits.map(unit => (
+                      <button
+                        key={unit.id}
+                        className={`vcm__rescue-unit vcm__rescue-unit--${unit.color}`}
+                        onClick={() => { onRescue(unit); }}
+                      >
+                        <span className="vcm__rescue-unit-name">{unit.label}</span>
+                        <span className="vcm__rescue-unit-arrow">→ 임시의료소</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* 외곽 방면 굴절차/고가차 */}
+                {faceRescuableUnits.length > 0 && (
+                  <>
+                    <div className="vcm__rescue-sub-label vcm__rescue-sub-label--face">외곽 방면</div>
+                    {faceRescuableUnits.map(unit => {
+                      const face     = extractFace(unit.zoneKey)!;
+                      const typeLbl  = unit.unitType === 'aerial' ? '고가차' : '굴절차';
+                      return (
+                        <button
+                          key={unit.id}
+                          className="vcm__rescue-unit vcm__rescue-unit--face"
+                          onClick={() => { onRescue(unit); }}
+                        >
+                          <span className="vcm__rescue-unit-name">
+                            {face}면 {typeLbl}
+                            <span className="vcm__rescue-unit-sub"> / {unit.label}</span>
+                          </span>
+                          <span className="vcm__rescue-unit-arrow">→ 임시의료소</span>
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
+              </>
             )}
           </div>
         )}
@@ -203,4 +261,30 @@ function condClass(c: VictimCondition): string {
     case '사망': return 'dead';
     default:     return '';
   }
+}
+
+/**
+ * 건물 내부 zoneKey에서 floorId를 추출.
+ * 지원 형식: "2F-center", "RF-stair", "B1-left"
+ * 외곽/특수 구역("face-A", "medical-post" 등)은 null 반환.
+ */
+function extractBuildingFloor(zoneKey: string | null): string | null {
+  if (!zoneKey) return null;
+  const m = zoneKey.match(/^(RF|\d+F|B\d+)-/);
+  return m ? m[1] : null;
+}
+
+/**
+ * zoneKey에서 방면 문자(A/B/C/D)를 추출.
+ * 지원 형식:
+ *   "face-A"  (buildingData valid zones)
+ *   "A-face", "A-pump", "A-tank"  (faceZoneData zone ids)
+ */
+function extractFace(zoneKey: string | null): 'A' | 'B' | 'C' | 'D' | null {
+  if (!zoneKey) return null;
+  const m1 = zoneKey.match(/^face-([ABCD])$/);
+  if (m1) return m1[1] as 'A' | 'B' | 'C' | 'D';
+  const m2 = zoneKey.match(/^([ABCD])-/);
+  if (m2) return m2[1] as 'A' | 'B' | 'C' | 'D';
+  return null;
 }

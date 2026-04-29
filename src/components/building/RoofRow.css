@@ -31,8 +31,7 @@
   background-color: var(--ctr-roof-bg);
 }
 
-/* 옥상의 좌/우 구역은 배경을 투명 처리하여 옥상 배경색이 보이게 */
-.roof-row__zones .zone-cell--left,
+/* 옥상의 화재 구역은 배경을 투명 처리하여 옥상 배경색이 보이게 */
 .roof-row__zones .zone-cell--right {
   background-color: transparent;
   background-image: none;

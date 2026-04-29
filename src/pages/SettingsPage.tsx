@@ -1,8 +1,7 @@
 import { useSettings }          from '../store/settingsStore';
 import { BuildingConfigPanel }  from '../components/building/BuildingConfigPanel';
 import { SettingsLibraryPanel } from '../components/settings/SettingsLibraryPanel';
-import { SharedPresetPanel }    from '../components/settings/SharedPresetPanel';
-import { UnitPresetPanel }      from '../components/settings/UnitPresetPanel';
+import { HydrantSetupPanel }    from '../components/settings/HydrantSetupPanel';
 import { DispatchSetupPanel }   from '../components/settings/DispatchSetupPanel';
 import { VictimSetupPanel }     from '../components/settings/VictimSetupPanel';
 import { EventSetupPanel }      from '../components/settings/EventSetupPanel';
@@ -54,31 +53,13 @@ export function SettingsPage() {
         />
       </section>
 
-      {/* ── 출동대 상태 프리셋 ──────────────────── */}
+      {/* ── 소화전 설정 ───────────────────────── */}
       <section className="settings-page__section">
-        <h3 className="settings-page__section-title">출동대 상태 프리셋</h3>
+        <h3 className="settings-page__section-title">소화전 설정</h3>
         <p className="settings-page__hint">
-          실행창에서 토큰 우클릭 시 여기서 등록한 프리셋을 선택할 수 있습니다.
-          직접 입력한 임시 상태는 이곳에 저장되지 않습니다.
+          실행 시 초기 배치할 소화전 목록을 사전에 입력합니다.
         </p>
-
-        {/* A. 공통 프리셋 */}
-        <div className="settings-page__preset-block">
-          <h4 className="settings-page__sub-title">A. 공통 프리셋</h4>
-          <p className="settings-page__sub-hint">
-            여러 출동대에 공통으로 표시할 프리셋입니다. 적용 대상을 체크하거나, 미선택 시 모든 출동대에 표시됩니다.
-          </p>
-          <SharedPresetPanel />
-        </div>
-
-        {/* B. 출동대별 고유 프리셋 */}
-        <div className="settings-page__preset-block">
-          <h4 className="settings-page__sub-title">B. 출동대별 전용 프리셋</h4>
-          <p className="settings-page__sub-hint">
-            특정 출동대 종류에만 표시되는 전용 프리셋입니다. 좌측에서 종류를 선택하고 추가하세요.
-          </p>
-          <UnitPresetPanel />
-        </div>
+        <HydrantSetupPanel />
       </section>
 
       {/* ── 타이밍 설정 ───────────────────────── */}

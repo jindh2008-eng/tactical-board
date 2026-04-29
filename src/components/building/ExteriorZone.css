@@ -10,7 +10,7 @@
   background-color: var(--ctr-bg);
   border: 1.5px dashed var(--ctr-border-soft);
   border-radius: 3px;
-  overflow: hidden;
+  overflow: visible;  /* 토큰 오버레이 잘림 방지 */
   position: relative;
 }
 
@@ -59,7 +59,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: hidden;
+  overflow: visible;  /* 토큰 오버레이 잘림 방지 */
   transition: background-color 0.14s, border-color 0.14s;
 }
 

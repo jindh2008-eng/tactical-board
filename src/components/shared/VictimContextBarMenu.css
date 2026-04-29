@@ -1,0 +1,269 @@
+/* ─────────────────────────────────────────────
+   VictimContextBarMenu (vcbm)
+   구조대상자 우클릭 → 가로 막대형 메뉴
+   portal → document.body, position: fixed
+   ─────────────────────────────────────────────*/
+
+/* 백드롭 */
+.vcbm__backdrop {
+  position: fixed;
+  inset:    0;
+  z-index:  9997;
+  cursor:   default;
+}
+
+/* 메뉴 컨테이너 */
+.vcbm {
+  z-index:        9998;
+  display:        flex;
+  flex-direction: column;
+  background:     #14100a;
+  border:         1px solid #5a3a18;
+  border-radius:  7px;
+  box-shadow:     0 6px 20px rgba(0, 0, 0, 0.65),
+                  0 2px 6px  rgba(0, 0, 0, 0.4);
+  overflow:       hidden;
+  user-select:    none;
+  font-family:    inherit;
+  max-width:      min(92vw, 620px);
+}
+
+/* ── 기본 메뉴 바 ───────────────────────────── */
+
+.vcbm__bar {
+  display:     flex;
+  align-items: center;
+  gap:         4px;
+  padding:     6px 8px;
+  flex-wrap:   nowrap;
+  min-width:   0;
+}
+
+/* 환자정보 칩 */
+.vcbm__info {
+  font-size:     0.72rem;
+  font-weight:   700;
+  color:         #ffaa66;
+  white-space:   nowrap;
+  padding:       0 4px;
+  flex-shrink:   0;
+}
+
+/* 구분선 */
+.vcbm__sep {
+  width:       1px;
+  height:      20px;
+  background:  #3a2810;
+  flex-shrink: 0;
+  margin:      0 3px;
+}
+
+/* 공통 버튼 */
+.vcbm__btn {
+  flex-shrink:     0;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         8px 13px;
+  border-radius:   5px;
+  border:          1.5px solid #3a2810;
+  background:      #1e1408;
+  color:           #c8aa80;
+  font-size:       0.78rem;
+  font-weight:     700;
+  font-family:     inherit;
+  cursor:          pointer;
+  white-space:     nowrap;
+  min-height:      36px;
+  letter-spacing:  0.02em;
+  transition:      background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.vcbm__btn:hover:not(:disabled) {
+  background:   #2a1c0c;
+  border-color: #7a5030;
+  color:        #e8c890;
+}
+
+/* 활성(패널 열린) 상태 */
+.vcbm__btn--active {
+  background:   #2a1c08 !important;
+  border-color: #e87a30 !important;
+  color:        #ffaa55 !important;
+}
+
+/* 구조 버튼 — 주황 강조 */
+.vcbm__btn--rescue {
+  color:        #e87a30;
+  border-color: #5a3218;
+}
+
+.vcbm__btn--rescue:hover:not(:disabled) {
+  background:   #281408;
+  border-color: #e87a30;
+  color:        #ffa050;
+}
+
+/* 이미 구조됨 */
+.vcbm__btn--rescued {
+  color:        #5a4030 !important;
+  border-color: #2a1c10 !important;
+  background:   #120c06 !important;
+  cursor:       not-allowed;
+}
+
+/* 메모 있을 때 */
+.vcbm__btn--has-note {
+  border-color: #3a5030;
+  color:        #70c080;
+}
+
+.vcbm__btn--has-note:hover {
+  border-color: #5a8060;
+  color:        #90d8a0;
+}
+
+/* ── 하위 패널 ──────────────────────────────── */
+
+.vcbm__sub {
+  display:     flex;
+  align-items: center;
+  flex-wrap:   wrap;
+  gap:         5px;
+  padding:     7px 10px;
+  border-top:  1px solid #2a1c10;
+  min-width:   0;
+}
+
+/* 패널이 위에 있을 때 — 기본 바 위쪽 */
+.vcbm > .vcbm__sub:first-child {
+  border-top:    none;
+  border-bottom: 1px solid #2a1c10;
+}
+
+/* 빈 메시지 */
+.vcbm__sub-msg {
+  font-size:  0.72rem;
+  color:      #5a4530;
+  padding:    2px 4px;
+  white-space: nowrap;
+}
+
+/* ── 구조 처리 버튼 ──────────────────────────── */
+
+.vcbm__rescue-btn {
+  display:         flex;
+  align-items:     center;
+  padding:         7px 11px;
+  border-radius:   4px;
+  border:          1px solid #3a2808;
+  background:      #1a1208;
+  font-size:       0.75rem;
+  font-weight:     700;
+  font-family:     inherit;
+  cursor:          pointer;
+  white-space:     nowrap;
+  min-height:      34px;
+  transition:      background 0.1s, border-color 0.1s;
+}
+
+.vcbm__rescue-btn:hover {
+  background:   #2a1c10;
+  border-color: #e87a30;
+}
+
+/* 출동대 색상 */
+.vcbm__rescue-btn--red    { color: #f4a0a0; }
+.vcbm__rescue-btn--yellow { color: #f4d870; }
+.vcbm__rescue-btn--green  { color: #80dd90; }
+.vcbm__rescue-btn--vehicle { color: #ccaa66; }
+.vcbm__rescue-btn--agency  { color: #bb99dd; }
+
+/* 외곽 방면 고가차/굴절차 */
+.vcbm__rescue-btn--face {
+  color:        #70cc90;
+  border-color: #2a4030;
+  background:   #0e1810;
+}
+
+.vcbm__rescue-btn--face:hover {
+  background:   #182a1a;
+  border-color: #50aa70;
+}
+
+/* ── 환자 상태 버튼 ──────────────────────────── */
+
+.vcbm__cond-btn {
+  padding:       7px 14px;
+  border-radius: 4px;
+  border:        1.5px solid;
+  font-size:     0.78rem;
+  font-weight:   700;
+  font-family:   inherit;
+  cursor:        pointer;
+  white-space:   nowrap;
+  min-height:    34px;
+  transition:    filter 0.1s;
+}
+
+.vcbm__cond-btn:hover {
+  filter: brightness(1.25);
+}
+
+.vcbm__cond-btn--active {
+  outline:        2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.vcbm__cond-btn--minor    { background: #0a180e; color: #5cc87c; border-color: #2a6a3a; }
+.vcbm__cond-btn--critical { background: #1a0808; color: #e05050; border-color: #6a1818; }
+.vcbm__cond-btn--dead     { background: #141414; color: #888888; border-color: #404040; }
+
+/* ── 메모 / 라벨 입력 행 ─────────────────────── */
+
+.vcbm__input-row {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  width:       100%;
+  min-width:   180px;
+}
+
+.vcbm__input {
+  flex:          1;
+  min-width:     0;
+  padding:       6px 9px;
+  background:    #0e0c08;
+  border:        1px solid #4a3010;
+  border-radius: 4px;
+  color:         #cc9955;
+  font-size:     0.78rem;
+  font-family:   inherit;
+  outline:       none;
+  transition:    border-color 0.1s;
+}
+
+.vcbm__input:focus {
+  border-color: #8a5520;
+}
+
+.vcbm__input::placeholder {
+  color: #4a3520;
+}
+
+.vcbm__input-save {
+  flex-shrink:   0;
+  padding:       6px 11px;
+  background:    #2a1c08;
+  border:        1px solid #7a4a18;
+  border-radius: 4px;
+  color:         #ffaa55;
+  font-size:     0.82rem;
+  font-family:   inherit;
+  cursor:        pointer;
+  transition:    background 0.1s;
+}
+
+.vcbm__input-save:hover {
+  background: #3a2810;
+}

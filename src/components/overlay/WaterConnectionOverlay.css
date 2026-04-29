@@ -1,0 +1,118 @@
+/* ─────────────────────────────────────────────
+   WaterConnectionOverlay
+   송수 연결선 SVG 오버레이 + 팝업
+   ─────────────────────────────────────────────*/
+
+/* SVG 오버레이 — 전체 뷰포트
+   pointer-events: none 으로 SVG 자체는 클릭 차단하지 않음.
+   자식 .wco-hit 요소만 pointer-events: stroke 로 이벤트 수신. */
+.wco-svg {
+  position:       fixed;
+  inset:          0;
+  width:          100%;
+  height:         100%;
+  z-index:        9900;
+  overflow:       visible;
+  pointer-events: none;
+}
+
+/* ── 배관 선 (얇고 어두운 파란선) ────────────── */
+
+.wco-line {
+  stroke:         #1a5599;
+  stroke-width:   2;
+  fill:           none;
+  stroke-linecap: round;
+  opacity:        0.75;
+}
+
+/* ── 흐르는 물 점 ─────────────────────────────
+   stroke-dasharray: [점 크기] [간격] = period 합계
+   animation-duration = period ÷ 목표속도(px/s)
+
+   점 크기 6px + 간격 44px = period 50px
+   duration 0.5s → 속도 = 50 ÷ 0.5 = 100 px/s
+   선 길이와 무관하게 항상 동일한 시각 속도로 이동.
+   ─────────────────────────────────────────────*/
+
+.wco-flow {
+  stroke:           #66bbff;
+  stroke-width:     5;
+  fill:             none;
+  stroke-linecap:   round;
+  stroke-dasharray: 6 44;
+  animation:        wco-flow 1s linear infinite;
+  filter:           drop-shadow(0 0 3px #3388ee);
+}
+
+@keyframes wco-flow {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -50; }
+}
+
+/* ── 고장 상태 — 빨간선 + 점 정지 ──────────────
+   .wco-group--broken 이 SVG <g>에 붙으면
+   자식 path들이 아래 규칙에 따라 빨간색으로 전환됨
+   ─────────────────────────────────────────────*/
+
+.wco-group--broken .wco-line {
+  stroke:  #8b1818;
+  opacity: 0.9;
+}
+
+.wco-group--broken .wco-flow {
+  stroke:    #ff3333;
+  animation: none;          /* 이동 정지 */
+  filter:    drop-shadow(0 0 3px #cc0000);
+}
+
+/* ── 클릭 히트 영역 ───────────────────────────── */
+
+.wco-hit {
+  stroke:         transparent;
+  stroke-width:   18;
+  fill:           none;
+  cursor:         pointer;
+  pointer-events: stroke;
+}
+
+/* ── 송수 해제 팝업 ───────────────────────────── */
+
+.wco-popup-backdrop {
+  position: fixed;
+  inset:    0;
+  z-index:  9901;
+  cursor:   default;
+}
+
+.wco-popup {
+  position:      fixed;
+  z-index:       9902;
+  transform:     translate(-50%, -110%);
+  background:    #0e1822;
+  border:        1.5px solid #2255aa;
+  border-radius: 6px;
+  box-shadow:    0 4px 16px rgba(0, 0, 0, 0.6);
+  overflow:      hidden;
+  user-select:   none;
+}
+
+.wco-popup__btn {
+  display:     block;
+  width:       100%;
+  padding:     9px 18px;
+  background:  transparent;
+  border:      none;
+  color:       #88ccff;
+  font-size:   0.80rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor:      pointer;
+  white-space: nowrap;
+  transition:  background 0.1s;
+}
+
+.wco-popup__btn:hover {
+  background: #1a3060;
+  color:      #bbddff;
+}

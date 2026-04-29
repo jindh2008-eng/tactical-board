@@ -8,44 +8,100 @@
   gap: 10px;
 }
 
-/* ── 추가 행 ── */
+/* ── 새 이벤트 추가 섹션 ── */
 
+.esp__add-section {
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+  padding:        8px 10px 10px;
+  background:     var(--color-surface);
+  border:         1px solid var(--color-border);
+  border-radius:  5px;
+}
+
+.esp__add-title {
+  margin:      0;
+  font-size:   0.70rem;
+  font-weight: 700;
+  color:       var(--color-text-dim);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* 아이콘 그리드 (추가 전용) */
+.esp__add-icon-grid {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       5px;
+}
+
+/* 추가 컨트롤 행 */
 .esp__add-row {
-  display: flex;
-  gap: 6px;
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+}
+
+/* 선택 아이콘 미리보기 */
+.esp__add-preview {
+  width:           34px;
+  height:          34px;
+  flex-shrink:     0;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  background:      var(--color-bg);
+  border:          1.5px solid var(--color-border);
+  border-radius:   4px;
+}
+
+.esp__add-preview-img {
+  width:      28px;
+  height:     28px;
+  object-fit: contain;
+  display:    block;
+}
+
+.esp__add-preview-placeholder {
+  font-size: 1.1rem;
+  color:     var(--color-text-dim);
+  line-height: 1;
 }
 
 .esp__add-input {
-  flex: 1;
-  padding: 5px 8px;
+  flex:       1;
+  min-width:  0;
+  padding:    5px 8px;
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  border:     1px solid var(--color-border);
   border-radius: 3px;
-  color: var(--color-text);
-  font-size: 0.82rem;
+  color:      var(--color-text);
+  font-size:  0.82rem;
   font-family: inherit;
 }
 
 .esp__add-input:focus {
-  outline: none;
+  outline:      none;
   border-color: var(--color-accent);
 }
 
 .esp__add-btn {
-  padding: 5px 14px;
-  background: var(--color-accent);
-  border: none;
+  padding:     5px 14px;
+  background:  var(--color-accent);
+  border:      none;
   border-radius: 3px;
-  color: #fff;
-  font-size: 0.82rem;
+  color:       #fff;
+  font-size:   0.82rem;
   font-weight: 600;
-  cursor: pointer;
+  cursor:      pointer;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .esp__add-btn:disabled {
   opacity: 0.4;
-  cursor: default;
+  cursor:  default;
 }
 
 /* ── 목록 ── */
@@ -65,15 +121,14 @@
   overflow: hidden;
 }
 
-.esp__list-head,
-.esp__item {
-  display: grid;
-  grid-template-columns: 36px 1fr 28px;
-  align-items: center;
-  padding: 4px 8px;
-}
+/* ── 헤더 ── */
 
 .esp__list-head {
+  display: grid;
+  grid-template-columns: 36px 1fr 90px 40px 28px;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 4px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
@@ -87,15 +142,81 @@
 }
 
 .esp__lh--check { text-align: center; }
+.esp__lh--type  { text-align: center; }
+.esp__lh--icon  { text-align: center; }
+
+/* ── 이벤트 종류 세그먼트 버튼 ── */
+
+.esp__type-seg {
+  display:        flex;
+  border:         1px solid var(--color-border);
+  border-radius:  3px;
+  overflow:       hidden;
+}
+
+.esp__type-btn {
+  flex:        1;
+  padding:     3px 0;
+  background:  transparent;
+  border:      none;
+  border-right: 1px solid var(--color-border);
+  color:       var(--color-text-dim);
+  font-size:   0.65rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor:      pointer;
+  transition:  background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+
+.esp__type-btn:last-child {
+  border-right: none;
+}
+
+.esp__type-btn:hover:not(.esp__type-btn--active) {
+  background: var(--color-surface);
+  color:      var(--color-text);
+}
+
+/* 화재 활성 */
+.esp__type-btn--fire.esp__type-btn--active {
+  background: #6b1a0a;
+  color:      #ff9966;
+}
+
+/* 가스 활성 */
+.esp__type-btn--gas.esp__type-btn--active {
+  background: #0a3a1a;
+  color:      #66cc88;
+}
+
+/* 전기 활성 */
+.esp__type-btn--electric.esp__type-btn--active {
+  background: #2a2a00;
+  color:      #ffdd44;
+}
+
+/* ── 각 아이템 (메인 행 + 피커 묶음) ── */
 
 .esp__item {
+  display: flex;
+  flex-direction: column;
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
-  gap: 4px;
 }
 
 .esp__item:last-of-type {
   border-bottom: none;
+}
+
+/* ── 메인 행 ── */
+
+.esp__item-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 90px 40px 28px;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 4px;
 }
 
 /* 체크박스 */
@@ -131,6 +252,54 @@
   border-color: var(--color-border);
 }
 
+/* ── 아이콘 선택 버튼 ── */
+
+.esp__icon-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border: 1.5px dashed var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px;
+  transition: border-color 0.1s, background 0.1s;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+.esp__icon-btn:hover {
+  border-color: var(--color-accent);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.esp__icon-btn--has-icon {
+  border-style: solid;
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.esp__icon-thumb {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.esp__icon-placeholder {
+  font-size: 1rem;
+  color: var(--color-text-dim);
+  line-height: 1;
+}
+
+/* 피커 열린 상태 */
+.esp__item--picker-open .esp__icon-btn {
+  border-style: solid;
+  border-color: var(--color-accent);
+  background: rgba(99, 102, 241, 0.12);
+}
+
 /* 삭제 버튼 */
 .esp__del-btn {
   width: 22px;
@@ -150,6 +319,73 @@
 .esp__del-btn:hover {
   background: rgba(200, 60, 60, 0.15);
   color: #c84040;
+}
+
+/* ── 아이콘 피커 그리드 ── */
+
+.esp__icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+/* 아이콘 셀 (없음 포함) */
+.esp__icon-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 6px;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s;
+  min-width: 52px;
+}
+
+.esp__icon-cell:hover {
+  border-color: var(--color-accent);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.esp__icon-cell--active {
+  border-color: var(--color-accent) !important;
+  background: rgba(99, 102, 241, 0.16) !important;
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.esp__icon-cell-img {
+  width:  40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+
+.esp__icon-cell-name {
+  font-size: 0.60rem;
+  color: var(--color-text-dim);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.esp__icon-cell-none {
+  width:  40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.70rem;
+  color: var(--color-text-dim);
+  border: 1px dashed var(--color-border);
+  border-radius: 3px;
 }
 
 /* ── 안내 ── */

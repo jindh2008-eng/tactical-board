@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom';
 import type { VictimPos, VictimUpdate } from '../../context/VictimContext';
 import { useVictims } from '../../context/VictimContext';
 import { useTokens } from '../../context/TokenContext';
+import { useActionMode } from '../../context/ActionModeContext';
 import type { UnitToken } from '../../types';
 import type { VictimToken, VictimCondition } from '../../types/victim';
-import { VictimContextMenu } from './VictimContextMenu';
+import { VictimContextBarMenu, type AnchorRect } from './VictimContextBarMenu';
 import { zoneKeyToFullLabel, buildVictimDisplayLine } from '../../utils/victimUtils';
 import './VictimCard.css';
 
@@ -81,9 +82,31 @@ function GroupPersonIcon() {
 export function VictimCard({ victim, absPos }: Props) {
   const { updateVictim, moveVictim } = useVictims();
   const { tokens, rescueUnit }       = useTokens();
-  const [ctxMenu,     setCtxMenu]     = useState<{ x: number; y: number } | null>(null);
+  const { mode, clearMode }          = useActionMode();
+  const [ctxMenu,     setCtxMenu]     = useState<AnchorRect | null>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // rescue 모드 여부 및 대상 가능 여부
+  const isRescueMode = mode.type === 'rescue';
+  // 같은 구역에 있는 피해자만 대상으로 허용 (구역 없는 피해자는 제외)
+  const sourceToken  = isRescueMode
+    ? tokens.find(t => t.id === (mode as { sourceId: string }).sourceId) ?? null
+    : null;
+  const isRescueTarget = isRescueMode && victim.zoneKey !== null &&
+    sourceToken !== null && sourceToken.zoneKey === victim.zoneKey;
+
+  // rescue 모드에서 피해자 클릭 → 구조 실행
+  function handleRescueClick(e: React.MouseEvent) {
+    if (!isRescueTarget || !sourceToken) return;
+    e.stopPropagation();
+    const locationLabel = zoneKeyToFullLabel(victim.zoneKey);
+    const rescueLocLabel = [locationLabel, victim.subLocation]
+      .filter(Boolean).join(' ') || '위치미상';
+    rescueUnit(sourceToken.id, rescueLocLabel);
+    moveVictim(victim.id, 'medical-post');
+    clearMode();
+  }
 
   function handleMouseEnter() {
     if (wrapperRef.current) setTooltipRect(wrapperRef.current.getBoundingClientRect());
@@ -96,14 +119,18 @@ export function VictimCard({ victim, absPos }: Props) {
     e.dataTransfer.setData('tokenW', String(el.offsetWidth));
     e.dataTransfer.setData('tokenH', String(el.offsetHeight));
     e.dataTransfer.effectAllowed = 'move';
-    setCtxMenu(null);
+    setCtxMenu(null);       // 드래그 시작 시 메뉴 닫기
     setTooltipRect(null);
   }
 
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    setCtxMenu({ x: e.clientX, y: e.clientY });
+    // 토큰 wrapper rect 스냅샷 → 가로 막대 메뉴 열기
+    const rect = wrapperRef.current?.getBoundingClientRect();
+    if (rect) {
+      setCtxMenu({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height });
+    }
   }
 
   const handleClose  = useCallback(() => setCtxMenu(null), []);
@@ -118,7 +145,10 @@ export function VictimCard({ victim, absPos }: Props) {
       .filter(Boolean)
       .join(' ') || '위치미상';
 
-    rescueUnit(unit.id, rescueLocLabel);
+    // 굴절차/고가차는 현장에서 사다리 전개 구조 — 차량 위치 변경 없음
+    if (unit.unitType !== 'ladder' && unit.unitType !== 'aerial') {
+      rescueUnit(unit.id, rescueLocLabel);
+    }
     moveVictim(victim.id, 'medical-post');
     setCtxMenu(null);
   }, [rescueUnit, moveVictim, victim]);
@@ -155,17 +185,26 @@ export function VictimCard({ victim, absPos }: Props) {
           onMouseLeave={handleMouseLeave}
         >
           <div
-            className={`victim-card victim-card--person victim-gender--${genderKey}`}
-            draggable
+            className={[
+              'victim-card',
+              `victim-card--person`,
+              `victim-gender--${genderKey}`,
+              isRescueTarget ? 'victim-card--rescue-target' : '',
+              isRescueMode && !isRescueTarget ? 'victim-card--rescue-dim' : '',
+            ].filter(Boolean).join(' ')}
+            draggable={!isRescueMode}
             onDragStart={handleDragStart}
-            onContextMenu={handleContextMenu}
-            title={title}
+            onContextMenu={isRescueMode ? e => e.preventDefault() : handleContextMenu}
+            onClick={isRescueTarget ? handleRescueClick : undefined}
+            title={isRescueTarget ? `${title} — 클릭하여 구조` : title}
+            style={isRescueTarget ? { cursor: 'pointer' } : undefined}
           >
             {victim.gender === '남' ? <MaleIcon /> : <FemaleIcon />}
             <span className="victim-card__subloc">{subLoc}</span>
           </div>
         </div>
-        {tooltipRect && ReactDOM.createPortal(
+        {/* hover 말풍선 — 메뉴 닫혀 있을 때만 표시 */}
+        {tooltipRect && !ctxMenu && ReactDOM.createPortal(
           <div
             className={`victim-tooltip-portal victim-cond--${ck}`}
             style={{
@@ -183,10 +222,9 @@ export function VictimCard({ victim, absPos }: Props) {
           document.body,
         )}
         {ctxMenu && (
-          <VictimContextMenu
+          <VictimContextBarMenu
             victim={victim}
-            x={ctxMenu.x}
-            y={ctxMenu.y}
+            anchorRect={ctxMenu}
             tokens={tokens}
             onUpdate={handleUpdate}
             onRescue={handleRescue}
@@ -202,13 +240,21 @@ export function VictimCard({ victim, absPos }: Props) {
     const count = victim.groupCount ?? 2;
     return (
       <>
-        <div className="victim-card-wrapper" style={wrapperStyle}>
+        <div className="victim-card-wrapper" style={wrapperStyle} ref={wrapperRef}>
           <div
-            className="victim-card victim-card--group victim-cond--minor"
-            draggable
+            className={[
+              'victim-card',
+              'victim-card--group',
+              'victim-cond--minor',
+              isRescueTarget ? 'victim-card--rescue-target' : '',
+              isRescueMode && !isRescueTarget ? 'victim-card--rescue-dim' : '',
+            ].filter(Boolean).join(' ')}
+            draggable={!isRescueMode}
             onDragStart={handleDragStart}
-            onContextMenu={handleContextMenu}
-            title={title}
+            onContextMenu={isRescueMode ? e => e.preventDefault() : handleContextMenu}
+            onClick={isRescueTarget ? handleRescueClick : undefined}
+            title={isRescueTarget ? `${title} — 클릭하여 구조` : title}
+            style={isRescueTarget ? { cursor: 'pointer' } : undefined}
           >
             <div className="group-icons">
               {Array.from({ length: count }).map((_, i) => (
@@ -222,10 +268,9 @@ export function VictimCard({ victim, absPos }: Props) {
           </div>
         </div>
         {ctxMenu && (
-          <VictimContextMenu
+          <VictimContextBarMenu
             victim={victim}
-            x={ctxMenu.x}
-            y={ctxMenu.y}
+            anchorRect={ctxMenu}
             tokens={tokens}
             onUpdate={handleUpdate}
             onRescue={handleRescue}
@@ -239,13 +284,20 @@ export function VictimCard({ victim, absPos }: Props) {
   // ── 기타 (custom) ───────────────────────────────
   return (
     <>
-      <div className="victim-card-wrapper" style={wrapperStyle}>
+      <div className="victim-card-wrapper" style={wrapperStyle} ref={wrapperRef}>
         <div
-          className="victim-card victim-card--custom"
-          draggable
+          className={[
+            'victim-card',
+            'victim-card--custom',
+            isRescueTarget ? 'victim-card--rescue-target' : '',
+            isRescueMode && !isRescueTarget ? 'victim-card--rescue-dim' : '',
+          ].filter(Boolean).join(' ')}
+          draggable={!isRescueMode}
           onDragStart={handleDragStart}
-          onContextMenu={handleContextMenu}
-          title={title}
+          onContextMenu={isRescueMode ? e => e.preventDefault() : handleContextMenu}
+          onClick={isRescueTarget ? handleRescueClick : undefined}
+          title={isRescueTarget ? `${title} — 클릭하여 구조` : title}
+          style={isRescueTarget ? { cursor: 'pointer' } : undefined}
         >
           <span className="victim-card__top">{victim.customLabel?.trim() || '기타'}</span>
           {(victim.originDisplayBottom ?? buildVictimDisplayLine(victim)) && (
@@ -256,10 +308,9 @@ export function VictimCard({ victim, absPos }: Props) {
         </div>
       </div>
       {ctxMenu && (
-        <VictimContextMenu
+        <VictimContextBarMenu
           victim={victim}
-          x={ctxMenu.x}
-          y={ctxMenu.y}
+          anchorRect={ctxMenu}
           tokens={tokens}
           onUpdate={handleUpdate}
           onRescue={handleRescue}

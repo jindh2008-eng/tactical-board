@@ -103,24 +103,43 @@
 }
 
 /* ─────────────────────────────────────────────
+   인라인 오버레이 컨테이너
+   토큰 wrapper(position:relative) 기준 absolute 배치.
+   드래그 시 토큰과 함께 이동 — getBoundingClientRect 불필요.
+   ─────────────────────────────────────────────*/
+
+.token-overlay {
+  position:       absolute;
+  left:           50%;
+  bottom:         100%;          /* 기본: 토큰 위쪽 */
+  transform:      translateX(-50%);
+  margin-bottom:  3px;
+  pointer-events: none;
+  z-index:        999;
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  white-space:    nowrap;
+}
+
+/* 뷰포트 상단 근접 시 토큰 아래쪽으로 전환 */
+.token-overlay--below {
+  bottom:        auto;
+  top:           100%;
+  margin-bottom: 0;
+  margin-top:    3px;
+}
+
+/* ─────────────────────────────────────────────
    상태 배지 오버레이
-   토큰 위에 고정 — pointer-events: none 으로
-   드래그 동작 방해 없음
    ─────────────────────────────────────────────*/
 
 .token-badge-overlay {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
-  display: flex;
+  display:        flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding-bottom: 3px;
-  white-space: nowrap;
-  z-index: 6;
+  align-items:    center;
+  gap:            2px;
+  white-space:    nowrap;
 }
 
 .token-badge {
@@ -191,4 +210,113 @@
   min-width: 34px;   /* MM:SS 표시용 */
   font-size: 0.66rem;
   letter-spacing: 0.02em;
+}
+
+/* ─────────────────────────────────────────────
+   ActionMode 시각 피드백
+   ─────────────────────────────────────────────*/
+
+/* 모드 소스 토큰: 펄스 링 컨테이너 */
+.token-card-mode-ring {
+  position:      absolute;
+  inset:         -5px;
+  border-radius: 11px;
+  border:        2px solid #44aaff;
+  animation:     token-mode-pulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+  z-index:       4;
+}
+
+@keyframes token-mode-pulse {
+  0%,  100% { opacity: 1;   box-shadow: 0 0 0 0   rgba(68, 170, 255, 0.5); }
+  50%       { opacity: 0.7; box-shadow: 0 0 0 8px rgba(68, 170, 255, 0);   }
+}
+
+/* 모드 소스 토큰 카드 자체 */
+.token-card--mode-source {
+  box-shadow: 0 0 0 2px #44aaff, 0 0 12px rgba(68, 170, 255, 0.4);
+  z-index: 10;
+}
+
+/* 모드 중 다른 토큰: 흐리게 처리 */
+.token-card--mode-dim {
+  opacity:    0.45;
+  filter:     grayscale(0.4);
+  cursor:     not-allowed;
+  transition: opacity 0.2s;
+}
+
+/* ─────────────────────────────────────────────
+   상태 태그 오버레이 (statusTag)
+   ─────────────────────────────────────────────*/
+
+.token-status-tag-overlay {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  white-space:    nowrap;
+}
+
+.token-status-tag {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  padding:        1px 6px;
+  border-radius:  3px;
+  border:         1px solid;
+  font-size:      0.62rem;
+  font-weight:    700;
+  line-height:    1.5;
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(2px);
+}
+
+.token-status-tag__main {
+  /* 기본 태그 텍스트 — font/color는 부모에서 상속 */
+}
+
+.token-status-tag__linked {
+  font-size:      0.58rem;
+  font-weight:    600;
+  opacity:        0.85;
+  letter-spacing: 0.02em;
+  line-height:    1.4;
+}
+
+/* ─────────────────────────────────────────────
+   customNote 말풍선 (인라인 — token-overlay 내부)
+   ─────────────────────────────────────────────*/
+
+.token-note-tooltip {
+  background:    rgba(16, 14, 26, 0.95);
+  border:        1px solid rgba(100, 80, 180, 0.55);
+  border-radius: 4px;
+  padding:       4px 9px;
+  font-size:     0.70rem;
+  color:         #c8c0e8;
+  white-space:   nowrap;
+  box-shadow:    0 3px 10px rgba(0, 0, 0, 0.5);
+  max-width:     200px;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─────────────────────────────────────────────
+   소화전 고장 상태
+   ─────────────────────────────────────────────*/
+
+.token-card--hydrant-broken {
+  opacity:    0.45;
+  filter:     grayscale(0.7);
+  text-decoration: line-through;
+}
+
+/* 우클릭 메뉴 열린 토큰: 테두리/글로우만, 모양·크기·텍스트는 그대로 */
+.token-card--menu-open {
+  outline:        3px solid rgba(99, 102, 241, 0.9);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 4px rgba(99, 102, 241, 0.18),
+    0 0 14px rgba(99, 102, 241, 0.45);
+  z-index: 10;
 }

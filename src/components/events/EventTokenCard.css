@@ -1,162 +1,227 @@
 /* ─────────────────────────────────────────────
-   이벤트 토큰 카드
-   — EventOverlay 내 position: absolute 배치
+   이벤트 토큰 카드 — 카드형 UI (아이콘 중심)
    ─────────────────────────────────────────────*/
 
 .event-token {
-  position: absolute;
-  display:  inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 12px;
-  border-radius: 3px;
-  cursor: grab;
-  user-select: none;
-  white-space: nowrap;
-  z-index: 20;
-  min-width: 60px;
-  height: 32px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-  transition: box-shadow 0.1s;
+  position:        absolute;
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             2px;
+  width:           54px;
+  height:          54px;
+  padding:         3px 2px;
+  border-radius:   8px;
+  cursor:          grab;
+  user-select:     none;
+  z-index:         20;
+  box-sizing:      border-box;
+  transition:      box-shadow 0.15s, background 0.15s, opacity 0.15s, filter 0.15s;
+
+  /* 미지정(-) 기본 */
+  background: #2e2e34;
+  border:     1.5px solid rgba(160, 160, 170, 0.25);
+  color:      rgba(200, 200, 205, 0.85);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
 }
 
 .event-token:active {
-  cursor: grabbing;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  cursor:    grabbing;
+  transform: scale(0.96);
 }
 
-/* ── 상태별 배경 ── */
-
-/* 미지정(-): 중립 회색 */
-.event-token[data-status='-'] {
-  background: #3a3a40;
-  border: 1px solid rgba(160, 160, 170, 0.3);
-}
-
-.event-token[data-status='최성기'] {
-  background: #b83010;
-  border: 1px solid rgba(255, 180, 100, 0.4);
-}
-
-.event-token[data-status='폭발'] {
-  background: #8b0000;
-  border: 2px solid #ff5555;
-  box-shadow: 0 0 8px rgba(255, 60, 60, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5);
-}
-
-.event-token[data-status='초진'] {
-  background: #2a2a2a;
-  border: 1px solid #555;
-}
-
-.event-token[data-status='완진'] {
-  background: #2a4a6a;
-  border: 1px solid rgba(100, 160, 210, 0.35);
-}
-
-/* ── 아이콘 ── */
+/* ── 대표 이미지 아이콘 ── */
 
 .event-token__icon {
-  width:  14px;
-  height: 14px;
-  object-fit: contain;
+  width:       36px;
+  height:      36px;
+  object-fit:  contain;
   flex-shrink: 0;
+  display:     block;
 }
 
-/* 화재: 정상 */
-.event-token[data-status='화재'] .event-token__icon {
-  filter: none;
+/* 이미지 없을 때 이모지 폴백 */
+.event-token__icon--emoji {
+  width:       auto;
+  height:      auto;
+  font-size:   22px;
+  line-height: 1;
 }
 
-/* 폭발: 붉게 강조 */
-.event-token[data-status='폭발'] .event-token__icon {
-  filter: brightness(2) saturate(3) hue-rotate(-20deg);
-}
-
-/* 초진: 검은 실루엣 */
-.event-token[data-status='초진'] .event-token__icon {
-  filter: grayscale(1) brightness(0.15);
+/* 화재 SVG 아이콘 */
+.event-token__icon--flame {
+  width:        32px;
+  height:       32px;
+  flex-shrink:  0;
+  overflow:     visible;
 }
 
 /* ── 이름 ── */
 
 .event-token__label {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size:      9px;
+  font-weight:    700;
+  text-align:     center;
+  line-height:    1.2;
+  max-width:      100%;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+  white-space:    nowrap;
+  letter-spacing: 0.01em;
 }
 
-.event-token[data-status='-']     .event-token__label { color: rgba(180, 180, 185, 0.8); }
-.event-token[data-status='최성기'] .event-token__label,
-.event-token[data-status='폭발']  .event-token__label { color: rgba(255, 255, 255, 0.95); }
-.event-token[data-status='초진']  .event-token__label { color: rgba(200, 200, 200, 0.85); }
-.event-token[data-status='완진']  .event-token__label { color: rgba(160, 210, 240, 0.9); }
+/* ── 상태 텍스트 ── */
 
 .event-token__status {
-  opacity: 0.80;
-  font-weight: 500;
+  font-size:  8px;
+  font-weight: 600;
+  opacity:    0.85;
+  text-align: center;
+  line-height: 1;
 }
 
 /* ─────────────────────────────────────────────
-   원형 상태 선택 메뉴 (우클릭)
+   상태별 시각 효과
+   ─────────────────────────────────────────────*/
+
+/* 최성기 / 연소확대 — 강한 주황 글로우 */
+.event-token--s-최성기,
+.event-token--s-연소확대 {
+  box-shadow: 0 0 12px rgba(255, 80, 0, 0.65),
+              0 3px 8px  rgba(0,   0, 0, 0.50);
+  border-color: rgba(255, 140, 60, 0.45) !important;
+}
+
+/* 50% — 중간 글로우 */
+.event-token--s-50pct {
+  box-shadow: 0 0 8px rgba(255, 120, 0, 0.55),
+              0 3px 8px rgba(0,   0, 0, 0.45);
+  border-color: rgba(220, 160, 60, 0.40) !important;
+}
+
+/* 초진 — 약간 어둡게 */
+.event-token--s-초진 {
+  opacity: 0.88;
+}
+
+/* 완진 — 흑백 처리 */
+.event-token--s-완진 {
+  filter:  grayscale(60%);
+  opacity: 0.72;
+  color:   rgba(160, 210, 240, 0.9);
+}
+
+/* 폭발 — 붉은 강조 테두리 + 강한 글로우 */
+.event-token--s-폭발 {
+  border:     2px solid #ff5555 !important;
+  box-shadow: 0 0 14px rgba(255, 50, 50, 0.70),
+              0 3px 8px rgba(0,  0, 0,  0.50);
+}
+
+/* 누출 — 초록 테두리 */
+.event-token--type-gas.event-token--s-누출 {
+  border-color: rgba(80, 200, 100, 0.45) !important;
+}
+
+/* 제어불가 — 보라 글로우 */
+.event-token--type-gas.event-token--s-제어불가 {
+  box-shadow: 0 0 10px rgba(160, 60, 220, 0.55),
+              0 3px 8px rgba(0,  0, 0, 0.45);
+  border-color: rgba(180, 80, 255, 0.40) !important;
+}
+
+/* 불꽃 — 노란 테두리 */
+.event-token--type-electric.event-token--s-불꽃 {
+  border-color: rgba(255, 220, 60, 0.55) !important;
+}
+
+/* 열폭주 — 주황 글로우 */
+.event-token--type-electric.event-token--s-열폭주 {
+  box-shadow:  0 0 10px rgba(220, 100, 30, 0.60),
+               0 3px 8px rgba(0,   0, 0, 0.45);
+  border-color: rgba(200, 120, 40, 0.45) !important;
+}
+
+/* ─────────────────────────────────────────────
+   원형 상태 선택 메뉴 — 아이콘 + 텍스트
    ─────────────────────────────────────────────*/
 
 .radial-backdrop {
   position: fixed;
-  inset: 0;
-  z-index: 999;
-  cursor: default;
+  inset:    0;
+  z-index:  999;
+  cursor:   default;
 }
 
-/* 0×0 기준점 — left/top = 클릭 좌표 */
 .radial-menu {
-  position: fixed;
-  width: 0;
-  height: 0;
-  z-index: 1000;
+  position:       fixed;
+  width:          0;
+  height:         0;
+  z-index:        1000;
   pointer-events: none;
 }
 
 .radial-item {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  pointer-events: all;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  cursor: pointer;
-  font-size: 0.60rem;
-  font-weight: 700;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
+  position:        absolute;
+  width:           54px;
+  height:          54px;
+  border-radius:   50%;
+  overflow:        hidden;
+  pointer-events:  all;
+  border:          2px solid rgba(255, 255, 255, 0.12);
+  cursor:          pointer;
+  font-family:     inherit;
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
   justify-content: center;
-  text-align: center;
-  line-height: 1.25;
-  padding: 0 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
-  color: rgba(255, 255, 255, 0.70);
-  background: rgba(30, 30, 35, 0.82);
-  transition: filter 0.1s, border-color 0.1s;
+  gap:             2px;
+  box-shadow:      0 2px 10px rgba(0, 0, 0, 0.6);
+  background:      rgba(25, 18, 10, 0.88);
+  transition:      filter 0.1s, border-color 0.1s, background 0.1s;
 }
 
 .radial-item:hover {
-  filter: brightness(1.25);
-  border-color: rgba(255, 255, 255, 0.45);
+  filter:       brightness(1.25);
+  border-color: rgba(255, 255, 255, 0.40);
 }
 
+/* ── 아이콘 영역 ── */
+.radial-item__icon {
+  font-size:   18px;
+  line-height: 1;
+  display:     block;
+  flex-shrink: 0;
+}
+
+/* ── 텍스트 영역 ── */
+.radial-item__label {
+  font-size:      0.68rem;
+  font-weight:    800;
+  color:          rgba(255, 255, 255, 0.85);
+  line-height:    1;
+  text-align:     center;
+  letter-spacing: 0.02em;
+  text-shadow:    0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* 없음: 흐리게 */
+.radial-item--none {
+  opacity: 0.55;
+}
+
+/* 선택된 상태 */
 .radial-item--active {
-  border-color: rgba(255, 255, 255, 0.7) !important;
-  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.65) !important;
+}
+.radial-item--active .radial-item__label {
+  color: #fff;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
 }
 
-/* 상태별 활성 배경 */
-.radial-item--폭발.radial-item--active   { background: #8b0000; }
-.radial-item--최성기.radial-item--active  { background: #b83010; }
-.radial-item--초진.radial-item--active   { background: #404030; }
-.radial-item--완진.radial-item--active   { background: #2a4a6a; }
-.radial-item--none.radial-item--active   { background: #3a3a42; }
+/* 50% 활성: 노란 배경에 어두운 텍스트 */
+.radial-item[data-value="50%"].radial-item--active .radial-item__label {
+  color: #4e3000;
+  text-shadow: none;
+}

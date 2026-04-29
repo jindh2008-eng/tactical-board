@@ -1,0 +1,119 @@
+/* ─────────────────────────────────────────────
+   HydrantSetupPanel (hsp)
+   소화전 사전 설정 패널
+   ─────────────────────────────────────────────*/
+
+.hsp {
+  display:        flex;
+  flex-direction: column;
+  gap:            10px;
+}
+
+.hsp__empty {
+  font-size:  0.82rem;
+  color:      var(--ctr-label-text, #888);
+  font-style: italic;
+  margin:     0;
+  padding:    4px 0;
+}
+
+/* ── 소화전 목록 ──────────────────────────────── */
+
+.hsp__list {
+  list-style: none;
+  margin:     0;
+  padding:    0;
+  display:    flex;
+  flex-direction: column;
+  gap:        6px;
+}
+
+.hsp__item {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+}
+
+/* ── 입력 필드 ──────────────────────────────────*/
+
+.hsp__input,
+.hsp__select {
+  height:        32px;
+  padding:       0 8px;
+  background:    #1a1410;
+  border:        1px solid #3a2818;
+  border-radius: 4px;
+  color:         #ccaa66;
+  font-size:     0.80rem;
+  font-family:   inherit;
+  outline:       none;
+  transition:    border-color 0.1s;
+}
+
+.hsp__input:focus,
+.hsp__select:focus {
+  border-color: #6a4820;
+}
+
+.hsp__input--name {
+  flex:      1;
+  min-width: 80px;
+}
+
+.hsp__input--dist {
+  width: 72px;
+  text-align: right;
+}
+
+.hsp__select {
+  width:  74px;
+  cursor: pointer;
+}
+
+.hsp__unit {
+  font-size:   0.78rem;
+  color:       #8a7a5a;
+  white-space: nowrap;
+}
+
+/* ── 삭제 버튼 ──────────────────────────────────*/
+
+.hsp__del-btn {
+  width:         26px;
+  height:        26px;
+  padding:       0;
+  background:    transparent;
+  border:        1px solid #5a1818;
+  border-radius: 4px;
+  color:         #aa4444;
+  font-size:     0.72rem;
+  cursor:        pointer;
+  flex-shrink:   0;
+  transition:    background 0.1s;
+}
+
+.hsp__del-btn:hover {
+  background: #2a0808;
+  color:      #ff6666;
+}
+
+/* ── 추가 버튼 ──────────────────────────────────*/
+
+.hsp__add-btn {
+  align-self:    flex-start;
+  padding:       6px 14px;
+  background:    transparent;
+  border:        1px dashed #3a5030;
+  border-radius: 4px;
+  color:         #668855;
+  font-size:     0.78rem;
+  font-family:   inherit;
+  cursor:        pointer;
+  transition:    background 0.1s, border-color 0.1s;
+}
+
+.hsp__add-btn:hover {
+  background:   #0e1a0a;
+  border-color: #558844;
+  color:        #88bb66;
+}

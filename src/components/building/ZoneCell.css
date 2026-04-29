@@ -34,7 +34,7 @@
   justify-content: center;
   gap: 3px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;  /* 토큰 오버레이가 구역 경계 밖으로 나올 수 있게 허용 */
   transition: background-color 0.12s ease;
   cursor: default;
   border-right: 1px solid var(--ctr-border-soft);
@@ -45,9 +45,8 @@
 }
 
 /* ─────────────────────────────────────────────
-   좌/우 구역 — 88px 고정 (기존 110px의 80%)
+   화재 구역 — 88px 고정
    ─────────────────────────────────────────────*/
-.zone-cell--left,
 .zone-cell--right {
   flex: 0 0 88px;
   background-color: var(--ctr-surface);
@@ -60,7 +59,6 @@
   );
 }
 
-.zone-cell--left:hover,
 .zone-cell--right:hover {
   background-color: #e4eef6;
   outline: 1px solid #7aaccc inset;
@@ -327,27 +325,32 @@
    화재단계별 배경색 (우측 구역 전용)
    ─────────────────────────────────────────────*/
 .zone-cell--fs-extension-peak {
-  background-color: #e07a5f !important;
+  background-color: #ffcdd2 !important;
   background-image: none !important;
 }
 
 .zone-cell--fs-peak {
-  background-color: #edb9a8 !important;
+  background-color: #fbe9e7 !important;
+  background-image: none !important;
+}
+
+.zone-cell--fs-seventy {
+  background-color: #fff3e0 !important;
   background-image: none !important;
 }
 
 .zone-cell--fs-half {
-  background-color: #edb9a8 !important;
+  background-color: #fffde7 !important;
   background-image: none !important;
 }
 
 .zone-cell--fs-initial {
-  background-color: #efe0b5 !important;
+  background-color: #f5f5f5 !important;
   background-image: none !important;
 }
 
 .zone-cell--fs-complete {
-  background-color: #d9d9d9 !important;
+  background-color: #fafafa !important;
   background-image: none !important;
 }
 
@@ -371,22 +374,15 @@
 }
 
 /* ─── 화염 이미지 — 셀 80% 크기, 뒤쪽 배치 ──── */
-/* 수정 위치: width/height 값을 바꾸면 크기 조절 */
 .fire-bg-icon {
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 80%;        /* ← 화염 크기 조절 */
-  height: 80%;       /* ← 화염 크기 조절 */
+  width: 80%;
+  height: 80%;
   object-fit: contain;
   z-index: 1;
   pointer-events: none;
-}
-
-/* 초진 — CSS filter로 검정 화염 처리 */
-/* 수정 위치: filter 값을 바꾸면 색조 조절 */
-.fire-bg-icon--dark {
-  filter: grayscale(1) brightness(0.12) contrast(1.4);
 }
 
 .fire-label {
@@ -411,32 +407,19 @@
 }
 
 
-/* --- 단계별 글자색 (최종 안정형) --- */
+/* --- 단계별 글자색 --- */
 
-/* 🔥 최성기 + 연소확대 / 최성기 / 50% → 동일 처리 */
-.zone-cell--fs-extension-peak .fire-label,
-.zone-cell--fs-peak .fire-label,
-.zone-cell--fs-half .fire-label {
-  color: #fff;
-  text-shadow:
-    0 0 4px rgba(0,0,0,0.9),
-    0 0 8px rgba(0,0,0,0.7),
-    0 0 2px rgba(0,0,0,1);
-}
+/* 빨강 계열 (연소확대, 최성기) → 해당 색 텍스트 + 연한 그림자 */
+.zone-cell--fs-extension-peak .fire-label { color: #b71c1c; text-shadow: 0 1px 3px rgba(255,255,255,0.6); }
+.zone-cell--fs-peak           .fire-label { color: #bf360c; text-shadow: 0 1px 3px rgba(255,255,255,0.6); }
+.zone-cell--fs-seventy        .fire-label { color: #e65100; text-shadow: 0 1px 3px rgba(255,255,255,0.6); }
 
-/* ⚫ 초진 (검정 화염 대응) */
-.zone-cell--fs-initial .fire-label {
-  color: #fff;
-  text-shadow:
-    0 0 3px rgba(0,0,0,1),
-    0 0 1px rgba(0,0,0,1);
-}
+/* 노랑 계열 (50%) → 어두운 텍스트 */
+.zone-cell--fs-half .fire-label { color: #f57f17; text-shadow: 0 1px 2px rgba(255,255,255,0.7); }
 
-/* ⚪ 완진 (배경 단순 → 일반 텍스트) */
-.zone-cell--fs-complete .fire-label {
-  color: #111;
-  text-shadow: none;
-}
+/* 회색 계열 (초진, 완진) → 어두운 텍스트 */
+.zone-cell--fs-initial  .fire-label { color: #212121; text-shadow: none; }
+.zone-cell--fs-complete .fire-label { color: #616161; text-shadow: none; }
 
 /* ─────────────────────────────────────────────
    화재 원형 선택 메뉴
@@ -471,28 +454,14 @@
   border-color: rgba(255, 255, 255, 0.65) !important;
 }
 
-/* 단계별 기본(비활성) 배경 — 초진은 어둡지 않게 */
-.fire-radial-item--initial { background: rgba(70, 55, 35, 0.88); }
-
-/* 단계별 활성 배경 */
-.fire-radial-item--extension-peak.fire-radial-item--active { background: #6a0800; }
-.fire-radial-item--peak.fire-radial-item--active           { background: #982818; }
-.fire-radial-item--half.fire-radial-item--active           { background: #b06030; }
-.fire-radial-item--initial.fire-radial-item--active        { background: #5a4828; }
-.fire-radial-item--complete.fire-radial-item--active       { background: #2a4a6a; }
+/* 단계별 활성 배경 — 스펙 색상 그대로 */
+.fire-radial-item--extension-peak.fire-radial-item--active { background: #D32F2F; }
+.fire-radial-item--peak.fire-radial-item--active           { background: #FF5722; }
+.fire-radial-item--seventy.fire-radial-item--active        { background: #FF9800; }
+.fire-radial-item--half.fire-radial-item--active           { background: #FFC107; }
+.fire-radial-item--initial.fire-radial-item--active        { background: #424242; }
+.fire-radial-item--complete.fire-radial-item--active       { background: #616161; }
 .fire-radial-item--default.fire-radial-item--active        { background: #3a3a42; }
-
-/* 화염 아이콘 */
-.fire-ri__flame {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.fire-ri__flame--dark {
-  filter: grayscale(1) brightness(0.15) contrast(1.4);
-}
 
 /* 단계 레이블 */
 .fire-ri__label {
@@ -511,10 +480,10 @@
   text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
 }
 
-/* 완진: 텍스트 색 */
-.fire-radial-item--complete .fire-ri__label,
-.fire-radial-item--complete.fire-radial-item--active .fire-ri__label {
-  color: rgba(160, 220, 255, 0.95);
+/* 50% 활성: 노란 배경에 어두운 텍스트 */
+.fire-radial-item--half.fire-radial-item--active .fire-ri__label {
+  color: #4e3000;
+  text-shadow: none;
 }
 
 /* 없음(-): 텍스트 색 */

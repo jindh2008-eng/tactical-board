@@ -1,0 +1,110 @@
+/* ─────────────────────────────────────────────
+   HydrantBarMenu (hbm)
+   소화전 전용 우클릭 가로 막대 메뉴
+   ─────────────────────────────────────────────*/
+
+.hbm__backdrop {
+  position: fixed;
+  inset:    0;
+  z-index:  9997;
+  cursor:   default;
+}
+
+.hbm {
+  z-index:       9998;
+  background:    #0c1418;
+  border:        1px solid #1e4455;
+  border-radius: 7px;
+  box-shadow:    0 6px 20px rgba(0, 0, 0, 0.65),
+                 0 2px 6px  rgba(0, 0, 0, 0.4);
+  overflow:      hidden;
+  user-select:   none;
+  font-family:   inherit;
+  min-width:     max-content;
+}
+
+/* ── 버튼 바 ──────────────────────────────── */
+
+.hbm__bar {
+  display:     flex;
+  align-items: center;
+  gap:         4px;
+  padding:     6px 8px;
+}
+
+.hbm__btn {
+  flex-shrink:     0;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         8px 16px;
+  border-radius:   5px;
+  border:          1.5px solid;
+  font-size:       0.78rem;
+  font-weight:     700;
+  font-family:     inherit;
+  cursor:          pointer;
+  white-space:     nowrap;
+  min-height:      38px;
+  letter-spacing:  0.02em;
+  transition:      filter 0.1s, border-color 0.12s;
+}
+
+.hbm__btn:hover {
+  filter: brightness(1.30);
+}
+
+/* 구분선 */
+.hbm__sep {
+  width:       1px;
+  height:      22px;
+  background:  #1e4455;
+  flex-shrink: 0;
+  margin:      0 2px;
+}
+
+/* ── 송수 버튼 ──────────────────────────────── */
+
+.hbm__btn--water {
+  background:   #0e2030;
+  border-color: #1e66aa;
+  color:        #55aaee;
+}
+
+.hbm__btn--water:hover {
+  border-color: #44aaff;
+  color:        #88ccff;
+}
+
+/* 고장 상태에서는 송수 비활성화 */
+.hbm__btn--water-disabled {
+  background:   #111416;
+  border-color: #2a3540;
+  color:        #3a5060;
+  cursor:       not-allowed;
+  filter:       none !important;
+}
+
+/* ── 소화전고장 버튼 ────────────────────────── */
+
+.hbm__btn--broken {
+  background:   #1e0a0a;
+  border-color: #6a2222;
+  border-style: dashed;
+  color:        #cc5555;
+}
+
+.hbm__btn--broken:hover {
+  border-color: #cc4444;
+  color:        #ff7777;
+}
+
+/* 고장 활성 상태 — 진한 빨간 테두리 + 실선 */
+.hbm__btn--broken-active {
+  background:    #2a0a0a !important;
+  border-style:  solid   !important;
+  border-color:  #dd4444 !important;
+  color:         #ff8888 !important;
+  outline:       2px solid #dd4444;
+  outline-offset: 2px;
+}

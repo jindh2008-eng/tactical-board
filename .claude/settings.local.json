@@ -18,7 +18,10 @@
       "Bash(grep -rn \"진압\\\\|대$\\\\|label.*대\\\\|makeLabel\\\\|formatLabel\\\\|labelFn\" /Users/daehyun/dev/tactical-board/src/utils/)",
       "Bash(lsof -ti:5173)",
       "Bash(grep -E \"\\\\.\\(tsx|ts|css\\)$\")",
-      "Bash(curl -s http://localhost:5174)"
+      "Bash(curl -s http://localhost:5174)",
+      "Bash(find D:\\\\claude\\\\tactical-board\\\\src *)",
+      "Bash(xargs grep *)",
+      "Bash(find D:/claude/tactical-board/src -name \"events.ts\" -exec cat {} \\\\;)"
     ]
   }
 }

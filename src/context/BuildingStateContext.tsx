@@ -116,7 +116,7 @@ export function useBuildingState(): BuildingStateValue {
 //    RF open  → weak, RF closed → full
 // ─────────────────────────────────────────────
 
-const FIRE_SMOKE_STATUSES = new Set<FireStatus>(['extension-peak', 'peak', 'half']);
+const FIRE_SMOKE_STATUSES = new Set<FireStatus>(['extension-peak', 'peak', 'seventy', 'half']);
 
 /** floorId → 연속 층 번호 (지하 음수, 지상 양수). RF/알 수 없는 ID는 null. */
 function floorIdToNum(fid: string): number | null {

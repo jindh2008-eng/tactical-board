@@ -2,11 +2,10 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import type { BuildingConfig } from '../types';
 import type {
   BuildingSettings, TimingSettings,
-  DispatchSetup, DispatchRosterItem, VictimSetupItem, ArrivalMode,
+  DispatchSetup, DispatchRosterItem, VictimSetupItem, ArrivalMode, HydrantSetupItem,
 } from '../types/settings';
-import type { EventSetupItem } from '../types/events';
+import type { EventSetupItem, EventType } from '../types/events';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP } from '../types/settings';
-import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../types/presets';
 import type { SettingsSet } from '../utils/settingsStorage';
 import {
   generateId,
@@ -35,18 +34,6 @@ interface SettingsContextValue {
   timing:        TimingSettings;
   updateTiming:  (next: Partial<TimingSettings>) => void;
 
-  // ── 공통 프리셋 CRUD ──────────────────────────
-  sharedBadgePresets: SharedBadgePreset[];
-  addSharedPreset:    (p: Omit<SharedBadgePreset, 'id'>) => void;
-  updateSharedPreset: (id: string, p: Omit<SharedBadgePreset, 'id'>) => void;
-  removeSharedPreset: (id: string) => void;
-
-  // ── 출동대별 고유 프리셋 CRUD ──────────────────
-  unitBadgePresets: UnitSpecificBadgePreset[];
-  addUnitPreset:    (p: Omit<UnitSpecificBadgePreset, 'id'>) => void;
-  updateUnitPreset: (id: string, p: Omit<UnitSpecificBadgePreset, 'id'>) => void;
-  removeUnitPreset: (id: string) => void;
-
   // ── 출동대 생성 설정 ──────────────────────────
   dispatchSetup:           DispatchSetup;
   updateDispatchUnits:     (u: Partial<DispatchSetup['units']>)    => void;
@@ -64,7 +51,7 @@ interface SettingsContextValue {
 
   // ── 이벤트 토큰 설정 ─────────────────────────
   eventSetup:              EventSetupItem[];
-  addEventSetupItem:       (label: string) => void;
+  addEventSetupItem:       (label: string, icon?: string, eventType?: EventType) => void;
   updateEventSetupItem:    (id: string, patch: Partial<Omit<EventSetupItem, 'id'>>) => void;
   removeEventSetupItem:    (id: string) => void;
 
@@ -78,6 +65,12 @@ interface SettingsContextValue {
   addVictimSetupItem:      () => void;
   updateVictimSetupItem:   (id: string, patch: Partial<Omit<VictimSetupItem, 'id'>>) => void;
   removeVictimSetupItem:   (id: string) => void;
+
+  // ── 소화전 사전 설정 ──────────────────────────
+  hydrantSetup:            HydrantSetupItem[];
+  addHydrantSetupItem:     () => void;
+  updateHydrantSetupItem:  (id: string, patch: Partial<Omit<HydrantSetupItem, 'id'>>) => void;
+  removeHydrantSetupItem:  (id: string) => void;
 
   // ── 설정 세트 관리 ────────────────────────────
   settingsList:         SettingsSet[];
@@ -110,13 +103,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [stairSmokeStartFloor, setStairSmokeStartFloor] = useState<number | null>(null);
   const [targetName,           setTargetName]           = useState<string>('');
 
-  // ── 프리셋 + 타이밍 (자동 복원) ─────────────────
-  const [sharedBadgePresets, setSharedBadgePresets] = useState<SharedBadgePreset[]>(
-    () => loadWorkingPresets().sharedBadgePresets
-  );
-  const [unitBadgePresets, setUnitBadgePresets] = useState<UnitSpecificBadgePreset[]>(
-    () => loadWorkingPresets().unitBadgePresets
-  );
+  // ── 타이밍 (자동 복원) ──────────────────────────
   const [timing, setTiming] = useState<TimingSettings>(
     () => loadWorkingPresets().timing ?? DEFAULT_TIMING
   );
@@ -144,6 +131,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [eventSetup, setEventSetup] = useState<EventSetupItem[]>(
     () => loadWorkingPresets().eventSetup ?? []
   );
+  const [hydrantSetup, setHydrantSetup] = useState<HydrantSetupItem[]>(
+    () => loadWorkingPresets().hydrantSetup ?? []
+  );
 
   // ── 설정 세트 ─────────────────────────────────
   const [settingsList,       setSettingsList]       = useState<SettingsSet[]>(loadSettingsList);
@@ -155,10 +145,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setDispatchRoster(prev => buildRoster(dispatchSetup, prev));
   }, [dispatchSetup]);
 
-  // 프리셋·타이밍·시나리오 설정 변경 시 자동 저장 (새로고침 대비)
+  // 타이밍·시나리오 설정 변경 시 자동 저장 (새로고침 대비)
   useEffect(() => {
-    saveWorkingPresets({ sharedBadgePresets, unitBadgePresets, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup });
-  }, [sharedBadgePresets, unitBadgePresets, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup]);
+    saveWorkingPresets({ sharedBadgePresets: [], unitBadgePresets: [], timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup });
+  }, [timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -209,8 +199,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const updateMedicalPostChief = useCallback((name: string) => setMedicalPostChief(name), []);
   const updateStagingAreaChief = useCallback((name: string) => setStagingAreaChief(name), []);
 
-  const addEventSetupItem = useCallback((label: string) => {
-    setEventSetup(prev => [...prev, { id: generateId(), label, enabled: true }]);
+  const addEventSetupItem = useCallback((label: string, icon?: string, eventType?: EventType) => {
+    setEventSetup(prev => [...prev, { id: generateId(), label, enabled: true, icon: icon ?? '', eventType: eventType ?? 'fire' }]);
   }, []);
   const updateEventSetupItem = useCallback((id: string, patch: Partial<Omit<EventSetupItem, 'id'>>) => {
     setEventSetup(prev => prev.map(item => item.id === id ? { ...item, ...patch } : item));
@@ -240,32 +230,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setVictimSetup(prev => prev.filter(item => item.id !== id));
   }, []);
 
-  // ── 공통 프리셋 CRUD ────────────────────────────
-
-  const addSharedPreset = useCallback((p: Omit<SharedBadgePreset, 'id'>) => {
-    setSharedBadgePresets(prev => [...prev, { ...p, id: generateId() }]);
+  // ── 소화전 사전 설정 ──────────────────────────
+  const addHydrantSetupItem = useCallback(() => {
+    setHydrantSetup(prev => [...prev, {
+      id:        generateId(),
+      name:      '',
+      side:      'A' as const,
+      distanceM: 100,
+    }]);
   }, []);
 
-  const updateSharedPreset = useCallback((id: string, p: Omit<SharedBadgePreset, 'id'>) => {
-    setSharedBadgePresets(prev => prev.map(x => x.id === id ? { ...p, id } : x));
+  const updateHydrantSetupItem = useCallback((id: string, patch: Partial<Omit<HydrantSetupItem, 'id'>>) => {
+    setHydrantSetup(prev => prev.map(item => item.id === id ? { ...item, ...patch } : item));
   }, []);
 
-  const removeSharedPreset = useCallback((id: string) => {
-    setSharedBadgePresets(prev => prev.filter(x => x.id !== id));
-  }, []);
-
-  // ── 출동대별 프리셋 CRUD ────────────────────────
-
-  const addUnitPreset = useCallback((p: Omit<UnitSpecificBadgePreset, 'id'>) => {
-    setUnitBadgePresets(prev => [...prev, { ...p, id: generateId() }]);
-  }, []);
-
-  const updateUnitPreset = useCallback((id: string, p: Omit<UnitSpecificBadgePreset, 'id'>) => {
-    setUnitBadgePresets(prev => prev.map(x => x.id === id ? { ...p, id } : x));
-  }, []);
-
-  const removeUnitPreset = useCallback((id: string) => {
-    setUnitBadgePresets(prev => prev.filter(x => x.id !== id));
+  const removeHydrantSetupItem = useCallback((id: string) => {
+    setHydrantSetup(prev => prev.filter(item => item.id !== id));
   }, []);
 
   // ── 설정 세트 저장/불러오기 ─────────────────────
@@ -275,27 +255,27 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const set: SettingsSet = {
       id, name: activeSettingsName, updatedAt: '',
       building: { config, fireFloor, stairSmokeStartFloor, targetName },
-      timing, sharedBadgePresets, unitBadgePresets,
+      timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
-      medicalPostChief, stagingAreaChief, eventSetup,
+      medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, stairSmokeStartFloor, targetName, timing, sharedBadgePresets, unitBadgePresets, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, stairSmokeStartFloor, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
     const set: SettingsSet = {
       id, name: newName, updatedAt: '',
       building: { config, fireFloor, stairSmokeStartFloor, targetName },
-      timing, sharedBadgePresets, unitBadgePresets,
+      timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
-      medicalPostChief, stagingAreaChief, eventSetup,
+      medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
     };
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [config, fireFloor, stairSmokeStartFloor, targetName, timing, sharedBadgePresets, unitBadgePresets, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup]);
+  }, [config, fireFloor, stairSmokeStartFloor, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -306,8 +286,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setStairSmokeStartFloor(b.stairSmokeStartFloor);
     setTargetName(b.targetName ?? '');
     setTiming(set.timing ? JSON.parse(JSON.stringify(set.timing)) : DEFAULT_TIMING);
-    setSharedBadgePresets(JSON.parse(JSON.stringify(set.sharedBadgePresets ?? [])));
-    setUnitBadgePresets(JSON.parse(JSON.stringify(set.unitBadgePresets ?? [])));
     // 구버전 저장 세트는 DEFAULT 값으로 채움
     const rawSetup = set.dispatchSetup ? JSON.parse(JSON.stringify(set.dispatchSetup)) as DispatchSetup : DEFAULT_DISPATCH_SETUP;
     // 구버전 저장 세트에 없는 vehicles 필드 보정
@@ -335,6 +313,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setMedicalPostChief(set.medicalPostChief ?? '');
     setStagingAreaChief(set.stagingAreaChief ?? '');
     setEventSetup(set.eventSetup ? JSON.parse(JSON.stringify(set.eventSetup)) : []);
+    setHydrantSetup(set.hydrantSetup ? JSON.parse(JSON.stringify(set.hydrantSetup)) : []);
     setActiveSettingsId(id);
     setActiveSettingsName(set.name);
   }, [settingsList]);
@@ -350,8 +329,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setStairSmokeStartFloor(null);
     setTargetName('');
     setTiming(DEFAULT_TIMING);
-    setSharedBadgePresets([]);
-    setUnitBadgePresets([]);
     setDispatchSetup(DEFAULT_DISPATCH_SETUP);
     setDispatchRoster([]);
     setVictimSetup([]);
@@ -359,6 +336,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setMedicalPostChief('');
     setStagingAreaChief('');
     setEventSetup([]);
+    setHydrantSetup([]);
     setActiveSettingsId(null);
     setActiveSettingsName('새 설정');
   }, []);
@@ -368,8 +346,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       building: { config, fireFloor, stairSmokeStartFloor, targetName },
       updateBuildingConfig, updateFireFloor, updateStairSmoke, updateTargetName,
       timing, updateTiming,
-      sharedBadgePresets, addSharedPreset, updateSharedPreset, removeSharedPreset,
-      unitBadgePresets, addUnitPreset, updateUnitPreset, removeUnitPreset,
       arrivalMode, updateArrivalMode,
       medicalPostChief, stagingAreaChief,
       updateMedicalPostChief, updateStagingAreaChief,
@@ -377,6 +353,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
       dispatchRoster, updateRosterArrival, updateRosterOrder,
       victimSetup, addVictimSetupItem, updateVictimSetupItem, removeVictimSetupItem,
+      hydrantSetup, addHydrantSetupItem, updateHydrantSetupItem, removeHydrantSetupItem,
       settingsList, activeSettingsId, activeSettingsName, setActiveSettingsName,
       saveSettings, saveSettingsAs, loadSettings, deleteSettingsEntry, newSettings,
     }}>

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useEvents } from '../../context/EventContext';
+import { resolveEventType } from '../../types/events';
 import { EventTokenCard } from './EventTokenCard';
 import './EventLayer.css';
 
@@ -11,8 +12,8 @@ import './EventLayer.css';
 // ─────────────────────────────────────────────
 
 // 토큰 크기 (클램핑용)
-const TOKEN_W = 60;
-const TOKEN_H = 32;
+const TOKEN_W = 54;
+const TOKEN_H = 54;
 
 // 초기 배치 상수 (직전대기 좌측 영역)
 const COLS     = 3;
@@ -82,6 +83,8 @@ export function EventLayer() {
             key={ev.id}
             id={ev.id}
             label={ev.label}
+            icon={ev.icon ?? ''}
+            eventType={resolveEventType(ev)}
             status={status}
             x={pos.x}
             y={pos.y}

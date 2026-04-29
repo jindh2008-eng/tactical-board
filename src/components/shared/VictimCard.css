@@ -190,3 +190,26 @@
 .zone-cell .victim-card__bottom {
   font-size: 0.64rem;
 }
+
+
+/* ─────────────────────────────────────────────
+   rescue ActionMode 시각 피드백
+   ─────────────────────────────────────────────*/
+
+/* 구조 가능한 대상 (같은 구역, 클릭 가능) */
+.victim-card--rescue-target {
+  box-shadow: 0 0 0 2px #44dd88, 0 0 14px rgba(68, 220, 136, 0.5);
+  animation: victim-rescue-pulse 1s ease-in-out infinite;
+}
+
+@keyframes victim-rescue-pulse {
+  0%,  100% { box-shadow: 0 0 0 2px #44dd88, 0 0 6px  rgba(68, 220, 136, 0.4); }
+  50%       { box-shadow: 0 0 0 3px #44dd88, 0 0 18px rgba(68, 220, 136, 0.7); }
+}
+
+/* 구조 불가 대상 (다른 구역이거나 rescue 모드 아님) */
+.victim-card--rescue-dim {
+  opacity: 0.35;
+  filter:  grayscale(0.5);
+  cursor:  default;
+}

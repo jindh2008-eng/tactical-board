@@ -1,50 +1,59 @@
 import { useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import type { EventStatus } from '../../types/events';
+import type { EventType, EventStatus } from '../../types/events';
+import { EVENT_TYPE_STATUSES } from '../../types/events';
+import { FireEventIcon } from '../shared/FlameIcon';
 import './EventTokenCard.css';
 
 // ─────────────────────────────────────────────
-// 원형 선택 메뉴
+// 원형 상태 선택 메뉴 — 아이콘 + 텍스트 세로 배치
 // ─────────────────────────────────────────────
 
-const RADIAL_RADIUS = 54;
+const RADIAL_RADIUS = 64;
 
-const RADIAL_ITEMS: { value: EventStatus; label: string }[] = [
-  { value: '폭발',   label: '폭발'   },
-  { value: '최성기', label: '최성기' },
-  { value: '초진',   label: '초진'   },
-  { value: '완진',   label: '완진'   },
-  { value: '-',     label: '없음'   },
-];
-
-function RadialMenu({ cx, cy, current, onSelect, onClose }: {
-  cx:       number;
-  cy:       number;
-  current:  EventStatus;
-  onSelect: (s: EventStatus) => void;
-  onClose:  () => void;
+function RadialMenu({ cx, cy, eventType, current, onSelect, onClose }: {
+  cx:        number;
+  cy:        number;
+  eventType: EventType;
+  current:   EventStatus;
+  onSelect:  (s: EventStatus) => void;
+  onClose:   () => void;
 }) {
+  const items = EVENT_TYPE_STATUSES[eventType];
+  const count = items.length;
+
   return ReactDOM.createPortal(
     <>
       <div className="radial-backdrop" onMouseDown={onClose} />
       <div className="radial-menu" style={{ left: cx, top: cy }}>
-        {RADIAL_ITEMS.map((item, i) => {
-          const angleDeg = i * (360 / RADIAL_ITEMS.length) - 90; // 0° = 12시
+        {items.map((item, i) => {
+          const angleDeg = i * (360 / count) - 90;
           const angleRad = angleDeg * (Math.PI / 180);
           const rx = Math.round(RADIAL_RADIUS * Math.cos(angleRad));
           const ry = Math.round(RADIAL_RADIUS * Math.sin(angleRad));
+          const isActive = current === item.value;
+          const isNone   = item.value === '-';
+
           return (
             <button
               key={item.value}
               className={[
                 'radial-item',
-                `radial-item--${item.value === '-' ? 'none' : item.value}`,
-                current === item.value ? 'radial-item--active' : '',
+                isNone   ? 'radial-item--none'   : '',
+                isActive ? 'radial-item--active'  : '',
               ].filter(Boolean).join(' ')}
-              style={{ transform: `translate(calc(-50% + ${rx}px), calc(-50% + ${ry}px))` }}
+              data-value={item.value}
+              style={{
+                transform: `translate(calc(-50% + ${rx}px), calc(-50% + ${ry}px))`,
+                ...(isActive ? { background: item.color } : {}),
+              }}
               onMouseDown={e => { e.stopPropagation(); onSelect(item.value); onClose(); }}
             >
-              {item.label}
+              {eventType === 'fire' && item.value !== '-'
+                ? <FireEventIcon status={item.value} size={22} />
+                : <span className="radial-item__icon" aria-hidden="true">{item.icon}</span>
+              }
+              <span className="radial-item__label">{item.label}</span>
             </button>
           );
         })}
@@ -55,16 +64,25 @@ function RadialMenu({ cx, cy, current, onSelect, onClose }: {
 }
 
 // ─────────────────────────────────────────────
-// EventTokenCard
-// — 드래그로 자유 이동, 우클릭으로 원형 상태 선택
+// 헬퍼
 // ─────────────────────────────────────────────
 
-const TOKEN_W = 60;
-const TOKEN_H = 32;
+function getStatusItem(eventType: EventType, value: EventStatus) {
+  return EVENT_TYPE_STATUSES[eventType].find(s => s.value === value);
+}
+
+// ─────────────────────────────────────────────
+// EventTokenCard — 카드형 UI (아이콘 중심)
+// ─────────────────────────────────────────────
+
+const TOKEN_W = 54;
+const TOKEN_H = 54;
 
 interface Props {
   id:             string;
   label:          string;
+  icon:           string;      // 파일명 (예: 'LPG가스통.png') — 빈 문자열이면 미표시
+  eventType:      EventType;
   status:         EventStatus;
   x:              number;
   y:              number;
@@ -72,10 +90,13 @@ interface Props {
   onStatusChange: (id: string, status: EventStatus) => void;
 }
 
-export function EventTokenCard({ id, label, status, x, y, onMove, onStatusChange }: Props) {
+export function EventTokenCard({
+  id, label, icon, eventType, status, x, y, onMove, onStatusChange,
+}: Props) {
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [radialCenter, setRadialCenter] = useState<{ x: number; y: number } | null>(null);
 
+  // ── 드래그 ────────────────────────────────────
   function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     e.preventDefault();
     e.stopPropagation();
@@ -88,7 +109,6 @@ export function EventTokenCard({ id, label, status, x, y, onMove, onStatusChange
       x: e.clientX - rect.left - x,
       y: e.clientY - rect.top  - y,
     };
-
     document.body.style.userSelect = 'none';
 
     function onMouseMove(ev: MouseEvent) {
@@ -97,13 +117,11 @@ export function EventTokenCard({ id, label, status, x, y, onMove, onStatusChange
       const newY = Math.max(0, Math.min(r.height - TOKEN_H, ev.clientY - r.top  - dragOffsetRef.current.y));
       onMove(id, newX, newY);
     }
-
     function onMouseUp() {
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup',   onMouseUp);
     }
-
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup',   onMouseUp);
   }
@@ -111,32 +129,65 @@ export function EventTokenCard({ id, label, status, x, y, onMove, onStatusChange
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    setRadialCenter({ x: e.clientX, y: e.clientY });
+    const r = e.currentTarget.getBoundingClientRect();
+    setRadialCenter({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
   }
 
-  const showIcon = status !== '-' && status !== '완진';
+  // ── 상태 파생값 ──────────────────────────────
+  const statusItem  = getStatusItem(eventType, status);
+  const statusLabel = status !== '-' ? (statusItem?.label ?? status) : null;
+  const tokenBg     = status !== '-' ? statusItem?.color : undefined;
+
+  // ── 상태별 CSS 클래스 ─────────────────────────
+  const statusClass = status !== '-' ? `event-token--s-${status.replace('%', 'pct')}` : '';
 
   return (
     <>
       <div
-        className="event-token"
+        className={[
+          'event-token',
+          `event-token--type-${eventType}`,
+          status !== '-' ? 'event-token--active' : '',
+          statusClass,
+        ].filter(Boolean).join(' ')}
         data-status={status}
-        style={{ left: x, top: y }}
+        data-event-type={eventType}
+        style={{
+          left: x,
+          top:  y,
+          ...(tokenBg ? { background: tokenBg } : {}),
+        }}
         onMouseDown={handleMouseDown}
         onContextMenu={handleContextMenu}
       >
-        {showIcon && (
-          <img className="event-token__icon" src="/fire.png" alt="" draggable={false} />
+        {/* 대표 아이콘 (설정된 이미지) */}
+        {icon
+          ? <img className="event-token__icon" src={`/event-icon/${icon}`} alt="" draggable={false} />
+          : eventType === 'fire'
+            ? <FireEventIcon
+                status={status}
+                size={32}
+                className="event-token__icon event-token__icon--flame"
+              />
+            : <span className="event-token__icon event-token__icon--emoji" aria-hidden="true">
+                {eventType === 'gas' ? '💨' : '⚡'}
+              </span>
+        }
+
+        {/* 이벤트명 */}
+        <span className="event-token__label">{label}</span>
+
+        {/* 상태 */}
+        {statusLabel && (
+          <span className="event-token__status">{statusLabel}</span>
         )}
-        <span className="event-token__label">
-          {label}{status !== '-' && <span className="event-token__status">-{status}</span>}
-        </span>
       </div>
 
       {radialCenter && (
         <RadialMenu
           cx={radialCenter.x}
           cy={radialCenter.y}
+          eventType={eventType}
           current={status}
           onSelect={s => onStatusChange(id, s)}
           onClose={() => setRadialCenter(null)}

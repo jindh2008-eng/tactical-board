@@ -1,0 +1,152 @@
+/* ─────────────────────────────────────────────
+   소화전 아이콘 — 전술 상황판 방면 구역 고정 표시
+   크기는 출동대 토큰 가로 너비(60px) 기준
+   ───────────────────────────────────────────── */
+
+.hydrant-icon {
+  position:       relative;
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  width:          60px;
+  user-select:    none;
+  cursor:         context-menu;
+  pointer-events: auto;   /* 부모 container 의 pointer-events 상속 차단 */
+  gap:            2px;
+}
+
+/* ── 명칭 (이미지 위) ──────────────────────── */
+.hydrant-icon__name {
+  display:             inline-block;
+  font-size:           0.68rem;
+  font-weight:         800;
+  color:               #FFD400;
+  text-align:          center;
+  line-height:         1;
+  white-space:         nowrap;
+  overflow:            hidden;
+  text-overflow:       ellipsis;
+  max-width:           100%;
+  -webkit-text-stroke: 1px #000;
+  paint-order:         stroke fill;
+}
+
+/* ── 이미지 ────────────────────────────────── */
+.hydrant-icon__img {
+  width:          30px;
+  height:         auto;
+  display:        block;
+  pointer-events: none;
+}
+
+/* ── 거리 (이미지 아래) ─────────────────────── */
+.hydrant-icon__dist {
+  display:             inline-block;
+  font-size:           0.68rem;
+  font-weight:         800;
+  color:               #FFFFFF;
+  text-align:          center;
+  line-height:         1;
+  -webkit-text-stroke: 1px #000;
+  paint-order:         stroke fill;
+}
+
+/* ── 고장 상태 ──────────────────────────────── */
+.hydrant-icon--broken .hydrant-icon__img {
+  filter:  grayscale(0.7) brightness(0.6) sepia(0.5) hue-rotate(-10deg);
+  opacity: 0.65;
+}
+.hydrant-icon--broken .hydrant-icon__name,
+.hydrant-icon--broken .hydrant-icon__dist {
+  color: #cc5555;
+}
+
+/* ── 송수연결 소스 펄스 링 ───────────────────── */
+.hydrant-icon__pulse-ring {
+  position:      absolute;
+  inset:         -4px;
+  border-radius: 6px;
+  border:        2px solid #44aaff;
+  animation:     hi-pulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+  z-index:        4;
+}
+
+@keyframes hi-pulse {
+  0%,  100% { opacity: 1;   box-shadow: 0 0 0 0   rgba(68, 170, 255, 0.5); }
+  50%       { opacity: 0.6; box-shadow: 0 0 0 8px rgba(68, 170, 255, 0);   }
+}
+
+/* ─────────────────────────────────────────────
+   우클릭 컨텍스트 메뉴
+   ───────────────────────────────────────────── */
+
+.hi-menu__backdrop {
+  position: fixed;
+  inset:    0;
+  z-index:  9901;
+  cursor:   default;
+}
+
+.hi-menu {
+  z-index:       9902;
+  background:    #0e1822;
+  border:        1.5px solid #2255aa;
+  border-radius: 6px;
+  box-shadow:    0 4px 16px rgba(0, 0, 0, 0.6);
+  overflow:      hidden;
+  user-select:   none;
+}
+
+.hi-menu__bar {
+  display:     flex;
+  align-items: stretch;
+  height:      36px;
+}
+
+.hi-menu__btn {
+  padding:     0 14px;
+  background:  transparent;
+  border:      none;
+  font-size:   0.80rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor:      pointer;
+  white-space: nowrap;
+  transition:  background 0.1s;
+}
+
+.hi-menu__btn--water {
+  color: #88ccff;
+}
+.hi-menu__btn--water:hover {
+  background: #1a3060;
+  color:      #bbddff;
+}
+
+.hi-menu__btn--broken {
+  color: #dd8888;
+}
+.hi-menu__btn--broken:hover {
+  background: #2a0808;
+  color:      #ff9999;
+}
+.hi-menu__btn--broken-active {
+  color:      #ff5555;
+  background: #1a0404;
+}
+.hi-menu__btn--broken-active:hover {
+  background: #2a0808;
+}
+
+/* 비활성(고장 중 송수 불가) */
+.hi-menu__btn--disabled {
+  opacity: 0.38;
+  cursor:  not-allowed;
+}
+
+.hi-menu__sep {
+  width:      1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin:     6px 0;
+}
