@@ -1,4 +1,4 @@
-import type { BuildingConfig } from '../../types';
+import type { BuildingConfig, FireStatus } from '../../types';
 import { DEFAULT_BUILDING_CONFIG, buildDisplayFloors } from '../../data/buildingData';
 import { BuildingBoard } from './BuildingBoard';
 import { ExteriorZone } from './ExteriorZone';
@@ -10,9 +10,9 @@ import { EventLayer } from '../events/EventLayer';
 import './TacticalArea.css';
 
 interface Props {
-  config?:               BuildingConfig;
-  fireFloor?:            number;
-  stairSmokeStartFloor?: number | null;
+  config?:            BuildingConfig;
+  fireFloor?:         number;
+  initialFireStatus?: FireStatus | null;
 }
 
 /**
@@ -29,9 +29,9 @@ interface Props {
  * col 3: 우측 (임시의료소 / D면 / 구조활동통계)
  */
 export function TacticalArea({
-  config               = DEFAULT_BUILDING_CONFIG,
-  fireFloor            = 1,
-  stairSmokeStartFloor = null,
+  config            = DEFAULT_BUILDING_CONFIG,
+  fireFloor         = 1,
+  initialFireStatus = null,
 }: Props) {
   const displayFloors  = buildDisplayFloors(config, fireFloor);
   const aboveRows      = displayFloors.filter(f => !f.isBasement).length;
@@ -74,7 +74,7 @@ export function TacticalArea({
         <BuildingBoard
           config={config}
           fireFloor={fireFloor}
-          stairSmokeStartFloor={stairSmokeStartFloor}
+          initialFireStatus={initialFireStatus}
         />
       </div>
 

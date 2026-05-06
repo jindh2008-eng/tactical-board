@@ -1,6 +1,8 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useCallback } from 'react';
 import { useEvents } from '../../context/EventContext';
-import { resolveEventType } from '../../types/events';
+import { resolveEventType, EVENT_TYPE_STATUSES } from '../../types/events';
+import type { EventStatus } from '../../types/events';
+import { useTokens } from '../../context/TokenContext';
 import { EventTokenCard } from './EventTokenCard';
 import './EventLayer.css';
 
@@ -23,8 +25,20 @@ const ROW3_H   = 166; // TacticalArea row 3 고정 높이
 
 export function EventLayer() {
   const { enabledEvents, positions, statuses, moveEvent, setEventStatus } = useEvents();
+  const { addLog } = useTokens();
   const layerRef = useRef<HTMLDivElement>(null);
   const initRef  = useRef(false);
+
+  const handleStatusChange = useCallback((id: string, status: EventStatus) => {
+    const ev = enabledEvents.find(e => e.id === id);
+    if (ev) {
+      const eventType  = resolveEventType(ev);
+      const statusItem = EVENT_TYPE_STATUSES[eventType].find(s => s.value === status);
+      const note = status === '-' ? '해제' : (statusItem?.label ?? status);
+      addLog({ logType: 'event-status', tokenId: id, tokenName: ev.label, fromZoneId: '', toZoneId: '', note });
+    }
+    setEventStatus(id, status);
+  }, [enabledEvents, addLog, setEventStatus]);
 
   // 최초 마운트 시 위치 미지정 이벤트를 좌측 하단 직전대기 옆 공간에 배치
   useLayoutEffect(() => {
@@ -89,7 +103,7 @@ export function EventLayer() {
             x={pos.x}
             y={pos.y}
             onMove={moveEvent}
-            onStatusChange={setEventStatus}
+            onStatusChange={handleStatusChange}
           />
         );
       })}

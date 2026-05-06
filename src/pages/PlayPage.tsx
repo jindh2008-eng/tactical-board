@@ -1,4 +1,4 @@
-import { useState }           from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSettings }        from '../store/settingsStore';
 import { useTraining }        from '../context/TrainingContext';
 import { useTokens, TokenProvider } from '../context/TokenContext';
@@ -12,11 +12,12 @@ import { TokenCard }          from '../components/shared/TokenCard';
 import { TacticalArea }       from '../components/building/TacticalArea';
 import { WaterConnectionOverlay } from '../components/overlay/WaterConnectionOverlay';
 import { UnitAddDrawer }      from '../components/overlays/UnitAddDrawer';
-import { LogModal }           from '../components/overlays/LogModal';
 import { AnalysisModal }      from '../components/overlays/AnalysisModal';
+import { LogPanel }           from '../components/right/LogPanel';
 import './PlayPage.css';
 
-type LeftPanel = 'resource' | 'unit' | null;
+type LeftPanel  = 'resource' | 'unit' | null;
+type RightPanel = 'log' | null;
 
 // ─────────────────────────────────────────────
 // ActionMode 오버레이 배너
@@ -117,13 +118,21 @@ function ResourcePanel() {
 
 export function PlayPage() {
   const { building, timing, dispatchRoster, victimSetup, arrivalMode } = useSettings();
-  const { runKey, status } = useTraining();
+  const { runKey, status, elapsed } = useTraining();
+
+  const elapsedRef = useRef(elapsed);
+  useEffect(() => { elapsedRef.current = elapsed; }, [elapsed]);
 
   const started = status === 'running';
-  const [leftPanel, setLeftPanel] = useState<LeftPanel>(null);
+  const [leftPanel,  setLeftPanel]  = useState<LeftPanel>(null);
+  const [rightPanel, setRightPanel] = useState<RightPanel>(null);
 
   function togglePanel(panel: LeftPanel) {
     setLeftPanel(v => v === panel ? null : panel);
+  }
+
+  function toggleRightPanel(panel: RightPanel) {
+    setRightPanel(v => v === panel ? null : panel);
   }
 
   return (
@@ -135,6 +144,7 @@ export function PlayPage() {
         initialRoster={dispatchRoster}
         started={started}
         arrivalMode={arrivalMode}
+        getElapsed={() => elapsedRef.current}
       >
         <VictimProvider
           key={runKey}
@@ -181,14 +191,27 @@ export function PlayPage() {
                   <TacticalArea
                     config={building.config}
                     fireFloor={building.fireFloor}
-                    stairSmokeStartFloor={building.stairSmokeStartFloor}
+                    initialFireStatus={building.fireStatus}
                   />
                 </div>
               </div>
 
+              {/* ── 우측 로그 패널 (탭 토글) ── */}
+              <div className={`right-drawer${rightPanel === 'log' ? ' right-drawer--open' : ''}`}>
+                <div className="right-drawer__panel">
+                  <LogPanel collapsed={false} onToggle={() => {}} />
+                </div>
+                <button
+                  className="right-drawer__tab"
+                  onClick={() => toggleRightPanel('log')}
+                  title="이벤트 로그"
+                >
+                  이벤트 로그
+                </button>
+              </div>
+
               {/* ── 오버레이 (Drawer / Modal) ── */}
               <UnitAddDrawer />
-              <LogModal />
               <AnalysisModal />
 
               {/* ── ActionMode 배너 (모드 활성 시만 표시) ── */}

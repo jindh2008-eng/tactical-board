@@ -6,7 +6,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { PlayPage }     from './pages/PlayPage';
 import './App.css';
 
-// ── 오버레이 버튼 (출동대 추가 / 분석 / 로그) ──────────────────────────
+// ── 오버레이 버튼 (출동대 추가 / 분석) ──────────────────────────────────
 function NavOverlayButtons() {
   const { openOverlay } = useUIOverlay();
   return (
@@ -16,9 +16,6 @@ function NavOverlayButtons() {
       </button>
       <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('analysis')}>
         분석
-      </button>
-      <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('log')}>
-        로그
       </button>
     </div>
   );

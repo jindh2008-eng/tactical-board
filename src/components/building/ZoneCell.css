@@ -417,9 +417,23 @@
 /* 노랑 계열 (50%) → 어두운 텍스트 */
 .zone-cell--fs-half .fire-label { color: #f57f17; text-shadow: 0 1px 2px rgba(255,255,255,0.7); }
 
-/* 회색 계열 (초진, 완진) → 어두운 텍스트 */
-.zone-cell--fs-initial  .fire-label { color: #212121; text-shadow: none; }
-.zone-cell--fs-complete .fire-label { color: #616161; text-shadow: none; }
+/* 회색 계열 (초진, 완진) → 흰 윤곽선으로 화염 아이콘과 분리 */
+.zone-cell--fs-initial  .fire-label {
+  color:       #1a1a1a;
+  text-shadow:
+    -1px -1px 0 rgba(255, 255, 255, 0.95),
+     1px -1px 0 rgba(255, 255, 255, 0.95),
+    -1px  1px 0 rgba(255, 255, 255, 0.95),
+     1px  1px 0 rgba(255, 255, 255, 0.95);
+}
+.zone-cell--fs-complete .fire-label {
+  color:       #424242;
+  text-shadow:
+    -1px -1px 0 rgba(255, 255, 255, 0.95),
+     1px -1px 0 rgba(255, 255, 255, 0.95),
+    -1px  1px 0 rgba(255, 255, 255, 0.95),
+     1px  1px 0 rgba(255, 255, 255, 0.95);
+}
 
 /* ─────────────────────────────────────────────
    화재 원형 선택 메뉴

@@ -10,17 +10,13 @@ const AERIAL_MAX_HEIGHT = 15;
 const LADDER_MAX_HEIGHT = 7;
 
 interface Props {
-  floor:                DisplayFloor;
-  stairSmokeStartFloor?: number | null;
-  fireFloor?:           number;
-  aboveGroundFloors?:   number;
+  floor:              DisplayFloor;
+  aboveGroundFloors?: number;
 }
 
 export function FloorRow({
   floor,
-  stairSmokeStartFloor  = null,
-  fireFloor             = 1,
-  aboveGroundFloors     = 1,
+  aboveGroundFloors = 1,
 }: Props) {
   const classes = [
     'floor-row',
@@ -28,22 +24,16 @@ export function FloorRow({
     floor.isRange    ? 'floor-row--range'    : '',
   ].filter(Boolean).join(' ');
 
-  const { doorStates, fireStates } = useBuildingState();
-  const { mode, clearMode }        = useActionMode();
-  const { setStatusTag }           = useTokens();
+  const { doorStates, stairSmokeFloor, smokeConcentration } = useBuildingState();
+  const { mode, clearMode }                                 = useActionMode();
+  const { setStatusTag }                                    = useTokens();
 
   // RF의 endFloor = aboveGroundFloors + 1
   const floorEndNum = floor.id === 'RF'
     ? aboveGroundFloors + 1
     : floor.endFloor;
 
-  const smokeLevel = computeStairSmokeLevel({
-    floorEndNum,
-    doorStates,
-    fireStates,
-    stairSmokeStartFloor,
-    fireFloor,
-  });
+  const smokeLevel = computeStairSmokeLevel({ floorEndNum, stairSmokeFloor, smokeConcentration });
 
   // ── 고가차/굴절차 층 선택 모드 ─────────────────
   const isAerialMode    = mode.type === 'aerial-floor-select';

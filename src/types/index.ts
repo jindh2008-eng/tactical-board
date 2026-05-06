@@ -1,4 +1,10 @@
 // ─────────────────────────────────────────────
+// 공통 좌표 타입
+// ─────────────────────────────────────────────
+
+export interface Pos { x: number; y: number; }
+
+// ─────────────────────────────────────────────
 // 건물 설정 타입
 // ─────────────────────────────────────────────
 
@@ -157,11 +163,13 @@ export interface UnitToken {
 
 /**
  * 로그 종류
- * 'move'       : 일반 이동 (A면으로 이동 등)
- * 'assignment' : 부서 지정 (B방면 1선펌프 부서 지정)
- * 'rescue'     : 구조 처리 (구조대상자 → 임시의료소 이동)
+ * 'move'        : 일반 이동 (A면으로 이동 등)
+ * 'assignment'  : 부서 지정 (B방면 1선펌프 부서 지정)
+ * 'rescue'      : 구조 처리 (구조대상자 → 임시의료소 이동)
+ * 'fire-status' : 화재상태 변화 (1층 최성기 등)
+ * 'status-tag'  : 출동대 상태 변경 (진압1대 단위지휘관 등)
  */
-export type LogType = 'move' | 'assignment' | 'rescue';
+export type LogType = 'move' | 'assignment' | 'rescue' | 'fire-status' | 'status-tag' | 'water-relay' | 'door' | 'smoke' | 'event-status';
 
 export interface LogEntry {
   id:             string;

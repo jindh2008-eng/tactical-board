@@ -1,14 +1,15 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import type { VictimToken, CreateVictimInput, VictimCondition } from '../types/victim';
 import type { VictimSetupItem } from '../types/settings';
-import type { BuildingConfig } from '../types';
+import type { BuildingConfig, Pos } from '../types';
 import {
   buildVictim, randomVictim,
   buildVictimDisplayLine, zoneKeyToLabel, zoneKeyToFullLabel,
 } from '../utils/victimUtils';
+import { useTokens } from './TokenContext';
 import {
   victimSetupToToken,
-  computeInitialVictimPositions,
+  computeInitialPositions,
 } from '../utils/victimPlacement';
 import { buildValidVictimZoneKeys } from '../data/buildingData';
 import {
@@ -19,7 +20,7 @@ import {
 // 타입
 // ─────────────────────────────────────────────
 
-export interface VictimPos { x: number; y: number; }
+export type VictimPos = Pos;
 
 /** updateVictim 에 전달 가능한 변경 필드 */
 export interface VictimUpdate {
@@ -46,6 +47,17 @@ export function useVictims(): VictimContextValue {
 }
 
 // ─────────────────────────────────────────────
+// 로그용 구조대상자 표시명
+// ─────────────────────────────────────────────
+
+function victimDisplayName(v: VictimToken): string {
+  if (v.customLabel) return v.customLabel;
+  if (v.kind === 'group') return `${v.groupCount ?? '?'}명`;
+  const parts = [v.gender, v.age != null ? `${v.age}세` : undefined, v.condition].filter(Boolean);
+  return parts.length > 0 ? (parts as string[]).join('/') : '구조대상자';
+}
+
+// ─────────────────────────────────────────────
 // Provider
 // ─────────────────────────────────────────────
 
@@ -61,6 +73,8 @@ export function VictimProvider({
   buildingConfig?:     BuildingConfig;
   fireFloor?:          number;
 }) {
+  const { addLog } = useTokens();
+
   // ── 배치 가능 구역 집합 (마운트 시 1회 계산) ─────────────────────────
   // 세션 복원 시 범위 행에 속한 구역의 구조대상자를 pool 로 이동하는 데 사용
   const validZoneKeysRef = useRef<Set<string>>(
@@ -80,6 +94,9 @@ export function VictimProvider({
     // 유효하지 않은 구역 → pool 이동
     return { ...v, zoneKey: null };
   }
+
+  // ── victimsRef — 로그 기록용 안정적 참조 ──────────────────────────────
+  const victimsRef = useRef<VictimToken[]>([]);
 
   // ── 구조대상자 상태 (세션 복원 우선) ─────────────────────────────────
   const [victims, setVictims] = useState<VictimToken[]>(() => {
@@ -109,10 +126,12 @@ export function VictimProvider({
     // 세션이 없을 때: setup 기반 초기 오프셋 계산
     if (initialVictimSetup && initialVictimSetup.length > 0) {
       const initialTokens = initialVictimSetup.map(victimSetupToToken);
-      return computeInitialVictimPositions(initialTokens);
+      return computeInitialPositions(initialTokens);
     }
     return {};
   });
+
+  useEffect(() => { victimsRef.current = victims; }, [victims]);
 
   // ── sessionStorage 저장 (500ms debounce) ─────────────────────────────
   useEffect(() => {
@@ -145,6 +164,19 @@ export function VictimProvider({
     toZoneKey: string | null,
     pos?:      VictimPos,
   ) => {
+    if (toZoneKey !== null) {
+      const v = victimsRef.current.find(vic => vic.id === victimId);
+      if (v && v.zoneKey !== toZoneKey) {
+        addLog({
+          logType:    'move',
+          tokenId:    victimId,
+          tokenName:  victimDisplayName(v),
+          fromZoneId: v.zoneKey ?? 'pool',
+          toZoneId:   toZoneKey,
+        });
+      }
+    }
+
     setVictims(prev => prev.map(v => {
       if (v.id !== victimId) return v;
 
@@ -180,12 +212,25 @@ export function VictimProvider({
       }
       return { ...prev, [victimId]: pos };
     });
-  }, []);
+  }, [addLog]);
 
   /** 상태·세부위치·라벨 변경 */
   const updateVictim = useCallback((victimId: string, update: VictimUpdate) => {
+    if (update.condition !== undefined) {
+      const v = victimsRef.current.find(vic => vic.id === victimId);
+      if (v && v.condition !== update.condition) {
+        addLog({
+          logType:    'status-tag',
+          tokenId:    victimId,
+          tokenName:  victimDisplayName(v),
+          fromZoneId: '',
+          toZoneId:   '',
+          note:       `환자상태 ${update.condition} 변경`,
+        });
+      }
+    }
     setVictims(prev => prev.map(v => v.id !== victimId ? v : { ...v, ...update }));
-  }, []);
+  }, [addLog]);
 
   return (
     <VictimContext.Provider value={{

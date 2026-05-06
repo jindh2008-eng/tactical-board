@@ -75,8 +75,8 @@ function getStatusItem(eventType: EventType, value: EventStatus) {
 // EventTokenCard — 카드형 UI (아이콘 중심)
 // ─────────────────────────────────────────────
 
-const TOKEN_W = 54;
-const TOKEN_H = 54;
+const TOKEN_W = 50;
+const TOKEN_H = 50;
 
 interface Props {
   id:             string;
@@ -138,6 +138,11 @@ export function EventTokenCard({
   const statusLabel = status !== '-' ? (statusItem?.label ?? status) : null;
   const tokenBg     = status !== '-' ? statusItem?.color : undefined;
 
+  // 상태 텍스트를 항상 1줄로 꽉 채우기 위해 글자 수 기반 font-size 계산
+  const statusFontSize = statusLabel
+    ? Math.min(14, Math.floor((TOKEN_W - 4) / statusLabel.length))
+    : 14;
+
   // ── 상태별 CSS 클래스 ─────────────────────────
   const statusClass = status !== '-' ? `event-token--s-${status.replace('%', 'pct')}` : '';
 
@@ -152,35 +157,36 @@ export function EventTokenCard({
         ].filter(Boolean).join(' ')}
         data-status={status}
         data-event-type={eventType}
-        style={{
-          left: x,
-          top:  y,
-          ...(tokenBg ? { background: tokenBg } : {}),
-        }}
+        style={{ left: x, top: y }}
         onMouseDown={handleMouseDown}
         onContextMenu={handleContextMenu}
       >
-        {/* 대표 아이콘 (설정된 이미지) */}
-        {icon
-          ? <img className="event-token__icon" src={`/event-icon/${icon}`} alt="" draggable={false} />
-          : eventType === 'fire'
-            ? <FireEventIcon
-                status={status}
-                size={32}
-                className="event-token__icon event-token__icon--flame"
-              />
-            : <span className="event-token__icon event-token__icon--emoji" aria-hidden="true">
-                {eventType === 'gas' ? '💨' : '⚡'}
-              </span>
-        }
+        {/* 카드 박스 — 이미지가 꽉 채움 */}
+        <div
+          className="event-token__card"
+          style={tokenBg ? { background: tokenBg } : undefined}
+        >
+          {icon
+            ? <img className="event-token__icon" src={`/event-icon/${icon}`} alt="" draggable={false} />
+            : eventType === 'fire'
+              ? <FireEventIcon
+                  status={status}
+                  size={40}
+                  className="event-token__icon event-token__icon--flame"
+                />
+              : <span className="event-token__icon event-token__icon--emoji" aria-hidden="true">
+                  {eventType === 'gas' ? '💨' : '⚡'}
+                </span>
+          }
 
-        {/* 이벤트명 */}
+          {/* 상태 — 카드 하단 오버레이 */}
+          {statusLabel && (
+            <span className="event-token__status" style={{ fontSize: statusFontSize }}>{statusLabel}</span>
+          )}
+        </div>
+
+        {/* 이벤트명 — 카드 아래 */}
         <span className="event-token__label">{label}</span>
-
-        {/* 상태 */}
-        {statusLabel && (
-          <span className="event-token__status">{statusLabel}</span>
-        )}
       </div>
 
       {radialCenter && (

@@ -90,6 +90,84 @@
 }
 
 /* ─────────────────────────────────────────────
+   우측 Overlay Drawer — 로그 패널
+   좌측 드로어와 대칭 구조 (오른쪽에서 슬라이드)
+   ─────────────────────────────────────────────*/
+.right-drawer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 260px;
+  z-index: 20;
+  transform: translateX(100%);
+  transition: transform 0.22s ease;
+}
+
+.right-drawer--open {
+  transform: translateX(0);
+}
+
+.right-drawer__panel {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--color-surface);
+  border-left: 1.5px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 패널 내부 헤더 숨김 (드로어 탭이 타이틀 역할) */
+.right-drawer__panel .panel__header {
+  display: none;
+}
+
+.right-drawer__panel .log-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  max-height: none;
+  padding-bottom: 8px;
+}
+
+/* 항상 보이는 세로 탭 — drawer 좌측 가장자리에 부착 */
+.right-drawer__tab {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  height: 100%;
+  width: 20px;
+  z-index: 21;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  cursor: pointer;
+  color: var(--color-text-dim);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  writing-mode: vertical-rl;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.right-drawer__tab:hover {
+  background-color: #1a2a3a;
+  color: var(--color-text);
+}
+
+.right-drawer--open .right-drawer__tab {
+  background-color: #1a2a3a;
+  color: var(--color-text);
+}
+
+/* ─────────────────────────────────────────────
    자원대기소 패널 (좌측 드로어 상단)
    ─────────────────────────────────────────────*/
 .resource-panel {

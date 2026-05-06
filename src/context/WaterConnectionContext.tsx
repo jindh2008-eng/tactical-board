@@ -1,6 +1,8 @@
 import {
-  createContext, useContext, useState, useCallback, type ReactNode,
+  createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode,
 } from 'react';
+import { useTokens } from './TokenContext';
+import { generateId } from '../utils/settingsStorage';
 
 // ─────────────────────────────────────────────
 // 송수 연결 타입
@@ -21,7 +23,7 @@ export interface WaterConnection {
 
 interface WaterConnectionContextValue {
   connections:      WaterConnection[];
-  addConnection:    (fromId: string, toId: string, fromType: string, toType: string) => void;
+  addConnection:    (fromId: string, toId: string, fromType: string, toType: string, fromNameOverride?: string) => void;
   removeConnection: (id: string) => void;
 }
 
@@ -37,34 +39,65 @@ export function useWaterConnections(): WaterConnectionContextValue {
   return ctx;
 }
 
-function uid(): string {
-  return `wc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 // ─────────────────────────────────────────────
 // Provider
 // ─────────────────────────────────────────────
 
 export function WaterConnectionProvider({ children }: { children: ReactNode }) {
+  const { tokens, addLog } = useTokens();
   const [connections, setConnections] = useState<WaterConnection[]>([]);
+
+  const tokensRef      = useRef(tokens);
+  const connectionsRef = useRef<WaterConnection[]>([]);
+  useEffect(() => { tokensRef.current = tokens; }, [tokens]);
+  useEffect(() => { connectionsRef.current = connections; }, [connections]);
 
   const addConnection = useCallback((
     fromId: string,
     toId:   string,
     fromType: string,
     toType:   string,
+    fromNameOverride?: string,
   ) => {
-    // 중복 연결 방지 (같은 쌍이 이미 있으면 추가하지 않음)
-    setConnections(prev => {
-      const exists = prev.some(c => c.fromId === fromId && c.toId === toId);
-      if (exists) return prev;
-      return [...prev, { id: uid(), fromId, toId, fromType, toType, status: 'active' }];
+    if (connectionsRef.current.some(c => c.fromId === fromId && c.toId === toId)) return;
+
+    const fromToken = tokensRef.current.find(t => t.id === fromId);
+    const toToken   = tokensRef.current.find(t => t.id === toId);
+    const fromName  = fromNameOverride ?? fromToken?.label ?? fromId;
+    const toName    = toToken?.label   ?? toId;
+
+    addLog({
+      logType:    'water-relay',
+      tokenId:    fromId,
+      tokenName:  fromName,
+      tokenColor: fromToken?.color,
+      fromZoneId: fromId,
+      toZoneId:   toId,
+      note:       `${fromName} → ${toName}`,
     });
-  }, []);
+
+    setConnections(prev => [...prev, { id: `wc-${generateId()}`, fromId, toId, fromType, toType, status: 'active' }]);
+  }, [addLog]);
 
   const removeConnection = useCallback((id: string) => {
+    const conn = connectionsRef.current.find(c => c.id === id);
+    if (conn) {
+      const fromToken = tokensRef.current.find(t => t.id === conn.fromId);
+      const toToken   = tokensRef.current.find(t => t.id === conn.toId);
+      const fromName  = fromToken?.label ?? conn.fromId;
+      const toName    = toToken?.label   ?? conn.toId;
+      addLog({
+        logType:    'water-relay',
+        tokenId:    conn.fromId,
+        tokenName:  fromName,
+        tokenColor: fromToken?.color,
+        fromZoneId: conn.fromId,
+        toZoneId:   conn.toId,
+        note:       `${fromName} → ${toName} 해제`,
+      });
+    }
     setConnections(prev => prev.filter(c => c.id !== id));
-  }, []);
+  }, [addLog]);
 
   return (
     <WaterConnectionContext.Provider value={{ connections, addConnection, removeConnection }}>

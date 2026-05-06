@@ -22,7 +22,7 @@ export function SettingsPage() {
     building,
     updateBuildingConfig,
     updateFireFloor,
-    updateStairSmoke,
+    updateFireStatus,
     updateTargetName,
     timing,
     updateTiming,
@@ -46,8 +46,8 @@ export function SettingsPage() {
           onChange={updateBuildingConfig}
           fireFloor={building.fireFloor}
           onFireFloorChange={updateFireFloor}
-          stairSmokeStartFloor={building.stairSmokeStartFloor}
-          onStairSmokeChange={updateStairSmoke}
+          fireStatus={building.fireStatus}
+          onFireStatusChange={updateFireStatus}
           targetName={building.targetName}
           onTargetNameChange={updateTargetName}
         />

@@ -135,22 +135,3 @@
   color: #5a5650;
 }
 
-/* ─── 적용 버튼 ────────────────────────────── */
-.config-bar__apply {
-  padding: 3px 12px;
-  background-color: #3a5a7a;
-  border: 1px solid #5a7a9a;
-  border-radius: 2px;
-  color: #dce8f0;
-  font-size: 0.65rem;
-  font-weight: 700;
-  font-family: inherit;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-left: 4px;
-  transition: background-color 0.1s;
-}
-
-.config-bar__apply:hover  { background-color: #4a6a8a; }
-.config-bar__apply:active { background-color: #2a4a6a; }

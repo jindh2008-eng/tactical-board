@@ -5,6 +5,7 @@
 
 import type { VictimSetupItem } from '../types/settings';
 import type { VictimAgeGroup, VictimFace, VictimToken } from '../types/victim';
+import type { Pos } from '../types';
 
 const AGE_GROUP_RANGES: Record<VictimAgeGroup, [number, number]> = {
   '소아':  [5,  11],
@@ -25,12 +26,6 @@ function ageGroupToAge(ag: VictimAgeGroup): number {
 
 /** VictimSetupItem.floor 에서 'RF' 의 location 문자열 */
 const RF_LOCATION = 'RF';
-
-// ─────────────────────────────────────────────
-// 좌표 타입
-// ─────────────────────────────────────────────
-
-export interface VictimPos { x: number; y: number; }
 
 // ─────────────────────────────────────────────
 // 위치 표시 유틸리티
@@ -72,7 +67,7 @@ export function floorNumberToLabel(floor: number): string {
  * 기준: zone 너비 ~120px, 높이 ~80px 을 상정.
  * 드래그로 수동 재배치는 언제나 가능.
  */
-const PRESETS: Array<Array<VictimPos>> = [
+const PRESETS: Array<Array<Pos>> = [
   [],
   [{ x: 60, y: 40 }],
   [{ x: 38, y: 40 }, { x: 82, y: 40 }],
@@ -87,7 +82,7 @@ export function computeVictimOffsets(
   count:  number,
   zoneW:  number = 120,
   zoneH:  number = 80,
-): VictimPos[] {
+): Pos[] {
   if (count <= 0) return [];
 
   if (count <= PRESETS.length - 1) {
@@ -113,11 +108,11 @@ export function computeVictimOffsets(
 /**
  * VictimToken 배열에서 zone별 오프셋 좌표를 일괄 계산한다.
  */
-export function computeInitialVictimPositions(
+export function computeInitialPositions(
   victims: VictimToken[],
   zoneW:   number = 120,
   zoneH:   number = 80,
-): Record<string, VictimPos> {
+): Record<string, Pos> {
   const byZone: Record<string, string[]> = {};
   for (const v of victims) {
     if (!v.zoneKey) continue;
@@ -125,7 +120,7 @@ export function computeInitialVictimPositions(
     byZone[v.zoneKey].push(v.id);
   }
 
-  const positions: Record<string, VictimPos> = {};
+  const positions: Record<string, Pos> = {};
   for (const ids of Object.values(byZone)) {
     const offsets = computeVictimOffsets(ids.length, zoneW, zoneH);
     ids.forEach((id, i) => { positions[id] = offsets[i]; });

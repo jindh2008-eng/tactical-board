@@ -3,6 +3,33 @@
   background-color: #080e0e;
 }
 
+.log-panel__header-right {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  margin-left: auto;
+}
+
+.log-panel__export-btn {
+  font-size:     0.68rem;
+  font-weight:   700;
+  color:         #3a8a8a;
+  background:    transparent;
+  border:        1px solid #1a4a4a;
+  border-radius: 3px;
+  padding:       1px 6px;
+  cursor:        pointer;
+  line-height:   1.4;
+  transition:    color 0.15s, border-color 0.15s, background 0.15s;
+  flex-shrink:   0;
+}
+
+.log-panel__export-btn:hover {
+  color:        #66cccc;
+  border-color: #2a6a6a;
+  background:   rgba(26, 74, 74, 0.3);
+}
+
 .log-panel__body {
   flex: 1;
   overflow-y: auto;
@@ -74,4 +101,171 @@
   font-size: 0.78rem;
   color: #f4c870;
   flex: 1;
+}
+
+
+/* ─────────────────────────────────────────────
+   화재상태 로그 항목
+   ─────────────────────────────────────────────*/
+.log-panel__entry--fire {
+  border-left: 2px solid #aa3a1a;
+  padding-left: 4px;
+}
+
+.log-panel__fire-floor {
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: #f0a070;
+  flex-shrink: 0;
+}
+
+.log-panel__fire-status {
+  font-size: 0.80rem;
+  font-weight: 700;
+  color: #ff7744;
+  flex-shrink: 0;
+}
+
+.log-panel__fire-status--release {
+  color: #778899;
+  font-weight: 400;
+}
+
+/* ─────────────────────────────────────────────
+   송수 연결 로그 항목
+   ─────────────────────────────────────────────*/
+.log-panel__entry--water {
+  border-left: 2px solid #115577;
+  padding-left: 4px;
+}
+
+.log-panel__entry--water-release {
+  border-left-color: #334455;
+}
+
+.log-panel__water-prefix {
+  font-size:   0.74rem;
+  font-weight: 700;
+  color:       #4499cc;
+  flex-shrink: 0;
+}
+
+.log-panel__water-note {
+  font-size: 0.78rem;
+  color:     #5ab0dd;
+  flex:      1;
+}
+
+.log-panel__water-note--release {
+  color: #556677;
+}
+
+/* ─────────────────────────────────────────────
+   방화문 개폐 로그 항목
+   ─────────────────────────────────────────────*/
+.log-panel__entry--door {
+  border-left: 2px solid #3a6a4a;
+  padding-left: 4px;
+}
+
+.log-panel__entry--door-close {
+  border-left-color: #2a3a2a;
+}
+
+.log-panel__door-name {
+  font-size:   0.78rem;
+  color:       #7abba0;
+  flex-shrink: 0;
+}
+
+.log-panel__door-state {
+  font-size:   0.78rem;
+  font-weight: 600;
+  color:       #66cc88;
+  flex-shrink: 0;
+}
+
+.log-panel__door-state--close {
+  color:       #4a7755;
+  font-weight: 400;
+}
+
+/* ─────────────────────────────────────────────
+   계단실 연기 로그 항목
+   ─────────────────────────────────────────────*/
+.log-panel__entry--smoke {
+  border-left: 2px solid #7a3a1a;
+  padding-left: 4px;
+}
+
+.log-panel__entry--smoke-clear {
+  border-left-color: #2a4a3a;
+}
+
+.log-panel__smoke-label {
+  font-size:   0.78rem;
+  color:       #c07858;
+  flex-shrink: 0;
+}
+
+.log-panel__smoke-note {
+  font-size:   0.78rem;
+  font-weight: 600;
+  color:       #dd8855;
+  flex:        1;
+}
+
+.log-panel__smoke-note--clear {
+  color:       #4a8866;
+  font-weight: 400;
+}
+
+/* ─────────────────────────────────────────────
+   출동대 상태태그 로그 항목
+   ─────────────────────────────────────────────*/
+.log-panel__entry--status {
+  border-left: 2px solid #225577;
+  padding-left: 4px;
+}
+
+.log-panel__status-tag {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #88ccff;
+  flex-shrink: 0;
+}
+
+.log-panel__status-tag--release {
+  color: #667788;
+  font-weight: 400;
+}
+
+/* ─────────────────────────────────────────────
+   이벤트 토큰 상태 로그 항목
+   ─────────────────────────────────────────────*/
+.log-panel__entry--event {
+  border-left: 2px solid #7a5a1a;
+  padding-left: 4px;
+}
+
+.log-panel__entry--event-release {
+  border-left-color: #3a3a3a;
+}
+
+.log-panel__event-name {
+  font-size:   0.78rem;
+  color:       #c8a060;
+  flex-shrink: 0;
+}
+
+.log-panel__event-status {
+  font-size:   0.78rem;
+  font-weight: 600;
+  color:       #e8b844;
+  flex:        1;
+}
+
+.log-panel__event-status--release {
+  color:       #556677;
+  font-weight: 400;
 }

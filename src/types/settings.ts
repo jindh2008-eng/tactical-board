@@ -1,13 +1,13 @@
-import type { BuildingConfig } from './index';
+import type { BuildingConfig, FireStatus } from './index';
 import type { VictimGender, VictimAgeGroup, VictimCondition, VictimFace } from './victim';
 export type { VictimFace };
 
 /** 건물 및 화재 상황 설정 */
 export interface BuildingSettings {
-  config:               BuildingConfig;
-  fireFloor:            number;
-  stairSmokeStartFloor: number | null;
-  targetName:           string;  // 대상명 (훈련 건물명)
+  config:      BuildingConfig;
+  fireFloor:   number;
+  fireStatus:  FireStatus | null;  // 초기 화재상태
+  targetName:  string;             // 대상명 (훈련 건물명)
 }
 
 /** 출동대 행동 타이밍 설정 */

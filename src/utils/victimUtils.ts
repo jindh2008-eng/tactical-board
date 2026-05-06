@@ -13,10 +13,8 @@ import {
   VICTIM_GENDERS,
   VICTIM_CONDITIONS,
 } from '../types/victim';
-
-function uid(): string {
-  return `victim-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
+import { generateId } from './settingsStorage';
+import { locationToFloorDisplay } from './victimPlacement';
 
 function pick<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -117,17 +115,6 @@ export function zoneKeyToFullLabel(zoneKey: string | null): string {
 // 위치 표시 텍스트 생성
 // ─────────────────────────────────────────────
 
-/** zone 레이블 → 한글 층 표시 */
-function locationToFloorDisplay(loc: string): string | null {
-  if (!loc) return null;
-  if (loc === 'RF') return '옥상';
-  const above = loc.match(/^(\d+)F$/);
-  if (above) return `${above[1]}층`;
-  const below = loc.match(/^B(\d+)$/);
-  if (below) return `B${below[1]}층`;
-  return null;
-}
-
 /**
  * 위치 두 번째 줄 텍스트 — zoneKey 기반으로 파생.
  * 형식: 층/면/상세위치 (있는 것만 `/` 연결)
@@ -164,7 +151,7 @@ export function randomVictim(subLocation: string): VictimToken {
   const condition: VictimCondition = pick(['경상', '중상', '사망'] as const);
 
   return {
-    id:          uid(),
+    id:          generateId(),
     kind:        'person',
     gender,
     age,
@@ -181,7 +168,7 @@ export function randomVictim(subLocation: string): VictimToken {
 export function buildVictim(input: CreateVictimInput): VictimToken {
   if (input.kind === 'person') {
     return {
-      id:          uid(),
+      id:          generateId(),
       kind:        'person',
       gender:      input.gender,
       age:         input.age,
@@ -191,7 +178,7 @@ export function buildVictim(input: CreateVictimInput): VictimToken {
     };
   } else if (input.kind === 'custom') {
     return {
-      id:          uid(),
+      id:          generateId(),
       kind:        'custom',
       customLabel: input.customLabel.trim() || '기타',
       subLocation: input.subLocation.trim(),
@@ -199,7 +186,7 @@ export function buildVictim(input: CreateVictimInput): VictimToken {
     };
   } else {
     return {
-      id:          uid(),
+      id:          generateId(),
       kind:        'group',
       groupCount:  Math.min(6, Math.max(2, input.groupCount)),
       condition:   input.condition,

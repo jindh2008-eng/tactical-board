@@ -7,16 +7,9 @@
  * 키 네임스페이스: 'tactical-board.runtime.*'
  */
 
-import type { UnitToken, LogEntry } from '../types';
+import type { UnitToken, LogEntry, Pos } from '../types';
 import type { VictimToken } from '../types/victim';
 import type { EventStatus } from '../types/events';
-
-// ─────────────────────────────────────────────
-// 위치 타입
-// ─────────────────────────────────────────────
-
-export interface TokenPos  { x: number; y: number; }
-export interface VictimPos { x: number; y: number; }
 
 // ─────────────────────────────────────────────
 // 저장 키
@@ -32,7 +25,7 @@ const KEY_VICTIMS = 'tactical-board.runtime.victims';
 export interface TokenSessionState {
   tokens:     UnitToken[];
   logs:       LogEntry[];
-  positions:  Record<string, TokenPos>;
+  positions:  Record<string, Pos>;
 
   /**
    * 절대 도착 시각 (ms timestamp).
@@ -62,7 +55,7 @@ export interface TokenSessionState {
 
 export interface VictimSessionState {
   victims:         VictimToken[];
-  victimPositions: Record<string, VictimPos>;
+  victimPositions: Record<string, Pos>;
 }
 
 // ─────────────────────────────────────────────

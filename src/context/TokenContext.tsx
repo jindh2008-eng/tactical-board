@@ -1,13 +1,13 @@
 import {
   createContext, useContext, useState, useCallback, useEffect, useRef,
 } from 'react';
-import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge, StatusTag } from '../types';
+import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge, StatusTag, Pos } from '../types';
 import type { DispatchRosterItem, ArrivalMode } from '../types/settings';
 import { rosterItemToToken, initCountersFromRoster, computeCountersFromTokens } from '../utils/dispatchArrival';
 import {
   saveTokenSession, loadTokenSession,
 } from '../utils/runtimeSession';
-import { secsToMmss } from '../utils/dispatchRoster';
+import { generateId } from '../utils/settingsStorage';
 
 const MEDICAL_TARGET_ZONE = 'standby-imminent';
 const ARRIVAL_TARGET_ZONE = 'standby-standby1';
@@ -45,7 +45,7 @@ function defaultUnitType(color: TokenColor): string {
 // Context 타입
 // ─────────────────────────────────────────────
 
-export interface TokenPos { x: number; y: number; }
+export type TokenPos = Pos;
 
 export interface MoveTokenOptions {
   /** true: 이동 카운트다운 없이 이동 (arrival 자동도착 전용) */
@@ -74,6 +74,7 @@ interface TokenContextValue {
   setStatusTag:      (tokenId: string, tag: StatusTag | null) => void;
   setCustomNote:     (tokenId: string, note: string) => void;
   changeTokenColor:  (tokenId: string, color: TokenColor) => void;
+  addLog:            (entry: Omit<LogEntry, 'id' | 'timestamp'>) => void;
 }
 
 const TokenContext = createContext<TokenContextValue | null>(null);
@@ -87,10 +88,6 @@ export function useTokens(): TokenContextValue {
 function nowHHMM(): string {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-
-function uid(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 // ─────────────────────────────────────────────
@@ -116,6 +113,7 @@ export function TokenProvider({
   initialRoster,
   started = false,
   arrivalMode = 'time',
+  getElapsed,
 }: {
   children:       React.ReactNode;
   timingConfig?:  Partial<TimingConfig>;
@@ -128,7 +126,21 @@ export function TokenProvider({
   started?: boolean;
   /** 도착설정 방식. 'order' 모드에서는 타이머 자동 이동 비활성화. */
   arrivalMode?: ArrivalMode;
+  /** 훈련 경과 초를 반환하는 콜백 — 로그 타임스탬프에 사용 */
+  getElapsed?: () => number;
 }) {
+  // ── 경과시간 ref — 항상 최신 값 유지 ─────────────────────────────────
+  const getElapsedRef = useRef<(() => number) | undefined>(undefined);
+  getElapsedRef.current = getElapsed;
+
+  function nowTimestamp(): string {
+    const sec = getElapsedRef.current?.();
+    if (sec !== undefined) {
+      return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+    }
+    return nowHHMM();
+  }
+
   // ── 세션 데이터 1회 로드 (최초 렌더에서만) ──────────────────────────
   const sessionDataRef = useRef<
     | { loaded: false }
@@ -279,7 +291,7 @@ export function TokenProvider({
         ));
         setLogs(prev => [{
           id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          timestamp:  nowHHMM(),
+          timestamp:  nowTimestamp(),
           logType:    'move' as const,
           tokenId:    current.id,
           tokenName:  current.label,
@@ -351,7 +363,7 @@ export function TokenProvider({
             const token = tokensRef.current.find(t => t.id === tokenId);
             return {
               id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-              timestamp:  nowHHMM(),
+              timestamp:  nowTimestamp(),
               logType:    'move' as const,
               tokenId:    tokenId,
               tokenName:  token?.label ?? tokenId,
@@ -498,7 +510,7 @@ export function TokenProvider({
       if (toZoneKey !== null) {
         const entry: LogEntry = {
           id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          timestamp:  nowHHMM(),
+          timestamp:  nowTimestamp(),
           logType:    'move',
           tokenId:    token.id,
           tokenName:  token.label,
@@ -558,7 +570,7 @@ export function TokenProvider({
       return {
         ...t,
         zoneKey: 'medical-post',
-        badges:  [...t.badges, { id: uid(), line1: '구조중' }],
+        badges:  [...t.badges, { id: generateId(), line1: '구조중' }],
       };
     }));
 
@@ -570,7 +582,7 @@ export function TokenProvider({
 
     const entry: LogEntry = {
       id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      timestamp:  nowHHMM(),
+      timestamp:  nowTimestamp(),
       logType:    'rescue',
       tokenId:    token.id,
       tokenName:  token.label,
@@ -605,7 +617,7 @@ export function TokenProvider({
         if (!t) return prev;
         return [{
           id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          timestamp:  nowHHMM(),
+          timestamp:  nowTimestamp(),
           logType:    'move' as const,
           tokenId:    t.id,
           tokenName:  t.label,
@@ -622,7 +634,7 @@ export function TokenProvider({
   const addBadge = useCallback((tokenId: string, badge: Omit<TokenBadge, 'id'>) => {
     setTokens(prev => prev.map(t =>
       t.id === tokenId
-        ? { ...t, badges: [...t.badges, { ...badge, id: uid() }] }
+        ? { ...t, badges: [...t.badges, { ...badge, id: generateId() }] }
         : t
     ));
   }, []);
@@ -641,10 +653,32 @@ export function TokenProvider({
     ));
   }, []);
 
+  const addLog = useCallback((entry: Omit<LogEntry, 'id' | 'timestamp'>) => {
+    setLogs(prev => [{
+      ...entry,
+      id:        `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: nowTimestamp(),
+    }, ...prev]);
+  }, []);
+
   const setStatusTag = useCallback((tokenId: string, tag: StatusTag | null) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
+    if (!token) return;
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, statusTag: tag ?? undefined } : t
     ));
+    const note = tag ? tag.label : `${token.statusTag?.label ?? '상태'} 해제`;
+    setLogs(prev => [{
+      id:        `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: nowTimestamp(),
+      logType:   'status-tag' as const,
+      tokenId,
+      tokenName:  token.label,
+      tokenColor: token.color,
+      fromZoneId: '',
+      toZoneId:   '',
+      note,
+    }, ...prev]);
   }, []);
 
   const setCustomNote = useCallback((tokenId: string, note: string) => {
@@ -663,12 +697,9 @@ export function TokenProvider({
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
       createToken, moveToken, rescueUnit,
-      addBadge, removeBadge, clearBadges, setStatusTag, setCustomNote, changeTokenColor,
+      addBadge, removeBadge, clearBadges, setStatusTag, setCustomNote, changeTokenColor, addLog,
     }}>
       {children}
     </TokenContext.Provider>
   );
 }
-
-// secsToMmss re-export (TokenCard 에서 사용)
-export { secsToMmss };

@@ -21,7 +21,11 @@
       "Bash(curl -s http://localhost:5174)",
       "Bash(find D:\\\\claude\\\\tactical-board\\\\src *)",
       "Bash(xargs grep *)",
-      "Bash(find D:/claude/tactical-board/src -name \"events.ts\" -exec cat {} \\\\;)"
+      "Bash(find D:/claude/tactical-board/src -name \"events.ts\" -exec cat {} \\\\;)",
+      "Bash(grep -i \"\\\\.css$\")",
+      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
+      "Bash(grep -oE \"^\\\\.[a-z0-9-_]+\\(\\\\s|,|:|\\\\{\\)\")",
+      "Bash(grep -oE \"^\\\\.[a-zA-Z0-9_-]+\\\\s*\\(\\\\{|,\\)\" /Users/daehyun/dev/tactical-board/src/components/shared/TokenCard.css)"
     ]
   }
 }

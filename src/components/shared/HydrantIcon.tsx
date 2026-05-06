@@ -44,7 +44,7 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
   // ── 송수 연결 모드 진입 ──────────────────────
   function handleWaterConnect() {
     if (broken) return;
-    enterMode({ type: 'water-connect', sourceId: id, sourceType: 'hydrant' });
+    enterMode({ type: 'water-connect', sourceId: id, sourceType: 'hydrant', sourceName: name });
     setMenuOpen(false);
   }
 

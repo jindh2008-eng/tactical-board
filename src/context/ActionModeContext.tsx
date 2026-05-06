@@ -31,7 +31,7 @@ export type ActionModeState =
   | { type: 'rescue';              sourceId: string; selectedVictims: string[] }
   | { type: 'select-floor';        sourceId: string; actionKey: string }
   | { type: 'select-pump';         sourceId: string }
-  | { type: 'water-connect';       sourceId: string; sourceType: string }
+  | { type: 'water-connect';       sourceId: string; sourceType: string; sourceName?: string }
   | { type: 'aerial-floor-select'; sourceId: string; unitType: string; actionLabel: string };
 
 interface ActionModeContextValue {

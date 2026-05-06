@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { EventStatus, EventSetupItem } from '../types/events';
+import type { Pos } from '../types';
 import { useSettings } from '../store/settingsStore';
 import { saveEventSession, loadEventSession } from '../utils/runtimeSession';
 
@@ -7,7 +8,7 @@ import { saveEventSession, loadEventSession } from '../utils/runtimeSession';
 // 타입
 // ─────────────────────────────────────────────
 
-export interface EventPos { x: number; y: number; }
+export type EventPos = Pos;
 
 interface EventContextValue {
   enabledEvents:  EventSetupItem[];

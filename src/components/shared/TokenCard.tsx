@@ -86,7 +86,7 @@ export function TokenCard({ token, absPos }: Props) {
   function handleClick(e: React.MouseEvent) {
     if (mode.type === 'water-connect' && !isSource) {
       e.stopPropagation();
-      addConnection(mode.sourceId, token.id, mode.sourceType, token.unitType);
+      addConnection(mode.sourceId, token.id, mode.sourceType, token.unitType, mode.sourceName);
       clearMode();
       return;
     }
