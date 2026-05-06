@@ -320,3 +320,53 @@
     0 0 14px rgba(99, 102, 241, 0.45);
   z-index: 10;
 }
+
+/* ─────────────────────────────────────────────
+   수량 게이지 (펌프차 / 물탱크차)
+   토큰 우측에 동일 높이로 부착, 내부에 % 수치 표기
+   ─────────────────────────────────────────────*/
+
+.water-gauge {
+  position:       absolute;
+  left:           calc(100% + 4px);
+  top:            0;
+  bottom:         0;
+  width:          40px;
+  border-radius:  4px;
+  overflow:       hidden;
+  background:     rgba(20, 22, 35, 0.75);
+  border:         1px solid rgba(80, 100, 140, 0.35);
+  pointer-events: none;
+}
+
+/* 채움 바 — 하단 기준 위로 채움 */
+.water-gauge__fill {
+  position:   absolute;
+  bottom:     0;
+  left:       0;
+  right:      0;
+  transition: height 0.9s ease, background 0.4s ease;
+}
+
+/* 25% 단위 수평 구분선 */
+.water-gauge__divider {
+  position:   absolute;
+  left:       0;
+  right:      0;
+  height:     1px;
+  background: rgba(0, 0, 0, 0.40);
+}
+
+/* 퍼센트 수치 — 게이지 중앙 */
+.water-gauge__pct {
+  position:    absolute;
+  inset:       0;
+  display:     flex;
+  align-items: center;
+  justify-content: center;
+  font-size:   11px;
+  font-weight: 900;
+  color:       #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7);
+  letter-spacing: -0.02em;
+}

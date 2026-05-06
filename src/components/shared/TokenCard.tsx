@@ -7,9 +7,41 @@ import { useWaterConnections } from '../../context/WaterConnectionContext';
 import type { UnitToken } from '../../types';
 import { PRESET_COLORS } from '../../types/presets';
 import { secsToMmss } from '../../utils/dispatchRoster';
+import { useWaterLevel }     from '../../context/WaterLevelContext';
 import { UnitStatusBarMenu } from './UnitStatusBarMenu';
 import { HydrantBarMenu }    from './HydrantBarMenu';
 import './TokenCard.css';
+
+// ── 수량 게이지 바 ───────────────────────────
+
+const WATER_UNIT_TYPES  = new Set(['pump', 'water_tank']);
+const AERIAL_UNIT_TYPES = new Set(['aerial', 'ladder']);
+
+function WaterGauge({ levelL, capacityL }: { levelL: number; capacityL: number }) {
+  const pct       = capacityL > 0 ? Math.max(0, Math.min(1, levelL / capacityL)) : 0;
+  const pctInt    = Math.round(pct * 100);
+  const isLow     = pct < 0.5;
+  const fillColor = isLow ? '#d94040' : '#2a8fd4';
+
+  return (
+    <div
+      className="water-gauge"
+      title={`${Math.round(levelL).toLocaleString()}L / ${capacityL.toLocaleString()}L`}
+    >
+      {/* 채움 바 — 아래에서 위로 */}
+      <div
+        className="water-gauge__fill"
+        style={{ height: `${pct * 100}%`, background: fillColor }}
+      />
+      {/* 25% 단위 구분선 3개 */}
+      {[25, 50, 75].map(p => (
+        <div key={p} className="water-gauge__divider" style={{ bottom: `${p}%` }} />
+      ))}
+      {/* 퍼센트 수치 */}
+      <span className="water-gauge__pct">{pctInt}</span>
+    </div>
+  );
+}
 
 // ── statusTag 색상 (컴포넌트 외부 상수로 이동) ──────────
 const STATUS_TAG_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -26,8 +58,9 @@ interface Props {
 }
 
 export function TokenCard({ token, absPos }: Props) {
-  const { mode, clearMode } = useActionMode();
-  const { addConnection }   = useWaterConnections();
+  const { mode, clearMode }        = useActionMode();
+  const { addConnection, connections } = useWaterConnections();
+  const waterLevel                 = useWaterLevel();
 
   const [barMenu,      setBarMenu]      = useState<{
     left: number; top: number; right: number; bottom: number; width: number; height: number;
@@ -111,7 +144,7 @@ export function TokenCard({ token, absPos }: Props) {
     : undefined;
 
   // ── 카운트다운 ───────────────────────────────
-  const { medicalCountdowns, moveCountdowns, arrivalCountdowns } = useTokens();
+  const { tokens, medicalCountdowns, moveCountdowns, arrivalCountdowns } = useTokens();
   const medicalCountdown = token.zoneKey === 'medical-post'
     ? (medicalCountdowns[token.id] ?? null) : null;
   const moveCountdown    = medicalCountdown === null
@@ -145,9 +178,25 @@ export function TokenCard({ token, absPos }: Props) {
     );
   }
 
+  // ── 수량 게이지 ──────────────────────────────
+  const showWaterGauge = waterLevel !== null && WATER_UNIT_TYPES.has(token.unitType);
+  const waterLevelL    = showWaterGauge ? (waterLevel!.levels[token.id] ?? waterLevel!.getCapacity(token.id)) : 0;
+  const waterCapL      = showWaterGauge ? waterLevel!.getCapacity(token.id) : 0;
+
   // ── 소화전 ───────────────────────────────────
   const isHydrant       = token.unitType === 'hydrant';
   const isHydrantBroken = isHydrant && token.statusTag?.label === '소화전고장';
+
+  // ── 고가차/굴절차 방수 — 수원 미연결 시 빨간색 ─────
+  const isAerialBansu = AERIAL_UNIT_TYPES.has(token.unitType) &&
+    !!token.statusTag?.label?.endsWith('방수');
+  const aerialHasWaterSource = isAerialBansu &&
+    connections.some(c => {
+      if (c.toId !== token.id || !WATER_UNIT_TYPES.has(c.fromType)) return false;
+      const src = tokens.find(t => t.id === c.fromId);
+      return src?.statusTag?.label !== '펌프고장';
+    });
+  const aerialBansuNoSource = isAerialBansu && !aerialHasWaterSource;
 
   // ── CSS 클래스 조합 ──────────────────────────
   const cardClasses = [
@@ -224,7 +273,8 @@ export function TokenCard({ token, absPos }: Props) {
 
             {/* 상태 태그 (소화전 고장은 토큰 본문에 표시) */}
             {token.statusTag && !isHydrantBroken && (() => {
-              const col = STATUS_TAG_COLORS[token.statusTag!.color] ?? STATUS_TAG_COLORS.white;
+              const baseCol = STATUS_TAG_COLORS[token.statusTag!.color] ?? STATUS_TAG_COLORS.white;
+              const col = aerialBansuNoSource ? STATUS_TAG_COLORS.red : baseCol;
               return (
                 <div className="token-status-tag-overlay">
                   <div
@@ -257,6 +307,10 @@ export function TokenCard({ token, absPos }: Props) {
         >
           {isHydrantBroken ? `${token.label} [고장]` : token.label}
         </div>
+
+        {showWaterGauge && (
+          <WaterGauge levelL={waterLevelL} capacityL={waterCapL} />
+        )}
       </div>
 
       {/* 카운트다운 포털 (우측 배지 형태 — 드래그 중 표시 안 됨, 포털 유지) */}

@@ -6,6 +6,7 @@ import { VictimProvider }     from '../context/VictimContext';
 import { EventProvider }      from '../context/EventContext';
 import { ActionModeProvider, useActionMode } from '../context/ActionModeContext';
 import { WaterConnectionProvider } from '../context/WaterConnectionContext';
+import { WaterLevelProvider }      from '../context/WaterLevelContext';
 import { HydrantStateProvider }    from '../context/HydrantStateContext';
 import { UnitStatusPanel as UnitInfoPanel } from '../components/left/UnitStatusPanel';
 import { TokenCard }          from '../components/shared/TokenCard';
@@ -155,6 +156,7 @@ export function PlayPage() {
           {/* ActionModeProvider: TokenContext + VictimContext 내부에 배치 */}
           <ActionModeProvider>
           <WaterConnectionProvider>
+          <WaterLevelProvider>
           <HydrantStateProvider>
             <div className="play-layout">
               {/* ── 자원대기소 Drawer (상단 절반) ── */}
@@ -221,6 +223,7 @@ export function PlayPage() {
               <WaterConnectionOverlay />
             </div>
           </HydrantStateProvider>
+          </WaterLevelProvider>
           </WaterConnectionProvider>
           </ActionModeProvider>
         </VictimProvider>
