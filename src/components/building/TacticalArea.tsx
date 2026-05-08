@@ -50,6 +50,7 @@ export function TacticalArea({
 
   return (
     <div
+      id="tactical-area"
       className="tactical-area"
       style={{ '--above-pct': abovePct, gridTemplateRows } as React.CSSProperties}
     >

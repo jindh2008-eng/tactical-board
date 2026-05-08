@@ -8,6 +8,7 @@ import { ActionModeProvider, useActionMode } from '../context/ActionModeContext'
 import { WaterConnectionProvider } from '../context/WaterConnectionContext';
 import { WaterLevelProvider }      from '../context/WaterLevelContext';
 import { HydrantStateProvider }    from '../context/HydrantStateContext';
+import { SprayOverlay }            from '../components/overlay/SprayOverlay';
 import { UnitStatusPanel as UnitInfoPanel } from '../components/left/UnitStatusPanel';
 import { TokenCard }          from '../components/shared/TokenCard';
 import { TacticalArea }       from '../components/building/TacticalArea';
@@ -38,6 +39,8 @@ function ActionModeBanner() {
     message = '부서 위치를 클릭하세요';
   } else if (mode.type === 'water-connect') {
     message = '송수 대상 토큰을 클릭하세요  (ESC 취소)';
+  } else if (mode.type === 'spray-target') {
+    message = '방수 지점을 클릭하세요  (ESC 취소)';
   }
 
   return (
@@ -48,6 +51,86 @@ function ActionModeBanner() {
         ESC 취소
       </button>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// 방수 지점 선택 오버레이
+// spray-target 모드 중 전체 화면에 클릭 영역을 제공
+// ─────────────────────────────────────────────
+
+// 클릭 좌표에서 data-floor-id, data-zone-key 탐색
+function getPointInfo(cx: number, cy: number): { floorId?: string; zoneKey?: string } {
+  const elements = document.elementsFromPoint(cx, cy);
+  let floorId: string | undefined;
+  let zoneKey: string | undefined;
+  for (const el of elements) {
+    let cur: Element | null = el;
+    while (cur) {
+      if (!floorId) { const v = cur.getAttribute('data-floor-id'); if (v) floorId = v; }
+      if (!zoneKey) { const v = cur.getAttribute('data-zone-key');  if (v) zoneKey  = v; }
+      if (floorId && zoneKey) break;
+      cur = cur.parentElement;
+    }
+    if (floorId && zoneKey) break;
+  }
+  return { floorId, zoneKey };
+}
+
+// 층 zone key (e.g. "3F-center") 에서 floor ID (e.g. "3F") 추출
+function floorIdFromZoneKey(zoneKey: string): string | null {
+  const m = zoneKey.match(/^(.+)-(center|right|stair)$/);
+  return m ? m[1] : null;
+}
+
+// 클릭 위치가 토큰의 구역(층 또는 방면)과 일치하는지 검증
+function isValidSprayZone(cx: number, cy: number, sourceZoneKey: string | null): boolean {
+  if (!sourceZoneKey) return false;
+  const { floorId, zoneKey } = getPointInfo(cx, cy);
+
+  if (sourceZoneKey.startsWith('face-')) {
+    // 방면 구역: data-zone-key 직접 일치
+    return zoneKey === sourceZoneKey;
+  }
+  // 층 구역: floor ID 비교
+  const srcFloorId = floorIdFromZoneKey(sourceZoneKey);
+  return srcFloorId !== null && floorId === srcFloorId;
+}
+
+function SprayTargetOverlay() {
+  const { mode, clearMode } = useActionMode();
+  const { setSprayState }   = useTokens();
+
+  if (mode.type !== 'spray-target') return null;
+
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    const { floorId, zoneKey } = getPointInfo(e.clientX, e.clientY);
+
+    // 토큰이 있는 구역 외 클릭은 무시
+    if (!isValidSprayZone(e.clientX, e.clientY, mode.sourceZoneKey)) return;
+
+    const board = document.getElementById('tactical-area');
+    const rect  = board?.getBoundingClientRect();
+    if (!rect) return;
+
+    // 방면 구역은 zoneKey, 층 구역은 floorId를 방수 지점에 저장
+    const resolvedFloorId = mode.sourceZoneKey?.startsWith('face-')
+      ? (zoneKey ?? floorId)
+      : floorId;
+
+    setSprayState(mode.sourceId, '100%', {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      floorId: resolvedFloorId,
+    });
+    clearMode();
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 9800, cursor: 'crosshair' }}
+      onClick={handleClick}
+    />
   );
 }
 
@@ -221,6 +304,12 @@ export function PlayPage() {
 
               {/* ── 송수 연결선 오버레이 ── */}
               <WaterConnectionOverlay />
+
+              {/* ── 방수 SVG 오버레이 ── */}
+              <SprayOverlay />
+
+              {/* ── 방수 지점 선택 오버레이 ── */}
+              <SprayTargetOverlay />
             </div>
           </HydrantStateProvider>
           </WaterLevelProvider>

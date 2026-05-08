@@ -1,4 +1,4 @@
-import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem } from '../types/settings';
+import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig } from '../types/settings';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP } from '../types/settings';
 import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../types/presets';
 import type { EventSetupItem } from '../types/events';
@@ -9,17 +9,18 @@ import type { EventSetupItem } from '../types/events';
 
 /** 작업 중 프리셋 + 타이밍 자동 저장 구조 */
 export interface WorkingPresets {
-  sharedBadgePresets: SharedBadgePreset[];
-  unitBadgePresets:   UnitSpecificBadgePreset[];
-  timing?:            TimingSettings;          // 구버전 역호환을 위해 optional
-  dispatchSetup?:     DispatchSetup;           // 구버전 역호환을 위해 optional
-  dispatchRoster?:    DispatchRosterItem[];    // 구버전 역호환을 위해 optional
-  victimSetup?:       VictimSetupItem[];       // 구버전 역호환을 위해 optional
-  arrivalMode?:       ArrivalMode;             // 도착설정 방식
-  medicalPostChief?:  string;                  // 임시의료소장
-  stagingAreaChief?:  string;                  // 자원대기소장
-  eventSetup?:        EventSetupItem[];        // 이벤트 토큰 설정
-  hydrantSetup?:      HydrantSetupItem[];      // 소화전 사전 설정
+  sharedBadgePresets:      SharedBadgePreset[];
+  unitBadgePresets:        UnitSpecificBadgePreset[];
+  timing?:                 TimingSettings;          // 구버전 역호환을 위해 optional
+  dispatchSetup?:          DispatchSetup;           // 구버전 역호환을 위해 optional
+  dispatchRoster?:         DispatchRosterItem[];    // 구버전 역호환을 위해 optional
+  victimSetup?:            VictimSetupItem[];       // 구버전 역호환을 위해 optional
+  arrivalMode?:            ArrivalMode;             // 도착설정 방식
+  medicalPostChief?:       string;                  // 임시의료소장
+  stagingAreaChief?:       string;                  // 자원대기소장
+  eventSetup?:             EventSetupItem[];        // 이벤트 토큰 설정
+  hydrantSetup?:           HydrantSetupItem[];      // 소화전 사전 설정
+  fireSuppressionConfig?:  FireSuppressionConfig;   // 화재 소화 설정
 }
 
 /** 이름을 붙여 저장하는 설정 세트 */

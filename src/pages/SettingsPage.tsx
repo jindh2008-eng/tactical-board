@@ -26,6 +26,8 @@ export function SettingsPage() {
     updateTargetName,
     timing,
     updateTiming,
+    fireSuppressionConfig,
+    updateFireSuppressionConfig,
   } = useSettings();
 
   return (
@@ -126,6 +128,87 @@ export function SettingsPage() {
           클릭으로 상태(화재·초진·완진·폭발)를 전환할 수 있습니다.
         </p>
         <EventSetupPanel />
+      </section>
+
+      {/* ── 화재 소화 설정 ────────────────────── */}
+      <section className="settings-page__section">
+        <h3 className="settings-page__section-title">화재 소화 설정</h3>
+        <p className="settings-page__hint">
+          진압대 방수 시 화재 단계 전환 임계치를 설정합니다.
+          100% 방수 기준 초당 포인트가 누적되어 임계치 도달 시 다음 단계로 전환됩니다.
+        </p>
+        <div className="settings-page__timing-row">
+          <label className="settings-page__timing-label">
+            초당 소화포인트 (100% 방수)
+            <input
+              className="settings-page__timing-input"
+              type="number"
+              min={0.1}
+              step={0.1}
+              value={fireSuppressionConfig.ptsPerSec}
+              onChange={e => {
+                const v = Math.max(0.1, parseFloat(e.target.value) || 0.1);
+                updateFireSuppressionConfig({ ptsPerSec: v });
+              }}
+            />
+          </label>
+        </div>
+        <div className="settings-page__timing-row">
+          <label className="settings-page__timing-label">
+            연소확대 → 최성기 임계치 (pt)
+            <input
+              className="settings-page__timing-input"
+              type="number"
+              min={1}
+              value={fireSuppressionConfig.thresholds['extension-peak']}
+              onChange={e => {
+                const v = Math.max(1, parseInt(e.target.value, 10) || 1);
+                updateFireSuppressionConfig({ thresholds: { ...fireSuppressionConfig.thresholds, 'extension-peak': v } });
+              }}
+            />
+          </label>
+          <label className="settings-page__timing-label">
+            최성기 → 70% 임계치 (pt)
+            <input
+              className="settings-page__timing-input"
+              type="number"
+              min={1}
+              value={fireSuppressionConfig.thresholds['peak']}
+              onChange={e => {
+                const v = Math.max(1, parseInt(e.target.value, 10) || 1);
+                updateFireSuppressionConfig({ thresholds: { ...fireSuppressionConfig.thresholds, 'peak': v } });
+              }}
+            />
+          </label>
+        </div>
+        <div className="settings-page__timing-row">
+          <label className="settings-page__timing-label">
+            70% → 50% 임계치 (pt)
+            <input
+              className="settings-page__timing-input"
+              type="number"
+              min={1}
+              value={fireSuppressionConfig.thresholds['seventy']}
+              onChange={e => {
+                const v = Math.max(1, parseInt(e.target.value, 10) || 1);
+                updateFireSuppressionConfig({ thresholds: { ...fireSuppressionConfig.thresholds, 'seventy': v } });
+              }}
+            />
+          </label>
+          <label className="settings-page__timing-label">
+            50% → 초진 임계치 (pt)
+            <input
+              className="settings-page__timing-input"
+              type="number"
+              min={1}
+              value={fireSuppressionConfig.thresholds['half']}
+              onChange={e => {
+                const v = Math.max(1, parseInt(e.target.value, 10) || 1);
+                updateFireSuppressionConfig({ thresholds: { ...fireSuppressionConfig.thresholds, 'half': v } });
+              }}
+            />
+          </label>
+        </div>
       </section>
     </div>
   );

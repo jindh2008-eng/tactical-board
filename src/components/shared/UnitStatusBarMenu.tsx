@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import type { UnitToken } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useActionMode } from '../../context/ActionModeContext';
+import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { getStatusPresets } from '../../config/unitStatusPresets';
 import './UnitStatusBarMenu.css';
 
@@ -40,6 +41,9 @@ interface Props {
 // 송수 연결 가능한 unitType (hydrant는 전용 HydrantBarMenu에서 처리)
 const WATER_SOURCE_TYPES = new Set(['pump', 'water_tank']);
 
+// 방수 가능 unitType
+const SUPPRESSION_TYPES = new Set(['suppression']);
+
 // 고가차/굴절차 전용 메뉴 대상 unitType
 const AERIAL_TYPES = new Set(['aerial', 'ladder']);
 
@@ -56,16 +60,21 @@ const AERIAL_BTN: Record<string, { bg: string; border: string; text: string }> =
 // ─────────────────────────────────────────────
 
 export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
-  const { setStatusTag, setCustomNote } = useTokens();
-  const { enterMode }                   = useActionMode();
+  const { setStatusTag, setCustomNote, setSprayState } = useTokens();
+  const { enterMode }                                  = useActionMode();
+  const { connections }                                = useWaterConnections();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [noteOpen,  setNoteOpen]  = useState(false);
   const [noteDraft, setNoteDraft] = useState(token.customNote ?? '');
 
-  const canWaterConnect  = WATER_SOURCE_TYPES.has(token.unitType);
-  const isAerialVehicle  = AERIAL_TYPES.has(token.unitType);
-  const deployLabel      = token.unitType === 'aerial' ? '사다리전개' : '바스켓전개';
+  const canWaterConnect   = WATER_SOURCE_TYPES.has(token.unitType);
+  const isAerialVehicle   = AERIAL_TYPES.has(token.unitType);
+  const deployLabel       = token.unitType === 'aerial' ? '사다리전개' : '바스켓전개';
+  const isSuppressionUnit = SUPPRESSION_TYPES.has(token.unitType);
+  const hasWaterSource    = isSuppressionUnit &&
+    connections.some(c => c.toId === token.id && WATER_SOURCE_TYPES.has(c.fromType));
+  const isSprayActive     = isSuppressionUnit && token.sprayState != null;
 
   // ── 위치 계산 (레이아웃 후 측정) ────────────
   const [style, setStyle] = useState<React.CSSProperties>({ visibility: 'hidden', position: 'fixed', left: 0, top: 0 });
@@ -137,6 +146,16 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
 
   function handleWaterConnect() {
     enterMode({ type: 'water-connect', sourceId: token.id, sourceType: token.unitType });
+    onClose();
+  }
+
+  function handleSprayStart() {
+    enterMode({ type: 'spray-target', sourceId: token.id, sourceZoneKey: token.zoneKey });
+    onClose();
+  }
+
+  function handleSprayStop() {
+    setSprayState(token.id, null);
     onClose();
   }
 
@@ -278,6 +297,32 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
             })}
 
             {presets.length > 0 && <div className="usbm__sep" aria-hidden="true" />}
+
+            {/* 방수개시 / 방수중단 (진압대 + 수원 연결 시) */}
+            {isSuppressionUnit && hasWaterSource && !isSprayActive && (
+              <>
+                <button
+                  className="usbm__btn usbm__btn--spray-start"
+                  onMouseDown={e => { e.stopPropagation(); handleSprayStart(); }}
+                  title="방수 지점을 클릭하여 방수 개시"
+                >
+                  방수개시
+                </button>
+                <div className="usbm__sep" aria-hidden="true" />
+              </>
+            )}
+            {isSprayActive && (
+              <>
+                <button
+                  className="usbm__btn usbm__btn--spray-stop"
+                  onMouseDown={e => { e.stopPropagation(); handleSprayStop(); }}
+                  title="방수 중단"
+                >
+                  방수중단
+                </button>
+                <div className="usbm__sep" aria-hidden="true" />
+              </>
+            )}
 
             {/* 송수 연결 버튼 (펌프/물탱크 전용) */}
             {canWaterConnect && (

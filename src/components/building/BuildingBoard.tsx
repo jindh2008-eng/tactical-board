@@ -1,12 +1,13 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
 import type { BuildingConfig, DoorState, FireStatus } from '../../types';
 import {
   DEFAULT_BUILDING_CONFIG,
   buildDisplayFloors,
   calcMinRowHeight,
 } from '../../data/buildingData';
-import { BuildingStateProvider, type SmokeLevel } from '../../context/BuildingStateContext';
+import { BuildingStateProvider, useBuildingState, type SmokeLevel } from '../../context/BuildingStateContext';
 import { useTokens } from '../../context/TokenContext';
+import { useSettings } from '../../store/settingsStore';
 import { FloorRow } from './FloorRow';
 import './BuildingBoard.css';
 
@@ -30,6 +31,87 @@ const FIRE_STATUS_LABELS: Record<string, string> = {
   'initial':        '초진',
   'complete':       '완진',
 };
+
+// ─────────────────────────────────────────────
+// 화재 소화 효과 (BuildingStateProvider 내부)
+// ─────────────────────────────────────────────
+
+const NEXT_FIRE_STATE: Partial<Record<FireStatus, FireStatus>> = {
+  'extension-peak': 'peak',
+  'peak':           'seventy',
+  'seventy':        'half',
+  'half':           'initial',
+};
+
+function floorIdFromZoneKey(zoneKey: string): string | null {
+  const m = zoneKey.match(/^(.+)-(center|right|stair)$/);
+  return m ? m[1] : null;
+}
+
+function FireSuppressionEffect() {
+  const { tokens }                                   = useTokens();
+  const { fireStates, setFireStatus }                = useBuildingState();
+  const { fireSuppressionConfig: cfg }               = useSettings();
+
+  const fireStatesRef  = useRef(fireStates);
+  const tokensRef      = useRef(tokens);
+  const cfgRef         = useRef(cfg);
+  const setFireRef     = useRef(setFireStatus);
+  const ptsRef         = useRef<Record<string, number>>({});
+
+  useEffect(() => { fireStatesRef.current = fireStates; }, [fireStates]);
+  useEffect(() => { tokensRef.current    = tokens;      }, [tokens]);
+  useEffect(() => { cfgRef.current       = cfg;         }, [cfg]);
+  useEffect(() => { setFireRef.current   = setFireStatus; }, [setFireStatus]);
+
+  // 1초 간격으로 소화포인트 누적 → 임계치 초과 시 화재 상태 전환
+  useEffect(() => {
+    const lastFireRef: Record<string, FireStatus | null> = {};
+
+    const interval = setInterval(() => {
+      const config = cfgRef.current;
+      const fires  = fireStatesRef.current;
+
+      // 화재 상태 변경 감지 → 해당 층 포인트 초기화 (인터벌 내에서 처리해 경쟁조건 제거)
+      for (const [fid, status] of Object.entries(fires)) {
+        if (lastFireRef[fid] !== status) {
+          ptsRef.current[fid] = 0;
+          lastFireRef[fid] = status;
+        }
+      }
+
+      const ptsPerFloor: Record<string, number> = {};
+      for (const token of tokensRef.current) {
+        if (!token.sprayState || token.sprayState === '0%') continue;
+        // floorId가 없으면 zoneKey에서 추출 (이전 데이터 호환)
+        const floorId = token.sprayTarget?.floorId
+          ?? (token.zoneKey ? floorIdFromZoneKey(token.zoneKey) ?? undefined : undefined);
+        if (!floorId) continue;
+        const mult = token.sprayState === '100%' ? 1 : 0.3;
+        ptsPerFloor[floorId] = (ptsPerFloor[floorId] ?? 0) + mult * config.ptsPerSec;
+      }
+
+      for (const [floorId, pts] of Object.entries(ptsPerFloor)) {
+        const currentStatus = fires[floorId];
+        if (!currentStatus) continue;
+        const nextStatus = NEXT_FIRE_STATE[currentStatus];
+        if (!nextStatus) continue;
+        const threshold = config.thresholds[currentStatus as keyof typeof config.thresholds];
+        if (threshold == null) continue;
+
+        ptsRef.current[floorId] = (ptsRef.current[floorId] ?? 0) + pts;
+        if (ptsRef.current[floorId] >= threshold) {
+          ptsRef.current[floorId] = 0;
+          lastFireRef[floorId] = nextStatus; // 다음 틱에서 이중 초기화 방지
+          setFireRef.current(floorId, nextStatus);
+        }
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return null;
+}
 
 // ─────────────────────────────────────────────
 // BuildingBoard
@@ -93,6 +175,7 @@ export function BuildingBoard({
       onDoorChange={handleDoorChange}
       onSmokeChange={handleSmokeChange}
     >
+      <FireSuppressionEffect />
       <div
         className="building-body"
         style={{ '--min-row-height': `${minRowPx}px` } as React.CSSProperties}

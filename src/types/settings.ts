@@ -21,6 +21,27 @@ export const DEFAULT_TIMING: TimingSettings = {
   moveTimeSec:   30,
 };
 
+/** 화재 소화 설정 */
+export interface FireSuppressionConfig {
+  ptsPerSec: number;   // 100% 방수 기준 초당 소화포인트
+  thresholds: {
+    'extension-peak': number;  // 연소확대 → 최성기 전환 임계치
+    'peak':           number;  // 최성기 → 70% 전환 임계치
+    'seventy':        number;  // 70% → 50% 전환 임계치
+    'half':           number;  // 50% → 초진 전환 임계치
+  };
+}
+
+export const DEFAULT_FIRE_SUPPRESSION_CONFIG: FireSuppressionConfig = {
+  ptsPerSec: 1,
+  thresholds: {
+    'extension-peak': 60,
+    'peak':           120,
+    'seventy':        90,
+    'half':           60,
+  },
+};
+
 /**
  * 전체 설정 상태
  *

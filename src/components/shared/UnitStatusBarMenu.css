@@ -92,6 +92,28 @@
   filter:       brightness(1.25);
 }
 
+/* ── 방수개시 / 방수중단 버튼 ──────────────────── */
+
+.usbm__btn--spray-start {
+  background:   #0d2a1a;
+  border-color: #1e7a44;
+  color:        #44dd88;
+}
+.usbm__btn--spray-start:hover {
+  border-color: #44ff99;
+  color:        #88ffcc;
+}
+
+.usbm__btn--spray-stop {
+  background:   #2a0808;
+  border-color: #aa2222;
+  color:        #ff7777;
+}
+.usbm__btn--spray-stop:hover {
+  border-color: #ff4444;
+  color:        #ffaaaa;
+}
+
 /* ── 메모(직접입력) 버튼 ─────────────────────── */
 
 .usbm__btn--note {

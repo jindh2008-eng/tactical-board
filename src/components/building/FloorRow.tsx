@@ -76,7 +76,7 @@ export function FloorRow({
   }
 
   return (
-    <div className={classes}>
+    <div className={classes} data-floor-id={floor.id}>
       <div
         className={[
           'floor-row__label',

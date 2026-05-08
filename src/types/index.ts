@@ -154,7 +154,9 @@ export interface UnitToken {
    * 'manual' : 사용자가 실행 중 직접 생성
    */
   source:      'roster' | 'manual';
-  lastMovedAt?: number;   // 마지막 이동 시각 (Date.now()) — recently-moved 강조용
+  lastMovedAt?: number;    // 마지막 이동 시각 (Date.now()) — recently-moved 강조용
+  sprayState?:  SprayState | null;                                       // 방수 상태 (진압대 전용)
+  sprayTarget?: { x: number; y: number; floorId?: string } | null;       // 방수 지점 (전술보드 기준 상대 좌표)
 }
 
 // ─────────────────────────────────────────────
@@ -198,3 +200,10 @@ export type CommandMethod   = '고정' | '전진' | '이동' | null;
 
 export type DoorState  = 'open' | 'closed';
 export type FireStatus = 'extension-peak' | 'peak' | 'seventy' | 'half' | 'initial' | 'complete';
+
+// ─────────────────────────────────────────────
+// 진압대 방수 상태
+// ─────────────────────────────────────────────
+
+/** 100% 정상방수 / 30% 방수압불량 / 0% 방수불가 */
+export type SprayState = '100%' | '30%' | '0%';

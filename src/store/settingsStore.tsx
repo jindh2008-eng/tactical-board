@@ -3,9 +3,10 @@ import type { BuildingConfig, FireStatus } from '../types';
 import type {
   BuildingSettings, TimingSettings,
   DispatchSetup, DispatchRosterItem, VictimSetupItem, ArrivalMode, HydrantSetupItem,
+  FireSuppressionConfig,
 } from '../types/settings';
 import type { EventSetupItem, EventType } from '../types/events';
-import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP } from '../types/settings';
+import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP, DEFAULT_FIRE_SUPPRESSION_CONFIG } from '../types/settings';
 import type { SettingsSet } from '../utils/settingsStorage';
 import {
   generateId,
@@ -72,6 +73,10 @@ interface SettingsContextValue {
   updateHydrantSetupItem:  (id: string, patch: Partial<Omit<HydrantSetupItem, 'id'>>) => void;
   removeHydrantSetupItem:  (id: string) => void;
 
+  // ── 화재 소화 설정 ────────────────────────────
+  fireSuppressionConfig:        FireSuppressionConfig;
+  updateFireSuppressionConfig:  (patch: Partial<FireSuppressionConfig>) => void;
+
   // ── 설정 세트 관리 ────────────────────────────
   settingsList:         SettingsSet[];
   activeSettingsId:     string | null;
@@ -134,6 +139,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [hydrantSetup, setHydrantSetup] = useState<HydrantSetupItem[]>(
     () => loadWorkingPresets().hydrantSetup ?? []
   );
+  const [fireSuppressionConfig, setFireSuppressionConfig] = useState<FireSuppressionConfig>(
+    () => loadWorkingPresets().fireSuppressionConfig ?? DEFAULT_FIRE_SUPPRESSION_CONFIG
+  );
 
   // ── 설정 세트 ─────────────────────────────────
   const [settingsList,       setSettingsList]       = useState<SettingsSet[]>(loadSettingsList);
@@ -147,8 +155,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // 타이밍·시나리오 설정 변경 시 자동 저장 (새로고침 대비)
   useEffect(() => {
-    saveWorkingPresets({ sharedBadgePresets: [], unitBadgePresets: [], timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup });
-  }, [timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup]);
+    saveWorkingPresets({ sharedBadgePresets: [], unitBadgePresets: [], timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig });
+  }, [timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -246,6 +254,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const removeHydrantSetupItem = useCallback((id: string) => {
     setHydrantSetup(prev => prev.filter(item => item.id !== id));
+  }, []);
+
+  const updateFireSuppressionConfig = useCallback((patch: Partial<FireSuppressionConfig>) => {
+    setFireSuppressionConfig(prev => ({
+      ...prev,
+      ...patch,
+      thresholds: { ...prev.thresholds, ...(patch.thresholds ?? {}) },
+    }));
   }, []);
 
   // ── 설정 세트 저장/불러오기 ─────────────────────
@@ -354,6 +370,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       dispatchRoster, updateRosterArrival, updateRosterOrder,
       victimSetup, addVictimSetupItem, updateVictimSetupItem, removeVictimSetupItem,
       hydrantSetup, addHydrantSetupItem, updateHydrantSetupItem, removeHydrantSetupItem,
+      fireSuppressionConfig, updateFireSuppressionConfig,
       settingsList, activeSettingsId, activeSettingsName, setActiveSettingsName,
       saveSettings, saveSettingsAs, loadSettings, deleteSettingsEntry, newSettings,
     }}>

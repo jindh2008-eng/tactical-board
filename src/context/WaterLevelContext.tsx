@@ -2,6 +2,7 @@ import {
   createContext, useContext, useState, useEffect,
   useRef, useMemo, useCallback, type ReactNode,
 } from 'react';
+import type { SprayState }    from '../types';
 import { useTokens }         from './TokenContext';
 import { useWaterConnections } from './WaterConnectionContext';
 import { useTraining }       from './TrainingContext';
@@ -31,8 +32,14 @@ const AERIAL_TYPES = new Set(['aerial', 'ladder']);
 //      소화전 고장은 연결 자체가 제거되므로 별도 체크 불필요
 // ─────────────────────────────────────────────
 
+function sprayMultiplier(state: SprayState | null | undefined): number {
+  if (state === '100%') return 1;
+  if (state === '30%')  return 0.3;
+  return 0;
+}
+
 function computeNetFlowRates(
-  tokens:          { id: string; unitType: string; statusTag?: { label: string } | null }[],
+  tokens:          { id: string; unitType: string; statusTag?: { label: string } | null; sprayState?: SprayState | null }[],
   connections:     { fromId: string; toId: string; fromType: string; toType: string }[],
   brokenSenderIds: Set<string>,
   levels:          Record<string, number>,
@@ -53,14 +60,16 @@ function computeNetFlowRates(
     net[conn.fromId] -= VEHICLE_FLOW_PER_MIN;
   }
 
-  // 1. 펌프 → 진압대 소모 (고장 펌프는 방수 중단)
+  // 1. 펌프 → 진압대 소모 (고장 펌프 skip, sprayState 비율 적용)
   for (const t of tokens) {
     if (t.unitType !== 'pump' || !(t.id in net)) continue;
     if (brokenSenderIds.has(t.id)) continue;
-    const suppCount = connections.filter(
-      c => c.fromId === t.id && c.toType === 'suppression',
-    ).length;
-    net[t.id] -= suppCount * SUPPRESSION_FLOW_PER_MIN;
+    const suppConns = connections.filter(c => c.fromId === t.id && c.toType === 'suppression');
+    for (const conn of suppConns) {
+      const suppToken = tokens.find(tk => tk.id === conn.toId);
+      const mult = sprayMultiplier(suppToken?.sprayState);
+      if (mult > 0) net[t.id] -= mult * SUPPRESSION_FLOW_PER_MIN;
+    }
   }
 
   // 2. 차량 → 차량 (고장 차량은 송신 차단)
@@ -105,9 +114,10 @@ function computeNetFlowRates(
 // ─────────────────────────────────────────────
 
 interface WaterLevelValue {
-  levels:      Record<string, number>;   // tokenId → 현재 잔량(L)
-  flowRates:   Record<string, number>;   // tokenId → 순유량(L/min), 음수=소모
-  getCapacity: (tokenId: string) => number;
+  levels:          Record<string, number>;   // tokenId → 현재 잔량(L)
+  flowRates:       Record<string, number>;   // tokenId → 순유량(L/min), 음수=소모
+  getCapacity:     (tokenId: string) => number;
+  emptyVehicleIds: Set<string>;             // 수량 0%인 차량 ID
 }
 
 const WaterLevelContext = createContext<WaterLevelValue | null>(null);
@@ -122,7 +132,7 @@ export function useWaterLevel(): WaterLevelValue | null {
 // ─────────────────────────────────────────────
 
 export function WaterLevelProvider({ children }: { children: ReactNode }) {
-  const { tokens }      = useTokens();
+  const { tokens, addLog, setSprayState } = useTokens();
   const { connections } = useWaterConnections();
   const { status, elapsed } = useTraining();
 
@@ -169,17 +179,108 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
     [tokens],
   );
 
+  // 0% 소진 차량 ID Set
+  const emptyVehicleIds = useMemo(
+    () => new Set(
+      Object.entries(levels)
+        .filter(([id, lvl]) => lvl === 0 && (capacityMap[id] ?? 0) > 0)
+        .map(([id]) => id),
+    ),
+    [levels, capacityMap],
+  );
+
+  // 수량 계산에 사용할 통합 송신 차단 Set (펌프고장 + 수량 소진)
+  const effectiveBrokenIds = useMemo(
+    () => new Set([...brokenSenderIds, ...emptyVehicleIds]),
+    [brokenSenderIds, emptyVehicleIds],
+  );
+
   // ref로 최신값 유지 (closure stale 방지)
-  const tokensRef         = useRef(tokens);
-  const connectionsRef    = useRef(connections);
-  const capacityRef       = useRef(capacityMap);
-  const brokenSenderIdRef = useRef(brokenSenderIds);
-  const levelsRef         = useRef(levels);
-  useEffect(() => { tokensRef.current         = tokens;         }, [tokens]);
-  useEffect(() => { connectionsRef.current    = connections;    }, [connections]);
-  useEffect(() => { capacityRef.current       = capacityMap;    }, [capacityMap]);
-  useEffect(() => { brokenSenderIdRef.current = brokenSenderIds; }, [brokenSenderIds]);
-  useEffect(() => { levelsRef.current         = levels;         }, [levels]);
+  const tokensRef            = useRef(tokens);
+  const connectionsRef       = useRef(connections);
+  const capacityRef          = useRef(capacityMap);
+  const effectiveBrokenIdRef = useRef(effectiveBrokenIds);
+  const levelsRef            = useRef(levels);
+  const addLogRef            = useRef(addLog);
+  useEffect(() => { tokensRef.current            = tokens;            }, [tokens]);
+  useEffect(() => { connectionsRef.current       = connections;       }, [connections]);
+  useEffect(() => { capacityRef.current          = capacityMap;       }, [capacityMap]);
+  useEffect(() => { effectiveBrokenIdRef.current = effectiveBrokenIds; }, [effectiveBrokenIds]);
+  useEffect(() => { levelsRef.current            = levels;            }, [levels]);
+  useEffect(() => { addLogRef.current            = addLog;            }, [addLog]);
+
+  // 펌프 고장·소진 시 연결된 진압대 방수 자동 중단
+  const setSprayStateRef  = useRef(setSprayState);
+  const prevBrokenKeyRef  = useRef('');
+  useEffect(() => { setSprayStateRef.current = setSprayState; }, [setSprayState]);
+
+  useEffect(() => {
+    const key = [...effectiveBrokenIds].sort().join(',');
+    if (key === prevBrokenKeyRef.current) return;
+    const prevIds = new Set(prevBrokenKeyRef.current ? prevBrokenKeyRef.current.split(',') : []);
+    prevBrokenKeyRef.current = key;
+
+    const newlyBroken = [...effectiveBrokenIds].filter(id => !prevIds.has(id));
+    if (newlyBroken.length === 0) return;
+
+    for (const brokenId of newlyBroken) {
+      for (const conn of connectionsRef.current) {
+        if (conn.fromId !== brokenId || conn.toType !== 'suppression') continue;
+        const toToken = tokensRef.current.find(t => t.id === conn.toId);
+        if (toToken?.sprayState != null) setSprayStateRef.current(conn.toId, null);
+      }
+    }
+  }, [effectiveBrokenIds]);
+
+  // 수량 50% / 0% 경고 로그 (훈련 중, 임계값 최초 통과 시 1회)
+  const warnedHalfRef    = useRef<Set<string>>(new Set());
+  const warnedEmptyRef   = useRef<Set<string>>(new Set());
+  const prevLevelsLogRef = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    if (status !== 'running') return;
+    const prev = prevLevelsLogRef.current;
+
+    for (const [id, level] of Object.entries(levels)) {
+      const cap = capacityRef.current[id] ?? 0;
+      if (cap === 0) continue;
+      const pct     = level / cap;
+      const prevPct = (prev[id] ?? cap) / cap;
+      const tk      = tokensRef.current.find(t => t.id === id);
+
+      // 50% 하향 통과 — 1회 경고
+      if (prevPct >= 0.5 && pct < 0.5 && !warnedHalfRef.current.has(id)) {
+        warnedHalfRef.current.add(id);
+        addLogRef.current({
+          logType:    'water-relay',
+          tokenId:    id,
+          tokenName:  tk?.label ?? id,
+          tokenColor: tk?.color,
+          fromZoneId: id,
+          toZoneId:   id,
+          note: `${tk?.label ?? id} 수량 50% 경고`,
+        });
+      }
+      if (pct >= 0.5) warnedHalfRef.current.delete(id);
+
+      // 0% 도달 — 1회 소진 알림
+      if (level === 0 && !warnedEmptyRef.current.has(id)) {
+        warnedEmptyRef.current.add(id);
+        addLogRef.current({
+          logType:    'water-relay',
+          tokenId:    id,
+          tokenName:  tk?.label ?? id,
+          tokenColor: tk?.color,
+          fromZoneId: id,
+          toZoneId:   id,
+          note: `${tk?.label ?? id} 수량 소진`,
+        });
+      }
+      if (level > 0) warnedEmptyRef.current.delete(id);
+    }
+
+    prevLevelsLogRef.current = { ...levels };
+  }, [levels, status]);
 
   // 훈련 진행 중 매 초 잔량 갱신
   useEffect(() => {
@@ -187,7 +288,7 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
     const rates = computeNetFlowRates(
       tokensRef.current,
       connectionsRef.current,
-      brokenSenderIdRef.current,
+      effectiveBrokenIdRef.current,
       levelsRef.current,
       capacityRef.current,
     );
@@ -206,8 +307,8 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
 
   // 현재 순유량 (표시용 — 렌더링 기준)
   const flowRates = useMemo(
-    () => computeNetFlowRates(tokens, connections, brokenSenderIds, levels, capacityMap),
-    [tokens, connections, brokenSenderIds, levels, capacityMap],
+    () => computeNetFlowRates(tokens, connections, effectiveBrokenIds, levels, capacityMap),
+    [tokens, connections, effectiveBrokenIds, levels, capacityMap],
   );
 
   const getCapacity = useCallback(
@@ -216,7 +317,7 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <WaterLevelContext.Provider value={{ levels, flowRates, getCapacity }}>
+    <WaterLevelContext.Provider value={{ levels, flowRates, getCapacity, emptyVehicleIds }}>
       {children}
     </WaterLevelContext.Provider>
   );

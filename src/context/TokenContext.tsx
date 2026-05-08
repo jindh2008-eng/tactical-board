@@ -1,7 +1,7 @@
 import {
   createContext, useContext, useState, useCallback, useEffect, useRef,
 } from 'react';
-import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge, StatusTag, Pos } from '../types';
+import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge, StatusTag, SprayState, Pos } from '../types';
 import type { DispatchRosterItem, ArrivalMode } from '../types/settings';
 import { rosterItemToToken, initCountersFromRoster, computeCountersFromTokens } from '../utils/dispatchArrival';
 import {
@@ -73,6 +73,7 @@ interface TokenContextValue {
   clearBadges:       (tokenId: string) => void;
   setStatusTag:      (tokenId: string, tag: StatusTag | null) => void;
   setCustomNote:     (tokenId: string, note: string) => void;
+  setSprayState:     (tokenId: string, state: SprayState | null, target?: { x: number; y: number } | null) => void;
   changeTokenColor:  (tokenId: string, color: TokenColor) => void;
   addLog:            (entry: Omit<LogEntry, 'id' | 'timestamp'>) => void;
 }
@@ -504,8 +505,17 @@ export function TokenProvider({
 
     if (zoneChanged) {
       const movedAt = Date.now();
+      // 구역 변경 시 방수 자동 해제 (동일 구역 내 위치 이동은 제외)
       setTokens(prev =>
-        prev.map(t => t.id === tokenId ? { ...t, zoneKey: toZoneKey, lastMovedAt: movedAt } : t)
+        prev.map(t => {
+          if (t.id !== tokenId) return t;
+          const update: Partial<typeof t> = { zoneKey: toZoneKey, lastMovedAt: movedAt };
+          if (t.sprayState != null) {
+            update.sprayState  = null;
+            update.sprayTarget = null;
+          }
+          return { ...t, ...update };
+        })
       );
       if (toZoneKey !== null) {
         const entry: LogEntry = {
@@ -687,6 +697,18 @@ export function TokenProvider({
     ));
   }, []);
 
+  const setSprayState = useCallback((
+    tokenId: string,
+    state:   SprayState | null,
+    target?: { x: number; y: number } | null,
+  ) => {
+    setTokens(prev => prev.map(t => {
+      if (t.id !== tokenId) return t;
+      if (state === null) return { ...t, sprayState: null, sprayTarget: null };
+      return { ...t, sprayState: state, sprayTarget: target !== undefined ? target : t.sprayTarget };
+    }));
+  }, []);
+
   const changeTokenColor = useCallback((tokenId: string, color: TokenColor) => {
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, color } : t
@@ -697,7 +719,7 @@ export function TokenProvider({
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
       createToken, moveToken, rescueUnit,
-      addBadge, removeBadge, clearBadges, setStatusTag, setCustomNote, changeTokenColor, addLog,
+      addBadge, removeBadge, clearBadges, setStatusTag, setCustomNote, setSprayState, changeTokenColor, addLog,
     }}>
       {children}
     </TokenContext.Provider>

@@ -104,6 +104,11 @@ export function TokenCard({ token, absPos }: Props) {
     e.dataTransfer.setData('tokenH', String(el.offsetHeight));
     e.dataTransfer.effectAllowed = 'move';
     setBarMenu(null);
+    if (wrapperRef.current) wrapperRef.current.dataset.dragging = 'true';
+  }
+
+  function handleDragEnd() {
+    if (wrapperRef.current) delete wrapperRef.current.dataset.dragging;
   }
 
   function handleContextMenu(e: React.MouseEvent) {
@@ -198,6 +203,9 @@ export function TokenCard({ token, absPos }: Props) {
     });
   const aerialBansuNoSource = isAerialBansu && !aerialHasWaterSource;
 
+  // ── 수량 소진 (0%) ───────────────────────────
+  const isWaterEmpty = showWaterGauge && waterLevelL === 0;
+
   // ── CSS 클래스 조합 ──────────────────────────
   const cardClasses = [
     'token-card',
@@ -207,6 +215,7 @@ export function TokenCard({ token, absPos }: Props) {
     isInMode        ? 'token-card--mode-dim'        : '',
     barMenu         ? 'token-card--menu-open'       : '',
     isHydrantBroken ? 'token-card--hydrant-broken'  : '',
+    isWaterEmpty    ? 'token-card--water-empty'     : '',
   ].filter(Boolean).join(' ');
 
   const hasOverlay = hasBadges || (!!token.statusTag && !isHydrantBroken) || showNoteTooltip;
@@ -301,6 +310,7 @@ export function TokenCard({ token, absPos }: Props) {
           className={cardClasses}
           draggable={mode.type === null}
           onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
           onContextMenu={handleContextMenu}
           onClick={handleClick}
           title={token.label}

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useHydrantState }     from '../../context/HydrantStateContext';
 import { useTokens }           from '../../context/TokenContext';
+import { useWaterLevel }       from '../../context/WaterLevelContext';
 import './WaterConnectionOverlay.css';
 
 // ─────────────────────────────────────────────
@@ -46,14 +47,16 @@ export function WaterConnectionOverlay() {
   const { connections, removeConnection } = useWaterConnections();
   const { isBroken: isHydrantBroken }     = useHydrantState();
   const { tokens }                        = useTokens();
+  const waterLevel                        = useWaterLevel();
 
   // ── 고장 여부 판별 ──────────────────────────
   // 소화전 고장: HydrantStateContext 기준
-  // 펌프/물탱크 고장: 토큰 statusTag === '펌프고장'
+  // 펌프/물탱크 고장: statusTag === '펌프고장' 또는 수량 0% 소진
   function isConnectionBroken(fromId: string, fromType: string): boolean {
     if (fromType === 'hydrant') return isHydrantBroken(fromId);
     const src = tokens.find(t => t.id === fromId);
-    return src?.statusTag?.label === '펌프고장';
+    if (src?.statusTag?.label === '펌프고장') return true;
+    return waterLevel?.emptyVehicleIds.has(fromId) ?? false;
   }
 
   // ── rAF 기반 위치 갱신 ──────────────────────
