@@ -56,7 +56,7 @@ function computeNetFlowRates(
     if (brokenSenderIds.has(conn.fromId)) continue;
     const toToken = tokens.find(t => t.id === conn.toId);
     if (!toToken || !AERIAL_TYPES.has(toToken.unitType)) continue;
-    if (!toToken.statusTag?.label?.endsWith('방수')) continue;
+    if (toToken.aerialSprayTarget == null) continue;
     net[conn.fromId] -= VEHICLE_FLOW_PER_MIN;
   }
 

@@ -60,7 +60,7 @@ const AERIAL_BTN: Record<string, { bg: string; border: string; text: string }> =
 // ─────────────────────────────────────────────
 
 export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
-  const { setStatusTag, setCustomNote, setSprayState } = useTokens();
+  const { setStatusTag, setCustomNote, setSprayState, setAerialTarget, setAerialSprayTarget } = useTokens();
   const { enterMode }                                  = useActionMode();
   const { connections }                                = useWaterConnections();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -167,11 +167,15 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
 
   function handleAerialStandby() {
     setStatusTag(token.id, { label: '임무대기', color: 'white' });
+    setAerialTarget(token.id, null);
+    setAerialSprayTarget(token.id, null);
     onClose();
   }
 
   function handleAerialBroken() {
     setStatusTag(token.id, { label: '장비고장', color: 'red' });
+    setAerialTarget(token.id, null);
+    setAerialSprayTarget(token.id, null);
     onClose();
   }
 
@@ -209,20 +213,6 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
               title={`건물 층을 클릭하여 ${deployLabel} 층을 선택하세요`}
             >
               {deployLabel}
-            </button>
-
-            {/* 방수 버튼 */}
-            <button
-              className="usbm__btn"
-              style={{
-                background:  AERIAL_BTN.water.bg,
-                borderColor: AERIAL_BTN.water.border,
-                color:       AERIAL_BTN.water.text,
-              }}
-              onMouseDown={e => { e.stopPropagation(); handleAerialDeploy('방수'); }}
-              title="건물 층을 클릭하여 방수 층을 선택하세요"
-            >
-              방수
             </button>
 
             <div className="usbm__sep" aria-hidden="true" />

@@ -157,6 +157,8 @@ export interface UnitToken {
   lastMovedAt?: number;    // 마지막 이동 시각 (Date.now()) — recently-moved 강조용
   sprayState?:  SprayState | null;                                       // 방수 상태 (진압대 전용)
   sprayTarget?: { x: number; y: number; floorId?: string } | null;       // 방수 지점 (전술보드 기준 상대 좌표)
+  aerialTarget?: { floorId: string; x: number; y: number; deployLabel: string } | null;  // 고가차/굴절차 전개 지점
+  aerialSprayTarget?: { floorId: string; x: number; y: number } | null;                  // 고가차/굴절차 방수 지점
 }
 
 // ─────────────────────────────────────────────

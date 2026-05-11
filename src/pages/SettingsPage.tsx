@@ -28,6 +28,8 @@ export function SettingsPage() {
     updateTiming,
     fireSuppressionConfig,
     updateFireSuppressionConfig,
+    aerialSuppressionConfig,
+    updateAerialSuppressionConfig,
   } = useSettings();
 
   return (
@@ -207,6 +209,54 @@ export function SettingsPage() {
                 updateFireSuppressionConfig({ thresholds: { ...fireSuppressionConfig.thresholds, 'half': v } });
               }}
             />
+          </label>
+        </div>
+      </section>
+
+      {/* ── 고가차/굴절차 소화포인트 설정 ──────────────── */}
+      <section className="settings-page__section">
+        <h3 className="settings-page__section-title">고가차/굴절차 소화포인트 설정</h3>
+        <p className="settings-page__hint">
+          고가차·굴절차 방수 시 진압대 소화포인트 대비 배율을 단계별로 설정합니다.
+        </p>
+        <div className="settings-page__timing-row">
+          <label className="settings-page__timing-label">
+            연소확대 → 최성기 배율
+            <input className="settings-page__timing-input" type="number" min={0.01} step={0.1}
+              value={aerialSuppressionConfig.multipliers['extension-peak']}
+              onChange={e => {
+                const v = Math.max(0.01, parseFloat(e.target.value) || 0.01);
+                updateAerialSuppressionConfig({ multipliers: { ...aerialSuppressionConfig.multipliers, 'extension-peak': v } });
+              }} />
+          </label>
+          <label className="settings-page__timing-label">
+            최성기 → 70% 배율
+            <input className="settings-page__timing-input" type="number" min={0.01} step={0.1}
+              value={aerialSuppressionConfig.multipliers['peak']}
+              onChange={e => {
+                const v = Math.max(0.01, parseFloat(e.target.value) || 0.01);
+                updateAerialSuppressionConfig({ multipliers: { ...aerialSuppressionConfig.multipliers, 'peak': v } });
+              }} />
+          </label>
+        </div>
+        <div className="settings-page__timing-row">
+          <label className="settings-page__timing-label">
+            70% → 50% 배율
+            <input className="settings-page__timing-input" type="number" min={0.01} step={0.01}
+              value={aerialSuppressionConfig.multipliers['seventy']}
+              onChange={e => {
+                const v = Math.max(0.01, parseFloat(e.target.value) || 0.01);
+                updateAerialSuppressionConfig({ multipliers: { ...aerialSuppressionConfig.multipliers, 'seventy': v } });
+              }} />
+          </label>
+          <label className="settings-page__timing-label">
+            50% → 초진 배율
+            <input className="settings-page__timing-input" type="number" min={0.01} step={0.01}
+              value={aerialSuppressionConfig.multipliers['half']}
+              onChange={e => {
+                const v = Math.max(0.01, parseFloat(e.target.value) || 0.01);
+                updateAerialSuppressionConfig({ multipliers: { ...aerialSuppressionConfig.multipliers, 'half': v } });
+              }} />
           </label>
         </div>
       </section>

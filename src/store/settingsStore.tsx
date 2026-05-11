@@ -3,10 +3,10 @@ import type { BuildingConfig, FireStatus } from '../types';
 import type {
   BuildingSettings, TimingSettings,
   DispatchSetup, DispatchRosterItem, VictimSetupItem, ArrivalMode, HydrantSetupItem,
-  FireSuppressionConfig,
+  FireSuppressionConfig, AerialSuppressionConfig,
 } from '../types/settings';
 import type { EventSetupItem, EventType } from '../types/events';
-import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP, DEFAULT_FIRE_SUPPRESSION_CONFIG } from '../types/settings';
+import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP, DEFAULT_FIRE_SUPPRESSION_CONFIG, DEFAULT_AERIAL_SUPPRESSION_CONFIG } from '../types/settings';
 import type { SettingsSet } from '../utils/settingsStorage';
 import {
   generateId,
@@ -77,6 +77,10 @@ interface SettingsContextValue {
   fireSuppressionConfig:        FireSuppressionConfig;
   updateFireSuppressionConfig:  (patch: Partial<FireSuppressionConfig>) => void;
 
+  // ── 고가차/굴절차 소화 설정 ───────────────────
+  aerialSuppressionConfig:       AerialSuppressionConfig;
+  updateAerialSuppressionConfig: (patch: Partial<AerialSuppressionConfig>) => void;
+
   // ── 설정 세트 관리 ────────────────────────────
   settingsList:         SettingsSet[];
   activeSettingsId:     string | null;
@@ -142,6 +146,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [fireSuppressionConfig, setFireSuppressionConfig] = useState<FireSuppressionConfig>(
     () => loadWorkingPresets().fireSuppressionConfig ?? DEFAULT_FIRE_SUPPRESSION_CONFIG
   );
+  const [aerialSuppressionConfig, setAerialSuppressionConfig] = useState<AerialSuppressionConfig>(
+    () => loadWorkingPresets().aerialSuppressionConfig ?? DEFAULT_AERIAL_SUPPRESSION_CONFIG
+  );
 
   // ── 설정 세트 ─────────────────────────────────
   const [settingsList,       setSettingsList]       = useState<SettingsSet[]>(loadSettingsList);
@@ -155,8 +162,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // 타이밍·시나리오 설정 변경 시 자동 저장 (새로고침 대비)
   useEffect(() => {
-    saveWorkingPresets({ sharedBadgePresets: [], unitBadgePresets: [], timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig });
-  }, [timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig]);
+    saveWorkingPresets({ sharedBadgePresets: [], unitBadgePresets: [], timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig });
+  }, [timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -261,6 +268,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       ...patch,
       thresholds: { ...prev.thresholds, ...(patch.thresholds ?? {}) },
+    }));
+  }, []);
+
+  const updateAerialSuppressionConfig = useCallback((patch: Partial<AerialSuppressionConfig>) => {
+    setAerialSuppressionConfig(prev => ({
+      ...prev,
+      ...patch,
+      multipliers: { ...prev.multipliers, ...(patch.multipliers ?? {}) },
     }));
   }, []);
 
@@ -371,6 +386,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       victimSetup, addVictimSetupItem, updateVictimSetupItem, removeVictimSetupItem,
       hydrantSetup, addHydrantSetupItem, updateHydrantSetupItem, removeHydrantSetupItem,
       fireSuppressionConfig, updateFireSuppressionConfig,
+      aerialSuppressionConfig, updateAerialSuppressionConfig,
       settingsList, activeSettingsId, activeSettingsName, setActiveSettingsName,
       saveSettings, saveSettingsAs, loadSettings, deleteSettingsEntry, newSettings,
     }}>

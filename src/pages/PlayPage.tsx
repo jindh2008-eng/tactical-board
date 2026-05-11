@@ -9,6 +9,7 @@ import { WaterConnectionProvider } from '../context/WaterConnectionContext';
 import { WaterLevelProvider }      from '../context/WaterLevelContext';
 import { HydrantStateProvider }    from '../context/HydrantStateContext';
 import { SprayOverlay }            from '../components/overlay/SprayOverlay';
+import { AerialOverlay }          from '../components/overlay/AerialOverlay';
 import { UnitStatusPanel as UnitInfoPanel } from '../components/left/UnitStatusPanel';
 import { TokenCard }          from '../components/shared/TokenCard';
 import { TacticalArea }       from '../components/building/TacticalArea';
@@ -40,6 +41,10 @@ function ActionModeBanner() {
   } else if (mode.type === 'water-connect') {
     message = '송수 대상 토큰을 클릭하세요  (ESC 취소)';
   } else if (mode.type === 'spray-target') {
+    message = '방수 지점을 클릭하세요  (ESC 취소)';
+  } else if (mode.type === 'aerial-floor-select') {
+    message = `전개 지점을 클릭하세요  (ESC 취소)`;
+  } else if (mode.type === 'aerial-spray-target') {
     message = '방수 지점을 클릭하세요  (ESC 취소)';
   }
 
@@ -122,6 +127,122 @@ function SprayTargetOverlay() {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
       floorId: resolvedFloorId,
+    });
+    clearMode();
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 9800, cursor: 'crosshair' }}
+      onClick={handleClick}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────
+// 고가차/굴절차 전개·방수 지점 선택 오버레이
+// aerial-floor-select 모드 중 임의 지점 클릭 → 층 정보 자동 감지
+// ─────────────────────────────────────────────
+
+const AERIAL_MAX_HEIGHT  = 15;
+const LADDER_MAX_HEIGHT  = 7;
+
+function AerialTargetOverlay() {
+  const { mode, clearMode }                        = useActionMode();
+  const { setStatusTag, setAerialTarget } = useTokens();
+
+  if (mode.type !== 'aerial-floor-select') return null;
+
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    // 클릭 지점에서 floor-row 탐색
+    const elements = document.elementsFromPoint(e.clientX, e.clientY);
+    let floorEl: Element | null = null;
+    for (const el of elements) {
+      let cur: Element | null = el;
+      while (cur) {
+        if (cur.getAttribute('data-floor-id')) { floorEl = cur; break; }
+        cur = cur.parentElement;
+      }
+      if (floorEl) break;
+    }
+    if (!floorEl) return;
+
+    // 지하층 제외
+    if (floorEl.classList.contains('floor-row--basement')) return;
+
+    const floorId      = floorEl.getAttribute('data-floor-id')!;
+    const floorHeight  = Number(floorEl.getAttribute('data-floor-height') ?? 0);
+    const displayLabel = floorEl.getAttribute('data-floor-label') ?? floorId;
+
+    // 높이 제한 검증
+    const maxHeight   = mode.unitType === 'ladder' ? LADDER_MAX_HEIGHT : AERIAL_MAX_HEIGHT;
+    const vehicleName = mode.unitType === 'ladder' ? '굴절차' : '고가차';
+    if (floorHeight > maxHeight) {
+      alert(`${vehicleName}는 ${maxHeight}층 높이까지만 전개 가능합니다.`);
+      return;
+    }
+
+    const board = document.getElementById('tactical-area');
+    const rect  = board?.getBoundingClientRect();
+    if (!rect) return;
+
+    setStatusTag(mode.sourceId, { label: `${displayLabel} ${mode.actionLabel}`, color: 'yellow' });
+    setAerialTarget(mode.sourceId, {
+      floorId,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      deployLabel: mode.actionLabel,
+    });
+    clearMode();
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 9800, cursor: 'crosshair' }}
+      onClick={handleClick}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────
+// 고가차/굴절차 방수 지점 선택 오버레이
+// aerial-spray-target 모드 중 임의 지점 클릭 → aerialSprayTarget 저장
+// ─────────────────────────────────────────────
+
+function AerialSprayTargetOverlay() {
+  const { mode, clearMode }                           = useActionMode();
+  const { setAerialSprayTarget, setStatusTag, tokens } = useTokens();
+
+  if (mode.type !== 'aerial-spray-target') return null;
+
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    const elements = document.elementsFromPoint(e.clientX, e.clientY);
+    let floorEl: Element | null = null;
+    for (const el of elements) {
+      let cur: Element | null = el;
+      while (cur) {
+        if (cur.getAttribute('data-floor-id')) { floorEl = cur; break; }
+        cur = cur.parentElement;
+      }
+      if (floorEl) break;
+    }
+
+    const board = document.getElementById('tactical-area');
+    const rect  = board?.getBoundingClientRect();
+    if (!rect) return;
+
+    const floorId = floorEl?.getAttribute('data-floor-id') ?? null;
+
+    if (mode.type !== 'aerial-spray-target') return;
+    const token = tokens.find(t => t.id === mode.sourceId);
+    if (!token) return;
+
+    const floorLabel  = floorEl?.getAttribute('data-floor-label') ?? '';
+    setStatusTag(mode.sourceId, { label: `${floorLabel} 방수`, color: 'blue' });
+    setAerialSprayTarget(mode.sourceId, {
+      floorId: floorId ?? (token.aerialTarget?.floorId ?? ''),
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     });
     clearMode();
   }
@@ -308,8 +429,15 @@ export function PlayPage() {
               {/* ── 방수 SVG 오버레이 ── */}
               <SprayOverlay />
 
+              {/* ── 고가차/굴절차 전개 SVG 오버레이 ── */}
+              <AerialOverlay />
+
               {/* ── 방수 지점 선택 오버레이 ── */}
               <SprayTargetOverlay />
+
+              {/* ── 고가차/굴절차 전개·방수 지점 선택 오버레이 ── */}
+              <AerialTargetOverlay />
+              <AerialSprayTargetOverlay />
             </div>
           </HydrantStateProvider>
           </WaterLevelProvider>

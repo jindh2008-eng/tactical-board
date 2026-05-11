@@ -51,17 +51,19 @@ function floorIdFromZoneKey(zoneKey: string): string | null {
 function FireSuppressionEffect() {
   const { tokens }                                   = useTokens();
   const { fireStates, setFireStatus }                = useBuildingState();
-  const { fireSuppressionConfig: cfg }               = useSettings();
+  const { fireSuppressionConfig: cfg, aerialSuppressionConfig } = useSettings();
 
   const fireStatesRef  = useRef(fireStates);
   const tokensRef      = useRef(tokens);
   const cfgRef         = useRef(cfg);
+  const aerialCfgRef   = useRef(aerialSuppressionConfig);
   const setFireRef     = useRef(setFireStatus);
   const ptsRef         = useRef<Record<string, number>>({});
 
   useEffect(() => { fireStatesRef.current = fireStates; }, [fireStates]);
   useEffect(() => { tokensRef.current    = tokens;      }, [tokens]);
   useEffect(() => { cfgRef.current       = cfg;         }, [cfg]);
+  useEffect(() => { aerialCfgRef.current = aerialSuppressionConfig; }, [aerialSuppressionConfig]);
   useEffect(() => { setFireRef.current   = setFireStatus; }, [setFireStatus]);
 
   // 1초 간격으로 소화포인트 누적 → 임계치 초과 시 화재 상태 전환
@@ -82,13 +84,26 @@ function FireSuppressionEffect() {
 
       const ptsPerFloor: Record<string, number> = {};
       for (const token of tokensRef.current) {
-        if (!token.sprayState || token.sprayState === '0%') continue;
-        // floorId가 없으면 zoneKey에서 추출 (이전 데이터 호환)
-        const floorId = token.sprayTarget?.floorId
-          ?? (token.zoneKey ? floorIdFromZoneKey(token.zoneKey) ?? undefined : undefined);
-        if (!floorId) continue;
-        const mult = token.sprayState === '100%' ? 1 : 0.3;
-        ptsPerFloor[floorId] = (ptsPerFloor[floorId] ?? 0) + mult * config.ptsPerSec;
+        // 진압대 방수
+        if (token.sprayState && token.sprayState !== '0%') {
+          const floorId = token.sprayTarget?.floorId
+            ?? (token.zoneKey ? floorIdFromZoneKey(token.zoneKey) ?? undefined : undefined);
+          if (floorId) {
+            const mult = token.sprayState === '100%' ? 1 : 0.3;
+            ptsPerFloor[floorId] = (ptsPerFloor[floorId] ?? 0) + mult * config.ptsPerSec;
+          }
+        }
+        // 고가차/굴절차 방수 (화재 단계별 배율 적용)
+        if (token.aerialSprayTarget) {
+          const floorId = token.aerialSprayTarget.floorId;
+          if (floorId) {
+            const currentStatus = fires[floorId];
+            const mult = currentStatus
+              ? (aerialCfgRef.current.multipliers[currentStatus as keyof typeof aerialCfgRef.current.multipliers] ?? 0)
+              : 0;
+            ptsPerFloor[floorId] = (ptsPerFloor[floorId] ?? 0) + mult * config.ptsPerSec;
+          }
+        }
       }
 
       for (const [floorId, pts] of Object.entries(ptsPerFloor)) {

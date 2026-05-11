@@ -33,7 +33,9 @@ interface WaterConnectionContextValue {
 
 const WaterConnectionContext = createContext<WaterConnectionContextValue | null>(null);
 
-const STANDBY_ZONES = new Set(['standby-standby1', 'standby-imminent']);
+const STANDBY_ZONES  = new Set(['standby-standby1', 'standby-imminent']);
+const AERIAL_TYPES   = new Set(['aerial', 'ladder']);
+const WATER_SOURCES  = new Set(['pump', 'water_tank']);
 
 export function useWaterConnections(): WaterConnectionContextValue {
   const ctx = useContext(WaterConnectionContext);
@@ -46,7 +48,7 @@ export function useWaterConnections(): WaterConnectionContextValue {
 // ─────────────────────────────────────────────
 
 export function WaterConnectionProvider({ children }: { children: ReactNode }) {
-  const { tokens, addLog, setSprayState } = useTokens();
+  const { tokens, addLog, setSprayState, setAerialSprayTarget } = useTokens();
   const [connections, setConnections] = useState<WaterConnection[]>([]);
 
   const tokensRef          = useRef(tokens);
@@ -104,12 +106,33 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
       if (conn.toType === 'suppression' && toToken?.sprayState != null) {
         setSprayState(conn.toId, null);
       }
+      // 고가차/굴절차 연결 해제 시 방수 자동 중단
+      if (AERIAL_TYPES.has(conn.toType) && toToken?.aerialSprayTarget != null) {
+        setAerialSprayTarget(conn.toId, null);
+      }
     }
     setConnections(prev => prev.filter(c => c.id !== id));
-  }, [addLog, setSprayState]);
+  }, [addLog, setSprayState, setAerialSprayTarget]);
 
   // removeConnRef는 최신 removeConnection을 항상 참조
   useEffect(() => { removeConnRef.current = removeConnection; }, [removeConnection]);
+
+  // 마운트 시: 페이지 이동 후 재마운트될 때 연결 없이 방수 중인 토큰 자동 초기화
+  // (connections는 리셋되지만 TokenContext는 sessionStorage에서 상태를 복원하므로 불일치 발생)
+  useEffect(() => {
+    for (const token of tokensRef.current) {
+      const hasWater = connectionsRef.current.some(
+        c => c.toId === token.id && WATER_SOURCES.has(c.fromType),
+      );
+      if (!hasWater) {
+        if (token.sprayState != null) setSprayState(token.id, null);
+        if (AERIAL_TYPES.has(token.unitType) && token.aerialSprayTarget != null) {
+          setAerialSprayTarget(token.id, null);
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 직전대기·대기1단계로 이동 시 해당 토큰의 송수 연결 자동 해제
   useEffect(() => {

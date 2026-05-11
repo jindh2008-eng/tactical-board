@@ -33,6 +33,7 @@ export type ActionModeState =
   | { type: 'select-pump';         sourceId: string }
   | { type: 'water-connect';       sourceId: string; sourceType: string; sourceName?: string }
   | { type: 'aerial-floor-select'; sourceId: string; unitType: string; actionLabel: string }
+  | { type: 'aerial-spray-target'; sourceId: string }
   | { type: 'spray-target';        sourceId: string; sourceZoneKey: string | null };
 
 interface ActionModeContextValue {

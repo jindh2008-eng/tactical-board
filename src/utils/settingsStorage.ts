@@ -1,4 +1,4 @@
-import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig } from '../types/settings';
+import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig, AerialSuppressionConfig } from '../types/settings';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP } from '../types/settings';
 import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../types/presets';
 import type { EventSetupItem } from '../types/events';
@@ -20,7 +20,8 @@ export interface WorkingPresets {
   stagingAreaChief?:       string;                  // 자원대기소장
   eventSetup?:             EventSetupItem[];        // 이벤트 토큰 설정
   hydrantSetup?:           HydrantSetupItem[];      // 소화전 사전 설정
-  fireSuppressionConfig?:  FireSuppressionConfig;   // 화재 소화 설정
+  fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
+  aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
 }
 
 /** 이름을 붙여 저장하는 설정 세트 */
@@ -143,7 +144,9 @@ export function loadWorkingPresets(): WorkingPresets {
       medicalPostChief:   parsed.medicalPostChief  ?? '',
       stagingAreaChief:   parsed.stagingAreaChief  ?? '',
       eventSetup:         parsed.eventSetup        ?? [],
-      hydrantSetup:       parsed.hydrantSetup      ?? [],
+      hydrantSetup:            parsed.hydrantSetup            ?? [],
+      fireSuppressionConfig:   parsed.fireSuppressionConfig,
+      aerialSuppressionConfig: parsed.aerialSuppressionConfig,
     };
   } catch {
     return EMPTY_WORKING;

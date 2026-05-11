@@ -42,6 +42,24 @@ export const DEFAULT_FIRE_SUPPRESSION_CONFIG: FireSuppressionConfig = {
   },
 };
 
+export interface AerialSuppressionConfig {
+  multipliers: {
+    'extension-peak': number;
+    'peak':           number;
+    'seventy':        number;
+    'half':           number;
+  };
+}
+
+export const DEFAULT_AERIAL_SUPPRESSION_CONFIG: AerialSuppressionConfig = {
+  multipliers: {
+    'extension-peak': 5,
+    'peak':           2,
+    'seventy':        0.2,
+    'half':           0.1,
+  },
+};
+
 /**
  * 전체 설정 상태
  *

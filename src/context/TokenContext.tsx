@@ -74,6 +74,8 @@ interface TokenContextValue {
   setStatusTag:      (tokenId: string, tag: StatusTag | null) => void;
   setCustomNote:     (tokenId: string, note: string) => void;
   setSprayState:     (tokenId: string, state: SprayState | null, target?: { x: number; y: number } | null) => void;
+  setAerialTarget:      (tokenId: string, target: { floorId: string; x: number; y: number; deployLabel: string } | null) => void;
+  setAerialSprayTarget: (tokenId: string, target: { floorId: string; x: number; y: number } | null) => void;
   changeTokenColor:  (tokenId: string, color: TokenColor) => void;
   addLog:            (entry: Omit<LogEntry, 'id' | 'timestamp'>) => void;
 }
@@ -709,6 +711,18 @@ export function TokenProvider({
     }));
   }, []);
 
+  const setAerialTarget = useCallback((tokenId: string, target: { floorId: string; x: number; y: number; deployLabel: string } | null) => {
+    setTokens(prev => prev.map(t =>
+      t.id === tokenId ? { ...t, aerialTarget: target ?? undefined, aerialSprayTarget: null } : t
+    ));
+  }, []);
+
+  const setAerialSprayTarget = useCallback((tokenId: string, target: { floorId: string; x: number; y: number } | null) => {
+    setTokens(prev => prev.map(t =>
+      t.id === tokenId ? { ...t, aerialSprayTarget: target ?? undefined } : t
+    ));
+  }, []);
+
   const changeTokenColor = useCallback((tokenId: string, color: TokenColor) => {
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, color } : t
@@ -719,7 +733,7 @@ export function TokenProvider({
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
       createToken, moveToken, rescueUnit,
-      addBadge, removeBadge, clearBadges, setStatusTag, setCustomNote, setSprayState, changeTokenColor, addLog,
+      addBadge, removeBadge, clearBadges, setStatusTag, setCustomNote, setSprayState, setAerialTarget, setAerialSprayTarget, changeTokenColor, addLog,
     }}>
       {children}
     </TokenContext.Provider>
