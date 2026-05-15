@@ -16,11 +16,14 @@ export const WATER_CAPACITIES: Record<string, number> = {
   water_tank: 6000,
 };
 
-const HYDRANT_FLOW_PER_MIN     = 1000;   // 소화전 → 차량
-const VEHICLE_FLOW_PER_MIN     = 1500;   // 차량 → 차량 (송수)
-const SUPPRESSION_FLOW_PER_MIN = 300;    // 펌프 → 진압대 1팀당
+const HYDRANT_FLOW_PER_MIN            = 1000;  // 소화전 → 차량
+const VEHICLE_FLOW_PER_MIN            = 1500;  // 차량 → 차량 (송수)
+const SUPPRESSION_FLOW_PER_MIN        = 300;   // 펌프 → 진압대 1팀당 (일반)
+const SUPPRESSION_INITIAL_FLOW_PER_MIN = 100;  // 펌프 → 진압대 1팀당 (초진 구역)
+const MONITOR_FLOW_PER_MIN            = 1800;  // 방수포 (펌프/물탱크 자체, 또는 고가차/굴절차 급수)
 
-const AERIAL_TYPES = new Set(['aerial', 'ladder']);
+const AERIAL_TYPES   = new Set(['aerial', 'ladder']);
+const WATER_SOURCES  = new Set(['pump', 'water_tank']);
 
 // ─────────────────────────────────────────────
 // 순 유량 계산 (수요 역산 모델)
@@ -38,37 +41,65 @@ function sprayMultiplier(state: SprayState | null | undefined): number {
   return 0;
 }
 
+// 초진(initial) 상태인 층 ID 집합을 DOM에서 읽어 반환
+// FloorRow[data-floor-id] 내부에 .zone-cell--fs-initial 이 있는 경우
+function getInitialFloorIds(): Set<string> {
+  const ids = new Set<string>();
+  document.querySelectorAll<HTMLElement>('[data-floor-id]').forEach(el => {
+    if (el.querySelector('.zone-cell--fs-initial')) {
+      const fid = el.getAttribute('data-floor-id');
+      if (fid) ids.add(fid);
+    }
+  });
+  return ids;
+}
+
 function computeNetFlowRates(
-  tokens:          { id: string; unitType: string; statusTag?: { label: string } | null; sprayState?: SprayState | null }[],
+  tokens:          { id: string; unitType: string; statusTag?: { label: string } | null; sprayState?: SprayState | null; sprayTarget?: { floorId?: string } | null; aerialSprayTarget?: { floorId: string; x: number; y: number } | null }[],
   connections:     { fromId: string; toId: string; fromType: string; toType: string }[],
   brokenSenderIds: Set<string>,
   levels:          Record<string, number>,
   capacities:      Record<string, number>,
+  initialFloorIds: Set<string> = new Set(),
 ): Record<string, number> {
   const net: Record<string, number> = {};
   for (const t of tokens) {
     if (t.unitType === 'pump' || t.unitType === 'water_tank') net[t.id] = 0;
   }
 
-  // 0. 고가차/굴절차 방수 — 연결된 펌프/물탱크에서 1500/min 소모 (고장 시 skip)
+  // 0. 고가차/굴절차 방수 — 연결된 펌프/물탱크에서 1800/min 소모 (고장 시 skip)
   for (const conn of connections) {
     if (!(conn.fromId in net)) continue;
     if (brokenSenderIds.has(conn.fromId)) continue;
     const toToken = tokens.find(t => t.id === conn.toId);
     if (!toToken || !AERIAL_TYPES.has(toToken.unitType)) continue;
     if (toToken.aerialSprayTarget == null) continue;
-    net[conn.fromId] -= VEHICLE_FLOW_PER_MIN;
+    net[conn.fromId] -= MONITOR_FLOW_PER_MIN;
   }
 
-  // 1. 펌프 → 진압대 소모 (고장 펌프 skip, sprayState 비율 적용)
+  // 0a. 펌프/물탱크차 방수포 자체 소모 — 자신의 aerialSprayTarget 설정 시 1800/min (고장 시 skip)
   for (const t of tokens) {
-    if (t.unitType !== 'pump' || !(t.id in net)) continue;
+    if (!(t.id in net)) continue;
+    if (brokenSenderIds.has(t.id)) continue;
+    if (!WATER_SOURCES.has(t.unitType)) continue;
+    if (t.aerialSprayTarget == null) continue;
+    net[t.id] -= MONITOR_FLOW_PER_MIN;
+  }
+
+  // 1. 펌프/물탱크 → 진압대 소모 (고장 차량 skip, sprayState 비율 적용)
+  // 초진 구역 방수 시 SUPPRESSION_INITIAL_FLOW_PER_MIN(100) 적용
+  for (const t of tokens) {
+    if ((t.unitType !== 'pump' && t.unitType !== 'water_tank') || !(t.id in net)) continue;
     if (brokenSenderIds.has(t.id)) continue;
     const suppConns = connections.filter(c => c.fromId === t.id && c.toType === 'suppression');
     for (const conn of suppConns) {
       const suppToken = tokens.find(tk => tk.id === conn.toId);
       const mult = sprayMultiplier(suppToken?.sprayState);
-      if (mult > 0) net[t.id] -= mult * SUPPRESSION_FLOW_PER_MIN;
+      if (mult > 0) {
+        const floorId   = suppToken?.sprayTarget?.floorId;
+        const isInitial = !!floorId && initialFloorIds.has(floorId);
+        net[t.id] -= mult * (isInitial ? SUPPRESSION_INITIAL_FLOW_PER_MIN : SUPPRESSION_FLOW_PER_MIN);
+      }
     }
   }
 
@@ -132,7 +163,7 @@ export function useWaterLevel(): WaterLevelValue | null {
 // ─────────────────────────────────────────────
 
 export function WaterLevelProvider({ children }: { children: ReactNode }) {
-  const { tokens, addLog, setSprayState } = useTokens();
+  const { tokens, addLog, setSprayState, setAerialSprayTarget } = useTokens();
   const { connections } = useWaterConnections();
   const { status, elapsed } = useTraining();
 
@@ -209,10 +240,12 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
   useEffect(() => { levelsRef.current            = levels;            }, [levels]);
   useEffect(() => { addLogRef.current            = addLog;            }, [addLog]);
 
-  // 펌프 고장·소진 시 연결된 진압대 방수 자동 중단
-  const setSprayStateRef  = useRef(setSprayState);
-  const prevBrokenKeyRef  = useRef('');
-  useEffect(() => { setSprayStateRef.current = setSprayState; }, [setSprayState]);
+  // 펌프 고장·소진 시 연결된 진압대/고가차·굴절차 방수 자동 중단
+  const setSprayStateRef        = useRef(setSprayState);
+  const setAerialSprayTargetRef = useRef(setAerialSprayTarget);
+  const prevBrokenKeyRef        = useRef('');
+  useEffect(() => { setSprayStateRef.current        = setSprayState;        }, [setSprayState]);
+  useEffect(() => { setAerialSprayTargetRef.current = setAerialSprayTarget; }, [setAerialSprayTarget]);
 
   useEffect(() => {
     const key = [...effectiveBrokenIds].sort().join(',');
@@ -223,12 +256,37 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
     const newlyBroken = [...effectiveBrokenIds].filter(id => !prevIds.has(id));
     if (newlyBroken.length === 0) return;
 
+    // 진압대: 수원 고장·소진 시 방수 즉시 중단
     for (const brokenId of newlyBroken) {
       for (const conn of connectionsRef.current) {
         if (conn.fromId !== brokenId || conn.toType !== 'suppression') continue;
         const toToken = tokensRef.current.find(t => t.id === conn.toId);
         if (toToken?.sprayState != null) setSprayStateRef.current(conn.toId, null);
       }
+    }
+
+    // 펌프/물탱크차: 자체 고장·소진 시 방수포 즉시 중단
+    for (const brokenId of newlyBroken) {
+      const token = tokensRef.current.find(t => t.id === brokenId);
+      if (token && WATER_SOURCES.has(token.unitType) && token.aerialSprayTarget != null) {
+        setAerialSprayTargetRef.current(brokenId, null);
+      }
+    }
+
+    // 고가차/굴절차: 방수 중이고 활성 수원이 하나도 없으면 방수 중단
+    const affectedAerialIds = new Set<string>();
+    for (const brokenId of newlyBroken) {
+      for (const conn of connectionsRef.current) {
+        if (conn.fromId !== brokenId || !AERIAL_TYPES.has(conn.toType)) continue;
+        const toToken = tokensRef.current.find(t => t.id === conn.toId);
+        if (toToken?.aerialSprayTarget != null) affectedAerialIds.add(conn.toId);
+      }
+    }
+    for (const aerialId of affectedAerialIds) {
+      const hasActiveSource = connectionsRef.current.some(
+        c => c.toId === aerialId && WATER_SOURCES.has(c.fromType) && !effectiveBrokenIds.has(c.fromId),
+      );
+      if (!hasActiveSource) setAerialSprayTargetRef.current(aerialId, null);
     }
   }, [effectiveBrokenIds]);
 
@@ -291,6 +349,7 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
       effectiveBrokenIdRef.current,
       levelsRef.current,
       capacityRef.current,
+      getInitialFloorIds(),
     );
     setLevels(prev => {
       const next = { ...prev };
@@ -307,7 +366,7 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
 
   // 현재 순유량 (표시용 — 렌더링 기준)
   const flowRates = useMemo(
-    () => computeNetFlowRates(tokens, connections, effectiveBrokenIds, levels, capacityMap),
+    () => computeNetFlowRates(tokens, connections, effectiveBrokenIds, levels, capacityMap, getInitialFloorIds()),
     [tokens, connections, effectiveBrokenIds, levels, capacityMap],
   );
 

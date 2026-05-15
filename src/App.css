@@ -110,79 +110,58 @@ html, body, #root {
   border-bottom: 1px solid var(--color-border);
 }
 
-.app-nav__brand {
-  font-size: 0.80rem;
-  font-weight: 700;
-  color: var(--color-text-dim);
-  letter-spacing: 0.08em;
-  margin-right: 12px;
+/* ── 메뉴 드롭다운 ── */
+.app-menu {
+  position: relative;
 }
 
-.app-nav__links {
-  display: flex;
-  gap: 2px;
-}
-
-.app-nav__link {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 14px;
+.app-menu__trigger {
+  height: 26px;
+  padding: 0 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 3px;
-  font-size: 0.78rem;
-  font-weight: 600;
   color: var(--color-text-dim);
-  text-decoration: none;
+  font-size: 0.80rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 
-.app-nav__link:hover {
+.app-menu__trigger:hover {
   background-color: #1a2a3a;
   color: var(--color-text);
 }
 
-.app-nav__link--active {
-  background-color: var(--color-accent);
-  color: #fff;
-}
-
-/* ── 훈련 컨트롤 바 (nav 우측) ── */
-.nav-training {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.nav-training__target {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-.nav-training__timer {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-accent);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+.app-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
   min-width: 90px;
-  text-align: center;
-}
-
-.nav-training__divider {
-  width: 1px;
-  height: 16px;
-  background-color: var(--color-border);
-  margin: 0 4px;
-  flex-shrink: 0;
-}
-
-.nav-training__btns {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
   display: flex;
-  gap: 4px;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-menu__item {
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.app-menu__item:hover {
+  background-color: #1a2a3a;
 }
 
 .nav-btn {
@@ -229,6 +208,99 @@ html, body, #root {
 }
 .nav-btn--stop:hover:not(:disabled) {
   background-color: #5a2222;
+}
+
+/* ── 표시옵션 인라인 바 ── */
+.nav-options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-options__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  white-space: nowrap;
+  padding-right: 4px;
+  border-right: 1px solid var(--color-border);
+}
+
+.nav-options__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.nav-options__item input[type='checkbox'] {
+  accent-color: var(--color-accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── 페이지별 nav 슬롯 (훈련창) ── */
+.play-nav-slot {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.play-nav__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.play-nav__center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.play-nav__divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--color-border);
+  flex-shrink: 0;
+}
+
+.play-nav__target {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.play-nav__timer {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 90px;
+  text-align: center;
+}
+
+.play-nav__timer--running {
+  color: #6ecc88;
+}
+
+.play-nav__btns {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 /* ── 라우트 콘텐츠 영역 ── */

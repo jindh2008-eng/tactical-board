@@ -1,0 +1,703 @@
+/* ─────────────────────────────────────────────
+   시나리오 예측 모달 (scen)
+   ───────────────────────────────────────────── */
+
+.scen-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.scen-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  width: min(1200px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── 헤더 ── */
+
+.scen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.scen-header__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.04em;
+}
+
+.scen-header__close {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.scen-header__close:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* ── 본문 2단 레이아웃 ── */
+
+.scen-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scen-body--standalone {
+  height: 100%;
+}
+
+.scen-left {
+  width: 320px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 오른쪽 패널: 내용 넘치면 패널 전체가 스크롤 */
+.scen-right {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 모바일: 세로 스택 */
+@media (max-width: 700px) {
+  .scen-body       { flex-direction: column; }
+  .scen-left       { width: 100%; border-right: none; border-bottom: 1px solid var(--color-border); max-height: 45vh; }
+}
+
+/* ── 섹션 카드 ── */
+
+.scen-section {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scen-section__title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ── 소화 설정 compact ── */
+
+.scen-cfg-subtitle {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 6px 0 4px;
+}
+
+.scen-cfg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.scen-cfg-label {
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+  flex: 1;
+}
+
+.scen-cfg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+}
+
+.scen-cfg-label-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.68rem;
+  color: var(--color-text-dim);
+}
+
+.scen-cfg-stepper {
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.scen-cfg-stepper__btn {
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 0.68rem;
+  padding: 3px 7px;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+}
+
+.scen-cfg-stepper__btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+}
+
+.scen-cfg-stepper__val {
+  flex: 1;
+  text-align: center;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  padding: 0 2px;
+  user-select: none;
+}
+
+/* ── 화점층 행 ── */
+
+.scen-floor-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 6px;
+  align-items: center;
+  min-height: 28px;
+}
+
+.scen-floor-row__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.scen-status-select,
+.scen-floor-select {
+  width: 100%;
+  padding: 3px 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.scen-status-select:focus,
+.scen-floor-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* 층 배정 수 표시 */
+.scen-floor-count {
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+  text-align: center;
+  min-width: 28px;
+  white-space: nowrap;
+}
+
+.scen-extra-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 5px;
+  align-items: center;
+}
+
+.scen-extra-row__tail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scen-add-btn {
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  font-size: 0.76rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.scen-add-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.scen-remove-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.scen-remove-btn:hover { color: #f87171; }
+
+/* ── 소화전 ── */
+
+.scen-hydrant-empty {
+  font-size: 0.76rem;
+  color: var(--color-text-dim);
+  padding: 4px 0;
+}
+
+.scen-hydrant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 26px;
+}
+
+.scen-hydrant-row__name {
+  font-size: 0.78rem;
+  color: var(--color-text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scen-hydrant-row__select {
+  padding: 3px 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.76rem;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.scen-hydrant-row__select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* ── 결과 요약 ── */
+
+.scen-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scen-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scen-summary-row__label {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+}
+
+.scen-summary-row__value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.scen-summary-row__value--highlight {
+  color: #6ecc88;
+}
+
+.scen-summary-row__value--warn {
+  color: #f87171;
+}
+
+/* ── 물탱크 ── */
+
+.scen-water-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+
+.scen-water-kv {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scen-water-kv__key {
+  font-size: 0.68rem;
+  color: var(--color-text-dim);
+  letter-spacing: 0.04em;
+}
+
+.scen-water-kv__val {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.scen-water-kv__val--surplus  { color: #38bdf8; }
+.scen-water-kv__val--deficit  { color: #f87171; }
+
+/* ── 타임라인 ── */
+
+.scen-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+}
+
+.scen-tl-row {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 8px;
+  align-items: baseline;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.78rem;
+}
+
+.scen-tl-row:last-of-type { border-bottom: none; }
+
+.scen-tl-row--arrival  { color: #60a5fa; }
+.scen-tl-row--fire     { color: var(--color-text); }
+.scen-tl-row--water    { color: #fb923c; }
+
+.scen-tl-time {
+  color: var(--color-text-dim);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+}
+
+/* ── 차트 탭 + 표시 시간 ── */
+
+.scen-chart-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.scen-chart-tab {
+  padding: 5px 16px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.scen-chart-tab:hover {
+  color: var(--color-text);
+  background: rgba(255,255,255,0.04);
+}
+
+.scen-chart-tab--active {
+  color: var(--color-text);
+  background: rgba(74, 144, 217, 0.1);
+  border-color: var(--color-accent, #4a90d9);
+}
+
+.scen-chart-tabs__spacer {
+  flex: 1;
+}
+
+/* ── 표시 시간 선택 ── */
+
+.scen-duration-label {
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+  margin-right: 2px;
+}
+
+.scen-duration-btn {
+  padding: 4px 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.scen-duration-btn:hover {
+  color: var(--color-text);
+}
+
+.scen-duration-btn--active {
+  background: #1a3a5c;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* ── 차트 + 그리드 래퍼 ── */
+
+.scen-grid-wrap {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* SVG 차트 영역: SVG 자체 height(444px)로 고정, 가로는 100% 채움 */
+.scen-chart-svg-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ── 고정 Y축 + 가변 차트 영역 ── */
+
+.scen-chart-row {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.scen-yaxis {
+  width: 72px;
+  flex-shrink: 0;
+  position: relative;
+  background: var(--color-bg);
+}
+
+.scen-yaxis__title {
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  font-size: 8px;
+  color: #6a8aaa;
+  white-space: nowrap;
+}
+
+.scen-yaxis__label {
+  position: absolute;
+  right: 4px;
+  font-size: 9px;
+  color: #6a8aaa;
+  transform: translateY(-50%);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.scen-chart-area {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.scen-yaxis--right {
+  border-left: 1px solid var(--color-border);
+}
+
+.scen-yaxis__label--right {
+  right: auto;
+  left: 4px;
+}
+
+.scen-yaxis__title--right {
+  right: auto;
+  left: 4px;
+}
+
+/* 범례 */
+.scen-graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.scen-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+}
+
+.scen-legend-dot {
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* 그리드 테이블 래퍼: 자연 높이 */
+.scen-grid-table-wrap {
+  width: 100%;
+  overflow: visible;
+}
+
+/* ── 진압대 배치 그리드 ── */
+
+.scen-grid {
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.76rem;
+}
+
+.scen-grid th,
+.scen-grid td {
+  border: 1px solid var(--color-border);
+  padding: 0;
+  text-align: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.scen-grid__unit-hdr {
+  position: sticky;
+  left: 0;
+  background: var(--color-surface);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  letter-spacing: 0.04em;
+  width: 72px;
+  padding: 4px 6px;
+  z-index: 2;
+  text-align: left;
+}
+
+.scen-grid__min-hdr {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  padding: 5px 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.scen-grid__unit-cell {
+  position: sticky;
+  left: 0;
+  background: var(--color-bg);
+  font-size: 0.74rem;
+  color: var(--color-text);
+  width: 72px;
+  padding: 3px 6px;
+  text-align: left;
+  z-index: 1;
+  border-right: 1px solid var(--color-border);
+}
+
+.scen-grid__unit-cell--pump       { background: rgba(29, 130, 217, 0.18); color: #93c5fd; }
+.scen-grid__unit-cell--water_tank { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+.scen-grid__unit-cell--hydrant    { background: rgba(251, 146, 60, 0.18); color: #fdba74; }
+
+.scen-grid__cell {
+  padding: 4px 2px;
+  min-height: 28px;
+}
+
+.scen-grid__cell--click {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  user-select: none;
+  transition: filter 0.1s;
+}
+
+.scen-grid__cell--click:hover {
+  filter: brightness(1.35);
+}
+
+/* ── 소방용수 그리드 — 차량 상태 셀 색상 ── */
+
+.scen-ws--1seon    { background: rgba(29, 130, 217, 0.35); color: #93c5fd; }
+.scen-ws--junyo    { background: rgba(29, 130, 217, 0.25); color: #bfdbfe; }
+.scen-ws--daegi    { background: rgba(147, 197, 253, 0.15); color: #7db8f0; }
+.scen-ws--gojang   { background: rgba(239, 68, 68, 0.18);  color: #fca5a5; }
+.scen-ws--jeomlyang { background: rgba(59, 130, 246, 0.28); color: #93c5fd; }
+
+/* ── 빈 상태 ── */
+
+.scen-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-dim);
+  font-size: 0.84rem;
+  padding: 24px;
+  text-align: center;
+}
+
+/* ── 총 배정 표시 ── */
+
+.scen-assign-hint {
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+  text-align: right;
+  padding-top: 2px;
+}
+
+.scen-assign-hint--over {
+  color: #fb923c;
+}

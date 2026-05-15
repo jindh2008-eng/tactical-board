@@ -79,19 +79,20 @@ const TOKEN_W = 50;
 const TOKEN_H = 50;
 
 interface Props {
-  id:             string;
-  label:          string;
-  icon:           string;      // 파일명 (예: 'LPG가스통.png') — 빈 문자열이면 미표시
-  eventType:      EventType;
-  status:         EventStatus;
-  x:              number;
-  y:              number;
-  onMove:         (id: string, x: number, y: number) => void;
-  onStatusChange: (id: string, status: EventStatus) => void;
+  id:              string;
+  label:           string;
+  icon:            string;      // 파일명 (예: 'LPG가스통.png') — 빈 문자열이면 미표시
+  eventType:       EventType;
+  status:          EventStatus;
+  firePercentage?: number;      // 연속 화재 % (소화 진행 표시용)
+  x:               number;
+  y:               number;
+  onMove:          (id: string, x: number, y: number) => void;
+  onStatusChange:  (id: string, status: EventStatus) => void;
 }
 
 export function EventTokenCard({
-  id, label, icon, eventType, status, x, y, onMove, onStatusChange,
+  id, label, icon, eventType, status, firePercentage, x, y, onMove, onStatusChange,
 }: Props) {
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [radialCenter, setRadialCenter] = useState<{ x: number; y: number } | null>(null);
@@ -135,8 +136,20 @@ export function EventTokenCard({
 
   // ── 상태 파생값 ──────────────────────────────
   const statusItem  = getStatusItem(eventType, status);
-  const statusLabel = status !== '-' ? (statusItem?.label ?? status) : null;
-  const tokenBg     = status !== '-' ? statusItem?.color : undefined;
+  const statusLabel = status !== '-' ? (
+    firePercentage != null ? `${Math.round(firePercentage)}%` : (statusItem?.label ?? status)
+  ) : null;
+
+  // 가스/전기 '화재' 상태는 % 구간에 따라 배경색 변경
+  const tokenBg = (() => {
+    if (status === '-') return undefined;
+    if (status === '화재' && (eventType === 'gas' || eventType === 'electric') && firePercentage != null) {
+      if (firePercentage >= 70) return '#b83010';
+      if (firePercentage >= 50) return '#FF9800';
+      return '#FFC107';
+    }
+    return statusItem?.color;
+  })();
 
   // 상태 텍스트를 항상 1줄로 꽉 채우기 위해 글자 수 기반 font-size 계산
   const statusFontSize = statusLabel

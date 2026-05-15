@@ -1,107 +1,66 @@
-import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { SettingsProvider, useSettings } from './store/settingsStore';
-import { TrainingProvider, useTraining } from './context/TrainingContext';
+import { memo, useState, useRef, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { SettingsProvider } from './store/settingsStore';
+import { TrainingProvider } from './context/TrainingContext';
 import { UIOverlayProvider, useUIOverlay } from './context/UIOverlayContext';
-import { SettingsPage } from './pages/SettingsPage';
-import { PlayPage }     from './pages/PlayPage';
+import { NavSlotProvider, NavSlot } from './context/NavSlotContext';
+import { SettingsPage }    from './pages/SettingsPage';
+import { PlayPage }        from './pages/PlayPage';
+import { ScenarioModal }   from './components/overlays/ScenarioModal';
 import './App.css';
 
-// ── 오버레이 버튼 (출동대 추가 / 분석) ──────────────────────────────────
-function NavOverlayButtons() {
-  const { openOverlay } = useUIOverlay();
+// ── 메뉴 버튼 (드롭다운) ──────────────────────────────────────────────
+function MenuButton() {
+  const [open, setOpen]  = useState(false);
+  const navigate         = useNavigate();
+  const location         = useLocation();
+  const { openOverlay }  = useUIOverlay();
+  const menuRef          = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onMouseDown(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [open]);
+
   return (
-    <div className="nav-overlay-btns">
-      <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('unit-add')}>
-        출동대 추가
+    <div className="app-menu" ref={menuRef}>
+      <button className="app-menu__trigger" onClick={() => setOpen(v => !v)}>
+        메뉴
       </button>
-      <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('analysis')}>
-        분석
-      </button>
+      {open && (
+        <div className="app-menu__dropdown">
+          <button className="app-menu__item" onClick={() => { navigate('/settings'); setOpen(false); }}>
+            설정
+          </button>
+          <button className="app-menu__item" onClick={() => { navigate('/play'); setOpen(false); }}>
+            훈련
+          </button>
+          <button className="app-menu__item" onClick={() => {
+            if (location.pathname !== '/play') navigate('/play');
+            openOverlay('analysis');
+            setOpen(false);
+          }}>
+            분석
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-// ── 훈련 컨트롤 바 (SettingsProvider + TrainingProvider 내부) ──────────
-function TrainingControls() {
-  const { building }                  = useSettings();
-  const { status, elapsed, loadSettings, start, stop } = useTraining();
-
-  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
-  const ss = String(elapsed % 60).padStart(2, '0');
-
-  const timerLabel =
-    status === 'running' ? `진행중 ${mm}:${ss}` :
-    status === 'ended'   ? `종료   ${mm}:${ss}` :
-                           '대기중 00:00';
-
-  return (
-    <div className="nav-training">
-      <NavOverlayButtons />
-      <div className="nav-training__divider" />
-      <span className="nav-training__target">
-        {building.targetName || '대상 미설정'}
-      </span>
-      <span className={`nav-training__timer${status === 'running' ? ' nav-training__timer--running' : ''}`}>
-        {timerLabel}
-      </span>
-      <div className="nav-training__btns">
-        <button
-          className="nav-btn nav-btn--setting"
-          onClick={loadSettings}
-          title="설정 데이터를 실행 상태로 불러오고 초기화"
-        >
-          훈련 세팅
-        </button>
-        <button
-          className="nav-btn nav-btn--start"
-          onClick={start}
-          disabled={status !== 'idle'}
-        >
-          시작
-        </button>
-        <button
-          className="nav-btn nav-btn--stop"
-          onClick={stop}
-          disabled={status !== 'running'}
-        >
-          종료
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── 앱 쉘 ────────────────────────────────────────────────────────────
-function AppShell() {
+// ── 앱 쉘 — React.memo로 NavSlotProvider 재렌더 전파 차단 ─────────────
+const AppShell = memo(function AppShell() {
+  const { overlay } = useUIOverlay();
   return (
     <div className="app-shell tactical-board-root">
-      {/* ── 상단 네비게이션 ── */}
       <nav className="app-nav">
-        <span className="app-nav__brand">전술 상황판</span>
-        <div className="app-nav__links">
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              `app-nav__link${isActive ? ' app-nav__link--active' : ''}`
-            }
-          >
-            설정
-          </NavLink>
-          <NavLink
-            to="/play"
-            className={({ isActive }) =>
-              `app-nav__link${isActive ? ' app-nav__link--active' : ''}`
-            }
-          >
-            실행
-          </NavLink>
-        </div>
-
-        {/* ── 훈련 컨트롤 (동일 줄 우측) ── */}
-        <TrainingControls />
+        <MenuButton />
+        <NavSlot />
       </nav>
-
-      {/* ── 페이지 라우트 ── */}
       <div className="app-content">
         <Routes>
           <Route path="/settings" element={<SettingsPage />} />
@@ -109,9 +68,10 @@ function AppShell() {
           <Route path="*"         element={<Navigate to="/play" replace />} />
         </Routes>
       </div>
+      {overlay === 'scenario' && <ScenarioModal />}
     </div>
   );
-}
+});
 
 function App() {
   return (
@@ -119,7 +79,9 @@ function App() {
       <SettingsProvider>
         <TrainingProvider>
           <UIOverlayProvider>
-            <AppShell />
+            <NavSlotProvider>
+              <AppShell />
+            </NavSlotProvider>
           </UIOverlayProvider>
         </TrainingProvider>
       </SettingsProvider>

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
-export type OverlayType = 'unit-add' | 'log' | 'analysis' | null;
+export type OverlayType = 'unit-add' | 'log' | 'analysis' | 'scenario' | 'checklist' | null;
 
 interface UIOverlayContextValue {
   overlay: OverlayType;

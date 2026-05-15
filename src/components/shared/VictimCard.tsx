@@ -165,7 +165,7 @@ export function VictimCard({ victim, absPos }: Props) {
 
   const displayTop =
     victim.kind === 'person'
-      ? [victim.gender, victim.age, victim.condition].filter(v => v != null && v !== '').join('/')
+      ? [victim.gender, victim.age, victim.condition].filter(v => v != null).join('/')
       : victim.kind === 'group' ? `다수 ${victim.groupCount ?? 2}명`
       : victim.customLabel?.trim() || '기타';
   const title = [displayTop, buildVictimDisplayLine(victim)].filter(Boolean).join(' · ');

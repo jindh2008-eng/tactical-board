@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSettings }        from '../store/settingsStore';
 import { useTraining }        from '../context/TrainingContext';
+import { useUIOverlay }       from '../context/UIOverlayContext';
+import { useNavSlot }         from '../context/NavSlotContext';
+import { DisplayOptionsContext } from '../context/DisplayOptionsContext';
 import { useTokens, TokenProvider } from '../context/TokenContext';
 import { VictimProvider }     from '../context/VictimContext';
 import { EventProvider }      from '../context/EventContext';
@@ -8,6 +11,7 @@ import { ActionModeProvider, useActionMode } from '../context/ActionModeContext'
 import { WaterConnectionProvider } from '../context/WaterConnectionContext';
 import { WaterLevelProvider }      from '../context/WaterLevelContext';
 import { HydrantStateProvider }    from '../context/HydrantStateContext';
+import { FireCommandProvider }     from '../context/FireCommandContext';
 import { SprayOverlay }            from '../components/overlay/SprayOverlay';
 import { AerialOverlay }          from '../components/overlay/AerialOverlay';
 import { UnitStatusPanel as UnitInfoPanel } from '../components/left/UnitStatusPanel';
@@ -16,11 +20,12 @@ import { TacticalArea }       from '../components/building/TacticalArea';
 import { WaterConnectionOverlay } from '../components/overlay/WaterConnectionOverlay';
 import { UnitAddDrawer }      from '../components/overlays/UnitAddDrawer';
 import { AnalysisModal }      from '../components/overlays/AnalysisModal';
-import { LogPanel }           from '../components/right/LogPanel';
+import { LogDrawer }          from '../components/overlays/LogDrawer';
+import { ChecklistPanel }     from '../components/panels/ChecklistPanel';
 import './PlayPage.css';
 
 type LeftPanel  = 'resource' | 'unit' | null;
-type RightPanel = 'log' | null;
+type RightPanel = 'checklist' | null;
 
 // ─────────────────────────────────────────────
 // ActionMode 오버레이 배너
@@ -107,25 +112,26 @@ function SprayTargetOverlay() {
   const { setSprayState }   = useTokens();
 
   if (mode.type !== 'spray-target') return null;
+  const sprayMode = mode;
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     const { floorId, zoneKey } = getPointInfo(e.clientX, e.clientY);
 
     // 토큰이 있는 구역 외 클릭은 무시
-    if (!isValidSprayZone(e.clientX, e.clientY, mode.sourceZoneKey)) return;
+    if (!isValidSprayZone(e.clientX, e.clientY, sprayMode.sourceZoneKey)) return;
 
     const board = document.getElementById('tactical-area');
     const rect  = board?.getBoundingClientRect();
     if (!rect) return;
 
     // 방면 구역은 zoneKey, 층 구역은 floorId를 방수 지점에 저장
-    const resolvedFloorId = mode.sourceZoneKey?.startsWith('face-')
+    const resolvedFloorId = sprayMode.sourceZoneKey?.startsWith('face-')
       ? (zoneKey ?? floorId)
       : floorId;
 
-    setSprayState(mode.sourceId, '100%', {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+    setSprayState(sprayMode.sourceId, '100%', {
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top)  / rect.height,
       floorId: resolvedFloorId,
     });
     clearMode();
@@ -148,10 +154,11 @@ const AERIAL_MAX_HEIGHT  = 15;
 const LADDER_MAX_HEIGHT  = 7;
 
 function AerialTargetOverlay() {
-  const { mode, clearMode }                        = useActionMode();
+  const { mode, clearMode }               = useActionMode();
   const { setStatusTag, setAerialTarget } = useTokens();
 
   if (mode.type !== 'aerial-floor-select') return null;
+  const aerialMode = mode;
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     // 클릭 지점에서 floor-row 탐색
@@ -175,8 +182,8 @@ function AerialTargetOverlay() {
     const displayLabel = floorEl.getAttribute('data-floor-label') ?? floorId;
 
     // 높이 제한 검증
-    const maxHeight   = mode.unitType === 'ladder' ? LADDER_MAX_HEIGHT : AERIAL_MAX_HEIGHT;
-    const vehicleName = mode.unitType === 'ladder' ? '굴절차' : '고가차';
+    const maxHeight   = aerialMode.unitType === 'ladder' ? LADDER_MAX_HEIGHT : AERIAL_MAX_HEIGHT;
+    const vehicleName = aerialMode.unitType === 'ladder' ? '굴절차' : '고가차';
     if (floorHeight > maxHeight) {
       alert(`${vehicleName}는 ${maxHeight}층 높이까지만 전개 가능합니다.`);
       return;
@@ -186,12 +193,12 @@ function AerialTargetOverlay() {
     const rect  = board?.getBoundingClientRect();
     if (!rect) return;
 
-    setStatusTag(mode.sourceId, { label: `${displayLabel} ${mode.actionLabel}`, color: 'yellow' });
-    setAerialTarget(mode.sourceId, {
+    setStatusTag(aerialMode.sourceId, { label: `${displayLabel} ${aerialMode.actionLabel}`, color: 'yellow' });
+    setAerialTarget(aerialMode.sourceId, {
       floorId,
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-      deployLabel: mode.actionLabel,
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top)  / rect.height,
+      deployLabel: aerialMode.actionLabel,
     });
     clearMode();
   }
@@ -241,8 +248,8 @@ function AerialSprayTargetOverlay() {
     setStatusTag(mode.sourceId, { label: `${floorLabel} 방수`, color: 'blue' });
     setAerialSprayTarget(mode.sourceId, {
       floorId: floorId ?? (token.aerialTarget?.floorId ?? ''),
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top)  / rect.height,
     });
     clearMode();
   }
@@ -318,15 +325,113 @@ function ResourcePanel() {
 }
 
 // ─────────────────────────────────────────────
+// nav 옵션 드롭다운
+// ─────────────────────────────────────────────
+
+type OptionKey = 'waterConn' | 'spray' | 'waterLevel';
+
+interface NavOptionsMenuProps {
+  showWaterConn:  boolean;
+  showSpray:      boolean;
+  showWaterLevel: boolean;
+  onToggle:       (key: OptionKey) => void;
+}
+
+function NavOptionsMenu({ showWaterConn, showSpray, showWaterLevel, onToggle }: NavOptionsMenuProps) {
+  return (
+    <div className="nav-options">
+      <span className="nav-options__label">표시옵션</span>
+      <label className="nav-options__item">
+        <input type="checkbox" checked={showWaterConn} onChange={() => onToggle('waterConn')} />
+        송수 연결선
+      </label>
+      <label className="nav-options__item">
+        <input type="checkbox" checked={showSpray} onChange={() => onToggle('spray')} />
+        방수 표시
+      </label>
+      <label className="nav-options__item">
+        <input type="checkbox" checked={showWaterLevel} onChange={() => onToggle('waterLevel')} />
+        수량표시
+      </label>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // PlayPage
 // ─────────────────────────────────────────────
 
 export function PlayPage() {
   const { building, timing, dispatchRoster, victimSetup, arrivalMode } = useSettings();
-  const { runKey, status, elapsed } = useTraining();
+  const { runKey, status, elapsed, loadSettings, start, stop }         = useTraining();
+  const { openOverlay }                                                 = useUIOverlay();
+
+  const [showWaterConn,  setShowWaterConn]  = useState(true);
+  const [showSpray,      setShowSpray]      = useState(true);
+  const [showWaterLevel, setShowWaterLevel] = useState(true);
+
+  function handleOptionToggle(key: OptionKey) {
+    if (key === 'waterConn')  setShowWaterConn(v => !v);
+    else if (key === 'spray') setShowSpray(v => !v);
+    else                      setShowWaterLevel(v => !v);
+  }
 
   const elapsedRef = useRef(elapsed);
   useEffect(() => { elapsedRef.current = elapsed; }, [elapsed]);
+
+  // ── nav 슬롯: 훈련 컨트롤을 상단 공유 nav 바에 주입 ──
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+  const timerLabel =
+    status === 'running' ? `진행중 ${mm}:${ss}` :
+    status === 'ended'   ? `종료   ${mm}:${ss}` :
+                           '대기중 00:00';
+
+  useNavSlot(
+    <div className="play-nav-slot">
+      {/* 좌 */}
+      <div className="play-nav__left">
+        <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('unit-add')}>
+          출동대 추가
+        </button>
+        <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('log')}>
+          이벤트 로그
+        </button>
+        <NavOptionsMenu
+          showWaterConn={showWaterConn}
+          showSpray={showSpray}
+          showWaterLevel={showWaterLevel}
+          onToggle={handleOptionToggle}
+        />
+        <div className="play-nav__divider" />
+      </div>
+
+      {/* 중앙 — 대상명 + 타이머 */}
+      <div className="play-nav__center">
+        <span className="play-nav__target">{building.targetName || '대상 미설정'}</span>
+        <span className={`play-nav__timer${status === 'running' ? ' play-nav__timer--running' : ''}`}>
+          {timerLabel}
+        </span>
+      </div>
+
+      {/* 우 */}
+      <div className="play-nav__btns">
+        <button
+          className="nav-btn nav-btn--setting"
+          onClick={loadSettings}
+          title="설정 데이터를 실행 상태로 불러오고 초기화"
+        >
+          훈련 세팅
+        </button>
+        <button className="nav-btn nav-btn--start" onClick={start} disabled={status !== 'idle'}>
+          시작
+        </button>
+        <button className="nav-btn nav-btn--stop" onClick={stop} disabled={status !== 'running'}>
+          종료
+        </button>
+      </div>
+    </div>
+  );
 
   const started = status === 'running';
   const [leftPanel,  setLeftPanel]  = useState<LeftPanel>(null);
@@ -341,7 +446,8 @@ export function PlayPage() {
   }
 
   return (
-    <div className="play-page">
+    <div className="play-page" onContextMenu={e => e.preventDefault()}>
+      <DisplayOptionsContext.Provider value={{ showWaterConn, showSpray, showWaterLevel }}>
       <EventProvider key={runKey}>
       <TokenProvider
         key={runKey}
@@ -362,6 +468,7 @@ export function PlayPage() {
           <WaterConnectionProvider>
           <WaterLevelProvider>
           <HydrantStateProvider>
+          <FireCommandProvider>
             <div className="play-layout">
               {/* ── 자원대기소 Drawer (상단 절반) ── */}
               <div className={`left-drawer left-drawer--resource${leftPanel === 'resource' ? ' left-drawer--open' : ''}`}>
@@ -377,7 +484,7 @@ export function PlayPage() {
                 </button>
               </div>
 
-              {/* ── 출동대현황 Drawer (하단 절반) ── */}
+              {/* ── 출동대현황 Drawer (하단) ── */}
               <div className={`left-drawer left-drawer--unit${leftPanel === 'unit' ? ' left-drawer--open' : ''}`}>
                 <div className="left-drawer__panel">
                   <UnitInfoPanel />
@@ -391,6 +498,22 @@ export function PlayPage() {
                 </button>
               </div>
 
+              {/* ── 진행상황 관리 탭 (항상 좌측 가장자리에 표시) ── */}
+              <button
+                className={`right-panel__tab${rightPanel === 'checklist' ? ' right-panel__tab--active' : ''}`}
+                onClick={() => toggleRightPanel('checklist')}
+                title="진행상황 관리"
+              >
+                진행상황 관리
+              </button>
+
+              {/* ── 진행상황 관리 패널 (탭 오른쪽에서 슬라이드) ── */}
+              <div className={`right-panel${rightPanel === 'checklist' ? ' right-panel--open' : ''}`}>
+                <div className="right-panel__panel">
+                  <ChecklistPanel />
+                </div>
+              </div>
+
               {/* ── 전술상황판 — 항상 전체 크기 유지 ── */}
               <div className="tactical-board-wrap">
                 <div className="tactical-board-inner">
@@ -398,26 +521,14 @@ export function PlayPage() {
                     config={building.config}
                     fireFloor={building.fireFloor}
                     initialFireStatus={building.fireStatus}
+                    extraFireFloors={building.extraFireFloors ?? []}
                   />
                 </div>
               </div>
 
-              {/* ── 우측 로그 패널 (탭 토글) ── */}
-              <div className={`right-drawer${rightPanel === 'log' ? ' right-drawer--open' : ''}`}>
-                <div className="right-drawer__panel">
-                  <LogPanel collapsed={false} onToggle={() => {}} />
-                </div>
-                <button
-                  className="right-drawer__tab"
-                  onClick={() => toggleRightPanel('log')}
-                  title="이벤트 로그"
-                >
-                  이벤트 로그
-                </button>
-              </div>
-
               {/* ── 오버레이 (Drawer / Modal) ── */}
               <UnitAddDrawer />
+              <LogDrawer />
               <AnalysisModal />
 
               {/* ── ActionMode 배너 (모드 활성 시만 표시) ── */}
@@ -439,6 +550,7 @@ export function PlayPage() {
               <AerialTargetOverlay />
               <AerialSprayTargetOverlay />
             </div>
+          </FireCommandProvider>
           </HydrantStateProvider>
           </WaterLevelProvider>
           </WaterConnectionProvider>
@@ -446,6 +558,7 @@ export function PlayPage() {
         </VictimProvider>
       </TokenProvider>
       </EventProvider>
+      </DisplayOptionsContext.Provider>
     </div>
   );
 }

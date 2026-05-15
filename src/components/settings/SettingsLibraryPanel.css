@@ -52,17 +52,6 @@
   border-color: var(--color-accent);
 }
 
-.slp__saved-badge {
-  font-size: 0.65rem;
-  background: #1a3a1a;
-  border: 1px solid #2a5a2a;
-  color: #88cc88;
-  padding: 1px 7px;
-  border-radius: 10px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 .slp__actions {
   display: flex;
   gap: 4px;
@@ -87,6 +76,11 @@
 
 .slp__btn:hover:not(:disabled) {
   background: #303048;
+}
+
+.slp__btn:active:not(:disabled) {
+  transform: scale(0.96);
+  filter: brightness(0.80);
 }
 
 .slp__btn:disabled {

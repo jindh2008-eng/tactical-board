@@ -4,6 +4,7 @@ import {
 import type { UnitToken, LogEntry, TokenType, TokenColor, TokenBadge, StatusTag, SprayState, Pos } from '../types';
 import type { DispatchRosterItem, ArrivalMode } from '../types/settings';
 import { rosterItemToToken, initCountersFromRoster, computeCountersFromTokens } from '../utils/dispatchArrival';
+import { computeRosterDisplayName } from '../utils/dispatchRoster';
 import {
   saveTokenSession, loadTokenSession,
 } from '../utils/runtimeSession';
@@ -71,10 +72,12 @@ interface TokenContextValue {
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
   removeBadge:       (tokenId: string, badgeId: string) => void;
   clearBadges:       (tokenId: string) => void;
+  setMissionTag:     (tokenId: string, tag: StatusTag | null) => void;
   setStatusTag:      (tokenId: string, tag: StatusTag | null) => void;
   setCustomNote:     (tokenId: string, note: string) => void;
-  setSprayState:     (tokenId: string, state: SprayState | null, target?: { x: number; y: number } | null) => void;
+  setSprayState:     (tokenId: string, state: SprayState | null, target?: { x: number; y: number; floorId?: string } | null) => void;
   setAerialTarget:      (tokenId: string, target: { floorId: string; x: number; y: number; deployLabel: string } | null) => void;
+  moveAerialTarget:     (tokenId: string, x: number, y: number, floorId?: string) => void;
   setAerialSprayTarget: (tokenId: string, target: { floorId: string; x: number; y: number } | null) => void;
   changeTokenColor:  (tokenId: string, color: TokenColor) => void;
   addLog:            (entry: Omit<LogEntry, 'id' | 'timestamp'>) => void;
@@ -103,7 +106,13 @@ function nowHHMM(): string {
  * arrivalSec 값에 관계없이 zoneKey = null.
  */
 function buildInitialTokens(roster: DispatchRosterItem[]): UnitToken[] {
-  return roster.map(item => rosterItemToToken(item, null));
+  return roster.map(item => {
+    const displayName = computeRosterDisplayName(item);
+    return rosterItemToToken(
+      displayName !== item.name ? { ...item, name: displayName } : item,
+      null,
+    );
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -673,6 +682,26 @@ export function TokenProvider({
     }, ...prev]);
   }, []);
 
+  const setMissionTag = useCallback((tokenId: string, tag: StatusTag | null) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
+    if (!token) return;
+    setTokens(prev => prev.map(t =>
+      t.id === tokenId ? { ...t, missionTag: tag ?? undefined } : t
+    ));
+    const note = tag ? tag.label : `${token.missionTag?.label ?? '임무'} 해제`;
+    setLogs(prev => [{
+      id:        `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: nowTimestamp(),
+      logType:   'status-tag' as const,
+      tokenId,
+      tokenName:  token.label,
+      tokenColor: token.color,
+      fromZoneId: '',
+      toZoneId:   '',
+      note,
+    }, ...prev]);
+  }, []);
+
   const setStatusTag = useCallback((tokenId: string, tag: StatusTag | null) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
@@ -702,7 +731,7 @@ export function TokenProvider({
   const setSprayState = useCallback((
     tokenId: string,
     state:   SprayState | null,
-    target?: { x: number; y: number } | null,
+    target?: { x: number; y: number; floorId?: string } | null,
   ) => {
     setTokens(prev => prev.map(t => {
       if (t.id !== tokenId) return t;
@@ -714,6 +743,14 @@ export function TokenProvider({
   const setAerialTarget = useCallback((tokenId: string, target: { floorId: string; x: number; y: number; deployLabel: string } | null) => {
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, aerialTarget: target ?? undefined, aerialSprayTarget: null } : t
+    ));
+  }, []);
+
+  const moveAerialTarget = useCallback((tokenId: string, x: number, y: number, floorId?: string) => {
+    setTokens(prev => prev.map(t =>
+      t.id === tokenId && t.aerialTarget
+        ? { ...t, aerialTarget: { ...t.aerialTarget, x, y, ...(floorId ? { floorId } : {}) } }
+        : t
     ));
   }, []);
 
@@ -733,7 +770,7 @@ export function TokenProvider({
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
       createToken, moveToken, rescueUnit,
-      addBadge, removeBadge, clearBadges, setStatusTag, setCustomNote, setSprayState, setAerialTarget, setAerialSprayTarget, changeTokenColor, addLog,
+      addBadge, removeBadge, clearBadges, setMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, moveAerialTarget, setAerialSprayTarget, changeTokenColor, addLog,
     }}>
       {children}
     </TokenContext.Provider>

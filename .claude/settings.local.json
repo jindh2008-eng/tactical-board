@@ -25,7 +25,23 @@
       "Bash(grep -i \"\\\\.css$\")",
       "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
       "Bash(grep -oE \"^\\\\.[a-z0-9-_]+\\(\\\\s|,|:|\\\\{\\)\")",
-      "Bash(grep -oE \"^\\\\.[a-zA-Z0-9_-]+\\\\s*\\(\\\\{|,\\)\" /Users/daehyun/dev/tactical-board/src/components/shared/TokenCard.css)"
+      "Bash(grep -oE \"^\\\\.[a-zA-Z0-9_-]+\\\\s*\\(\\\\{|,\\)\" /Users/daehyun/dev/tactical-board/src/components/shared/TokenCard.css)",
+      "Bash(Get-ChildItem -Path \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\overlay\" -Force)",
+      "Bash(Select-Object FullName, Name)",
+      "Bash(Get-ChildItem -Path \"d:\\\\claude\\\\tactical-board\\\\src\\\\context\" -File)",
+      "Bash(git checkout *)",
+      "Bash(Remove-Item \"src/components/overlay/PumpLineOverlay.tsx\" -Force)",
+      "Bash(Remove-Item \"src/components/overlay/PumpLineOverlay.css\" -Force)",
+      "Bash(Get-ChildItem -Path \"d:\\\\claude\\\\tactical-board\\\\src\\\\pages\" -Force)",
+      "Bash(Select-Object Name)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\claude\\\\tactical-board\" -Recurse -Directory -Name)",
+      "Bash(Select-Object -First 20)",
+      "Bash(findstr /r \"enterMode\\\\|water-relay\\\\|spray-target\\\\|aerial\" \"src\\\\**\\\\*.tsx\")",
+      "Bash(Remove-Item \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\left\\\\VictimCreator.tsx\" -Force)",
+      "Bash(Remove-Item \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\left\\\\VictimCreator.css\" -Force)",
+      "Bash(Get-ChildItem -Path 'd:\\\\claude\\\\tactical-board' -Recurse -Filter '*Settings*')",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

@@ -2,12 +2,19 @@ import type { BuildingConfig, FireStatus } from './index';
 import type { VictimGender, VictimAgeGroup, VictimCondition, VictimFace } from './victim';
 export type { VictimFace };
 
+/** 추가 화재 층 (화점층 외 초기 화재 설정) */
+export interface ExtraFireFloor {
+  floor:  number;
+  status: FireStatus;
+}
+
 /** 건물 및 화재 상황 설정 */
 export interface BuildingSettings {
-  config:      BuildingConfig;
-  fireFloor:   number;
-  fireStatus:  FireStatus | null;  // 초기 화재상태
-  targetName:  string;             // 대상명 (훈련 건물명)
+  config:            BuildingConfig;
+  fireFloor:         number;
+  fireStatus:        FireStatus | null;  // 초기 화재상태
+  targetName:        string;             // 대상명 (훈련 건물명)
+  extraFireFloors?:  ExtraFireFloor[];   // 화점층 외 추가 화재 층
 }
 
 /** 출동대 행동 타이밍 설정 */
@@ -73,6 +80,66 @@ export interface SettingsState {
 }
 
 // ─────────────────────────────────────────────
+// 훈련 진행 체크리스트
+// ─────────────────────────────────────────────
+
+export type ChecklistItemType = 'procedure' | 'event' | 'arrival' | 'message' | 'fire' | 'xvr' | 'unit';
+
+/** 출동대 유형별 사전 정의 상태메세지 목록 */
+export type UnitStatusConfig = Record<string, string[]>;
+
+export interface ChecklistItem {
+  id:                string;
+  text:              string;
+  itemType:          ChecklistItemType;
+  arrivalOrder?:     number;     // 출동대 도착 타입일 때 착대 순서
+  fireFloor?:        number;     // 화재 타입일 때 대상 층
+  fireTargetStatus?: FireStatus; // 화재 타입일 때 목표 화재상태
+  messageLocation?:  string;     // 메세지 타입일 때 층/구역 위치
+  messageBody?:      string;     // 메세지 타입일 때 본문 (줄바꿈 포함)
+  eventId?:          string;     // 이벤트 타입일 때 대상 돌발상황 ID
+  eventTargetStatus?: string;    // 이벤트 타입일 때 목표 상태
+  unitRosterId?:     string;     // 출동대 타입일 때 대상 로스터 ID
+  unitStatusText?:   string;     // 출동대 타입일 때 상태 메세지
+}
+
+export interface ChecklistSection {
+  id:    string;
+  title: string;
+  items: ChecklistItem[];
+}
+
+/** 체크리스트 레벨 — 현재 초급만 사용, 추후 'mid' | 'senior' 추가 가능 */
+export type ChecklistLevel = 'junior';
+
+export interface ChecklistConfig {
+  level:    ChecklistLevel;
+  sections: ChecklistSection[];
+}
+
+// ─────────────────────────────────────────────
+// 지휘절차
+// ─────────────────────────────────────────────
+
+export type CommandProcedureItemType = 'procedure' | 'event' | 'message' | 'dispatch' | 'fire';
+
+export interface CommandProcedureItem {
+  id:   string;
+  type: CommandProcedureItemType;
+  text: string;
+}
+
+export interface CommandProcedureCategory {
+  id:            string;
+  categoryTitle: string;
+  items:         CommandProcedureItem[];
+}
+
+export type CommandProcedureLevel = 'beginner' | 'intermediate' | 'advanced';
+
+export type CommandProcedureConfigs = Partial<Record<CommandProcedureLevel, CommandProcedureCategory[]>>;
+
+// ─────────────────────────────────────────────
 // 출동대 사전 생성 설정 (설정창 전용)
 // ─────────────────────────────────────────────
 
@@ -102,9 +169,10 @@ export type ArrivalMode = 'time' | 'order';
 /** 출동대 사전설정 로스터 항목 */
 export interface DispatchRosterItem {
   id:           string;
-  name:         string;        // '진압1대', '펌프1호', …
+  name:         string;        // '진압1', '펌프1', … (내부 키 — 매칭용)
   unitType:     string;        // 'suppression' | 'rescue' | 'ems' | 'pump' | 'rescue_vehicle' | 'aerial' | 'ladder' | 'smokeExhaust' | 'command'
   linkedTo:     string | null; // 연동 활동대 ID (자동 연동 차량일 때), 나머지는 null
+  unitPrefix?:  string;        // 부대명 접두사 — 입력 시 '00진압대'처럼 표시
   arrivalSec:   number;        // [시간설정 모드] 도착 예정 시간(초)
   arrivalOrder: number;        // [착대설정 모드] 착대 순서 (1~10, 기본 1)
 }

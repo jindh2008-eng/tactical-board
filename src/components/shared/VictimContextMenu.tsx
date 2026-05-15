@@ -103,7 +103,7 @@ export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, on
       <div className="vcm__header">
         <span className="vcm__header-top">
           {victim.kind === 'person'
-            ? [victim.gender, victim.age, victim.condition].filter(v => v != null && v !== '').join('/')
+            ? [victim.gender, victim.age, victim.condition].filter(v => v != null).join('/')
             : victim.kind === 'group' ? `다수 ${victim.groupCount ?? 2}명`
             : victim.customLabel?.trim() || '기타'}
         </span>

@@ -4,6 +4,8 @@ import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useHydrantState }     from '../../context/HydrantStateContext';
 import { useTokens }           from '../../context/TokenContext';
 import { useWaterLevel }       from '../../context/WaterLevelContext';
+import { useDisplayOptions }   from '../../context/DisplayOptionsContext';
+import { useActionMode }       from '../../context/ActionModeContext';
 import './WaterConnectionOverlay.css';
 
 // ─────────────────────────────────────────────
@@ -36,7 +38,42 @@ function computePathD(fromId: string, toId: string): string | null {
   const x2 = cx2 - ux * ENDPOINT_OFFSET;
   const y2 = cy2 - uy * ENDPOINT_OFFSET;
 
-  return `M ${x1} ${y1} L ${x2} ${y2}`;
+  // S자 2-bend 곡선
+  const curve = Math.min(len * 0.20, 80);
+  const px    = -uy;
+  const py    =  ux;
+
+  let cp1x = x1 + (x2 - x1) * 0.30 + px * curve;
+  let cp1y = y1 + (y2 - y1) * 0.30 + py * curve;
+  let cp2x = x1 + (x2 - x1) * 0.70 - px * curve;
+  let cp2y = y1 + (y2 - y1) * 0.70 - py * curve;
+
+  const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+  const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+  cp1x = Math.max(minX, Math.min(maxX, cp1x));
+  cp1y = Math.max(minY, Math.min(maxY, cp1y));
+  cp2x = Math.max(minX, Math.min(maxX, cp2x));
+  cp2y = Math.max(minY, Math.min(maxY, cp2y));
+
+  return `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+}
+
+// clipPath d 생성: 뷰포트 전체에서 토큰 영역을 evenodd로 제거
+const TOKEN_CLIP_PAD = 6;
+function buildTokenClipD(): string {
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  let d = `M 0 0 L ${W} 0 L ${W} ${H} L 0 ${H} Z`;
+  document.querySelectorAll('.token-card-wrapper').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const x = r.left - TOKEN_CLIP_PAD;
+    const y = r.top  - TOKEN_CLIP_PAD;
+    const w = r.width  + TOKEN_CLIP_PAD * 2;
+    const h = r.height + TOKEN_CLIP_PAD * 2;
+    d += ` M ${x} ${y} L ${x+w} ${y} L ${x+w} ${y+h} L ${x} ${y+h} Z`;
+  });
+  return d;
 }
 
 // ─────────────────────────────────────────────
@@ -48,10 +85,9 @@ export function WaterConnectionOverlay() {
   const { isBroken: isHydrantBroken }     = useHydrantState();
   const { tokens }                        = useTokens();
   const waterLevel                        = useWaterLevel();
+  const { showWaterConn }                 = useDisplayOptions();
+  const { mode }                          = useActionMode();
 
-  // ── 고장 여부 판별 ──────────────────────────
-  // 소화전 고장: HydrantStateContext 기준
-  // 펌프/물탱크 고장: statusTag === '펌프고장' 또는 수량 0% 소진
   function isConnectionBroken(fromId: string, fromType: string): boolean {
     if (fromType === 'hydrant') return isHydrantBroken(fromId);
     const src = tokens.find(t => t.id === fromId);
@@ -60,7 +96,15 @@ export function WaterConnectionOverlay() {
   }
 
   // ── rAF 기반 위치 갱신 ──────────────────────
-  const svgRef = useRef<SVGSVGElement>(null);
+  const svgRef     = useRef<SVGSVGElement>(null);
+  const clipPathEl = useRef<SVGPathElement>(null);
+
+  // 마운트 직후 clipPath를 뷰포트 전체로 초기화 (빈 d면 전체가 클립되어 보이지 않음)
+  useEffect(() => {
+    if (clipPathEl.current) {
+      clipPathEl.current.setAttribute('d', buildTokenClipD());
+    }
+  }, []);
 
   useEffect(() => {
     if (connections.length === 0) return;
@@ -80,6 +124,11 @@ export function WaterConnectionOverlay() {
         if (vis) vis.setAttribute('d', pathD);
         if (dot) dot.setAttribute('d', pathD);
         if (hit) hit.setAttribute('d', pathD);
+      }
+
+      // 토큰 위치가 바뀔 수 있으므로 매 프레임 갱신
+      if (clipPathEl.current) {
+        clipPathEl.current.setAttribute('d', buildTokenClipD());
       }
 
       rafId = requestAnimationFrame(update);
@@ -102,45 +151,51 @@ export function WaterConnectionOverlay() {
     setPopup(null);
   }
 
+  if (!showWaterConn && mode.type !== 'water-connect') return null;
   if (connections.length === 0 && popup === null) return null;
 
   return ReactDOM.createPortal(
     <>
-      {/* ── SVG 오버레이 ─────────────────────── */}
       <svg ref={svgRef} className="wco-svg" aria-hidden="true">
-        {connections.map(conn => {
-          const broken = isConnectionBroken(conn.fromId, conn.fromType);
-          return (
-            <g key={conn.id} className={broken ? 'wco-group--broken' : ''}>
-              {/* 배관 선 */}
-              <path
-                id={`wc-vis-${conn.id}`}
-                d="M 0 0 L 0 0"
-                className="wco-line"
-                style={{ pointerEvents: 'none' }}
-              />
+        <defs>
+          {/*
+            clip-rule="evenodd": 뷰포트 전체 rect에서 토큰 rect를 구멍처럼 뚫음
+            → 선이 토큰 영역에 진입하면 자동으로 클립되어 토큰 뒤로 들어가는 효과
+          */}
+          <clipPath id="wco-token-clip">
+            <path ref={clipPathEl} clipRule="evenodd" />
+          </clipPath>
+        </defs>
 
-              {/* 흐르는 물(점) — 고장 시 정지 */}
-              <path
-                id={`wc-dot-${conn.id}`}
-                d="M 0 0 L 0 0"
-                className="wco-flow"
-                style={{ pointerEvents: 'none' }}
-              />
-
-              {/* 클릭 히트 영역 */}
-              <path
-                id={`wc-hit-${conn.id}`}
-                d="M 0 0 L 0 0"
-                className="wco-hit"
-                onClick={e => handleLineClick(e, conn.id)}
-              />
-            </g>
-          );
-        })}
+        <g clipPath="url(#wco-token-clip)">
+          {connections.map(conn => {
+            const broken = isConnectionBroken(conn.fromId, conn.fromType);
+            return (
+              <g key={conn.id} className={broken ? 'wco-group--broken' : ''}>
+                <path
+                  id={`wc-vis-${conn.id}`}
+                  d="M 0 0 L 0 0"
+                  className="wco-line"
+                  style={{ pointerEvents: 'none' }}
+                />
+                <path
+                  id={`wc-dot-${conn.id}`}
+                  d="M 0 0 L 0 0"
+                  className="wco-flow"
+                  style={{ pointerEvents: 'none' }}
+                />
+                <path
+                  id={`wc-hit-${conn.id}`}
+                  d="M 0 0 L 0 0"
+                  className="wco-hit"
+                  onClick={e => handleLineClick(e, conn.id)}
+                />
+              </g>
+            );
+          })}
+        </g>
       </svg>
 
-      {/* ── 송수 해제 팝업 ───────────────────── */}
       {popup && (
         <>
           <div className="wco-popup-backdrop" onMouseDown={() => setPopup(null)} />

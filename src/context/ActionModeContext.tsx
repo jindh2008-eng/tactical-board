@@ -63,6 +63,17 @@ export function ActionModeProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [clearMode]);
 
+  // 전역 우클릭 → 모드 취소 (모드 활성 중일 때만)
+  useEffect(() => {
+    if (mode.type === null) return;
+    function onContextMenu(e: MouseEvent) {
+      e.preventDefault();
+      clearMode();
+    }
+    document.addEventListener('contextmenu', onContextMenu);
+    return () => document.removeEventListener('contextmenu', onContextMenu);
+  }, [mode.type, clearMode]);
+
   return (
     <ActionModeContext.Provider value={{ mode, enterMode, clearMode }}>
       {children}

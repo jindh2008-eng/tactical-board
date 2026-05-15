@@ -146,8 +146,9 @@ export interface UnitToken {
   unitType: string;                    // 출동대 종류 키 (e.g. 'suppression', 'pump', 'ladder')
   zoneKey:  string | null;             // 현재 위치 구역 키 (null = pool/출동대현황)
   badges:   TokenBadge[];              // 시스템 전용 상태 배지 (구조중 등)
-  statusTag?:  StatusTag;             // 사용자 선택 상태 태그 (1개, 토글)
-  customNote?: string;                 // 직접입력 메모 (말풍선 표시)
+  missionTag?: StatusTag;              // 임무 태그 (토큰 좌측 표시, 1개 토글)
+  statusTag?:  StatusTag;              // 상태 태그 (토큰 위 표시, 1개 토글)
+  customNote?: string;                 // 메모 (말풍선 표시, X로 닫음)
   /**
    * 생성 경로
    * 'roster' : dispatchRoster 기반 자동 생성
@@ -173,7 +174,7 @@ export interface UnitToken {
  * 'fire-status' : 화재상태 변화 (1층 최성기 등)
  * 'status-tag'  : 출동대 상태 변경 (진압1대 단위지휘관 등)
  */
-export type LogType = 'move' | 'assignment' | 'rescue' | 'fire-status' | 'status-tag' | 'water-relay' | 'door' | 'smoke' | 'event-status';
+export type LogType = 'move' | 'assignment' | 'rescue' | 'fire-status' | 'status-tag' | 'water-relay' | 'door' | 'smoke' | 'event-status' | 'checklist';
 
 export interface LogEntry {
   id:             string;

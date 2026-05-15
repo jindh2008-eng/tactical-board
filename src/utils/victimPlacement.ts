@@ -24,9 +24,6 @@ function ageGroupToAge(ag: VictimAgeGroup): number {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
-/** VictimSetupItem.floor 에서 'RF' 의 location 문자열 */
-const RF_LOCATION = 'RF';
-
 // ─────────────────────────────────────────────
 // 위치 표시 유틸리티
 // ─────────────────────────────────────────────

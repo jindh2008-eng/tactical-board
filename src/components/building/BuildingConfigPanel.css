@@ -1,6 +1,180 @@
 /* ─────────────────────────────────────────────
-   건물 정보 입력 바
-   중앙 컬럼 상단에 위치하는 다크 툴바
+   건물 정보 설정 폼 (설정창 전용)
+   ─────────────────────────────────────────────*/
+
+.bcf {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── 기본 정보 행 ── */
+
+.bcf__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bcf__field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bcf__label {
+  font-size: 0.76rem;
+  color: var(--color-text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bcf__input {
+  padding: 4px 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.82rem;
+  outline: none;
+}
+
+.bcf__input:focus {
+  border-color: var(--color-accent);
+}
+
+.bcf__input--name {
+  width: 160px;
+}
+
+.bcf__input--num {
+  width: 52px;
+  text-align: center;
+}
+
+.bcf__unit {
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+}
+
+.bcf__divider {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+
+/* ── 화재 설정 영역 ── */
+
+.bcf__fire-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bcf__fire-label {
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.bcf__fire-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bcf__floor-select {
+  padding: 4px 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.78rem;
+  outline: none;
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.bcf__floor-select--primary {
+  border-color: rgba(192, 96, 80, 0.5);
+  color: #f0a090;
+}
+
+.bcf__floor-select:focus {
+  border-color: var(--color-accent);
+}
+
+.bcf__primary-badge {
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(192, 96, 80, 0.15);
+  color: #c06050;
+  border: 1px solid rgba(192, 96, 80, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bcf__status-select {
+  padding: 4px 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.78rem;
+  outline: none;
+  cursor: pointer;
+  min-width: 80px;
+}
+
+.bcf__status-select:focus {
+  border-color: var(--color-accent);
+}
+
+.bcf__remove-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font-size: 0.68rem;
+  padding: 2px 5px;
+  border-radius: 2px;
+  transition: color 0.1s, background 0.1s;
+}
+
+.bcf__remove-btn:hover {
+  color: #e05c5c;
+  background: rgba(224, 92, 92, 0.1);
+}
+
+.bcf__add-floor-btn {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 4px 12px;
+  font-size: 0.74rem;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.bcf__add-floor-btn:hover {
+  background: var(--color-header-bg);
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+/* ─────────────────────────────────────────────
+   건물 정보 입력 바 (PlayPage 상단 툴바 — 기존 유지)
    ─────────────────────────────────────────────*/
 .config-bar {
   display: flex;

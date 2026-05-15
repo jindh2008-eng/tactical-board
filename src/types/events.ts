@@ -29,7 +29,7 @@ export const EVENT_TYPE_STATUSES: Record<EventType, EventStatusItem[]> = {
     { value: '-',     label: '없음',   icon: '—',  color: '#3a3a42' },
     { value: '연소확대', label: '연소확대', icon: '🔥', color: '#D32F2F' },
     { value: '최성기',  label: '최성기', icon: '🔥', color: '#FF5722' },
-    { value: '70%',   label: '70%',   icon: '🔥', color: '#FF9800' },
+    { value: '큰불잡음', label: '큰불잡음', icon: '🔥', color: '#FF9800' },
     { value: '50%',   label: '50%',   icon: '🔥', color: '#FFC107' },
     { value: '초진',   label: '초진',   icon: '🔥', color: '#424242' },
     { value: '완진',   label: '완진',   icon: '—',  color: '#757575' },
@@ -63,19 +63,10 @@ export interface EventSetupItem {
 }
 
 // ─────────────────────────────────────────────
-// 아이콘 목록
+// 아이콘 목록 (public/event-icon/*.png 자동 스캔)
 // ─────────────────────────────────────────────
 
-export const EVENT_ICON_FILES = [
-  'LPG가스통.png',
-  'LPG저장소.png',
-  '소화전.png',
-  '승용차.png',
-  '용접용가스.png',
-  '지게차.png',
-  '탱크로리.png',
-  '화물차.jpg',
-] as const;
+export { EVENT_ICON_FILES } from 'virtual:event-icons';
 
 /** 이벤트 토큰의 eventType (기존 데이터 호환: undefined → 'fire') */
 export function resolveEventType(item: EventSetupItem): EventType {

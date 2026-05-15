@@ -1,4 +1,4 @@
-import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig, AerialSuppressionConfig } from '../types/settings';
+import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig, AerialSuppressionConfig, ChecklistConfig, CommandProcedureConfigs, UnitStatusConfig } from '../types/settings';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP } from '../types/settings';
 import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../types/presets';
 import type { EventSetupItem } from '../types/events';
@@ -11,6 +11,7 @@ import type { EventSetupItem } from '../types/events';
 export interface WorkingPresets {
   sharedBadgePresets:      SharedBadgePreset[];
   unitBadgePresets:        UnitSpecificBadgePreset[];
+  building?:               BuildingSettings;        // 건물 설정
   timing?:                 TimingSettings;          // 구버전 역호환을 위해 optional
   dispatchSetup?:          DispatchSetup;           // 구버전 역호환을 위해 optional
   dispatchRoster?:         DispatchRosterItem[];    // 구버전 역호환을 위해 optional
@@ -22,6 +23,9 @@ export interface WorkingPresets {
   hydrantSetup?:           HydrantSetupItem[];      // 소화전 사전 설정
   fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
   aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
+  checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
+  commandProcedureConfigs?: CommandProcedureConfigs;  // 지휘절차 (초급/중급/고급)
+  unitStatusConfig?:        UnitStatusConfig;          // 출동대 상태메세지
 }
 
 /** 이름을 붙여 저장하는 설정 세트 */
@@ -41,6 +45,11 @@ export interface SettingsSet {
   stagingAreaChief?:  string;                  // 자원대기소장
   eventSetup?:        EventSetupItem[];        // 이벤트 토큰 설정
   hydrantSetup?:      HydrantSetupItem[];      // 소화전 사전 설정
+  fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
+  aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
+  checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
+  commandProcedureConfigs?: CommandProcedureConfigs;  // 지휘절차 (초급/중급/고급)
+  unitStatusConfig?:        UnitStatusConfig;          // 출동대 상태메세지
 }
 
 // ─────────────────────────────────────────────
@@ -136,6 +145,7 @@ export function loadWorkingPresets(): WorkingPresets {
     return {
       sharedBadgePresets: parsed.sharedBadgePresets ?? [],
       unitBadgePresets:   parsed.unitBadgePresets   ?? [],
+      building:           parsed.building,
       timing:             parsed.timing         ?? DEFAULT_TIMING,
       dispatchSetup,
       dispatchRoster:     parsed.dispatchRoster ?? [],
@@ -147,6 +157,20 @@ export function loadWorkingPresets(): WorkingPresets {
       hydrantSetup:            parsed.hydrantSetup            ?? [],
       fireSuppressionConfig:   parsed.fireSuppressionConfig,
       aerialSuppressionConfig: parsed.aerialSuppressionConfig,
+      checklistConfig: parsed.checklistConfig
+        ? {
+            ...parsed.checklistConfig,
+            sections: (parsed.checklistConfig.sections ?? []).map((s: { id: string; title: string; items: { id: string; text: string; itemType?: string; arrivalOrder?: number }[] }) => ({
+              ...s,
+              items: (s.items ?? []).map(it => ({
+                ...it,
+                itemType: it.itemType ?? 'procedure',
+              })),
+            })),
+          }
+        : undefined,
+      commandProcedureConfigs: parsed.commandProcedureConfigs ?? {},
+      unitStatusConfig:        parsed.unitStatusConfig        ?? {},
     };
   } catch {
     return EMPTY_WORKING;

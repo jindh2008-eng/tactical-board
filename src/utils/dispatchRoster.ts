@@ -1,6 +1,32 @@
 import type { DispatchSetup, DispatchRosterItem } from '../types/settings';
 import { generateId } from './settingsStorage';
 
+// ─── 부대명 표시 ──────────────────────────────────────────────────────
+
+const ROSTER_TYPE_SUFFIX: Record<string, string> = {
+  suppression:    '진압대',
+  pump:           '펌프',
+  rescue:         '구조',
+  rescue_vehicle: '구조차',
+  ems:            '구급',
+  aerial:         '고가',
+  ladder:         '굴절',
+  smokeExhaust:   '배연',
+  command:        '지휘차',
+  water_tank:     '물탱크',
+};
+
+/**
+ * 부대명 접두사가 있으면 "00진압대" 형식으로 반환, 없으면 item.name 그대로.
+ * unitPrefix는 부모·자식 모두에 복사되어 있으므로 allItems 불필요.
+ */
+export function computeRosterDisplayName(item: DispatchRosterItem): string {
+  const prefix = item.unitPrefix?.trim();
+  if (!prefix) return item.name;
+  const suffix = ROSTER_TYPE_SUFFIX[item.unitType] ?? item.name;
+  return `${prefix}${suffix}`;
+}
+
 /** 초 → MM:SS 문자열 */
 export function secsToMmss(secs: number): string {
   const m = Math.floor(secs / 60);
@@ -62,11 +88,13 @@ export function buildRoster(
   for (const { unitEntry, vehEntry } of pendingUnits) {
     const prevUnit = prevByName.get(unitEntry.name);
     const unitId   = prevUnit?.id ?? generateId();
+    const prefix   = prevUnit?.unitPrefix;
     result.push({
       id:           unitId,
       name:         unitEntry.name,
       unitType:     unitEntry.unitType,
       linkedTo:     null,
+      unitPrefix:   prefix,
       arrivalSec:   prevUnit?.arrivalSec   ?? 0,
       arrivalOrder: prevUnit?.arrivalOrder ?? 1,
     });
@@ -78,6 +106,7 @@ export function buildRoster(
         name:         vehEntry.name,
         unitType:     vehEntry.unitType,
         linkedTo:     unitId,
+        unitPrefix:   prefix,  // 부모와 동기화
         arrivalSec:   prevVeh?.arrivalSec   ?? (prevUnit?.arrivalSec ?? 0),
         arrivalOrder: prevVeh?.arrivalOrder ?? (prevUnit?.arrivalOrder ?? 1),
       });
@@ -102,6 +131,7 @@ export function buildRoster(
         name,
         unitType:     def.unitType,
         linkedTo:     null,
+        unitPrefix:   prev?.unitPrefix,
         arrivalSec:   prev?.arrivalSec   ?? 0,
         arrivalOrder: prev?.arrivalOrder ?? 1,
       });

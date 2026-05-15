@@ -1,6 +1,5 @@
-import { UnitStatus }    from '../left/UnitStatus';
-import { VictimCreator } from '../left/VictimCreator';
-import { useUIOverlay }  from '../../context/UIOverlayContext';
+import { UnitStatus }   from '../left/UnitStatus';
+import { useUIOverlay } from '../../context/UIOverlayContext';
 import './overlays.css';
 
 export function UnitAddDrawer() {
@@ -17,7 +16,6 @@ export function UnitAddDrawer() {
         </div>
         <div className="unit-add-drawer__body">
           <UnitStatus />
-          <VictimCreator />
         </div>
       </div>
     </>

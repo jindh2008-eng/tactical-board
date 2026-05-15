@@ -13,6 +13,7 @@ interface Props {
   config?:            BuildingConfig;
   fireFloor?:         number;
   initialFireStatus?: FireStatus | null;
+  extraFireFloors?:   import('../../types/settings').ExtraFireFloor[];
 }
 
 /**
@@ -32,6 +33,7 @@ export function TacticalArea({
   config            = DEFAULT_BUILDING_CONFIG,
   fireFloor         = 1,
   initialFireStatus = null,
+  extraFireFloors   = [],
 }: Props) {
   const displayFloors  = buildDisplayFloors(config, fireFloor);
   const aboveRows      = displayFloors.filter(f => !f.isBasement).length;
@@ -76,6 +78,7 @@ export function TacticalArea({
           config={config}
           fireFloor={fireFloor}
           initialFireStatus={initialFireStatus}
+          extraFireFloors={extraFireFloors}
         />
       </div>
 

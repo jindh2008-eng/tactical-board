@@ -26,6 +26,28 @@
   min-width:     max-content;
 }
 
+/* ── 임무|상태 섹션 헤더 ────────────────────── */
+
+.usbm__section-header {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  padding:     4px 8px 0;
+}
+
+.usbm__section-label {
+  font-size:      0.65rem;
+  font-weight:    700;
+  color:          #888;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.usbm__section-divider {
+  color:     #444;
+  font-size: 0.75rem;
+}
+
 /* ── 상태 버튼 바 ──────────────────────────── */
 
 .usbm__bar {

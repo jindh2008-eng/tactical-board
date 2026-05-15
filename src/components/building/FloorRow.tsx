@@ -18,7 +18,7 @@ export function FloorRow({
     floor.isRange    ? 'floor-row--range'    : '',
   ].filter(Boolean).join(' ');
 
-  const { doorStates, stairSmokeFloor, smokeConcentration } = useBuildingState();
+  const { stairSmokeFloor, smokeConcentration } = useBuildingState();
 
   // RF의 endFloor = aboveGroundFloors + 1
   const floorEndNum = floor.id === 'RF'

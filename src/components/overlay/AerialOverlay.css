@@ -12,7 +12,7 @@
   pointer-events: none;
 }
 
-/* ── 붐/사다리 암 ───────────────────────────── */
+/* ── 굴절차 붐 암 (2개 직선) ───────────────── */
 
 .aerial-arm {
   fill:             none;
@@ -21,18 +21,45 @@
   stroke-linejoin:  round;
 }
 
-/* 고가차 — 노란 사다리, 가로대 표현 */
-.aerial-arm--aerial {
-  stroke:           #ffcc44;
-  stroke-dasharray: 10 5;
-  filter:           drop-shadow(0 0 4px rgba(255, 200, 60, 0.5));
-}
-
-/* 굴절차 — 주황 붐, 짧은 분절 표현 */
 .aerial-arm--ladder {
   stroke:           #ff9944;
   stroke-dasharray: 8 4;
   filter:           drop-shadow(0 0 4px rgba(255, 150, 60, 0.5));
+}
+
+/* ── 고가차 사다리 레일 (두 측면 봉) ────────── */
+
+.aerial-rails {
+  fill:           none;
+  stroke-width:   2;
+  stroke-linecap: round;
+}
+
+.aerial-rails--aerial {
+  stroke: #ffcc44;
+  filter: drop-shadow(0 0 3px rgba(255, 200, 60, 0.5));
+}
+
+.aerial-rails--ladder {
+  stroke: #ff9944;
+  filter: drop-shadow(0 0 3px rgba(255, 150, 60, 0.5));
+}
+
+/* ── 사다리 가로대 ──────────────────────────── */
+
+.aerial-rungs {
+  fill:           none;
+  stroke-width:   1.5;
+  stroke-linecap: butt;
+  opacity:        0.9;
+}
+
+.aerial-rungs--aerial {
+  stroke: #ffcc44;
+}
+
+.aerial-rungs--ladder {
+  stroke: #ff9944;
 }
 
 /* 굴절 관절점 */

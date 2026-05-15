@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import type { DispatchSetup } from '../../types/settings';
-import { secsToMmss, mmssToSecs } from '../../utils/dispatchRoster';
+import { secsToMmss, mmssToSecs, computeRosterDisplayName } from '../../utils/dispatchRoster';
 import './DispatchSetupPanel.css';
 
 // ── 활동대 행 정의 ──────────────────────────────
@@ -66,7 +66,7 @@ export function DispatchSetupPanel() {
   const {
     arrivalMode, updateArrivalMode,
     dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
-    dispatchRoster, updateRosterArrival, updateRosterOrder,
+    dispatchRoster, updateRosterArrival, updateRosterOrder, updateRosterPrefix,
   } = useSettings();
   const { units, vehicles } = dispatchSetup;
 
@@ -185,6 +185,7 @@ export function DispatchSetupPanel() {
             {/* 헤더 */}
             <div className={`dsp__roster-head dsp__roster-head--${arrivalMode}`}>
               <span className="dsp__rh dsp__rh--name">명칭</span>
+              <span className="dsp__rh dsp__rh--prefix">부대명</span>
               {arrivalMode === 'time'
                 ? <span className="dsp__rh dsp__rh--time">도착시간</span>
                 : <span className="dsp__rh dsp__rh--order">착대순서</span>
@@ -197,7 +198,24 @@ export function DispatchSetupPanel() {
                 key={item.id}
                 className={`dsp__roster-row dsp__roster-row--${arrivalMode}${item.linkedTo ? ' dsp__roster-row--linked' : ''}`}
               >
-                <span className="dsp__rc dsp__rc--name">{item.name}</span>
+                <span className="dsp__rc dsp__rc--name">
+                  {computeRosterDisplayName(item)}
+                </span>
+
+                {/* 부대명 입력 (비연동 행만) */}
+                {item.linkedTo ? (
+                  <span className="dsp__rc dsp__rc--prefix-empty" />
+                ) : (
+                  <span className="dsp__rc dsp__rc--prefix">
+                    <input
+                      className="dsp__prefix-input"
+                      type="text"
+                      placeholder="부대명"
+                      value={item.unitPrefix ?? ''}
+                      onChange={e => updateRosterPrefix(item.id, e.target.value)}
+                    />
+                  </span>
+                )}
 
                 {/* 연동 차량: 설정 불가 — AUTO 표시만 */}
                 {item.linkedTo ? (

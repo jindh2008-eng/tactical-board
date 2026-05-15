@@ -55,9 +55,6 @@ export function SettingsLibraryPanel() {
             placeholder="설정 이름"
             onKeyDown={e => e.stopPropagation()}
           />
-          {activeSettingsId && (
-            <span className="slp__saved-badge">저장됨</span>
-          )}
         </div>
         <div className="slp__actions">
           <button className="slp__btn slp__btn--primary" onClick={handleSave}>

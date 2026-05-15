@@ -1,0 +1,296 @@
+.cp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── 레벨 탭 ────────────────────────────────── */
+
+.cp-panel__level-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 8px;
+}
+
+.cp-panel__level-tab {
+  font-size: 0.82rem;
+  padding: 4px 16px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: background-color 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.cp-panel__level-tab:hover {
+  background-color: var(--color-header-bg);
+  color: var(--color-text);
+}
+
+.cp-panel__level-tab--active {
+  background-color: var(--color-header-bg);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* ── 카테고리 ────────────────────────────────── */
+
+.cp-panel__categories {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cp-panel__category {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cp-panel__category--drag-over {
+  outline: 1.5px dashed var(--color-accent);
+  outline-offset: -1px;
+}
+
+.cp-panel__category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background-color: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cp-panel__category-title {
+  flex: 1;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.cp-panel__category-title:hover {
+  color: var(--color-accent);
+}
+
+.cp-panel__category-title-input {
+  flex: 1;
+  font-size: 0.84rem;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-accent);
+  color: var(--color-text);
+  padding: 0 2px;
+  outline: none;
+}
+
+/* ── 드래그 핸들 ─────────────────────────────── */
+
+.cp-panel__drag-handle {
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity 0.1s;
+  padding: 0 2px;
+}
+
+.cp-panel__drag-handle:hover { opacity: 1; color: var(--color-text); }
+.cp-panel__drag-handle:active { cursor: grabbing; }
+.cp-panel__drag-handle--item { font-size: 0.75rem; }
+
+/* ── 항목 ────────────────────────────────────── */
+
+.cp-panel__items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+}
+
+.cp-panel__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cp-panel__item--drag-over {
+  background-color: rgba(68, 170, 255, 0.08);
+  outline: 1px dashed var(--color-accent);
+  outline-offset: -1px;
+  border-radius: 2px;
+}
+
+.cp-panel__item-input {
+  flex: 1;
+  font-size: 0.78rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: var(--color-text);
+  padding: 2px 4px;
+  outline: none;
+  transition: border-color 0.1s;
+}
+
+.cp-panel__item-input:hover,
+.cp-panel__item-input:focus {
+  border-bottom-color: var(--color-border);
+}
+
+/* ── 삭제 버튼 ───────────────────────────────── */
+
+.cp-panel__delete-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font-size: 0.68rem;
+  padding: 1px 4px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  transition: color 0.1s, background-color 0.1s;
+}
+
+.cp-panel__delete-btn:hover {
+  color: #e05c5c;
+  background-color: rgba(224, 92, 92, 0.1);
+}
+
+/* ── 항목 추가 행 ─────────────────────────────── */
+
+.cp-panel__add-item-row {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.cp-panel__type-select {
+  font-size: 0.72rem;
+  background: var(--color-bg, #1a1a1a);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  padding: 2px 4px;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.cp-panel__add-item-input {
+  flex: 1;
+  font-size: 0.76rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  padding: 3px 6px;
+  outline: none;
+}
+
+.cp-panel__add-item-input:focus {
+  border-color: var(--color-accent);
+}
+
+.cp-panel__add-item-btn {
+  font-size: 0.74rem;
+  padding: 2px 8px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.1s, color 0.1s;
+}
+
+.cp-panel__add-item-btn:hover {
+  background-color: var(--color-header-bg);
+  color: var(--color-text);
+}
+
+/* ── 카테고리 추가 행 ─────────────────────────── */
+
+.cp-panel__add-category-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cp-panel__add-category-input {
+  flex: 1;
+  font-size: 0.78rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  padding: 4px 8px;
+  outline: none;
+}
+
+.cp-panel__add-category-input:focus {
+  border-color: var(--color-accent);
+}
+
+.cp-panel__add-category-btn {
+  font-size: 0.76rem;
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.1s, color 0.1s;
+}
+
+.cp-panel__add-category-btn:hover {
+  background-color: var(--color-header-bg);
+  color: var(--color-text);
+}
+
+/* ── 타입 배지 ───────────────────────────────── */
+
+.cp-panel__type-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+}
+
+.cp-panel__type-badge--procedure {
+  background-color: rgba(200, 200, 200, 0.12);
+  color: var(--color-text-dim);
+  border: 1px solid rgba(200, 200, 200, 0.2);
+}
+
+.cp-panel__type-badge--dispatch {
+  background-color: rgba(68, 140, 255, 0.12);
+  color: #5599ff;
+  border: 1px solid rgba(68, 140, 255, 0.25);
+}
+
+.cp-panel__type-badge--event {
+  background-color: rgba(255, 200, 50, 0.12);
+  color: #d4a800;
+  border: 1px solid rgba(255, 200, 50, 0.25);
+}
+
+.cp-panel__type-badge--message {
+  background-color: rgba(80, 200, 120, 0.12);
+  color: #55cc88;
+  border: 1px solid rgba(80, 200, 120, 0.25);
+}
+
+.cp-panel__type-badge--fire {
+  background-color: rgba(220, 60, 60, 0.12);
+  color: #e05c5c;
+  border: 1px solid rgba(220, 60, 60, 0.25);
+}

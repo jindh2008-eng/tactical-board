@@ -3,6 +3,7 @@ import {
 } from 'react';
 import { useTokens } from './TokenContext';
 import { generateId } from '../utils/settingsStorage';
+import { saveWaterConnSession, loadWaterConnSession } from '../utils/runtimeSession';
 
 // ─────────────────────────────────────────────
 // 송수 연결 타입
@@ -49,14 +50,23 @@ export function useWaterConnections(): WaterConnectionContextValue {
 
 export function WaterConnectionProvider({ children }: { children: ReactNode }) {
   const { tokens, addLog, setSprayState, setAerialSprayTarget } = useTokens();
-  const [connections, setConnections] = useState<WaterConnection[]>([]);
+
+  // 마운트 시 sessionStorage에서 복원 (없으면 빈 배열)
+  const [connections, setConnections] = useState<WaterConnection[]>(
+    () => (loadWaterConnSession() ?? []) as WaterConnection[],
+  );
 
   const tokensRef          = useRef(tokens);
-  const connectionsRef     = useRef<WaterConnection[]>([]);
+  const connectionsRef     = useRef<WaterConnection[]>(connections); // 복원값으로 초기화
   const prevTokensRef      = useRef<typeof tokens>([]);
   const removeConnRef      = useRef<(id: string) => void>(() => {});
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);
   useEffect(() => { connectionsRef.current = connections; }, [connections]);
+
+  // 연결 변경 시 sessionStorage 저장
+  useEffect(() => {
+    saveWaterConnSession(connections);
+  }, [connections]);
 
   const addConnection = useCallback((
     fromId: string,

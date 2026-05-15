@@ -11,11 +11,13 @@ import { saveEventSession, loadEventSession } from '../utils/runtimeSession';
 export type EventPos = Pos;
 
 interface EventContextValue {
-  enabledEvents:  EventSetupItem[];
-  positions:      Record<string, EventPos>;
-  statuses:       Record<string, EventStatus>;
-  moveEvent:      (id: string, x: number, y: number) => void;
-  setEventStatus: (id: string, status: EventStatus) => void;
+  enabledEvents:     EventSetupItem[];
+  positions:         Record<string, EventPos>;
+  statuses:          Record<string, EventStatus>;
+  firePercentages:   Record<string, number>;   // 화재계 이벤트 연속 % (0~100)
+  moveEvent:         (id: string, x: number, y: number) => void;
+  setEventStatus:    (id: string, status: EventStatus) => void;
+  setFirePercentage: (id: string, pct: number) => void;
 }
 
 const EventContext = createContext<EventContextValue | null>(null);
@@ -45,6 +47,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     return (saved?.statuses ?? {}) as Record<string, EventStatus>;
   });
 
+  const [firePercentages, setFirePercentages] = useState<Record<string, number>>({});
+
   // 새로 활성화된 이벤트에 기본 상태 부여 (위치는 EventOverlay가 초기화)
   useEffect(() => {
     setStatuses(prev => {
@@ -71,12 +75,26 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     setPositions(prev => ({ ...prev, [id]: { x, y } }));
   }, []);
 
+  const setFirePercentage = useCallback((id: string, pct: number) => {
+    setFirePercentages(prev => ({ ...prev, [id]: pct }));
+  }, []);
+
   const setEventStatus = useCallback((id: string, status: EventStatus) => {
     setStatuses(prev => ({ ...prev, [id]: status }));
+    // 화재계 상태 전환 시 % 초기화
+    if (status === '최성기' || status === '화재') {
+      setFirePercentages(prev => ({ ...prev, [id]: 100 }));
+    } else if (status === '큰불잡음') {
+      setFirePercentages(prev => ({ ...prev, [id]: 70 }));
+    } else if (status === '50%') {
+      setFirePercentages(prev => ({ ...prev, [id]: 50 }));
+    } else {
+      setFirePercentages(prev => { const n = { ...prev }; delete n[id]; return n; });
+    }
   }, []);
 
   return (
-    <EventContext.Provider value={{ enabledEvents, positions, statuses, moveEvent, setEventStatus }}>
+    <EventContext.Provider value={{ enabledEvents, positions, statuses, firePercentages, moveEvent, setEventStatus, setFirePercentage }}>
       {children}
     </EventContext.Provider>
   );

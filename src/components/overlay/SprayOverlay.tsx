@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import type { SprayState } from '../../types';
-import { useTokens } from '../../context/TokenContext';
+import { useTokens }         from '../../context/TokenContext';
+import { useDisplayOptions } from '../../context/DisplayOptionsContext';
 import './SprayOverlay.css';
 
 // ─────────────────────────────────────────────
@@ -85,6 +86,12 @@ function buildStreamPath(
 // ─────────────────────────────────────────────
 
 export function SprayOverlay() {
+  const { showSpray } = useDisplayOptions();
+  if (!showSpray) return null;
+  return <SprayOverlayInner />;
+}
+
+function SprayOverlayInner() {
   const { tokens } = useTokens();
   const svgRef     = useRef<SVGSVGElement>(null);
   const tokensRef  = useRef(tokens);
@@ -131,10 +138,18 @@ export function SprayOverlay() {
         const tokenRect = el.getBoundingClientRect();
         const ox = tokenRect.left + tokenRect.width  / 2;
         const oy = tokenRect.top  + tokenRect.height / 2;
-        const tx = (boardRect?.left ?? 0) + token.sprayTarget.x;
-        const ty = (boardRect?.top  ?? 0) + token.sprayTarget.y;
+        const tx = (boardRect?.left ?? 0) + token.sprayTarget.x * (boardRect?.width  ?? 1);
+        const ty = (boardRect?.top  ?? 0) + token.sprayTarget.y * (boardRect?.height ?? 1);
 
-        const cfg = SPRAY_CONFIG[token.sprayState];
+        const baseCfg = SPRAY_CONFIG[token.sprayState];
+
+        // 초진 구역 방수 여부: 팬 크기 1/3 적용
+        const floorId   = token.sprayTarget?.floorId;
+        const isInitial = !!floorId &&
+          !!document.querySelector(`[data-floor-id="${floorId}"] .zone-cell--fs-initial`);
+        const cfg = isInitial
+          ? { halfDeg: baseCfg.halfDeg / 3, streams: 1, streamOffsetDeg: 0 }
+          : baseCfg;
 
         // 팬 경로
         const fanEl = svg.querySelector(`#sf-${token.id}`) as SVGPathElement | null;

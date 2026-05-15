@@ -4,7 +4,7 @@ import type { VictimSetupItem } from '../types/settings';
 import type { BuildingConfig, Pos } from '../types';
 import {
   buildVictim, randomVictim,
-  buildVictimDisplayLine, zoneKeyToLabel, zoneKeyToFullLabel,
+  buildVictimDisplayLine, zoneKeyToFullLabel,
 } from '../utils/victimUtils';
 import { useTokens } from './TokenContext';
 import {

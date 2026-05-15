@@ -269,3 +269,17 @@
   color:       #556677;
   font-weight: 400;
 }
+
+/* ─────────────────────────────────────────────
+   체크리스트 로그 항목
+   ─────────────────────────────────────────────*/
+.log-panel__entry--checklist {
+  border-left: 2px solid #2a5a3a;
+  padding-left: 4px;
+}
+
+.log-panel__checklist-note {
+  font-size:   0.78rem;
+  color:       #6aaa80;
+  flex:        1;
+}

@@ -4,7 +4,7 @@ import type { UnitToken } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
-import { getStatusPresets } from '../../config/unitStatusPresets';
+import { getMissionPresets, getStatusPresets } from '../../config/unitStatusPresets';
 import './UnitStatusBarMenu.css';
 
 // ─────────────────────────────────────────────
@@ -44,6 +44,9 @@ const WATER_SOURCE_TYPES = new Set(['pump', 'water_tank']);
 // 방수 가능 unitType
 const SUPPRESSION_TYPES = new Set(['suppression']);
 
+// 방수포 가능 unitType (펌프차/물탱크차)
+const MONITOR_TYPES = new Set(['pump', 'water_tank']);
+
 // 고가차/굴절차 전용 메뉴 대상 unitType
 const AERIAL_TYPES = new Set(['aerial', 'ladder']);
 
@@ -60,7 +63,7 @@ const AERIAL_BTN: Record<string, { bg: string; border: string; text: string }> =
 // ─────────────────────────────────────────────
 
 export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
-  const { setStatusTag, setCustomNote, setSprayState, setAerialTarget, setAerialSprayTarget } = useTokens();
+  const { setMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, setAerialSprayTarget } = useTokens();
   const { enterMode }                                  = useActionMode();
   const { connections }                                = useWaterConnections();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -75,6 +78,8 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const hasWaterSource    = isSuppressionUnit &&
     connections.some(c => c.toId === token.id && WATER_SOURCE_TYPES.has(c.fromType));
   const isSprayActive     = isSuppressionUnit && token.sprayState != null;
+  const isMonitorUnit     = MONITOR_TYPES.has(token.unitType);
+  const isMonitorActive   = isMonitorUnit && token.aerialSprayTarget != null;
 
   // ── 위치 계산 (레이아웃 후 측정) ────────────
   const [style, setStyle] = useState<React.CSSProperties>({ visibility: 'hidden', position: 'fixed', left: 0, top: 0 });
@@ -124,10 +129,18 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
 
   // ── 핸들러 ──────────────────────────────────
 
-  function handlePreset(label: string, color: string) {
+  function handleMission(label: string, color: string) {
+    if (token.missionTag?.label === label) {
+      setMissionTag(token.id, null);
+    } else {
+      setMissionTag(token.id, { label, color });
+    }
+    onClose();
+  }
+
+  function handleStatus(label: string, color: string) {
     if (token.statusTag?.label === label) {
       setStatusTag(token.id, null);
-      setCustomNote(token.id, '');
     } else {
       setStatusTag(token.id, { label, color });
     }
@@ -159,6 +172,18 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
     onClose();
   }
 
+  // ── 방수포 핸들러 (펌프차/물탱크차) ──────────
+  function handleMonitorStart() {
+    enterMode({ type: 'aerial-spray-target', sourceId: token.id });
+    onClose();
+  }
+
+  function handleMonitorStop() {
+    setAerialSprayTarget(token.id, null);
+    setStatusTag(token.id, null);
+    onClose();
+  }
+
   // ── 고가차/굴절차 전용 핸들러 ────────────────
   function handleAerialDeploy(actionLabel: string) {
     enterMode({ type: 'aerial-floor-select', sourceId: token.id, unitType: token.unitType, actionLabel });
@@ -180,7 +205,8 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   }
 
   // ── 데이터 ──────────────────────────────────
-  const presets = getStatusPresets(token.unitType);
+  const missionPresets = getMissionPresets(token.unitType);
+  const statusPresets  = getStatusPresets(token.unitType);
 
   // ─────────────────────────────────────────────
   // 렌더
@@ -262,9 +288,49 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
             </button>
           </div>
         ) : (
-          /* 일반 유닛 버튼 바 */
+          /* 일반 유닛 버튼 바 — 임무 | 상태 두 섹션 */
           <div className="usbm__bar">
-            {presets.map(preset => {
+            {/* ── 헤더 ── */}
+            {(missionPresets.length > 0 || statusPresets.length > 0) && (
+              <div className="usbm__section-header">
+                {missionPresets.length > 0 && <span className="usbm__section-label">임무</span>}
+                {missionPresets.length > 0 && statusPresets.length > 0 && (
+                  <span className="usbm__section-divider" aria-hidden="true">|</span>
+                )}
+                {statusPresets.length > 0 && <span className="usbm__section-label">상태</span>}
+              </div>
+            )}
+
+            {/* ── 임무 버튼 ── */}
+            {missionPresets.map(preset => {
+              const isActive = token.missionTag?.label === preset.label;
+              const col      = TAG_COLORS[preset.color] ?? TAG_COLORS.white;
+              return (
+                <button
+                  key={preset.label}
+                  className={['usbm__btn', isActive ? 'usbm__btn--active' : ''].filter(Boolean).join(' ')}
+                  style={{
+                    background:  col.bg,
+                    borderColor: isActive ? col.text : col.border,
+                    color:       col.text,
+                    ...(isActive ? { outline: `2px solid ${col.text}`, outlineOffset: '2px' } : {}),
+                  }}
+                  onMouseDown={e => { e.stopPropagation(); handleMission(preset.label, preset.color); }}
+                  title={preset.label + (isActive ? ' — 클릭하여 해제' : '')}
+                >
+                  {isActive && <span className="usbm__check" aria-hidden="true">✓ </span>}
+                  {preset.label}
+                </button>
+              );
+            })}
+
+            {/* ── 임무/상태 구분선 ── */}
+            {missionPresets.length > 0 && statusPresets.length > 0 && (
+              <div className="usbm__sep" aria-hidden="true" />
+            )}
+
+            {/* ── 상태 버튼 ── */}
+            {statusPresets.map(preset => {
               const isActive = token.statusTag?.label === preset.label;
               const col      = TAG_COLORS[preset.color] ?? TAG_COLORS.white;
               return (
@@ -277,7 +343,7 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
                     color:       col.text,
                     ...(isActive ? { outline: `2px solid ${col.text}`, outlineOffset: '2px' } : {}),
                   }}
-                  onMouseDown={e => { e.stopPropagation(); handlePreset(preset.label, preset.color); }}
+                  onMouseDown={e => { e.stopPropagation(); handleStatus(preset.label, preset.color); }}
                   title={preset.label + (isActive ? ' — 클릭하여 해제' : '')}
                 >
                   {isActive && <span className="usbm__check" aria-hidden="true">✓ </span>}
@@ -286,7 +352,9 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
               );
             })}
 
-            {presets.length > 0 && <div className="usbm__sep" aria-hidden="true" />}
+            {(missionPresets.length > 0 || statusPresets.length > 0) && (
+              <div className="usbm__sep" aria-hidden="true" />
+            )}
 
             {/* 방수개시 / 방수중단 (진압대 + 수원 연결 시) */}
             {isSuppressionUnit && hasWaterSource && !isSprayActive && (
@@ -341,6 +409,30 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
             >
               {token.customNote && !noteOpen ? '메모 ✎' : '메모'}
             </button>
+
+            {/* 방수포 (펌프차/물탱크차 전용, 맨우측) */}
+            {isMonitorUnit && (
+              <>
+                <div className="usbm__sep" aria-hidden="true" />
+                {isMonitorActive ? (
+                  <button
+                    className="usbm__btn usbm__btn--spray-stop"
+                    onMouseDown={e => { e.stopPropagation(); handleMonitorStop(); }}
+                    title="방수포 중단"
+                  >
+                    방수중단
+                  </button>
+                ) : (
+                  <button
+                    className="usbm__btn usbm__btn--spray-start"
+                    onMouseDown={e => { e.stopPropagation(); handleMonitorStart(); }}
+                    title="방수포 지점을 클릭하여 방수 개시"
+                  >
+                    방수포
+                  </button>
+                )}
+              </>
+            )}
           </div>
         )}
 

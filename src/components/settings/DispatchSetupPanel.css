@@ -193,11 +193,11 @@
   border-color: var(--color-accent);
 }
 
-/* 2컬럼: [명칭, 도착시간/착대] */
+/* 3컬럼: [명칭, 부대명입력, 도착시간/착대] */
 .dsp__roster-head,
 .dsp__roster-row {
   display: grid;
-  grid-template-columns: 1fr 90px;
+  grid-template-columns: auto 1fr 90px;
   gap: 6px;
   align-items: center;
   padding: 4px 10px;
@@ -239,11 +239,45 @@
 .dsp__rc--name {
   font-size: 0.8rem;
   color: var(--color-text);
+  white-space: nowrap;
 }
 
 .dsp__roster-row--linked .dsp__rc--name {
   font-size: 0.76rem;
   color: var(--color-text-dim);
+}
+
+.dsp__rh--prefix {
+  font-size: 0.65rem;
+  color: var(--color-text-dim);
+}
+
+.dsp__rc--prefix,
+.dsp__rc--prefix-empty {
+  display: flex;
+  align-items: center;
+}
+
+.dsp__prefix-input {
+  width: 100%;
+  min-width: 0;
+  padding: 3px 6px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 0.78rem;
+  font-family: inherit;
+}
+
+.dsp__prefix-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.dsp__prefix-input::placeholder {
+  color: var(--color-text-dim);
+  opacity: 0.6;
 }
 
 .dsp__rc--time,

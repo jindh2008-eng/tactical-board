@@ -4,11 +4,12 @@ import {
   useState,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   type ReactNode,
 } from 'react';
 import type { DoorState, FireStatus } from '../types';
+import type { ExtraFireFloor } from '../types/settings';
+import { saveBuildingSession, loadBuildingSession } from '../utils/runtimeSession';
 
 // ─────────────────────────────────────────────
 // 연기 강도 (표시용 3단계)
@@ -23,10 +24,12 @@ export type SmokeLevel = 'none' | 'weak' | 'full';
 interface BuildingStateValue {
   doorStates:         Record<string, DoorState>;
   fireStates:         Record<string, FireStatus | null>;
+  firePercentages:    Record<string, number>;    // peak/seventy/half 구간의 연속 % (0~100)
   stairSmokeFloor:    number | null;  // 연기 유입 최저 층번호 (null = 클린)
   smokeConcentration: number;          // 0~100 농도 (현재는 0 / 50 / 100 세 값만 사용)
   setDoorState:       (floorId: string, state: DoorState) => void;
   setFireStatus:      (floorId: string, status: FireStatus | null) => void;
+  setFirePercentage:  (floorId: string, pct: number) => void;
 }
 
 const BuildingStateContext = createContext<BuildingStateValue | null>(null);
@@ -38,8 +41,9 @@ const BuildingStateContext = createContext<BuildingStateValue | null>(null);
 interface Props {
   children:            ReactNode;
   allFloorIds:         string[];
-  fireFloor:           number;           // 화점층 (문 초기화 기준)
+  fireFloor:           number;            // 화점층 (문 초기화 기준)
   initialFireStatus:   FireStatus | null; // 훈련 시작 시 자동 설정할 화재상태
+  extraFireFloors?:    ExtraFireFloor[];  // 추가 화재 층 (항상 문 Open)
   aboveGroundFloors:   number;
   onFireChange?:       (floorId: string, status: FireStatus | null) => void;
   onDoorChange?:       (floorId: string, state: DoorState) => void;
@@ -62,6 +66,50 @@ function floorIdToNum(fid: string): number | null {
 /** floor number → floorId */
 function floorNumToId(n: number): string {
   return n < 0 ? `B${-n}` : `${n}F`;
+}
+
+function buildInitDoorStates(allFloorIds: string[], fireFloor: number, extraFireFloors: ExtraFireFloor[]): Record<string, DoorState> {
+  const extraNums = new Set(extraFireFloors.map(e => e.floor));
+  const m: Record<string, DoorState> = {};
+  for (const id of allFloorIds) {
+    if (id === 'RF') {
+      m[id] = 'closed';
+    } else {
+      const num = floorIdToNum(id);
+      m[id] = (num !== null && (num <= fireFloor || extraNums.has(num))) ? 'open' : 'closed';
+    }
+  }
+  return m;
+}
+
+function buildInitFireStates(fireFloor: number, initialFireStatus: FireStatus | null, extraFireFloors: ExtraFireFloor[]): Record<string, FireStatus | null> {
+  const states: Record<string, FireStatus | null> = {};
+  if (initialFireStatus) states[floorNumToId(fireFloor)] = initialFireStatus;
+  for (const { floor, status } of extraFireFloors) {
+    states[floorNumToId(floor)] = status;
+  }
+  return states;
+}
+
+function buildInitFirePercentages(fireFloor: number, initialFireStatus: FireStatus | null, extraFireFloors: ExtraFireFloor[]): Record<string, number> {
+  const pct: Record<string, number> = {};
+  function applyPct(floorId: string, status: FireStatus | null) {
+    if (status === 'peak')         pct[floorId] = 100;
+    else if (status === 'seventy') pct[floorId] = 70;
+    else if (status === 'half')    pct[floorId] = 50;
+  }
+  applyPct(floorNumToId(fireFloor), initialFireStatus);
+  for (const { floor, status } of extraFireFloors) {
+    applyPct(floorNumToId(floor), status);
+  }
+  return pct;
+}
+
+function resolveInitSmokeLevelStr(smokeFloor: number | null, concentration: number): SmokeLevel {
+  if (smokeFloor === null) return 'none';
+  if (concentration >= 67) return 'full';
+  if (concentration > 0)   return 'weak';
+  return 'none';
 }
 
 /** 현재 열려있는 활성 화점 계단문이 하나라도 있는지 확인 (excludeFloor 제외) */
@@ -105,66 +153,58 @@ export function BuildingStateProvider({
   allFloorIds,
   fireFloor,
   initialFireStatus,
-  aboveGroundFloors,
+  extraFireFloors = [],
   onFireChange,
   onDoorChange,
   onSmokeChange,
 }: Props) {
-  // ── 문 초기 상태: RF·화점 위층 = closed, 화점층 이하 = open ──
-  const buildDoorStates = useCallback((): Record<string, DoorState> => {
-    const m: Record<string, DoorState> = {};
-    for (const id of allFloorIds) {
-      if (id === 'RF') {
-        m[id] = 'closed';
-      } else {
-        const num = floorIdToNum(id);
-        m[id] = (num !== null && num <= fireFloor) ? 'open' : 'closed';
-      }
+  // ── 초기 상태: sessionStorage 복원 우선, 없으면 설정값으로 계산 ──
+  // (useState lazy initializer는 마운트 1회만 실행 — props 변경에 반응 안 함)
+  const [init] = useState(() => {
+    const saved = loadBuildingSession();
+    if (saved) {
+      return {
+        doorStates:         saved.doorStates,
+        fireStates:         saved.fireStates,
+        firePercentages:    saved.firePercentages,
+        stairSmokeFloor:    saved.stairSmokeFloor,
+        smokeConcentration: saved.smokeConcentration,
+        prevSmokeLevel:     resolveInitSmokeLevelStr(saved.stairSmokeFloor, saved.smokeConcentration),
+      };
     }
-    return m;
-  }, [allFloorIds, fireFloor]);
+    const doors = buildInitDoorStates(allFloorIds, fireFloor, extraFireFloors);
+    const fires = buildInitFireStates(fireFloor, initialFireStatus, extraFireFloors);
+    const ptcs  = buildInitFirePercentages(fireFloor, initialFireStatus, extraFireFloors);
+    const { smokeFloor, concentration } = computeSmokeFromStates(fires, doors);
+    return {
+      doorStates:         doors,
+      fireStates:         fires,
+      firePercentages:    ptcs,
+      stairSmokeFloor:    smokeFloor,
+      smokeConcentration: concentration,
+      prevSmokeLevel:     resolveInitSmokeLevelStr(smokeFloor, concentration),
+    };
+  });
 
-  // ── 화재 초기 상태 ──
-  const buildFireStates = useCallback((): Record<string, FireStatus | null> => {
-    if (!initialFireStatus) return {};
-    return { [floorNumToId(fireFloor)]: initialFireStatus };
-  }, [fireFloor, initialFireStatus]);
+  const [doorStates,         setDoorStates]         = useState(() => init.doorStates);
+  const [fireStates,         setFireStates]         = useState(() => init.fireStates);
+  const [firePercentages,    setFirePercentages]    = useState(() => init.firePercentages);
+  const [stairSmokeFloor,    setStairSmokeFloor]    = useState(() => init.stairSmokeFloor);
+  const [smokeConcentration, setSmokeConcentration] = useState(() => init.smokeConcentration);
 
-  const [doorStates,         setDoorStates]         = useState<Record<string, DoorState>>(buildDoorStates);
-  const [fireStates,         setFireStates]         = useState<Record<string, FireStatus | null>>(buildFireStates);
-  const [stairSmokeFloor,    setStairSmokeFloor]    = useState<number | null>(null);
-  const [smokeConcentration, setSmokeConcentration] = useState<number>(0);
-
-  const fireStatesRef      = useRef<Record<string, FireStatus | null>>({});
-  const doorStatesRef      = useRef<Record<string, DoorState>>({});
-  const stairSmokeFloorRef = useRef<number | null>(null);
-  const prevSmokeLevelRef  = useRef<SmokeLevel>('none');
+  const fireStatesRef      = useRef<Record<string, FireStatus | null>>(init.fireStates);
+  const doorStatesRef      = useRef<Record<string, DoorState>>(init.doorStates);
+  const stairSmokeFloorRef = useRef<number | null>(init.stairSmokeFloor);
+  const prevSmokeLevelRef  = useRef<SmokeLevel>(init.prevSmokeLevel);
 
   useEffect(() => { fireStatesRef.current = fireStates; },           [fireStates]);
   useEffect(() => { doorStatesRef.current = doorStates; },           [doorStates]);
   useEffect(() => { stairSmokeFloorRef.current = stairSmokeFloor; }, [stairSmokeFloor]);
 
-  // 층수·화점층·초기화재상태 변경 시 전체 초기화
-  const setupKey = useMemo(
-    () => `${allFloorIds.join(',')}|${fireFloor}|${initialFireStatus ?? ''}`,
-    [allFloorIds, fireFloor, initialFireStatus],
-  );
+  // 상태 변경 시 sessionStorage 저장
   useEffect(() => {
-    const newDoors = buildDoorStates();
-    const newFire  = buildFireStates();
-    setDoorStates(newDoors);
-    setFireStates(newFire);
-    // 초기 문·화재 상태를 교차 검사해 시작 연기값 결정
-    const { smokeFloor, concentration } = computeSmokeFromStates(newFire, newDoors);
-    setStairSmokeFloor(smokeFloor);
-    setSmokeConcentration(concentration);
-    // 초기화로 인한 연기 변화는 로그 대상 아님 — ref를 미리 최신화해 diff 방지
-    prevSmokeLevelRef.current =
-      smokeFloor === null ? 'none' :
-      concentration >= 67 ? 'full' :
-      concentration > 0   ? 'weak' : 'none';
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setupKey]);
+    saveBuildingSession({ doorStates, fireStates, firePercentages, stairSmokeFloor, smokeConcentration });
+  }, [doorStates, fireStates, firePercentages, stairSmokeFloor, smokeConcentration]);
 
   // 연기 레벨 변화 감지 → onSmokeChange 호출
   const globalSmokeLevel: SmokeLevel =
@@ -235,10 +275,19 @@ export function BuildingStateProvider({
     }
   }, []);
 
+  const setFirePercentage = useCallback((floorId: string, pct: number) => {
+    setFirePercentages(prev => ({ ...prev, [floorId]: pct }));
+  }, []);
+
   const setFireStatus = useCallback((floorId: string, status: FireStatus | null) => {
     if (fireStatesRef.current[floorId] === status) return;
     setFireStates(prev => ({ ...prev, [floorId]: status }));
     onFireChange?.(floorId, status);
+    // 상태 전환 시 % 초기화 (소화 효과 인터벌 동기화용)
+    if (status === 'peak')         setFirePercentages(prev => ({ ...prev, [floorId]: 100 }));
+    else if (status === 'seventy') setFirePercentages(prev => ({ ...prev, [floorId]: 70 }));
+    else if (status === 'half')    setFirePercentages(prev => ({ ...prev, [floorId]: 50 }));
+    else setFirePercentages(prev => { const n = { ...prev }; delete n[floorId]; return n; });
 
     // 해당 층 문이 이미 열린 상태에서 활성 화재상태로 변경 → 연기 발생
     if (status && FIRE_SMOKE_STATUSES.has(status)) {
@@ -257,7 +306,7 @@ export function BuildingStateProvider({
 
   return (
     <BuildingStateContext.Provider
-      value={{ doorStates, fireStates, stairSmokeFloor, smokeConcentration, setDoorState, setFireStatus }}
+      value={{ doorStates, fireStates, firePercentages, stairSmokeFloor, smokeConcentration, setDoorState, setFireStatus, setFirePercentage }}
     >
       {children}
     </BuildingStateContext.Provider>

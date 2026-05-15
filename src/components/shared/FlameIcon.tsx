@@ -17,7 +17,7 @@ const FLAME_FILES: Record<FireStatus, string> = {
 const EVENT_STATUS_TO_FIRE: Record<string, FireStatus> = {
   '연소확대': 'extension-peak',
   '최성기':  'peak',
-  '70%':    'seventy',
+  '큰불잡음': 'seventy',
   '50%':    'half',
   '초진':   'initial',
   '완진':   'complete',

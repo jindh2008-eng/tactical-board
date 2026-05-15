@@ -129,6 +129,86 @@
 }
 
 /* ─────────────────────────────────────────────
+   좌측 슬라이드 Drawer (이벤트 로그)
+   unit-add-drawer와 동일한 구조, 동일 위치에서 하나만 열림
+   ─────────────────────────────────────────────*/
+.log-drawer {
+  position: fixed;
+  top: 36px;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  background-color: var(--color-surface);
+  border-right: 1.5px solid var(--color-border);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.22s ease;
+  overflow: hidden;
+}
+
+.log-drawer--open {
+  transform: translateX(0);
+}
+
+.log-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  letter-spacing: 0.08em;
+  background-color: var(--color-header-bg);
+  flex-shrink: 0;
+}
+
+.log-drawer__close {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+}
+
+.log-drawer__close:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.log-drawer__body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 내부 LogPanel 헤더 숨김 (drawer 헤더가 역할 대신) */
+.log-drawer__body .panel__header {
+  display: none;
+}
+
+.log-drawer__body .log-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: none;
+}
+
+.log-drawer__body .log-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  max-height: none;
+  padding-bottom: 8px;
+}
+
+/* ─────────────────────────────────────────────
    NavBar 오버레이 버튼
    ─────────────────────────────────────────────*/
 .nav-overlay-btns {

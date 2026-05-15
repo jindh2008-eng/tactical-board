@@ -3,7 +3,10 @@ import type { BuildingConfig, FireStatus } from '../types';
 import type {
   BuildingSettings, TimingSettings,
   DispatchSetup, DispatchRosterItem, VictimSetupItem, ArrivalMode, HydrantSetupItem,
-  FireSuppressionConfig, AerialSuppressionConfig,
+  FireSuppressionConfig, AerialSuppressionConfig, ChecklistConfig, ChecklistSection, ChecklistItem, ChecklistItemType,
+  ExtraFireFloor,
+  CommandProcedureConfigs, CommandProcedureLevel, CommandProcedureCategory,
+  UnitStatusConfig,
 } from '../types/settings';
 import type { EventSetupItem, EventType } from '../types/events';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP, DEFAULT_FIRE_SUPPRESSION_CONFIG, DEFAULT_AERIAL_SUPPRESSION_CONFIG } from '../types/settings';
@@ -28,8 +31,9 @@ interface SettingsContextValue {
   building:             BuildingSettings;
   updateBuildingConfig: (config: BuildingConfig) => void;
   updateFireFloor:      (floor: number) => void;
-  updateFireStatus:     (status: FireStatus | null) => void;
-  updateTargetName:     (name: string) => void;
+  updateFireStatus:        (status: FireStatus | null) => void;
+  updateTargetName:        (name: string) => void;
+  updateExtraFireFloors:   (floors: ExtraFireFloor[]) => void;
 
   // ── 타이밍 설정 ───────────────────────────────
   timing:        TimingSettings;
@@ -60,6 +64,7 @@ interface SettingsContextValue {
   dispatchRoster:          DispatchRosterItem[];
   updateRosterArrival:     (id: string, secs: number, syncLinked?: boolean) => void;
   updateRosterOrder:       (id: string, order: number) => void;
+  updateRosterPrefix:      (id: string, prefix: string) => void;
 
   // ── 구조대상자 생성 설정 ──────────────────────
   victimSetup:             VictimSetupItem[];
@@ -80,6 +85,26 @@ interface SettingsContextValue {
   // ── 고가차/굴절차 소화 설정 ───────────────────
   aerialSuppressionConfig:       AerialSuppressionConfig;
   updateAerialSuppressionConfig: (patch: Partial<AerialSuppressionConfig>) => void;
+
+  // ── 훈련 체크리스트 ───────────────────────────
+  checklistConfig:              ChecklistConfig;
+  addChecklistSection:          (title: string) => void;
+  updateChecklistSection:       (id: string, title: string) => void;
+  removeChecklistSection:       (id: string) => void;
+  reorderChecklistSections:     (fromIndex: number, toIndex: number) => void;
+  addChecklistItem:             (sectionId: string, text: string, itemType?: ChecklistItemType, options?: { arrivalOrder?: number; fireFloor?: number; fireTargetStatus?: FireStatus; messageLocation?: string; messageBody?: string; eventId?: string; eventTargetStatus?: string; unitRosterId?: string; unitStatusText?: string }) => void;
+  updateChecklistItem:          (sectionId: string, itemId: string, patch: Partial<Omit<ChecklistItem, 'id'>>) => void;
+  removeChecklistItem:          (sectionId: string, itemId: string) => void;
+  reorderChecklistItems:        (sectionId: string, fromIndex: number, toIndex: number) => void;
+  appendChecklistSections:      (sections: ChecklistSection[]) => void;
+
+  // ── 지휘절차 ──────────────────────────────────
+  commandProcedureConfigs:     CommandProcedureConfigs;
+  updateCommandProcedureLevel: (level: CommandProcedureLevel, categories: CommandProcedureCategory[]) => void;
+
+  // ── 출동대 상태메세지 ─────────────────────────
+  unitStatusConfig:            UnitStatusConfig;
+  updateUnitStatusMessages:    (unitType: string, messages: string[]) => void;
 
   // ── 설정 세트 관리 ────────────────────────────
   settingsList:         SettingsSet[];
@@ -106,11 +131,22 @@ export function useSettings(): SettingsContextValue {
 // ─────────────────────────────────────────────
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  // ── 건물 설정 ─────────────────────────────────
-  const [config,      setConfig]      = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
-  const [fireFloor,   setFireFloor]   = useState<number>(1);
-  const [fireStatus,  setFireStatus]  = useState<FireStatus | null>(null);
-  const [targetName,  setTargetName]  = useState<string>('');
+  // ── 건물 설정 (자동 복원) ──────────────────────
+  const [config,      setConfig]      = useState<BuildingConfig>(
+    () => loadWorkingPresets().building?.config ?? DEFAULT_BUILDING_CONFIG
+  );
+  const [fireFloor,   setFireFloor]   = useState<number>(
+    () => loadWorkingPresets().building?.fireFloor ?? 1
+  );
+  const [fireStatus,  setFireStatus]  = useState<FireStatus | null>(
+    () => loadWorkingPresets().building?.fireStatus ?? null
+  );
+  const [targetName,  setTargetName]  = useState<string>(
+    () => loadWorkingPresets().building?.targetName ?? ''
+  );
+  const [extraFireFloors, setExtraFireFloors] = useState<ExtraFireFloor[]>(
+    () => loadWorkingPresets().building?.extraFireFloors ?? []
+  );
 
   // ── 타이밍 (자동 복원) ──────────────────────────
   const [timing, setTiming] = useState<TimingSettings>(
@@ -149,6 +185,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [aerialSuppressionConfig, setAerialSuppressionConfig] = useState<AerialSuppressionConfig>(
     () => loadWorkingPresets().aerialSuppressionConfig ?? DEFAULT_AERIAL_SUPPRESSION_CONFIG
   );
+  const [checklistConfig, setChecklistConfig] = useState<ChecklistConfig>(
+    () => loadWorkingPresets().checklistConfig ?? { level: 'junior', sections: [] }
+  );
+  const [commandProcedureConfigs, setCommandProcedureConfigs] = useState<CommandProcedureConfigs>(
+    () => loadWorkingPresets().commandProcedureConfigs ?? {}
+  );
+  const [unitStatusConfig, setUnitStatusConfig] = useState<UnitStatusConfig>(
+    () => loadWorkingPresets().unitStatusConfig ?? {}
+  );
 
   // ── 설정 세트 ─────────────────────────────────
   const [settingsList,       setSettingsList]       = useState<SettingsSet[]>(loadSettingsList);
@@ -160,25 +205,26 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setDispatchRoster(prev => buildRoster(dispatchSetup, prev));
   }, [dispatchSetup]);
 
-  // 타이밍·시나리오 설정 변경 시 자동 저장 (새로고침 대비)
+  // 설정 변경 시 자동 저장 (새로고침 대비)
   useEffect(() => {
-    saveWorkingPresets({ sharedBadgePresets: [], unitBadgePresets: [], timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig });
-  }, [timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig]);
+    saveWorkingPresets({
+      sharedBadgePresets: [], unitBadgePresets: [],
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors },
+      timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
+      medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
+    });
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig]);
 
   // ── 건물 설정 ──────────────────────────────────
 
   const updateBuildingConfig = useCallback((next: BuildingConfig) => {
-    setStairSmokeStartFloor(prev => {
-      if (prev === null) return null;
-      if (prev > 0 && prev > next.aboveGroundFloors) return null;
-      if (prev < 0 && -prev > next.basementFloors)   return null;
-      return prev;
-    });
     setConfig(next);
   }, []);
-  const updateFireFloor  = useCallback((floor: number)            => setFireFloor(floor),   []);
-  const updateFireStatus = useCallback((s: FireStatus | null)     => setFireStatus(s),      []);
-  const updateTargetName = useCallback((name: string)             => setTargetName(name),   []);
+  const updateFireFloor        = useCallback((floor: number)          => setFireFloor(floor),           []);
+  const updateFireStatus       = useCallback((s: FireStatus | null)   => setFireStatus(s),              []);
+  const updateTargetName       = useCallback((name: string)           => setTargetName(name),           []);
+  const updateExtraFireFloors  = useCallback((floors: ExtraFireFloor[]) => setExtraFireFloors(floors),  []);
 
   // ── 타이밍 설정 ──────────────────────────────
   const updateTiming = useCallback((next: Partial<TimingSettings>) => {
@@ -206,6 +252,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setDispatchRoster(prev => prev.map(item => {
       if (item.id === id)         return { ...item, arrivalOrder: order };
       if (item.linkedTo === id)   return { ...item, arrivalOrder: order }; // 연동 차량 자동 동기화
+      return item;
+    }));
+  }, []);
+
+  const updateRosterPrefix = useCallback((id: string, prefix: string) => {
+    setDispatchRoster(prev => prev.map(item => {
+      if (item.id === id)         return { ...item, unitPrefix: prefix || undefined };
+      if (item.linkedTo === id)   return { ...item, unitPrefix: prefix || undefined }; // 연동 차량 동기화
       return item;
     }));
   }, []);
@@ -279,34 +333,142 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  // ── 훈련 체크리스트 ──────────────────────────
+  const addChecklistSection = useCallback((title: string) => {
+    setChecklistConfig(prev => ({
+      ...prev,
+      sections: [...prev.sections, { id: generateId(), title, items: [] }],
+    }));
+  }, []);
+
+  const updateChecklistSection = useCallback((id: string, title: string) => {
+    setChecklistConfig(prev => ({
+      ...prev,
+      sections: prev.sections.map((s: ChecklistSection) => s.id === id ? { ...s, title } : s),
+    }));
+  }, []);
+
+  const removeChecklistSection = useCallback((id: string) => {
+    setChecklistConfig(prev => ({
+      ...prev,
+      sections: prev.sections.filter((s: ChecklistSection) => s.id !== id),
+    }));
+  }, []);
+
+  const addChecklistItem = useCallback((
+    sectionId: string,
+    text: string,
+    itemType: ChecklistItemType = 'procedure',
+    options?: { arrivalOrder?: number; fireFloor?: number; fireTargetStatus?: FireStatus; messageLocation?: string; messageBody?: string; eventId?: string; eventTargetStatus?: string; unitRosterId?: string; unitStatusText?: string }
+  ) => {
+    const extra: Partial<Pick<ChecklistItem, 'arrivalOrder' | 'fireFloor' | 'fireTargetStatus' | 'messageLocation' | 'messageBody' | 'eventId' | 'eventTargetStatus' | 'unitRosterId' | 'unitStatusText'>> = {};
+    if (options?.arrivalOrder      != null) extra.arrivalOrder      = options.arrivalOrder;
+    if (options?.fireFloor         != null) extra.fireFloor         = options.fireFloor;
+    if (options?.fireTargetStatus  != null) extra.fireTargetStatus  = options.fireTargetStatus;
+    if (options?.messageLocation   != null) extra.messageLocation   = options.messageLocation;
+    if (options?.messageBody       != null) extra.messageBody       = options.messageBody;
+    if (options?.eventId           != null) extra.eventId           = options.eventId;
+    if (options?.eventTargetStatus != null) extra.eventTargetStatus = options.eventTargetStatus;
+    if (options?.unitRosterId      != null) extra.unitRosterId      = options.unitRosterId;
+    if (options?.unitStatusText    != null) extra.unitStatusText    = options.unitStatusText;
+    setChecklistConfig(prev => ({
+      ...prev,
+      sections: prev.sections.map((s: ChecklistSection) =>
+        s.id === sectionId
+          ? { ...s, items: [...s.items, { id: generateId(), text, itemType, ...extra }] }
+          : s
+      ),
+    }));
+  }, []);
+
+  const updateChecklistItem = useCallback((sectionId: string, itemId: string, patch: Partial<Omit<ChecklistItem, 'id'>>) => {
+    setChecklistConfig(prev => ({
+      ...prev,
+      sections: prev.sections.map((s: ChecklistSection) =>
+        s.id === sectionId
+          ? { ...s, items: s.items.map((it: ChecklistItem) => it.id === itemId ? { ...it, ...patch } : it) }
+          : s
+      ),
+    }));
+  }, []);
+
+  const removeChecklistItem = useCallback((sectionId: string, itemId: string) => {
+    setChecklistConfig(prev => ({
+      ...prev,
+      sections: prev.sections.map((s: ChecklistSection) =>
+        s.id === sectionId
+          ? { ...s, items: s.items.filter((it: ChecklistItem) => it.id !== itemId) }
+          : s
+      ),
+    }));
+  }, []);
+
+  const reorderChecklistSections = useCallback((fromIndex: number, toIndex: number) => {
+    setChecklistConfig(prev => {
+      const sections = [...prev.sections];
+      const [moved] = sections.splice(fromIndex, 1);
+      sections.splice(toIndex, 0, moved);
+      return { ...prev, sections };
+    });
+  }, []);
+
+  const appendChecklistSections = useCallback((newSections: ChecklistSection[]) => {
+    setChecklistConfig(prev => ({ ...prev, sections: [...prev.sections, ...newSections] }));
+  }, []);
+
+  const reorderChecklistItems = useCallback((sectionId: string, fromIndex: number, toIndex: number) => {
+    setChecklistConfig(prev => ({
+      ...prev,
+      sections: prev.sections.map((s: ChecklistSection) => {
+        if (s.id !== sectionId) return s;
+        const items = [...s.items];
+        const [moved] = items.splice(fromIndex, 1);
+        items.splice(toIndex, 0, moved);
+        return { ...s, items };
+      }),
+    }));
+  }, []);
+
+  // ── 지휘절차 ──────────────────────────────────
+  const updateCommandProcedureLevel = useCallback((level: CommandProcedureLevel, categories: CommandProcedureCategory[]) => {
+    setCommandProcedureConfigs(prev => ({ ...prev, [level]: categories }));
+  }, []);
+
+  // ── 출동대 상태메세지 ─────────────────────────
+  const updateUnitStatusMessages = useCallback((unitType: string, messages: string[]) => {
+    setUnitStatusConfig(prev => ({ ...prev, [unitType]: messages }));
+  }, []);
+
   // ── 설정 세트 저장/불러오기 ─────────────────────
 
   const saveSettings = useCallback(() => {
     const id = activeSettingsId ?? generateId();
     const set: SettingsSet = {
       id, name: activeSettingsName, updatedAt: '',
-      building: { config, fireFloor, fireStatus, targetName },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors },
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
     const set: SettingsSet = {
       id, name: newName, updatedAt: '',
-      building: { config, fireFloor, fireStatus, targetName },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors },
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
     };
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup]);
+  }, [config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -322,13 +484,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     // 구버전 저장 세트에 없는 vehicles 필드 보정
     const loadedSetup: DispatchSetup = {
       ...rawSetup,
-      vehicles: { waterTank: 0, ...rawSetup.vehicles },
+      vehicles: { ...rawSetup.vehicles, waterTank: rawSetup.vehicles?.waterTank ?? 0 },
     };
     setDispatchSetup(loadedSetup);
     const loadedRoster = (set.dispatchRoster
       ? JSON.parse(JSON.stringify(set.dispatchRoster)) as DispatchRosterItem[]
       : buildRoster(loadedSetup, [])
-    ).map((r: DispatchRosterItem) => ({ arrivalOrder: 1, ...r })); // arrivalOrder 마이그레이션
+    ).map((r: DispatchRosterItem) => ({ ...r, arrivalOrder: r.arrivalOrder ?? 1 })); // arrivalOrder 마이그레이션
     setDispatchRoster(loadedRoster);
     // victimSetup 마이그레이션 (detailLocation, face/floor null 허용, 'RF' 지원)
     const loadedVictims = (set.victimSetup ?? []).map((v: VictimSetupItem) => ({
@@ -345,6 +507,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setStagingAreaChief(set.stagingAreaChief ?? '');
     setEventSetup(set.eventSetup ? JSON.parse(JSON.stringify(set.eventSetup)) : []);
     setHydrantSetup(set.hydrantSetup ? JSON.parse(JSON.stringify(set.hydrantSetup)) : []);
+    if (set.fireSuppressionConfig)  setFireSuppressionConfig(JSON.parse(JSON.stringify(set.fireSuppressionConfig)));
+    if (set.aerialSuppressionConfig) setAerialSuppressionConfig(JSON.parse(JSON.stringify(set.aerialSuppressionConfig)));
+    if (set.checklistConfig) setChecklistConfig(JSON.parse(JSON.stringify(set.checklistConfig)));
+    else setChecklistConfig({ level: 'junior', sections: [] });
+    setCommandProcedureConfigs(set.commandProcedureConfigs ? JSON.parse(JSON.stringify(set.commandProcedureConfigs)) : {});
+    setUnitStatusConfig(set.unitStatusConfig ? JSON.parse(JSON.stringify(set.unitStatusConfig)) : {});
+    setExtraFireFloors(set.building?.extraFireFloors ? JSON.parse(JSON.stringify(set.building.extraFireFloors)) : []);
     setActiveSettingsId(id);
     setActiveSettingsName(set.name);
   }, [settingsList]);
@@ -368,25 +537,34 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setStagingAreaChief('');
     setEventSetup([]);
     setHydrantSetup([]);
+    setChecklistConfig({ level: 'junior', sections: [] });
+    setCommandProcedureConfigs({});
+    setUnitStatusConfig({});
+    setExtraFireFloors([]);
     setActiveSettingsId(null);
     setActiveSettingsName('새 설정');
   }, []);
 
   return (
     <SettingsContext.Provider value={{
-      building: { config, fireFloor, fireStatus, targetName },
-      updateBuildingConfig, updateFireFloor, updateFireStatus, updateTargetName,
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors },
+      updateBuildingConfig, updateFireFloor, updateFireStatus, updateTargetName, updateExtraFireFloors,
       timing, updateTiming,
       arrivalMode, updateArrivalMode,
       medicalPostChief, stagingAreaChief,
       updateMedicalPostChief, updateStagingAreaChief,
       eventSetup, addEventSetupItem, updateEventSetupItem, removeEventSetupItem,
       dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
-      dispatchRoster, updateRosterArrival, updateRosterOrder,
+      dispatchRoster, updateRosterArrival, updateRosterOrder, updateRosterPrefix,
       victimSetup, addVictimSetupItem, updateVictimSetupItem, removeVictimSetupItem,
       hydrantSetup, addHydrantSetupItem, updateHydrantSetupItem, removeHydrantSetupItem,
       fireSuppressionConfig, updateFireSuppressionConfig,
       aerialSuppressionConfig, updateAerialSuppressionConfig,
+      checklistConfig,
+      addChecklistSection, updateChecklistSection, removeChecklistSection, reorderChecklistSections,
+      addChecklistItem, updateChecklistItem, removeChecklistItem, reorderChecklistItems, appendChecklistSections,
+      commandProcedureConfigs, updateCommandProcedureLevel,
+      unitStatusConfig, updateUnitStatusMessages,
       settingsList, activeSettingsId, activeSettingsName, setActiveSettingsName,
       saveSettings, saveSettingsAs, loadSettings, deleteSettingsEntry, newSettings,
     }}>

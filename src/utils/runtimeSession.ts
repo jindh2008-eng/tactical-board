@@ -7,7 +7,7 @@
  * 키 네임스페이스: 'tactical-board.runtime.*'
  */
 
-import type { UnitToken, LogEntry, Pos } from '../types';
+import type { UnitToken, LogEntry, Pos, DoorState, FireStatus } from '../types';
 import type { VictimToken } from '../types/victim';
 import type { EventStatus } from '../types/events';
 
@@ -179,6 +179,60 @@ export function loadEventSession(): EventSessionState | null {
 }
 
 // ─────────────────────────────────────────────
+// 건물 상태 세션
+// ─────────────────────────────────────────────
+
+const KEY_BUILDING = 'tactical-board.runtime.building';
+
+export interface BuildingSessionState {
+  doorStates:         Record<string, DoorState>;
+  fireStates:         Record<string, FireStatus | null>;
+  firePercentages:    Record<string, number>;
+  stairSmokeFloor:    number | null;
+  smokeConcentration: number;
+}
+
+export function saveBuildingSession(state: BuildingSessionState): void {
+  try {
+    sessionStorage.setItem(KEY_BUILDING, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+export function loadBuildingSession(): BuildingSessionState | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_BUILDING);
+    if (!raw) return null;
+    return JSON.parse(raw) as BuildingSessionState;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
+// 송수 연결 세션
+// ─────────────────────────────────────────────
+
+const KEY_WATERCONN = 'tactical-board.runtime.waterconn';
+
+export interface WaterConnSessionItem {
+  id: string; fromId: string; toId: string;
+  fromType: string; toType: string; status: 'active';
+}
+
+export function saveWaterConnSession(connections: WaterConnSessionItem[]): void {
+  try {
+    sessionStorage.setItem(KEY_WATERCONN, JSON.stringify(connections));
+  } catch { /* ignore */ }
+}
+
+export function loadWaterConnSession(): WaterConnSessionItem[] | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_WATERCONN);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
 // 전체 초기화 (새 훈련 시작 시 호출)
 // ─────────────────────────────────────────────
 
@@ -188,5 +242,7 @@ export function clearRuntimeSession(): void {
     sessionStorage.removeItem(KEY_VICTIMS);
     sessionStorage.removeItem(KEY_TRAINING);
     sessionStorage.removeItem(KEY_EVENTS);
+    sessionStorage.removeItem(KEY_BUILDING);
+    sessionStorage.removeItem(KEY_WATERCONN);
   } catch { /* ignore */ }
 }

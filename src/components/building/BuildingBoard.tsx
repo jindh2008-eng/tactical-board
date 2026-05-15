@@ -6,8 +6,12 @@ import {
   calcMinRowHeight,
 } from '../../data/buildingData';
 import { BuildingStateProvider, useBuildingState, type SmokeLevel } from '../../context/BuildingStateContext';
+import { useFireCommand } from '../../context/FireCommandContext';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
+import { useEvents, type EventPos } from '../../context/EventContext';
+import { resolveEventType } from '../../types/events';
+import { useTraining } from '../../context/TrainingContext';
 import { FloorRow } from './FloorRow';
 import './BuildingBoard.css';
 
@@ -26,22 +30,26 @@ function floorIdToLabel(floorId: string): string {
 const FIRE_STATUS_LABELS: Record<string, string> = {
   'extension-peak': '연소확대',
   'peak':           '최성기',
-  'seventy':        '70%',
+  'seventy':        '큰불잡음',
   'half':           '50%',
   'initial':        '초진',
   'complete':       '완진',
 };
 
+// FireCommandContext에 setFireStatus 등록 (BuildingStateProvider 내부)
+function FireCommandRegistrar() {
+  const { setFireStatus } = useBuildingState();
+  const { register }      = useFireCommand();
+  register(setFireStatus);
+  return null;
+}
+
 // ─────────────────────────────────────────────
 // 화재 소화 효과 (BuildingStateProvider 내부)
 // ─────────────────────────────────────────────
 
-const NEXT_FIRE_STATE: Partial<Record<FireStatus, FireStatus>> = {
-  'extension-peak': 'peak',
-  'peak':           'seventy',
-  'seventy':        'half',
-  'half':           'initial',
-};
+// 연소확대만 포인트 기반 전환, peak/seventy/half는 연속 % 시스템 사용
+const PERCENTAGE_FIRE_STATUSES = new Set<FireStatus>(['peak', 'seventy', 'half']);
 
 function floorIdFromZoneKey(zoneKey: string): string | null {
   const m = zoneKey.match(/^(.+)-(center|right|stair)$/);
@@ -49,42 +57,53 @@ function floorIdFromZoneKey(zoneKey: string): string | null {
 }
 
 function FireSuppressionEffect() {
-  const { tokens }                                   = useTokens();
-  const { fireStates, setFireStatus }                = useBuildingState();
+  const { tokens }                                             = useTokens();
+  const { fireStates, setFireStatus, setFirePercentage }      = useBuildingState();
   const { fireSuppressionConfig: cfg, aerialSuppressionConfig } = useSettings();
+  const { status: trainingStatus }                             = useTraining();
 
-  const fireStatesRef  = useRef(fireStates);
-  const tokensRef      = useRef(tokens);
-  const cfgRef         = useRef(cfg);
-  const aerialCfgRef   = useRef(aerialSuppressionConfig);
-  const setFireRef     = useRef(setFireStatus);
-  const ptsRef         = useRef<Record<string, number>>({});
+  const fireStatesRef        = useRef(fireStates);
+  const tokensRef            = useRef(tokens);
+  const cfgRef               = useRef(cfg);
+  const aerialCfgRef         = useRef(aerialSuppressionConfig);
+  const setFireRef           = useRef(setFireStatus);
+  const setFirePercentageRef = useRef(setFirePercentage);
+  const trainingRef          = useRef(trainingStatus);
+  const ptsRef               = useRef<Record<string, number>>({});
+  const pctRef               = useRef<Record<string, number>>({});
 
-  useEffect(() => { fireStatesRef.current = fireStates; }, [fireStates]);
-  useEffect(() => { tokensRef.current    = tokens;      }, [tokens]);
-  useEffect(() => { cfgRef.current       = cfg;         }, [cfg]);
-  useEffect(() => { aerialCfgRef.current = aerialSuppressionConfig; }, [aerialSuppressionConfig]);
-  useEffect(() => { setFireRef.current   = setFireStatus; }, [setFireStatus]);
+  useEffect(() => { fireStatesRef.current        = fireStates;          }, [fireStates]);
+  useEffect(() => { tokensRef.current            = tokens;              }, [tokens]);
+  useEffect(() => { cfgRef.current               = cfg;                 }, [cfg]);
+  useEffect(() => { aerialCfgRef.current         = aerialSuppressionConfig; }, [aerialSuppressionConfig]);
+  useEffect(() => { setFireRef.current           = setFireStatus;       }, [setFireStatus]);
+  useEffect(() => { setFirePercentageRef.current = setFirePercentage;   }, [setFirePercentage]);
+  useEffect(() => { trainingRef.current          = trainingStatus;      }, [trainingStatus]);
 
-  // 1초 간격으로 소화포인트 누적 → 임계치 초과 시 화재 상태 전환
+  // 1초 간격: 연소확대→최성기는 포인트 누적, 최성기/70%/50%는 연속 % 감소
   useEffect(() => {
     const lastFireRef: Record<string, FireStatus | null> = {};
 
     const interval = setInterval(() => {
+      if (trainingRef.current !== 'running') return;
+
       const config = cfgRef.current;
       const fires  = fireStatesRef.current;
 
-      // 화재 상태 변경 감지 → 해당 층 포인트 초기화 (인터벌 내에서 처리해 경쟁조건 제거)
+      // 화재 상태 변경 감지 → pts/pct 동기화
       for (const [fid, status] of Object.entries(fires)) {
         if (lastFireRef[fid] !== status) {
           ptsRef.current[fid] = 0;
           lastFireRef[fid] = status;
+          if (status === 'peak')         pctRef.current[fid] = 100;
+          else if (status === 'seventy') pctRef.current[fid] = 70;
+          else if (status === 'half')    pctRef.current[fid] = 50;
+          else                           delete pctRef.current[fid];
         }
       }
 
       const ptsPerFloor: Record<string, number> = {};
       for (const token of tokensRef.current) {
-        // 진압대 방수
         if (token.sprayState && token.sprayState !== '0%') {
           const floorId = token.sprayTarget?.floorId
             ?? (token.zoneKey ? floorIdFromZoneKey(token.zoneKey) ?? undefined : undefined);
@@ -93,7 +112,6 @@ function FireSuppressionEffect() {
             ptsPerFloor[floorId] = (ptsPerFloor[floorId] ?? 0) + mult * config.ptsPerSec;
           }
         }
-        // 고가차/굴절차 방수 (화재 단계별 배율 적용)
         if (token.aerialSprayTarget) {
           const floorId = token.aerialSprayTarget.floorId;
           if (floorId) {
@@ -106,22 +124,232 @@ function FireSuppressionEffect() {
         }
       }
 
-      for (const [floorId, pts] of Object.entries(ptsPerFloor)) {
+      for (const [floorId, ptsThisSec] of Object.entries(ptsPerFloor)) {
         const currentStatus = fires[floorId];
         if (!currentStatus) continue;
-        const nextStatus = NEXT_FIRE_STATE[currentStatus];
-        if (!nextStatus) continue;
-        const threshold = config.thresholds[currentStatus as keyof typeof config.thresholds];
-        if (threshold == null) continue;
 
-        ptsRef.current[floorId] = (ptsRef.current[floorId] ?? 0) + pts;
-        if (ptsRef.current[floorId] >= threshold) {
-          ptsRef.current[floorId] = 0;
-          lastFireRef[floorId] = nextStatus; // 다음 틱에서 이중 초기화 방지
-          setFireRef.current(floorId, nextStatus);
+        if (currentStatus === 'extension-peak') {
+          // 포인트 누적 → 최성기 전환 (기존 방식)
+          const threshold = config.thresholds['extension-peak'];
+          ptsRef.current[floorId] = (ptsRef.current[floorId] ?? 0) + ptsThisSec;
+          if (ptsRef.current[floorId] >= threshold) {
+            ptsRef.current[floorId] = 0;
+            lastFireRef[floorId] = 'peak';
+            setFireRef.current(floorId, 'peak');
+          }
+        } else if (PERCENTAGE_FIRE_STATUSES.has(currentStatus)) {
+          // 연속 % 감소 방식
+          let ratePctPerPt: number;
+          let boundaryPct: number;
+          let nextSt: FireStatus;
+
+          if (currentStatus === 'peak') {
+            ratePctPerPt = 30 / config.thresholds.peak;
+            boundaryPct  = 70;
+            nextSt       = 'seventy';
+          } else if (currentStatus === 'seventy') {
+            ratePctPerPt = 20 / config.thresholds.seventy;
+            boundaryPct  = 50;
+            nextSt       = 'half';
+          } else {
+            ratePctPerPt = 50 / config.thresholds.half;
+            boundaryPct  = 0;
+            nextSt       = 'initial';
+          }
+
+          const curPct = pctRef.current[floorId] ?? (currentStatus === 'peak' ? 100 : currentStatus === 'seventy' ? 70 : 50);
+          const newPct = curPct - ptsThisSec * ratePctPerPt;
+
+          if (newPct <= boundaryPct) {
+            lastFireRef[floorId] = nextSt;
+            setFireRef.current(floorId, nextSt);
+          } else {
+            pctRef.current[floorId] = newPct;
+            setFirePercentageRef.current(floorId, newPct);
+          }
         }
       }
     }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return null;
+}
+
+// ─────────────────────────────────────────────
+// 이벤트 화재 소화 효과
+// ─────────────────────────────────────────────
+
+// 연소확대 포인트 임계치 (포인트 누적 방식 유지)
+const EVENT_연소확대_THRESHOLD = 60;
+
+// % 감소 구간별 임계치 (감소 속도 계산용)
+const EVENT_PCT_THRESHOLDS = {
+  peak:    120,  // 100%→70% 구간
+  seventy:  90,  // 70%→50% 구간
+  half:     60,  // 50%→0% 구간
+} as const;
+
+// pos.x, pos.y 는 토큰 좌상단 — 중심점으로 보정해 층 경계 오탐 방지
+const EVENT_TOKEN_HALF = 27; // TOKEN_W/H = 54
+
+// 건물 내부 → data-floor-id, A/B/C/D면 → data-zone-key("face-*") 반환
+function getEventLocationId(pos: EventPos): string | null {
+  const board = document.getElementById('tactical-area');
+  if (!board) return null;
+  const rect = board.getBoundingClientRect();
+  const cx = rect.left + pos.x + EVENT_TOKEN_HALF;
+  const cy = rect.top  + pos.y + EVENT_TOKEN_HALF;
+  const elements = document.elementsFromPoint(cx, cy);
+  for (const el of elements) {
+    let cur: Element | null = el;
+    while (cur) {
+      const fid = cur.getAttribute('data-floor-id');
+      if (fid) return fid;
+      const zk = cur.getAttribute('data-zone-key');
+      if (zk?.startsWith('face-')) return zk;
+      cur = cur.parentElement;
+    }
+  }
+  return null;
+}
+
+function EventFireSuppressionEffect() {
+  const { enabledEvents, positions, statuses, setEventStatus, setFirePercentage } = useEvents();
+  const { tokens }                                                                  = useTokens();
+  const { fireSuppressionConfig: cfg }                                              = useSettings();
+  const { status: trainingStatus }                                                  = useTraining();
+
+  const tokensRef            = useRef(tokens);
+  const statusesRef          = useRef(statuses);
+  const positionsRef         = useRef(positions);
+  const enabledRef           = useRef(enabledEvents);
+  const cfgRef               = useRef(cfg);
+  const setStatusRef         = useRef(setEventStatus);
+  const setFirePercentageRef = useRef(setFirePercentage);
+  const trainingRef          = useRef(trainingStatus);
+  const ptsRef               = useRef<Record<string, number>>({});
+  const pctRef               = useRef<Record<string, number>>({});
+
+  useEffect(() => { tokensRef.current            = tokens;            }, [tokens]);
+  useEffect(() => { statusesRef.current          = statuses;          }, [statuses]);
+  useEffect(() => { positionsRef.current         = positions;         }, [positions]);
+  useEffect(() => { enabledRef.current           = enabledEvents;     }, [enabledEvents]);
+  useEffect(() => { cfgRef.current               = cfg;               }, [cfg]);
+  useEffect(() => { setStatusRef.current         = setEventStatus;    }, [setEventStatus]);
+  useEffect(() => { setFirePercentageRef.current = setFirePercentage; }, [setFirePercentage]);
+  useEffect(() => { trainingRef.current          = trainingStatus;    }, [trainingStatus]);
+
+  useEffect(() => {
+    const lastStatusRef: Record<string, string> = {};
+
+    const interval = setInterval(() => {
+      if (trainingRef.current !== 'running') return;
+
+      const config = cfgRef.current;
+      const evts   = enabledRef.current;
+      const sts    = statusesRef.current;
+      const pos    = positionsRef.current;
+
+      // 상태 변경 감지 → pts/pct 동기화
+      for (const ev of evts) {
+        const s = sts[ev.id];
+        if (lastStatusRef[ev.id] !== s) {
+          ptsRef.current[ev.id] = 0;
+          lastStatusRef[ev.id]  = s;
+          if (s === '최성기' || s === '화재') pctRef.current[ev.id] = 100;
+          else if (s === '큰불잡음')             pctRef.current[ev.id] = 70;
+          else if (s === '50%')               pctRef.current[ev.id] = 50;
+          else                                delete pctRef.current[ev.id];
+        }
+      }
+
+      // 위치 키별 소화포인트 계산
+      const ptsPerLocation: Record<string, number> = {};
+      for (const token of tokensRef.current) {
+        if (token.sprayState && token.sprayState !== '0%') {
+          const locId = token.sprayTarget?.floorId
+            ?? (token.zoneKey?.startsWith('face-') ? token.zoneKey : undefined)
+            ?? (token.zoneKey ? floorIdFromZoneKey(token.zoneKey) ?? undefined : undefined);
+          if (locId) {
+            const mult = token.sprayState === '100%' ? 1 : 0.3;
+            ptsPerLocation[locId] = (ptsPerLocation[locId] ?? 0) + mult * config.ptsPerSec;
+          }
+        }
+        if (token.aerialSprayTarget?.floorId) {
+          const locId = token.aerialSprayTarget.floorId;
+          ptsPerLocation[locId] = (ptsPerLocation[locId] ?? 0) + config.ptsPerSec;
+        }
+      }
+
+      for (const ev of evts) {
+        const status = sts[ev.id];
+        if (!status || status === '-') continue;
+
+        const evPos = pos[ev.id];
+        if (!evPos) continue;
+        const locId = getEventLocationId(evPos);
+        if (!locId) continue;
+        const ptsThisSec = ptsPerLocation[locId];
+        if (!ptsThisSec) continue;
+
+        const evType = resolveEventType(ev);
+
+        if (status === '연소확대') {
+          // 포인트 누적 → 최성기 전환
+          ptsRef.current[ev.id] = (ptsRef.current[ev.id] ?? 0) + ptsThisSec;
+          if (ptsRef.current[ev.id] >= EVENT_연소확대_THRESHOLD) {
+            ptsRef.current[ev.id] = 0;
+            lastStatusRef[ev.id]  = '최성기';
+            setStatusRef.current(ev.id, '최성기');
+          }
+        } else if (evType === 'fire' && (status === '최성기' || status === '큰불잡음' || status === '50%')) {
+          // 화재 이벤트 연속 % 감소
+          let ratePctPerPt: number;
+          let boundaryPct: number;
+          let nextSt: string;
+          if (status === '최성기') {
+            ratePctPerPt = 30 / EVENT_PCT_THRESHOLDS.peak;
+            boundaryPct  = 70;
+            nextSt       = '큰불잡음';
+          } else if (status === '큰불잡음') {
+            ratePctPerPt = 20 / EVENT_PCT_THRESHOLDS.seventy;
+            boundaryPct  = 50;
+            nextSt       = '50%';
+          } else {
+            ratePctPerPt = 50 / EVENT_PCT_THRESHOLDS.half;
+            boundaryPct  = 0;
+            nextSt       = '초진';
+          }
+          const curPct = pctRef.current[ev.id] ?? (status === '최성기' ? 100 : status === '큰불잡음' ? 70 : 50);
+          const newPct = curPct - ptsThisSec * ratePctPerPt;
+          if (newPct <= boundaryPct) {
+            lastStatusRef[ev.id] = nextSt;
+            setStatusRef.current(ev.id, nextSt);
+          } else {
+            pctRef.current[ev.id] = newPct;
+            setFirePercentageRef.current(ev.id, newPct);
+          }
+        } else if ((evType === 'gas' || evType === 'electric') && status === '화재') {
+          // 가스/전기 화재: 3구간 동적 비율로 100%→0% 감소
+          const curPct = pctRef.current[ev.id] ?? 100;
+          let ratePctPerPt: number;
+          if (curPct > 70)      ratePctPerPt = 30 / EVENT_PCT_THRESHOLDS.peak;
+          else if (curPct > 50) ratePctPerPt = 20 / EVENT_PCT_THRESHOLDS.seventy;
+          else                  ratePctPerPt = 50 / EVENT_PCT_THRESHOLDS.half;
+
+          const newPct = curPct - ptsThisSec * ratePctPerPt;
+          if (newPct <= 0) {
+            lastStatusRef[ev.id] = '-';
+            setStatusRef.current(ev.id, '-');
+          } else {
+            pctRef.current[ev.id] = newPct;
+            setFirePercentageRef.current(ev.id, newPct);
+          }
+        }
+      }
+    }, 1000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -133,15 +361,17 @@ function FireSuppressionEffect() {
 // ─────────────────────────────────────────────
 
 interface Props {
-  config?:           BuildingConfig;
-  fireFloor?:        number;
+  config?:            BuildingConfig;
+  fireFloor?:         number;
   initialFireStatus?: FireStatus | null;
+  extraFireFloors?:   import('../../types/settings').ExtraFireFloor[];
 }
 
 export function BuildingBoard({
   config             = DEFAULT_BUILDING_CONFIG,
   fireFloor          = 1,
   initialFireStatus  = null,
+  extraFireFloors    = [],
 }: Props) {
   const floors      = useMemo(() => buildDisplayFloors(config, fireFloor), [config, fireFloor]);
   const minRowPx    = calcMinRowHeight();
@@ -185,12 +415,15 @@ export function BuildingBoard({
       allFloorIds={allFloorIds}
       fireFloor={fireFloor}
       initialFireStatus={initialFireStatus}
+      extraFireFloors={extraFireFloors}
       aboveGroundFloors={config.aboveGroundFloors}
       onFireChange={handleFireChange}
       onDoorChange={handleDoorChange}
       onSmokeChange={handleSmokeChange}
     >
+      <FireCommandRegistrar />
       <FireSuppressionEffect />
+      <EventFireSuppressionEffect />
       <div
         className="building-body"
         style={{ '--min-row-height': `${minRowPx}px` } as React.CSSProperties}

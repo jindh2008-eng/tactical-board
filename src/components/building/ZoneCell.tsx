@@ -22,7 +22,7 @@ interface StageMeta {
 const FIRE_STAGE_META: Record<FireStatus, StageMeta> = {
   'extension-peak': { label: '연소확대', bgClass: 'zone-cell--fs-extension-peak' },
   'peak':           { label: '최성기',   bgClass: 'zone-cell--fs-peak'           },
-  'seventy':        { label: '70%',     bgClass: 'zone-cell--fs-seventy'         },
+  'seventy':        { label: '큰불잡음', bgClass: 'zone-cell--fs-seventy'         },
   'half':           { label: '50%',     bgClass: 'zone-cell--fs-half'           },
   'initial':        { label: '초진',    bgClass: 'zone-cell--fs-initial'        },
   'complete':       { label: '완진',    bgClass: 'zone-cell--fs-complete'       },
@@ -42,7 +42,7 @@ interface FireRadialItem {
 const FIRE_RADIAL_ITEMS: FireRadialItem[] = [
   { value: 'extension-peak', label: '연소확대' },
   { value: 'peak',           label: '최성기'  },
-  { value: 'seventy',        label: '70%'    },
+  { value: 'seventy',        label: '큰불잡음' },
   { value: 'half',           label: '50%'    },
   { value: 'initial',        label: '초진'   },
   { value: 'complete',       label: '완진'   },
@@ -183,9 +183,10 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
   const hasSmoke = !!zone.status.smoke;
   const hasState = hasFire || hasSmoke;
 
-  const { doorStates, fireStates, setDoorState: ctxSetDoor, setFireStatus: ctxSetFire } = useBuildingState();
-  const doorState  = doorStates[floorId]  ?? (floorId === 'RF' ? 'closed' : 'open');
-  const fireStatus = fireStates[floorId]  ?? null;
+  const { doorStates, fireStates, firePercentages, setDoorState: ctxSetDoor, setFireStatus: ctxSetFire } = useBuildingState();
+  const doorState   = doorStates[floorId]     ?? (floorId === 'RF' ? 'closed' : 'open');
+  const fireStatus  = fireStates[floorId]     ?? null;
+  const firePct     = firePercentages[floorId];
 
   const [isDragOver,    setIsDragOver]    = useState(false);
   const [fireRadialPos, setFireRadialPos] = useState<{ x: number; y: number } | null>(null);
@@ -305,7 +306,9 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
           {stageMeta && fireStatus ? (
             <div className="fire-cell">
               <FlameIcon status={fireStatus} className="fire-bg-icon" />
-              <span className="fire-label">{stageMeta.label}</span>
+              <span className="fire-label">
+                {firePct != null ? `${Math.round(firePct)}%` : stageMeta.label}
+              </span>
             </div>
           ) : null}
         </div>

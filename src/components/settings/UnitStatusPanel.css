@@ -1,0 +1,133 @@
+.unit-status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.unit-status-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.unit-status-panel__group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.unit-status-panel__types {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.unit-status-panel__type-block {
+  background: var(--color-surface-raised, rgba(255,255,255,0.04));
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.unit-status-panel__type-header {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.unit-status-panel__messages {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 20px;
+}
+
+.unit-status-panel__empty {
+  font-size: 0.68rem;
+  color: var(--color-text-dim);
+}
+
+.unit-status-panel__message-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.04);
+}
+
+.unit-status-panel__message-text {
+  flex: 1;
+  font-size: 0.74rem;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.unit-status-panel__remove-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font-size: 0.64rem;
+  padding: 1px 3px;
+  border-radius: 2px;
+  line-height: 1;
+  transition: color 0.1s, background-color 0.1s;
+}
+
+.unit-status-panel__remove-btn:hover {
+  color: #e05c5c;
+  background: rgba(220,60,60,0.10);
+}
+
+.unit-status-panel__add-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.unit-status-panel__add-input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  font-size: 0.72rem;
+  background: var(--color-input-bg, rgba(255,255,255,0.06));
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.unit-status-panel__add-input:focus {
+  border-color: var(--color-accent);
+}
+
+.unit-status-panel__add-btn {
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.unit-status-panel__add-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.unit-status-panel__add-btn:not(:disabled):hover {
+  opacity: 0.85;
+}

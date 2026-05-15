@@ -44,6 +44,7 @@ const LOG_TYPE_LABELS: Record<LogType, string> = {
   'door':         '방화문',
   'smoke':        '연기',
   'event-status': '이벤트',
+  'checklist':    '체크리스트',
 };
 
 // ── 로그 내용 → 한 줄 텍스트 ─────────────────────────────────────────────

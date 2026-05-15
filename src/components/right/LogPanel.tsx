@@ -120,6 +120,15 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     );
   }
 
+  if (logType === 'checklist') {
+    return (
+      <div className="log-panel__entry log-panel__entry--checklist">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className="log-panel__checklist-note">{note}</span>
+      </div>
+    );
+  }
+
   // move / assignment / rescue
   return (
     <div className="log-panel__entry">

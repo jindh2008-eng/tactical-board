@@ -11,7 +11,6 @@ import type {
 } from '../types/victim';
 import {
   VICTIM_GENDERS,
-  VICTIM_CONDITIONS,
 } from '../types/victim';
 import { generateId } from './settingsStorage';
 import { locationToFloorDisplay } from './victimPlacement';

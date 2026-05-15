@@ -7,7 +7,8 @@ import { useWaterConnections } from '../../context/WaterConnectionContext';
 import type { UnitToken } from '../../types';
 import { PRESET_COLORS } from '../../types/presets';
 import { secsToMmss } from '../../utils/dispatchRoster';
-import { useWaterLevel }     from '../../context/WaterLevelContext';
+import { useWaterLevel }       from '../../context/WaterLevelContext';
+import { useDisplayOptions }   from '../../context/DisplayOptionsContext';
 import { UnitStatusBarMenu } from './UnitStatusBarMenu';
 import { HydrantBarMenu }    from './HydrantBarMenu';
 import './TokenCard.css';
@@ -61,6 +62,7 @@ export function TokenCard({ token, absPos }: Props) {
   const { mode, clearMode }        = useActionMode();
   const { addConnection, connections } = useWaterConnections();
   const waterLevel                 = useWaterLevel();
+  const { showWaterLevel }         = useDisplayOptions();
 
   const [barMenu,      setBarMenu]      = useState<{
     left: number; top: number; right: number; bottom: number; width: number; height: number;
@@ -134,8 +136,8 @@ export function TokenCard({ token, absPos }: Props) {
 
   const handleClose = useCallback(() => setBarMenu(null), []);
 
-  // customNote 말풍선: hover 중, 메뉴 닫혀 있고, statusTag가 없을 때만
-  const showNoteTooltip = isHovered && !barMenu && !!token.customNote && !token.statusTag;
+  // customNote 말풍선: 설정된 경우 항상 표시 (X로 닫기 가능)
+  const showBubble = !!token.customNote && !barMenu;
 
   // ── 절대 위치 스타일 ─────────────────────────
   const wrapperStyle: React.CSSProperties | undefined = absPos
@@ -149,7 +151,7 @@ export function TokenCard({ token, absPos }: Props) {
     : undefined;
 
   // ── 카운트다운 ───────────────────────────────
-  const { tokens, medicalCountdowns, moveCountdowns, arrivalCountdowns } = useTokens();
+  const { tokens, medicalCountdowns, moveCountdowns, arrivalCountdowns, setCustomNote } = useTokens();
   const medicalCountdown = token.zoneKey === 'medical-post'
     ? (medicalCountdowns[token.id] ?? null) : null;
   const moveCountdown    = medicalCountdown === null
@@ -157,7 +159,8 @@ export function TokenCard({ token, absPos }: Props) {
   const arrivalCountdown = token.zoneKey === null
     ? (arrivalCountdowns[token.id] ?? null) : null;
 
-  const hasBadges = token.badges.length > 0;
+  const hasBadges    = token.badges.length > 0;
+  const hasMission   = !!token.missionTag;
 
   // 카운트다운은 우측 고정 위치 표시용으로 포털 유지
   // (드래그 중 표시되지 않으므로 좌표 지연 문제 없음)
@@ -184,9 +187,9 @@ export function TokenCard({ token, absPos }: Props) {
   }
 
   // ── 수량 게이지 ──────────────────────────────
-  const showWaterGauge = waterLevel !== null && WATER_UNIT_TYPES.has(token.unitType);
-  const waterLevelL    = showWaterGauge ? (waterLevel!.levels[token.id] ?? waterLevel!.getCapacity(token.id)) : 0;
-  const waterCapL      = showWaterGauge ? waterLevel!.getCapacity(token.id) : 0;
+  const isWaterUnit    = waterLevel !== null && WATER_UNIT_TYPES.has(token.unitType);
+  const waterLevelL    = isWaterUnit ? (waterLevel!.levels[token.id] ?? waterLevel!.getCapacity(token.id)) : 0;
+  const waterCapL      = isWaterUnit ? waterLevel!.getCapacity(token.id) : 0;
 
   // ── 소화전 ───────────────────────────────────
   const isHydrant       = token.unitType === 'hydrant';
@@ -204,7 +207,9 @@ export function TokenCard({ token, absPos }: Props) {
   const aerialBansuNoSource = isAerialBansu && !aerialHasWaterSource;
 
   // ── 수량 소진 (0%) ───────────────────────────
-  const isWaterEmpty = showWaterGauge && waterLevelL === 0;
+  const isWaterEmpty   = isWaterUnit && waterLevelL === 0;
+  // 수량표시 OFF여도 소진 시에는 게이지 표시
+  const showWaterGauge = isWaterUnit && (showWaterLevel || isWaterEmpty);
 
   // ── CSS 클래스 조합 ──────────────────────────
   const cardClasses = [
@@ -218,7 +223,7 @@ export function TokenCard({ token, absPos }: Props) {
     isWaterEmpty    ? 'token-card--water-empty'     : '',
   ].filter(Boolean).join(' ');
 
-  const hasOverlay = hasBadges || (!!token.statusTag && !isHydrantBroken) || showNoteTooltip;
+  const hasOverlay = hasBadges || (!!token.statusTag && !isHydrantBroken);
 
   // ─────────────────────────────────────────────
   // 렌더
@@ -299,12 +304,24 @@ export function TokenCard({ token, absPos }: Props) {
               );
             })()}
 
-            {/* 메모 말풍선 */}
-            {showNoteTooltip && (
-              <div className="token-note-tooltip">{token.customNote}</div>
-            )}
           </div>
         )}
+
+        {/* ── 좌측 임무 레이블 ── */}
+        {hasMission && (() => {
+          const m   = token.missionTag!;
+          const col = STATUS_TAG_COLORS[m.color] ?? STATUS_TAG_COLORS.white;
+          const abbr = m.label.length <= 3 ? m.label : m.label.slice(0, 2);
+          return (
+            <div
+              className="token-mission-label"
+              style={{ background: col.bg, borderColor: col.border, color: col.text }}
+              aria-label={m.label}
+            >
+              {abbr}
+            </div>
+          );
+        })()}
 
         <div
           className={cardClasses}
@@ -317,6 +334,18 @@ export function TokenCard({ token, absPos }: Props) {
         >
           {isHydrantBroken ? `${token.label} [고장]` : token.label}
         </div>
+
+        {/* ── customNote 말풍선 (항상 표시, X로 닫기) ── */}
+        {showBubble && (
+          <div className="token-bubble" aria-label={`메모: ${token.customNote}`}>
+            <span className="token-bubble__text">{token.customNote}</span>
+            <button
+              className="token-bubble__close"
+              onMouseDown={e => { e.stopPropagation(); setCustomNote(token.id, ''); }}
+              aria-label="메모 닫기"
+            >×</button>
+          </div>
+        )}
 
         {showWaterGauge && (
           <WaterGauge levelL={waterLevelL} capacityL={waterCapL} />
