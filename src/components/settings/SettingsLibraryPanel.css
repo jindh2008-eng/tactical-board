@@ -129,6 +129,17 @@
   font-size: 0.7rem;
 }
 
+.slp__btn--export {
+  background: #1a3040;
+  border-color: #2a5070;
+  color: #80c0e0;
+}
+
+.slp__btn--export:hover:not(:disabled) {
+  background: #224455;
+  border-color: #3a6080;
+}
+
 /* 다른 이름으로 저장 */
 
 .slp__save-as-row {

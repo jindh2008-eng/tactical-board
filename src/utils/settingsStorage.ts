@@ -191,3 +191,55 @@ export function loadWorkingPresets(): WorkingPresets {
 export function saveWorkingPresets(presets: WorkingPresets): void {
   localStorage.setItem(WORKING_PRESETS_KEY, JSON.stringify(presets));
 }
+
+// ─────────────────────────────────────────────
+// 내보내기 / 불러오기
+// ─────────────────────────────────────────────
+
+export interface SettingsExport {
+  version: 1;
+  exportedAt: string;
+  settingsList: SettingsSet[];
+  workingPresets: WorkingPresets;
+}
+
+export function exportSettings(): void {
+  const data: SettingsExport = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    settingsList: loadSettingsList(),
+    workingPresets: loadWorkingPresets(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tactical-board-settings-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export function importSettings(file: File): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const raw = e.target?.result as string;
+        const data = JSON.parse(raw) as SettingsExport;
+        if (data.version !== 1 || !Array.isArray(data.settingsList) || !data.workingPresets) {
+          reject(new Error('올바른 설정 파일이 아닙니다.'));
+          return;
+        }
+        localStorage.setItem(SETTINGS_LIST_KEY, JSON.stringify(data.settingsList));
+        localStorage.setItem(WORKING_PRESETS_KEY, JSON.stringify(data.workingPresets));
+        resolve();
+      } catch {
+        reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
+      }
+    };
+    reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+    reader.readAsText(file);
+  });
+}

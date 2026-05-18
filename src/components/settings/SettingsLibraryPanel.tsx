@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSettings } from '../../store/settingsStore';
+import { exportSettings, importSettings } from '../../utils/settingsStorage';
 import './SettingsLibraryPanel.css';
 
 /**
@@ -24,6 +25,7 @@ export function SettingsLibraryPanel() {
   const [showList,   setShowList]   = useState(false);
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [saveAsName, setSaveAsName] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleSave() {
     saveSettings();
@@ -40,6 +42,22 @@ export function SettingsLibraryPanel() {
   function handleNew() {
     if (!window.confirm('현재 설정을 초기화하겠습니까? 저장되지 않은 변경사항은 사라집니다.')) return;
     newSettings();
+  }
+
+  function handleExport() {
+    exportSettings();
+  }
+
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    try {
+      await importSettings(file);
+      window.location.reload();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '불러오기 실패');
+    }
   }
 
   return (
@@ -75,6 +93,19 @@ export function SettingsLibraryPanel() {
           >
             저장 목록 {showList ? '▲' : '▼'}
           </button>
+          <button className="slp__btn slp__btn--export" onClick={handleExport} title="설정을 JSON 파일로 저장합니다">
+            내보내기
+          </button>
+          <button className="slp__btn slp__btn--export" onClick={() => fileInputRef.current?.click()} title="다른 기기에서 내보낸 JSON 파일을 불러옵니다">
+            가져오기
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
         </div>
       </div>
 
