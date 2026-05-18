@@ -20,7 +20,7 @@ const UNIT_TYPE_GROUPS: { groupLabel: string; types: { key: string; label: strin
       { key: 'ladder',         label: '굴절차' },
       { key: 'smokeExhaust',   label: '배연차' },
       { key: 'command',        label: '지휘차' },
-      { key: 'waterTank',      label: '물탱크' },
+      { key: 'water_tank',      label: '물탱크' },
     ],
   },
 ];

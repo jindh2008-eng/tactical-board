@@ -385,20 +385,38 @@
    임무 레이블 — 토큰 좌측에 붙는 컬러 칩
    ─────────────────────────────────────────────*/
 
+/* 임무 레이블 wrapper — 컬럼들을 오른쪽부터 쌓음 */
 .token-mission-label {
-  position:      absolute;
-  right:         calc(100% + 3px);
-  top:           50%;
-  transform:     translateY(-50%);
-  padding:       2px 5px;
-  border-radius: 3px;
-  border:        1px solid;
-  font-size:     0.62rem;
-  font-weight:   700;
-  line-height:   1.4;
-  letter-spacing: 0.03em;
-  white-space:   nowrap;
+  position:       absolute;
+  right:          calc(100% + 3px);
+  top:            0;
+  bottom:         0;            /* wrapper 높이에 자동으로 꽉 맞춤 */
+  padding:        0 3px;
+  border-radius:  3px;
+  border:         1px solid;
+  display:        flex;
+  flex-direction: row-reverse;  /* 첫 번째 컬럼이 토큰에 가장 가깝게 */
+  align-items:    stretch;      /* 컬럼이 전체 높이를 채우도록 */
+  gap:            1px;
   pointer-events: none;
+}
+
+/* 한 컬럼 (최대 3글자) */
+.token-mission-label__col {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: space-evenly; /* N글자 → N등분해서 각 중앙에 배치 */
+}
+
+/* 개별 글자 */
+.token-mission-label__char {
+  display:               block;
+  font-size:             9px;
+  font-weight:           900;
+  line-height:           1;
+  text-align:            center;
+  -webkit-text-stroke:   0.4px currentColor;
 }
 
 /* ─────────────────────────────────────────────

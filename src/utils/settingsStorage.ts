@@ -1,4 +1,4 @@
-import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig, AerialSuppressionConfig, ChecklistConfig, CommandProcedureConfigs, UnitStatusConfig } from '../types/settings';
+import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig, AerialSuppressionConfig, ChecklistConfig, CommandProcedureConfigs, UnitStatusConfig, UnitTagPresetConfig } from '../types/settings';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP } from '../types/settings';
 import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../types/presets';
 import type { EventSetupItem } from '../types/events';
@@ -26,6 +26,7 @@ export interface WorkingPresets {
   checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
   commandProcedureConfigs?: CommandProcedureConfigs;  // 지휘절차 (초급/중급/고급)
   unitStatusConfig?:        UnitStatusConfig;          // 출동대 상태메세지
+  unitTagPresetConfig?:     UnitTagPresetConfig;       // 임무/상태 태그 프리셋
 }
 
 /** 이름을 붙여 저장하는 설정 세트 */
@@ -50,6 +51,7 @@ export interface SettingsSet {
   checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
   commandProcedureConfigs?: CommandProcedureConfigs;  // 지휘절차 (초급/중급/고급)
   unitStatusConfig?:        UnitStatusConfig;          // 출동대 상태메세지
+  unitTagPresetConfig?:     UnitTagPresetConfig;       // 임무/상태 태그 프리셋
 }
 
 // ─────────────────────────────────────────────
@@ -62,6 +64,14 @@ const WORKING_PRESETS_KEY = 'tacticalBoardWorkingPresets';
 // ─────────────────────────────────────────────
 // 헬퍼
 // ─────────────────────────────────────────────
+
+/** waterTank → water_tank 키 마이그레이션 (구버전 호환) */
+export function migrateUnitStatusConfig(cfg: Record<string, string[]>): Record<string, string[]> {
+  if (!cfg.waterTank && !cfg['water_tank']) return cfg;
+  const { waterTank, ...rest } = cfg;
+  const merged = waterTank ? [...(rest['water_tank'] ?? []), ...waterTank] : (rest['water_tank'] ?? []);
+  return { ...rest, 'water_tank': [...new Set(merged)] };
+}
 
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -170,7 +180,8 @@ export function loadWorkingPresets(): WorkingPresets {
           }
         : undefined,
       commandProcedureConfigs: parsed.commandProcedureConfigs ?? {},
-      unitStatusConfig:        parsed.unitStatusConfig        ?? {},
+      unitStatusConfig:        migrateUnitStatusConfig(parsed.unitStatusConfig ?? {}),
+      unitTagPresetConfig:     parsed.unitTagPresetConfig ?? {},
     };
   } catch {
     return EMPTY_WORKING;

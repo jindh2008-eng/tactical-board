@@ -10,6 +10,7 @@ import { EventSetupPanel }       from '../components/settings/EventSetupPanel';
 import { ChecklistSetupPanel }   from '../components/settings/ChecklistSetupPanel';
 import { CommandProcedurePanel } from '../components/settings/CommandProcedurePanel';
 import { UnitStatusPanel }       from '../components/settings/UnitStatusPanel';
+import { TagPresetPanel }        from '../components/settings/TagPresetPanel';
 import { ScenarioModal }         from '../components/overlays/ScenarioModal';
 import './SettingsPage.css';
 
@@ -17,6 +18,7 @@ type SettingsSection =
   | 'library' | 'building' | 'hydrant' | 'timing' | 'dispatch' | 'vehicle' | 'victim' | 'event'
   | 'commandprocedure'
   | 'unitstatus'
+  | 'tagpreset'
   | 'checklist'
   | 'predict';
 
@@ -89,6 +91,13 @@ export function SettingsPage() {
             onClick={() => setSection('unitstatus')}
           >
             출동대 상태메세지
+          </button>
+
+          <button
+            className={`settings-page__sidebar-top-item${section === 'tagpreset' ? ' settings-page__sidebar-top-item--active' : ''}`}
+            onClick={() => setSection('tagpreset')}
+          >
+            임무/상태 프리셋
           </button>
 
           <button
@@ -244,6 +253,17 @@ export function SettingsPage() {
                 시나리오/체크리스트의 '출동대' 항목에서 불러와 사용할 수 있습니다.
               </p>
               <UnitStatusPanel />
+            </section>
+          )}
+
+          {section === 'tagpreset' && (
+            <section className="settings-page__section">
+              <h3 className="settings-page__section-title">임무/상태 프리셋</h3>
+              <p className="settings-page__hint">
+                출동대 유형별 임무·상태 태그를 사전에 등록합니다.
+                훈련창에서 출동대를 우클릭하면 여기서 설정한 항목이 표시됩니다.
+              </p>
+              <TagPresetPanel />
             </section>
           )}
 

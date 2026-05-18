@@ -88,6 +88,21 @@ export type ChecklistItemType = 'procedure' | 'event' | 'arrival' | 'message' | 
 /** 출동대 유형별 사전 정의 상태메세지 목록 */
 export type UnitStatusConfig = Record<string, string[]>;
 
+/** 임무/상태 태그 프리셋 항목 */
+export interface TagPreset {
+  label: string;
+  color: string;  // 'blue' | 'yellow' | 'red' | 'green' | 'white'
+}
+
+/** 유닛타입별 임무/상태 프리셋 묶음 */
+export interface UnitTagPresets {
+  missions: TagPreset[];
+  statuses: TagPreset[];
+}
+
+/** 전체 임무/상태 프리셋 설정 (unitType → presets) */
+export type UnitTagPresetConfig = Record<string, UnitTagPresets>;
+
 export interface ChecklistItem {
   id:                string;
   text:              string;

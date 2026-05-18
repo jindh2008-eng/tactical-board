@@ -593,7 +593,7 @@ export function ChecklistSetupPanel() {
                       value={getUnitRosterId(section.id)}
                       onChange={e => {
                         setNewUnitRosterIds(prev => ({ ...prev, [section.id]: e.target.value }));
-                        setNewUnitStatusTexts(prev => ({ ...prev, [section.id]: '' }));
+                        setNewUnitStatusTexts(prev => { const next = { ...prev }; delete next[section.id]; return next; });
                       }}
                     >
                       {unitEligibleRoster.map(r => (

@@ -7,6 +7,7 @@ import type {
   ExtraFireFloor,
   CommandProcedureConfigs, CommandProcedureLevel, CommandProcedureCategory,
   UnitStatusConfig,
+  UnitTagPresetConfig, UnitTagPresets,
 } from '../types/settings';
 import type { EventSetupItem, EventType } from '../types/events';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP, DEFAULT_FIRE_SUPPRESSION_CONFIG, DEFAULT_AERIAL_SUPPRESSION_CONFIG } from '../types/settings';
@@ -18,6 +19,7 @@ import {
   saveWorkingPresets,
   upsertSettingsSet,
   removeSettingsSet,
+  migrateUnitStatusConfig,
 } from '../utils/settingsStorage';
 import { buildRoster } from '../utils/dispatchRoster';
 import { DEFAULT_BUILDING_CONFIG } from '../data/buildingData';
@@ -105,6 +107,10 @@ interface SettingsContextValue {
   // ── 출동대 상태메세지 ─────────────────────────
   unitStatusConfig:            UnitStatusConfig;
   updateUnitStatusMessages:    (unitType: string, messages: string[]) => void;
+
+  // ── 임무/상태 태그 프리셋 ─────────────────────
+  unitTagPresetConfig:         UnitTagPresetConfig;
+  updateUnitTagPresets:        (unitType: string, presets: UnitTagPresets) => void;
 
   // ── 설정 세트 관리 ────────────────────────────
   settingsList:         SettingsSet[];
@@ -194,6 +200,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [unitStatusConfig, setUnitStatusConfig] = useState<UnitStatusConfig>(
     () => loadWorkingPresets().unitStatusConfig ?? {}
   );
+  const [unitTagPresetConfig, setUnitTagPresetConfig] = useState<UnitTagPresetConfig>(
+    () => loadWorkingPresets().unitTagPresetConfig ?? {}
+  );
 
   // ── 설정 세트 ─────────────────────────────────
   const [settingsList,       setSettingsList]       = useState<SettingsSet[]>(loadSettingsList);
@@ -213,8 +222,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
       fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
+      unitTagPresetConfig,
     });
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -439,6 +449,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setUnitStatusConfig(prev => ({ ...prev, [unitType]: messages }));
   }, []);
 
+  // ── 임무/상태 태그 프리셋 ─────────────────────
+  const updateUnitTagPresets = useCallback((unitType: string, presets: UnitTagPresets) => {
+    setUnitTagPresetConfig(prev => ({ ...prev, [unitType]: presets }));
+  }, []);
+
   // ── 설정 세트 저장/불러오기 ─────────────────────
 
   const saveSettings = useCallback(() => {
@@ -450,10 +465,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
       fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
+      unitTagPresetConfig,
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
@@ -464,11 +480,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
       fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
+      unitTagPresetConfig,
     };
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig]);
+  }, [config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -512,7 +529,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (set.checklistConfig) setChecklistConfig(JSON.parse(JSON.stringify(set.checklistConfig)));
     else setChecklistConfig({ level: 'junior', sections: [] });
     setCommandProcedureConfigs(set.commandProcedureConfigs ? JSON.parse(JSON.stringify(set.commandProcedureConfigs)) : {});
-    setUnitStatusConfig(set.unitStatusConfig ? JSON.parse(JSON.stringify(set.unitStatusConfig)) : {});
+    setUnitStatusConfig(set.unitStatusConfig ? migrateUnitStatusConfig(JSON.parse(JSON.stringify(set.unitStatusConfig))) : {});
+    setUnitTagPresetConfig(set.unitTagPresetConfig ? JSON.parse(JSON.stringify(set.unitTagPresetConfig)) : {});
     setExtraFireFloors(set.building?.extraFireFloors ? JSON.parse(JSON.stringify(set.building.extraFireFloors)) : []);
     setActiveSettingsId(id);
     setActiveSettingsName(set.name);
@@ -540,6 +558,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setChecklistConfig({ level: 'junior', sections: [] });
     setCommandProcedureConfigs({});
     setUnitStatusConfig({});
+    setUnitTagPresetConfig({});
     setExtraFireFloors([]);
     setActiveSettingsId(null);
     setActiveSettingsName('새 설정');
@@ -565,6 +584,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       addChecklistItem, updateChecklistItem, removeChecklistItem, reorderChecklistItems, appendChecklistSections,
       commandProcedureConfigs, updateCommandProcedureLevel,
       unitStatusConfig, updateUnitStatusMessages,
+      unitTagPresetConfig, updateUnitTagPresets,
       settingsList, activeSettingsId, activeSettingsName, setActiveSettingsName,
       saveSettings, saveSettingsAs, loadSettings, deleteSettingsEntry, newSettings,
     }}>

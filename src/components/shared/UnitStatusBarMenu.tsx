@@ -4,7 +4,7 @@ import type { UnitToken } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
-import { getMissionPresets, getStatusPresets } from '../../config/unitStatusPresets';
+import { useSettings } from '../../store/settingsStore';
 import './UnitStatusBarMenu.css';
 
 // ─────────────────────────────────────────────
@@ -66,6 +66,7 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const { setMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, setAerialSprayTarget } = useTokens();
   const { enterMode }                                  = useActionMode();
   const { connections }                                = useWaterConnections();
+  const { unitTagPresetConfig }                        = useSettings();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [noteOpen,  setNoteOpen]  = useState(false);
@@ -205,8 +206,8 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   }
 
   // ── 데이터 ──────────────────────────────────
-  const missionPresets = getMissionPresets(token.unitType);
-  const statusPresets  = getStatusPresets(token.unitType);
+  const missionPresets = unitTagPresetConfig[token.unitType]?.missions ?? [];
+  const statusPresets  = unitTagPresetConfig[token.unitType]?.statuses ?? [];
 
   // ─────────────────────────────────────────────
   // 렌더

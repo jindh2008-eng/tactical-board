@@ -307,18 +307,26 @@ export function TokenCard({ token, absPos }: Props) {
           </div>
         )}
 
-        {/* ── 좌측 임무 레이블 ── */}
+        {/* ── 좌측 임무 레이블 (세로쓰기, 3글자씩 컬럼) ── */}
         {hasMission && (() => {
-          const m   = token.missionTag!;
-          const col = STATUS_TAG_COLORS[m.color] ?? STATUS_TAG_COLORS.white;
-          const abbr = m.label.length <= 3 ? m.label : m.label.slice(0, 2);
+          const m    = token.missionTag!;
+          const col  = STATUS_TAG_COLORS[m.color] ?? STATUS_TAG_COLORS.white;
+          const chars = [...m.label];
+          const cols: string[][] = [];
+          for (let i = 0; i < chars.length; i += 3) cols.push(chars.slice(i, i + 3));
           return (
             <div
               className="token-mission-label"
               style={{ background: col.bg, borderColor: col.border, color: col.text }}
               aria-label={m.label}
             >
-              {abbr}
+              {cols.map((colChars, ci) => (
+                <span key={ci} className="token-mission-label__col">
+                  {colChars.map((ch, i) => (
+                    <span key={i} className="token-mission-label__char">{ch}</span>
+                  ))}
+                </span>
+              ))}
             </div>
           );
         })()}
