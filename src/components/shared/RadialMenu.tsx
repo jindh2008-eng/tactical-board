@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { UnitToken } from '../../types';
+import type { TagPreset } from '../../types/settings';
 import { useTokens } from '../../context/TokenContext';
-import { getStatusPresets } from '../../config/unitStatusPresets';
+import { useSettings } from '../../store/settingsStore';
 import './RadialMenu.css';
 
 // ─────────────────────────────────────────────
@@ -57,6 +58,7 @@ function angleOffset(deg: number, radius: number) {
 
 export function RadialMenu({ token, cx, cy, onClose }: Props) {
   const { setStatusTag, setCustomNote } = useTokens();
+  const { unitTagPresetConfig }         = useSettings();
 
   const [inputOpen,  setInputOpen]  = useState(false);
   const [noteDraft,  setNoteDraft]  = useState(token.customNote ?? '');
@@ -71,7 +73,7 @@ export function RadialMenu({ token, cx, cy, onClose }: Props) {
   }, [onClose]);
 
   // ── 데이터 준비 ──────────────────────────────
-  const presets    = getStatusPresets(token.unitType);
+  const presets: TagPreset[] = unitTagPresetConfig[token.unitType]?.statuses ?? [];
   const totalItems = presets.length + 1;  // +1 = 직접입력
 
   // 직접입력 패널 방향
@@ -134,7 +136,7 @@ export function RadialMenu({ token, cx, cy, onClose }: Props) {
         </div>
 
         {/* ── 상태 태그 프리셋 버튼 ───────────────── */}
-        {presets.map((preset, i) => {
+        {presets.map((preset: TagPreset, i: number) => {
           const deg        = i * (360 / totalItems) - 90;
           const { rx, ry } = angleOffset(deg, RADIUS_RING);
           const isActive   = token.statusTag?.label === preset.label;

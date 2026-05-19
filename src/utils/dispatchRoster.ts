@@ -4,7 +4,7 @@ import { generateId } from './settingsStorage';
 // ─── 부대명 표시 ──────────────────────────────────────────────────────
 
 const ROSTER_TYPE_SUFFIX: Record<string, string> = {
-  suppression:    '진압대',
+  suppression:    '진압',
   pump:           '펌프',
   rescue:         '구조',
   rescue_vehicle: '구조차',
@@ -17,7 +17,7 @@ const ROSTER_TYPE_SUFFIX: Record<string, string> = {
 };
 
 /**
- * 부대명 접두사가 있으면 "00진압대" 형식으로 반환, 없으면 item.name 그대로.
+ * 부대명 접두사가 있으면 "거진진압" 형식으로 반환, 없으면 item.name 그대로.
  * unitPrefix는 부모·자식 모두에 복사되어 있으므로 allItems 불필요.
  */
 export function computeRosterDisplayName(item: DispatchRosterItem): string {

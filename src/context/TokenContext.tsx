@@ -72,7 +72,7 @@ interface TokenContextValue {
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
   removeBadge:       (tokenId: string, badgeId: string) => void;
   clearBadges:       (tokenId: string) => void;
-  setMissionTag:     (tokenId: string, tag: StatusTag | null) => void;
+  toggleMissionTag:  (tokenId: string, tag: StatusTag) => void;
   setStatusTag:      (tokenId: string, tag: StatusTag | null) => void;
   setCustomNote:     (tokenId: string, note: string) => void;
   setSprayState:     (tokenId: string, state: SprayState | null, target?: { x: number; y: number; floorId?: string } | null) => void;
@@ -682,13 +682,18 @@ export function TokenProvider({
     }, ...prev]);
   }, []);
 
-  const setMissionTag = useCallback((tokenId: string, tag: StatusTag | null) => {
+  const toggleMissionTag = useCallback((tokenId: string, tag: StatusTag) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
+    const prev_tags = token.missionTags ?? [];
+    const exists = prev_tags.some(m => m.label === tag.label);
+    const next_tags = exists
+      ? prev_tags.filter(m => m.label !== tag.label)
+      : [...prev_tags, tag];
     setTokens(prev => prev.map(t =>
-      t.id === tokenId ? { ...t, missionTag: tag ?? undefined } : t
+      t.id === tokenId ? { ...t, missionTags: next_tags.length > 0 ? next_tags : undefined } : t
     ));
-    const note = tag ? tag.label : `${token.missionTag?.label ?? '임무'} 해제`;
+    const note = exists ? `임무 해제: ${tag.label}` : `임무: ${tag.label}`;
     setLogs(prev => [{
       id:        `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       timestamp: nowTimestamp(),
@@ -770,7 +775,7 @@ export function TokenProvider({
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
       createToken, moveToken, rescueUnit,
-      addBadge, removeBadge, clearBadges, setMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, moveAerialTarget, setAerialSprayTarget, changeTokenColor, addLog,
+      addBadge, removeBadge, clearBadges, toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, moveAerialTarget, setAerialSprayTarget, changeTokenColor, addLog,
     }}>
       {children}
     </TokenContext.Provider>

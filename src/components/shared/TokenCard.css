@@ -250,6 +250,68 @@
    상태 태그 오버레이 (statusTag)
    ─────────────────────────────────────────────*/
 
+/* ── 상단 출동대 상태메세지 ── */
+.token-status-msg {
+  position:       absolute;
+  bottom:         calc(100% + 3px);
+  left:           50%;
+  transform:      translateX(-50%);
+  display:        flex;
+  align-items:    center;
+  gap:            4px;
+  padding:        2px 6px 2px 8px;
+  background:     rgba(10, 20, 30, 0.92);
+  border:         1px solid rgba(80, 140, 200, 0.55);
+  border-radius:  10px;
+  white-space:    nowrap;
+  pointer-events: auto;
+  backdrop-filter: blur(3px);
+  box-shadow:     0 2px 8px rgba(0, 0, 0, 0.55);
+  z-index:        4;
+}
+
+.token-status-msg__text {
+  font-size:      0.65rem;
+  font-weight:    700;
+  color:          #88ccee;
+  letter-spacing: 0.03em;
+  max-width:      120px;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+}
+
+.token-status-msg__close {
+  display:        flex;
+  align-items:    center;
+  justify-content: center;
+  width:          13px;
+  height:         13px;
+  border:         none;
+  background:     transparent;
+  color:          rgba(100, 160, 210, 0.65);
+  font-size:      10px;
+  cursor:         pointer;
+  padding:        0;
+  flex-shrink:    0;
+  line-height:    1;
+}
+.token-status-msg__close:hover {
+  color: #ff8888;
+}
+
+/* ── 하단 상태 태그 (임무/상태 프리셋) ── */
+.token-status-tag-below {
+  position:       absolute;
+  top:            calc(100% + 3px);
+  left:           50%;
+  transform:      translateX(-50%);
+  display:        flex;
+  justify-content: center;
+  white-space:    nowrap;
+  z-index:        4;
+  pointer-events: none;
+}
+
 .token-status-tag-overlay {
   display:        flex;
   flex-direction: column;
@@ -385,20 +447,46 @@
    임무 레이블 — 토큰 좌측에 붙는 컬러 칩
    ─────────────────────────────────────────────*/
 
-/* 임무 레이블 wrapper — 컬럼들을 오른쪽부터 쌓음 */
-.token-mission-label {
+/* 임무 레이블 컨테이너 — 토큰 좌측에 붙어서 복수 레이블을 간격 없이 나열 */
+.token-mission-labels {
   position:       absolute;
   right:          calc(100% + 3px);
   top:            0;
-  bottom:         0;            /* wrapper 높이에 자동으로 꽉 맞춤 */
+  bottom:         0;
+  display:        flex;
+  flex-direction: row;
+  align-items:    stretch;
+  pointer-events: none;
+}
+
+/* 개별 임무 레이블 칩 */
+.token-mission-label {
   padding:        0 3px;
-  border-radius:  3px;
   border:         1px solid;
   display:        flex;
   flex-direction: row-reverse;  /* 첫 번째 컬럼이 토큰에 가장 가깝게 */
-  align-items:    stretch;      /* 컬럼이 전체 높이를 채우도록 */
+  align-items:    stretch;
   gap:            1px;
-  pointer-events: none;
+}
+
+/* 첫 번째(가장 왼쪽) 레이블만 왼쪽 모서리 둥글게 */
+.token-mission-label:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+/* 마지막(토큰에 붙는) 레이블만 오른쪽 모서리 둥글게 */
+.token-mission-label:last-child {
+  border-radius: 0 3px 3px 0;
+}
+
+/* 레이블이 1개뿐이면 전체 둥글게 */
+.token-mission-label:only-child {
+  border-radius: 3px;
+}
+
+/* 인접 레이블 간 좌측 보더 제거 (이중선 방지) */
+.token-mission-label + .token-mission-label {
+  border-left: none;
 }
 
 /* 한 컬럼 (최대 3글자) */

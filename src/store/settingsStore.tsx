@@ -19,7 +19,12 @@ import {
   saveWorkingPresets,
   upsertSettingsSet,
   removeSettingsSet,
-  migrateUnitStatusConfig,
+  loadCommandProcedureConfigs,
+  saveCommandProcedureConfigs,
+  loadUnitStatusConfig,
+  saveUnitStatusConfig,
+  loadUnitTagPresetConfig,
+  saveUnitTagPresetConfig,
 } from '../utils/settingsStorage';
 import { buildRoster } from '../utils/dispatchRoster';
 import { DEFAULT_BUILDING_CONFIG } from '../data/buildingData';
@@ -94,7 +99,7 @@ interface SettingsContextValue {
   updateChecklistSection:       (id: string, title: string) => void;
   removeChecklistSection:       (id: string) => void;
   reorderChecklistSections:     (fromIndex: number, toIndex: number) => void;
-  addChecklistItem:             (sectionId: string, text: string, itemType?: ChecklistItemType, options?: { arrivalOrder?: number; fireFloor?: number; fireTargetStatus?: FireStatus; messageLocation?: string; messageBody?: string; eventId?: string; eventTargetStatus?: string; unitRosterId?: string; unitStatusText?: string }) => void;
+  addChecklistItem:             (sectionId: string, text: string, itemType?: ChecklistItemType, options?: Partial<Omit<ChecklistItem, 'id' | 'text' | 'itemType'>>) => void;
   updateChecklistItem:          (sectionId: string, itemId: string, patch: Partial<Omit<ChecklistItem, 'id'>>) => void;
   removeChecklistItem:          (sectionId: string, itemId: string) => void;
   reorderChecklistItems:        (sectionId: string, fromIndex: number, toIndex: number) => void;
@@ -195,13 +200,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     () => loadWorkingPresets().checklistConfig ?? { level: 'junior', sections: [] }
   );
   const [commandProcedureConfigs, setCommandProcedureConfigs] = useState<CommandProcedureConfigs>(
-    () => loadWorkingPresets().commandProcedureConfigs ?? {}
+    loadCommandProcedureConfigs
   );
   const [unitStatusConfig, setUnitStatusConfig] = useState<UnitStatusConfig>(
-    () => loadWorkingPresets().unitStatusConfig ?? {}
+    loadUnitStatusConfig
   );
   const [unitTagPresetConfig, setUnitTagPresetConfig] = useState<UnitTagPresetConfig>(
-    () => loadWorkingPresets().unitTagPresetConfig ?? {}
+    loadUnitTagPresetConfig
   );
 
   // ── 설정 세트 ─────────────────────────────────
@@ -213,6 +218,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setDispatchRoster(prev => buildRoster(dispatchSetup, prev));
   }, [dispatchSetup]);
+
+  // 독립 항목 자동 저장 (메인 설정과 별도)
+  useEffect(() => { saveCommandProcedureConfigs(commandProcedureConfigs); }, [commandProcedureConfigs]);
+  useEffect(() => { saveUnitStatusConfig(unitStatusConfig); }, [unitStatusConfig]);
+  useEffect(() => { saveUnitTagPresetConfig(unitTagPresetConfig); }, [unitTagPresetConfig]);
 
   // 설정 변경 시 자동 저장 (새로고침 대비)
   useEffect(() => {
@@ -369,23 +379,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     sectionId: string,
     text: string,
     itemType: ChecklistItemType = 'procedure',
-    options?: { arrivalOrder?: number; fireFloor?: number; fireTargetStatus?: FireStatus; messageLocation?: string; messageBody?: string; eventId?: string; eventTargetStatus?: string; unitRosterId?: string; unitStatusText?: string }
+    options?: Partial<Omit<ChecklistItem, 'id' | 'text' | 'itemType'>>
   ) => {
-    const extra: Partial<Pick<ChecklistItem, 'arrivalOrder' | 'fireFloor' | 'fireTargetStatus' | 'messageLocation' | 'messageBody' | 'eventId' | 'eventTargetStatus' | 'unitRosterId' | 'unitStatusText'>> = {};
-    if (options?.arrivalOrder      != null) extra.arrivalOrder      = options.arrivalOrder;
-    if (options?.fireFloor         != null) extra.fireFloor         = options.fireFloor;
-    if (options?.fireTargetStatus  != null) extra.fireTargetStatus  = options.fireTargetStatus;
-    if (options?.messageLocation   != null) extra.messageLocation   = options.messageLocation;
-    if (options?.messageBody       != null) extra.messageBody       = options.messageBody;
-    if (options?.eventId           != null) extra.eventId           = options.eventId;
-    if (options?.eventTargetStatus != null) extra.eventTargetStatus = options.eventTargetStatus;
-    if (options?.unitRosterId      != null) extra.unitRosterId      = options.unitRosterId;
-    if (options?.unitStatusText    != null) extra.unitStatusText    = options.unitStatusText;
     setChecklistConfig(prev => ({
       ...prev,
       sections: prev.sections.map((s: ChecklistSection) =>
         s.id === sectionId
-          ? { ...s, items: [...s.items, { id: generateId(), text, itemType, ...extra }] }
+          ? { ...s, items: [...s.items, { id: generateId(), text, itemType, ...options }] }
           : s
       ),
     }));
@@ -528,9 +528,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (set.aerialSuppressionConfig) setAerialSuppressionConfig(JSON.parse(JSON.stringify(set.aerialSuppressionConfig)));
     if (set.checklistConfig) setChecklistConfig(JSON.parse(JSON.stringify(set.checklistConfig)));
     else setChecklistConfig({ level: 'junior', sections: [] });
-    setCommandProcedureConfigs(set.commandProcedureConfigs ? JSON.parse(JSON.stringify(set.commandProcedureConfigs)) : {});
-    setUnitStatusConfig(set.unitStatusConfig ? migrateUnitStatusConfig(JSON.parse(JSON.stringify(set.unitStatusConfig))) : {});
-    setUnitTagPresetConfig(set.unitTagPresetConfig ? JSON.parse(JSON.stringify(set.unitTagPresetConfig)) : {});
+    // 지휘절차 / 출동대 상태메세지 / 태그 프리셋은 메인 설정 불러오기 시 변경하지 않음
     setExtraFireFloors(set.building?.extraFireFloors ? JSON.parse(JSON.stringify(set.building.extraFireFloors)) : []);
     setActiveSettingsId(id);
     setActiveSettingsName(set.name);
@@ -556,9 +554,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setEventSetup([]);
     setHydrantSetup([]);
     setChecklistConfig({ level: 'junior', sections: [] });
-    setCommandProcedureConfigs({});
-    setUnitStatusConfig({});
-    setUnitTagPresetConfig({});
+    // 지휘절차 / 출동대 상태메세지 / 태그 프리셋은 신규 작성 시에도 유지
     setExtraFireFloors([]);
     setActiveSettingsId(null);
     setActiveSettingsName('새 설정');

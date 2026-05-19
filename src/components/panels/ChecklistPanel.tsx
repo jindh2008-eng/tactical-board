@@ -25,6 +25,7 @@ const TYPE_LABELS: Record<ChecklistItemType, string> = {
   fire:      '화재',
   xvr:       'XVR',
   unit:      '출동대',
+  incident:  '돌발상황',
 };
 
 function floorNumToId(n: number): string {
@@ -33,12 +34,13 @@ function floorNumToId(n: number): string {
 
 export function ChecklistPanel() {
   const { checklistConfig, dispatchRoster } = useSettings();
-  const { tokens, moveToken, addLog, setCustomNote } = useTokens();
+  const { tokens, moveToken, addLog, setCustomNote, toggleMissionTag, setStatusTag } = useTokens();
   const { callSetFire }                     = useFireCommand();
   const { setEventStatus }                  = useEvents();
-  const [checked,       setChecked]       = useState<Set<string>>(new Set());
-  const [collapsed,     setCollapsed]     = useState<Set<string>>(new Set());
-  const [activeMessage, setActiveMessage] = useState<ChecklistItem | null>(null);
+  const [checked,         setChecked]         = useState<Set<string>>(new Set());
+  const [collapsed,       setCollapsed]       = useState<Set<string>>(new Set());
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
+  const [activeMessage,   setActiveMessage]   = useState<ChecklistItem | null>(null);
 
   function getArrivalTokenIds(order: number): string[] {
     return dispatchRoster
@@ -114,15 +116,93 @@ export function ChecklistPanel() {
   }
 
   function toggleUnitItem(item: ChecklistItem) {
-    const isCk = checked.has(item.id);
+    const isCk    = checked.has(item.id);
+    const tokenId = item.unitRosterId ? `roster-${item.unitRosterId}` : null;
+    if (!tokenId) return;
+    const effectType = item.unitEffectType ?? 'statusMsg';
+
     if (!isCk) {
-      if (item.unitRosterId && item.unitStatusText != null) {
-        setCustomNote(`roster-${item.unitRosterId}`, item.unitStatusText);
+      if (effectType === 'statusMsg' && item.unitStatusText != null) {
+        setCustomNote(tokenId, item.unitStatusText);
+      } else if (effectType === 'mission' && item.unitMissionLabel && item.unitMissionColor) {
+        toggleMissionTag(tokenId, { label: item.unitMissionLabel, color: item.unitMissionColor });
+      } else if (effectType === 'status' && item.unitStatusTagLabel && item.unitStatusTagColor) {
+        setStatusTag(tokenId, { label: item.unitStatusTagLabel, color: item.unitStatusTagColor });
       }
       setChecked(prev => new Set([...prev, item.id]));
       addLog({ logType: 'checklist', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '', note: item.text });
     } else {
+      if (effectType === 'statusMsg') {
+        setCustomNote(tokenId, '');
+      } else if (effectType === 'mission' && item.unitMissionLabel && item.unitMissionColor) {
+        toggleMissionTag(tokenId, { label: item.unitMissionLabel, color: item.unitMissionColor });
+      } else if (effectType === 'status') {
+        setStatusTag(tokenId, null);
+      }
       setChecked(prev => { const n = new Set(prev); n.delete(item.id); return n; });
+    }
+  }
+
+  function applyChildEffect(child: ChecklistItem, checking: boolean) {
+    const t = child.itemType ?? 'procedure';
+    if (t === 'unit') {
+      const tokenId = child.unitRosterId ? `roster-${child.unitRosterId}` : null;
+      if (!tokenId) return;
+      const et = child.unitEffectType ?? 'statusMsg';
+      if (checking) {
+        if (et === 'statusMsg' && child.unitStatusText != null)
+          setCustomNote(tokenId, child.unitStatusText);
+        else if (et === 'mission' && child.unitMissionLabel && child.unitMissionColor)
+          toggleMissionTag(tokenId, { label: child.unitMissionLabel, color: child.unitMissionColor });
+        else if (et === 'status' && child.unitStatusTagLabel && child.unitStatusTagColor)
+          setStatusTag(tokenId, { label: child.unitStatusTagLabel, color: child.unitStatusTagColor });
+      } else {
+        if (et === 'statusMsg') setCustomNote(tokenId, '');
+        else if (et === 'mission' && child.unitMissionLabel && child.unitMissionColor)
+          toggleMissionTag(tokenId, { label: child.unitMissionLabel, color: child.unitMissionColor });
+        else if (et === 'status') setStatusTag(tokenId, null);
+      }
+    } else if (t === 'incident') {
+      if (checking && child.eventId && child.eventTargetStatus != null)
+        setEventStatus(child.eventId, child.eventTargetStatus);
+    } else if (t === 'fire') {
+      if (checking && child.fireFloor != null && child.fireTargetStatus != null)
+        callSetFire(floorNumToId(child.fireFloor), child.fireTargetStatus);
+    } else if (t === 'arrival') {
+      const order = child.arrivalOrder ?? 1;
+      if (checking) {
+        getArrivalTokenIds(order).forEach(id => {
+          const tk = tokens.find(tk => tk.id === id);
+          if (tk && tk.zoneKey !== 'standby-standby1') moveToken(id, 'standby-standby1');
+        });
+      } else {
+        if (!isArrivalLocked(order)) {
+          getArrivalTokenIds(order).forEach(id => {
+            const tk = tokens.find(tk => tk.id === id);
+            if (tk && tk.zoneKey === 'standby-standby1') moveToken(id, null);
+          });
+        }
+      }
+    }
+    // procedure, event, xvr, message: 사이드이펙트 없음
+  }
+
+  function triggerLinkedChildren(parentId: string, checking: boolean) {
+    const children: ChecklistItem[] = [];
+    for (const sec of checklistConfig.sections) {
+      for (const it of sec.items) {
+        if (it.linkedParentId === parentId) children.push(it);
+      }
+    }
+    if (children.length === 0) return;
+    children.forEach(c => applyChildEffect(c, checking));
+    setChecked(prev => {
+      const next = new Set(prev);
+      children.forEach(c => checking ? next.add(c.id) : next.delete(c.id));
+      return next;
+    });
+    if (checking) {
+      children.forEach(c => addLog({ logType: 'checklist', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '', note: c.text }));
     }
   }
 
@@ -165,6 +245,11 @@ export function ChecklistPanel() {
         ) : (
           checklistConfig.sections.map(section => {
             const isCollapsed = collapsed.has(section.id);
+            // 이 섹션에서 하위 항목을 가진 상위 항목 ID 집합
+            const parentItemIds = new Set(
+              section.items.filter(it => it.linkedParentId).map(it => it.linkedParentId!)
+            );
+
             return (
               <div key={section.id} className="checklist-panel__section">
                 <button
@@ -182,6 +267,11 @@ export function ChecklistPanel() {
                   const isChecked = checked.has(item.id);
                   const order     = item.arrivalOrder ?? 1;
                   const isLocked  = itemType === 'arrival' && isChecked && isArrivalLocked(order);
+                  const isLinked  = !!item.linkedParentId;
+                  const isParent  = parentItemIds.has(item.id);
+
+                  // 하위 항목은 상위가 펼쳐진 경우에만 표시
+                  if (isLinked && !expandedParents.has(item.linkedParentId!)) return null;
 
                   const fireTitle = itemType === 'fire' && item.fireFloor != null
                     ? `${item.fireFloor}층 → ${FIRE_STATUS_LABELS[item.fireTargetStatus!] ?? ''}`
@@ -190,12 +280,14 @@ export function ChecklistPanel() {
 
                   function handleClick() {
                     if (isLocked) return;
-                    if (itemType === 'arrival')      toggleArrivalItem(item.id, order, item.text);
-                    else if (itemType === 'fire')    toggleFireItem(item);
-                    else if (itemType === 'message') toggleMessageItem(item);
-                    else if (itemType === 'event')   toggleEventItem(item);
-                    else if (itemType === 'unit')    toggleUnitItem(item);
-                    else                             toggleItem(item.id, item.text);
+                    const checking = !isChecked;
+                    if (itemType === 'arrival')       toggleArrivalItem(item.id, order, item.text);
+                    else if (itemType === 'fire')     toggleFireItem(item);
+                    else if (itemType === 'message')  toggleMessageItem(item);
+                    else if (itemType === 'incident') toggleEventItem(item);
+                    else if (itemType === 'unit')     toggleUnitItem(item);
+                    else                              toggleItem(item.id, item.text);
+                    triggerLinkedChildren(item.id, checking);
                   }
 
                   return (
@@ -205,15 +297,36 @@ export function ChecklistPanel() {
                         'checklist-panel__item',
                         isChecked ? 'checklist-panel__item--checked' : '',
                         isLocked  ? 'checklist-panel__item--locked'  : '',
+                        isLinked  ? 'checklist-panel__item--linked'   : '',
                       ].filter(Boolean).join(' ')}
                       onClick={handleClick}
                       title={title}
                     >
+                      {isLinked && <span className="checklist-panel__link-icon">└</span>}
                       <span className={`checklist-panel__item-badge checklist-panel__item-badge--${itemType}`}>
                         {TYPE_LABELS[itemType] ?? itemType}
                       </span>
                       <span className="checklist-panel__item-text">{item.text}</span>
                       {isLocked && <span className="checklist-panel__lock-icon">🔒</span>}
+                      {/* 상위 항목 하위 숨김/표시 체크박스 */}
+                      {isParent && (
+                        <input
+                          type="checkbox"
+                          className="checklist-panel__expand-cb"
+                          checked={!expandedParents.has(item.id)}
+                          title={expandedParents.has(item.id) ? '하위 항목 숨기기' : '하위 항목 표시'}
+                          onClick={e => e.stopPropagation()}
+                          onChange={e => {
+                            e.stopPropagation();
+                            setExpandedParents(prev => {
+                              const next = new Set(prev);
+                              if (e.target.checked) next.delete(item.id);
+                              else                  next.add(item.id);
+                              return next;
+                            });
+                          }}
+                        />
+                      )}
                     </div>
                   );
                 })}

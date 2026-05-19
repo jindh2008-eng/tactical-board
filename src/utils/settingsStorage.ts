@@ -193,6 +193,49 @@ export function saveWorkingPresets(presets: WorkingPresets): void {
 }
 
 // ─────────────────────────────────────────────
+// 독립 저장 — 지휘절차 / 출동대 상태메세지 / 태그 프리셋
+// 메인 설정 불러오기·초기화에 영향받지 않는 전역 데이터
+// ─────────────────────────────────────────────
+
+const COMMAND_PROCEDURE_KEY = 'tacticalBoardCommandProcedure';
+const UNIT_STATUS_KEY       = 'tacticalBoardUnitStatus';
+const TAG_PRESET_KEY        = 'tacticalBoardTagPresets';
+
+export function loadCommandProcedureConfigs(): CommandProcedureConfigs {
+  try {
+    const raw = localStorage.getItem(COMMAND_PROCEDURE_KEY);
+    if (raw) return JSON.parse(raw) as CommandProcedureConfigs;
+    // 최초 실행: WorkingPresets에서 마이그레이션
+    return loadWorkingPresets().commandProcedureConfigs ?? {};
+  } catch { return {}; }
+}
+export function saveCommandProcedureConfigs(cfg: CommandProcedureConfigs): void {
+  localStorage.setItem(COMMAND_PROCEDURE_KEY, JSON.stringify(cfg));
+}
+
+export function loadUnitStatusConfig(): UnitStatusConfig {
+  try {
+    const raw = localStorage.getItem(UNIT_STATUS_KEY);
+    if (raw) return migrateUnitStatusConfig(JSON.parse(raw) as Record<string, string[]>);
+    return migrateUnitStatusConfig(loadWorkingPresets().unitStatusConfig ?? {});
+  } catch { return {}; }
+}
+export function saveUnitStatusConfig(cfg: UnitStatusConfig): void {
+  localStorage.setItem(UNIT_STATUS_KEY, JSON.stringify(cfg));
+}
+
+export function loadUnitTagPresetConfig(): UnitTagPresetConfig {
+  try {
+    const raw = localStorage.getItem(TAG_PRESET_KEY);
+    if (raw) return JSON.parse(raw) as UnitTagPresetConfig;
+    return loadWorkingPresets().unitTagPresetConfig ?? {};
+  } catch { return {}; }
+}
+export function saveUnitTagPresetConfig(cfg: UnitTagPresetConfig): void {
+  localStorage.setItem(TAG_PRESET_KEY, JSON.stringify(cfg));
+}
+
+// ─────────────────────────────────────────────
 // 내보내기 / 불러오기
 // ─────────────────────────────────────────────
 

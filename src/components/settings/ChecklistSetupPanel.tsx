@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useSettings } from '../../store/settingsStore';
-import type { ChecklistItemType, CommandProcedureLevel, CommandProcedureItemType } from '../../types/settings';
+import type { ChecklistItemType, CommandProcedureLevel, CommandProcedureItemType, TagPreset } from '../../types/settings';
 import type { FireStatus } from '../../types';
 import { EVENT_TYPE_STATUSES, resolveEventType } from '../../types/events';
 import { generateId } from '../../utils/settingsStorage';
@@ -15,6 +15,7 @@ const TYPE_LABELS: Record<ChecklistItemType, string> = {
   fire:      '화재',
   xvr:       'XVR',
   unit:      '출동대',
+  incident:  '돌발상황',
 };
 
 const FIRE_STATUS_OPTIONS: { value: FireStatus; label: string }[] = [
@@ -60,6 +61,7 @@ export function ChecklistSetupPanel() {
     building,
     eventSetup,
     unitStatusConfig,
+    unitTagPresetConfig,
     commandProcedureConfigs,
     appendChecklistSections,
     addChecklistSection,
@@ -91,8 +93,14 @@ export function ChecklistSetupPanel() {
   const [newEventStatuses, setNewEventStatuses] = useState<Record<string, string>>({});
 
   // 출동대 타입 전용 상태
-  const [newUnitRosterIds,   setNewUnitRosterIds]   = useState<Record<string, string>>({});
-  const [newUnitStatusTexts, setNewUnitStatusTexts] = useState<Record<string, string>>({});
+  const [newUnitRosterIds,     setNewUnitRosterIds]     = useState<Record<string, string>>({});
+  const [newUnitEffectTypes,   setNewUnitEffectTypes]   = useState<Record<string, 'statusMsg' | 'mission' | 'status'>>({});
+  const [newUnitStatusTexts,   setNewUnitStatusTexts]   = useState<Record<string, string>>({});
+  const [newUnitMissionLabels, setNewUnitMissionLabels] = useState<Record<string, string>>({});
+  const [newUnitStatusTagLabels, setNewUnitStatusTagLabels] = useState<Record<string, string>>({});
+
+  // 연동 체크박스 (새 항목용) — true = 바로 위 항목과 연동
+  const [newItemLinked, setNewItemLinked] = useState<Record<string, boolean>>({});
 
   // 불러오기 상태
   const [showImport,     setShowImport]     = useState(false);
@@ -169,18 +177,56 @@ export function ChecklistSetupPanel() {
     return newEventStatuses[sectionId] ?? (opts[0]?.value ?? '');
   }
 
-  // 출동대 타입 헬퍼 — 상태메세지가 있는 로스터만 표시
-  const unitEligibleRoster = dispatchRoster.filter(r => (unitStatusConfig[r.unitType]?.length ?? 0) > 0);
+  // 출동대 타입 헬퍼 — 임무/상태/메세지 프리셋이 하나라도 있는 로스터 표시
+  const unitEligibleRoster = dispatchRoster.filter(r => {
+    const hasMsgs      = (unitStatusConfig[r.unitType]?.length ?? 0) > 0;
+    const hasMissions  = (unitTagPresetConfig[r.unitType]?.missions.length ?? 0) > 0;
+    const hasStatuses  = (unitTagPresetConfig[r.unitType]?.statuses.length ?? 0) > 0;
+    return hasMsgs || hasMissions || hasStatuses;
+  });
   function getUnitRosterId(sectionId: string): string {
     return newUnitRosterIds[sectionId] ?? (unitEligibleRoster[0]?.id ?? '');
   }
+  function getUnitEffectType(sectionId: string): 'statusMsg' | 'mission' | 'status' {
+    return newUnitEffectTypes[sectionId] ?? 'statusMsg';
+  }
   function getUnitStatusOptions(sectionId: string): string[] {
-    const rosterId = getUnitRosterId(sectionId);
-    const item     = dispatchRoster.find(r => r.id === rosterId);
+    const item = dispatchRoster.find(r => r.id === getUnitRosterId(sectionId));
     return item ? (unitStatusConfig[item.unitType] ?? []) : [];
+  }
+  function getMissionOptions(sectionId: string): TagPreset[] {
+    const item = dispatchRoster.find(r => r.id === getUnitRosterId(sectionId));
+    return item ? (unitTagPresetConfig[item.unitType]?.missions ?? []) : [];
+  }
+  function getStatusTagOptions(sectionId: string): TagPreset[] {
+    const item = dispatchRoster.find(r => r.id === getUnitRosterId(sectionId));
+    return item ? (unitTagPresetConfig[item.unitType]?.statuses ?? []) : [];
   }
   function getUnitStatusText(sectionId: string): string {
     return newUnitStatusTexts[sectionId] ?? (getUnitStatusOptions(sectionId)[0] ?? '');
+  }
+  function getUnitMissionLabel(sectionId: string): string {
+    return newUnitMissionLabels[sectionId] ?? (getMissionOptions(sectionId)[0]?.label ?? '');
+  }
+  function getUnitStatusTagLabel(sectionId: string): string {
+    return newUnitStatusTagLabels[sectionId] ?? (getStatusTagOptions(sectionId)[0]?.label ?? '');
+  }
+  function getNewItemLinked(sectionId: string): boolean {
+    return newItemLinked[sectionId] ?? false;
+  }
+
+  /** 바로 위 항목 기준으로 연결할 상위 ID 계산 */
+  function resolveParentId(sectionId: string): string | undefined {
+    const section = checklistConfig.sections.find(s => s.id === sectionId);
+    if (!section || section.items.length === 0) return undefined;
+    const above = section.items[section.items.length - 1];
+    return above.linkedParentId ?? above.id;
+  }
+
+  function resetUnitSelections(sectionId: string) {
+    setNewUnitStatusTexts(prev    => { const n = { ...prev }; delete n[sectionId]; return n; });
+    setNewUnitMissionLabels(prev  => { const n = { ...prev }; delete n[sectionId]; return n; });
+    setNewUnitStatusTagLabels(prev => { const n = { ...prev }; delete n[sectionId]; return n; });
   }
 
   // ── 불러오기 ─────────────────────────────────
@@ -237,8 +283,10 @@ export function ChecklistSetupPanel() {
 
   function handleAddItem(sectionId: string) {
     const itemType = getNewItemType(sectionId);
+    const parentId = getNewItemLinked(sectionId) ? resolveParentId(sectionId) : undefined;
+    const parentOpts = parentId ? { linkedParentId: parentId } : {};
 
-    if (itemType === 'event') {
+    if (itemType === 'incident') {
       if (eventSetup.length === 0) return;
       const eventId  = getEventId(sectionId);
       const status   = getEventStatus(sectionId);
@@ -246,20 +294,41 @@ export function ChecklistSetupPanel() {
       if (!ev) return;
       const statusItem = getEventStatusOptions(sectionId).find(s => s.value === status);
       const text = `${ev.label} → ${statusItem?.label ?? status}`;
-      addChecklistItem(sectionId, text, 'event', { eventId, eventTargetStatus: status });
+      addChecklistItem(sectionId, text, 'incident', { eventId, eventTargetStatus: status, ...parentOpts });
       return;
     }
 
     if (itemType === 'unit') {
       if (unitEligibleRoster.length === 0) return;
-      const rosterId  = getUnitRosterId(sectionId);
-      const statusTxt = getUnitStatusText(sectionId);
-      if (!statusTxt) return;
+      const rosterId   = getUnitRosterId(sectionId);
       const rosterItem = dispatchRoster.find(r => r.id === rosterId);
       if (!rosterItem) return;
-      const displayName = computeRosterDisplayName(rosterItem);
-      const text = `${displayName} → ${statusTxt}`;
-      addChecklistItem(sectionId, text, 'unit', { unitRosterId: rosterId, unitStatusText: statusTxt });
+      const displayName  = computeRosterDisplayName(rosterItem);
+      const effectType   = getUnitEffectType(sectionId);
+
+      if (effectType === 'statusMsg') {
+        const statusTxt = getUnitStatusText(sectionId);
+        if (!statusTxt) return;
+        addChecklistItem(sectionId, `${displayName} → ${statusTxt}`, 'unit', {
+          unitRosterId: rosterId, unitEffectType: 'statusMsg', unitStatusText: statusTxt, ...parentOpts,
+        });
+      } else if (effectType === 'mission') {
+        const label   = getUnitMissionLabel(sectionId);
+        const preset  = getMissionOptions(sectionId).find(p => p.label === label);
+        if (!preset) return;
+        addChecklistItem(sectionId, `${displayName} → [임무] ${label}`, 'unit', {
+          unitRosterId: rosterId, unitEffectType: 'mission',
+          unitMissionLabel: preset.label, unitMissionColor: preset.color, ...parentOpts,
+        });
+      } else if (effectType === 'status') {
+        const label  = getUnitStatusTagLabel(sectionId);
+        const preset = getStatusTagOptions(sectionId).find(p => p.label === label);
+        if (!preset) return;
+        addChecklistItem(sectionId, `${displayName} → [상태] ${label}`, 'unit', {
+          unitRosterId: rosterId, unitEffectType: 'status',
+          unitStatusTagLabel: preset.label, unitStatusTagColor: preset.color, ...parentOpts,
+        });
+      }
       return;
     }
 
@@ -267,7 +336,7 @@ export function ChecklistSetupPanel() {
       if (allOrders.length === 0) return;
       const order = getNewItemOrder(sectionId);
       const text  = `${order}착대 도착`;
-      addChecklistItem(sectionId, text, 'arrival', { arrivalOrder: order });
+      addChecklistItem(sectionId, text, 'arrival', { arrivalOrder: order, ...parentOpts });
       const nextOrder = allOrders.find(o => o !== order && !usedOrders.has(o));
       setNewItemArrivalOrders(prev => ({ ...prev, [sectionId]: nextOrder ?? allOrders[0] ?? 1 }));
 
@@ -276,18 +345,18 @@ export function ChecklistSetupPanel() {
       const floor  = getFireFloor(sectionId);
       const status = getFireStatus(sectionId);
       const label  = FIRE_STATUS_LABELS[status] ?? status;
-      addChecklistItem(sectionId, `${floor}층 → ${label}`, 'fire', { fireFloor: floor, fireTargetStatus: status });
+      addChecklistItem(sectionId, `${floor}층 → ${label}`, 'fire', { fireFloor: floor, fireTargetStatus: status, ...parentOpts });
 
     } else if (itemType === 'message') {
       const body = getMsgBody(sectionId).trim();
       if (!body) return;
       const locType  = getMsgLocType(sectionId);
       const location = locType === 'floor' ? getMsgFloor(sectionId) : getMsgZone(sectionId);
-      addChecklistItem(sectionId, location, 'message', { messageLocation: location, messageBody: body });
+      addChecklistItem(sectionId, location, 'message', { messageLocation: location, messageBody: body, ...parentOpts });
       setMsgBody(prev => ({ ...prev, [sectionId]: '' }));
 
     } else {
-      addChecklistItem(sectionId, '', itemType);
+      addChecklistItem(sectionId, '', itemType, Object.keys(parentOpts).length ? parentOpts : undefined);
     }
   }
 
@@ -393,13 +462,13 @@ export function ChecklistSetupPanel() {
 
       {/* 섹션 목록 */}
       {checklistConfig.sections.map((section, sectionIndex) => {
-        const curItemType     = getNewItemType(section.id);
-        const curOrder        = getNewItemOrder(section.id);
-        const curFireFloor    = getFireFloor(section.id);
-        const curFireStatus   = getFireStatus(section.id);
-        const curMsgLocType   = getMsgLocType(section.id);
-        const availableOrders = allOrders.filter(o => !usedOrders.has(o) || o === curOrder);
-        const canAddArrival   = arrivalMode === 'order' && availableOrders.length > 0;
+        const curItemType       = getNewItemType(section.id);
+        const curOrder          = getNewItemOrder(section.id);
+        const curFireFloor      = getFireFloor(section.id);
+        const curFireStatus     = getFireStatus(section.id);
+        const curMsgLocType     = getMsgLocType(section.id);
+        const availableOrders   = allOrders.filter(o => !usedOrders.has(o) || o === curOrder);
+        const canAddArrival     = arrivalMode === 'order' && availableOrders.length > 0;
 
         return (
           <div
@@ -443,11 +512,15 @@ export function ChecklistSetupPanel() {
             <div className="checklist-setup__items">
               {section.items.map((item, itemIndex) => {
                 const itemKey    = `${section.id}:${itemIndex}`;
-                const isReadonly = item.itemType === 'arrival' || item.itemType === 'fire' || item.itemType === 'message' || item.itemType === 'event' || item.itemType === 'unit';
+                const isReadonly = item.itemType === 'arrival' || item.itemType === 'fire' || item.itemType === 'message' || item.itemType === 'incident' || item.itemType === 'unit';
                 return (
                   <div
                     key={item.id}
-                    className={`checklist-setup__item${overItemKey === itemKey && dragItem.current?.index !== itemIndex ? ' checklist-setup__item--drag-over' : ''}`}
+                    className={[
+                      'checklist-setup__item',
+                      overItemKey === itemKey && dragItem.current?.index !== itemIndex ? 'checklist-setup__item--drag-over' : '',
+                      item.linkedParentId ? 'checklist-setup__item--linked' : '',
+                    ].filter(Boolean).join(' ')}
                     onDragOver={e => onItemDragOver(e, section.id, itemIndex)}
                     onDrop={e => onItemDrop(e, section.id, itemIndex)}
                   >
@@ -458,6 +531,7 @@ export function ChecklistSetupPanel() {
                       onDragEnd={onDragEnd}
                       title="드래그하여 순서 변경"
                     >⠿</span>
+                    {item.linkedParentId && <span className="checklist-setup__link-icon">└</span>}
                     <span className={`checklist-setup__type-badge checklist-setup__type-badge--${item.itemType}`}>
                       {TYPE_LABELS[item.itemType ?? 'procedure']}
                     </span>
@@ -477,6 +551,25 @@ export function ChecklistSetupPanel() {
                         onChange={e => updateChecklistItem(section.id, item.id, { text: e.target.value })}
                       />
                     )}
+                    {/* 상위 연동 체크박스 (첫 번째 항목 제외) */}
+                    {itemIndex > 0 && (
+                      <input
+                        type="checkbox"
+                        className="checklist-setup__link-cb"
+                        checked={!!item.linkedParentId}
+                        title="바로 위 항목과 연동"
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            const above = section.items[itemIndex - 1];
+                            const parentId = above.linkedParentId ?? above.id;
+                            updateChecklistItem(section.id, item.id, { linkedParentId: parentId });
+                          } else {
+                            updateChecklistItem(section.id, item.id, { linkedParentId: undefined });
+                          }
+                        }}
+                      />
+                    )}
                     <button className="checklist-setup__delete-btn" onClick={() => removeChecklistItem(section.id, item.id)} title="항목 삭제">✕</button>
                   </div>
                 );
@@ -493,6 +586,7 @@ export function ChecklistSetupPanel() {
               >
                 <option value="procedure">절차</option>
                 <option value="event">이벤트</option>
+                <option value="incident">돌발상황</option>
                 <option value="unit">출동대</option>
                 <option value="message">메세지</option>
                 <option value="fire">화재</option>
@@ -539,8 +633,8 @@ export function ChecklistSetupPanel() {
                 </>
               )}
 
-              {/* 이벤트 상태 선택 */}
-              {curItemType === 'event' && (
+              {/* 돌발상황 선택 */}
+              {curItemType === 'incident' && (
                 eventSetup.length === 0 ? (
                   <span style={{ fontSize: '0.74rem', color: 'var(--color-text-dim)' }}>
                     돌발상황 설정에서 항목을 먼저 등록하세요.
@@ -579,13 +673,25 @@ export function ChecklistSetupPanel() {
                 )
               )}
 
-              {/* 출동대 상태 선택 */}
-              {curItemType === 'unit' && (
-                unitEligibleRoster.length === 0 ? (
-                  <span style={{ fontSize: '0.74rem', color: 'var(--color-text-dim)' }}>
-                    출동대 상태메세지 설정에서 메세지를 먼저 등록하세요.
-                  </span>
-                ) : (
+              {/* 출동대 효과 선택 */}
+              {curItemType === 'unit' && (() => {
+                if (unitEligibleRoster.length === 0) {
+                  return (
+                    <span style={{ fontSize: '0.74rem', color: 'var(--color-text-dim)' }}>
+                      출동대 프리셋(메세지/임무/상태)을 먼저 등록하세요.
+                    </span>
+                  );
+                }
+                const curEffectType   = getUnitEffectType(section.id);
+                const statusMsgOpts   = getUnitStatusOptions(section.id);
+                const missionOpts     = getMissionOptions(section.id);
+                const statusTagOpts   = getStatusTagOptions(section.id);
+                const curOptsEmpty =
+                  (curEffectType === 'statusMsg' && statusMsgOpts.length === 0) ||
+                  (curEffectType === 'mission'   && missionOpts.length   === 0) ||
+                  (curEffectType === 'status'    && statusTagOpts.length  === 0);
+
+                return (
                   <>
                     <select
                       className="checklist-setup__fire-select"
@@ -593,32 +699,75 @@ export function ChecklistSetupPanel() {
                       value={getUnitRosterId(section.id)}
                       onChange={e => {
                         setNewUnitRosterIds(prev => ({ ...prev, [section.id]: e.target.value }));
-                        setNewUnitStatusTexts(prev => { const next = { ...prev }; delete next[section.id]; return next; });
+                        resetUnitSelections(section.id);
                       }}
                     >
                       {unitEligibleRoster.map(r => (
                         <option key={r.id} value={r.id}>{computeRosterDisplayName(r)}</option>
                       ))}
                     </select>
-                    <select
-                      className="checklist-setup__fire-select"
-                      value={getUnitStatusText(section.id)}
-                      onChange={e => setNewUnitStatusTexts(prev => ({ ...prev, [section.id]: e.target.value }))}
-                    >
-                      {getUnitStatusOptions(section.id).map(msg => (
-                        <option key={msg} value={msg}>{msg}</option>
-                      ))}
-                    </select>
+
+                    {/* 효과 유형 탭 */}
+                    <div className="checklist-setup__message-loc-tabs">
+                      {(['statusMsg', 'mission', 'status'] as const).map(et => {
+                        const label = et === 'statusMsg' ? '메세지' : et === 'mission' ? '임무' : '상태';
+                        return (
+                          <button
+                            key={et}
+                            type="button"
+                            className={`checklist-setup__message-loc-tab${curEffectType === et ? ' checklist-setup__message-loc-tab--active' : ''}`}
+                            onClick={() => {
+                              setNewUnitEffectTypes(prev => ({ ...prev, [section.id]: et }));
+                              resetUnitSelections(section.id);
+                            }}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* 효과 유형별 옵션 */}
+                    {curOptsEmpty ? (
+                      <span style={{ fontSize: '0.74rem', color: 'var(--color-text-dim)' }}>
+                        해당 유형 없음
+                      </span>
+                    ) : curEffectType === 'statusMsg' ? (
+                      <select
+                        className="checklist-setup__fire-select"
+                        value={getUnitStatusText(section.id)}
+                        onChange={e => setNewUnitStatusTexts(prev => ({ ...prev, [section.id]: e.target.value }))}
+                      >
+                        {statusMsgOpts.map(msg => <option key={msg} value={msg}>{msg}</option>)}
+                      </select>
+                    ) : curEffectType === 'mission' ? (
+                      <select
+                        className="checklist-setup__fire-select"
+                        value={getUnitMissionLabel(section.id)}
+                        onChange={e => setNewUnitMissionLabels(prev => ({ ...prev, [section.id]: e.target.value }))}
+                      >
+                        {missionOpts.map(p => <option key={p.label} value={p.label}>{p.label}</option>)}
+                      </select>
+                    ) : (
+                      <select
+                        className="checklist-setup__fire-select"
+                        value={getUnitStatusTagLabel(section.id)}
+                        onChange={e => setNewUnitStatusTagLabels(prev => ({ ...prev, [section.id]: e.target.value }))}
+                      >
+                        {statusTagOpts.map(p => <option key={p.label} value={p.label}>{p.label}</option>)}
+                      </select>
+                    )}
+
                     <button
                       className="checklist-setup__add-item-btn"
                       onClick={() => handleAddItem(section.id)}
-                      disabled={!getUnitStatusText(section.id)}
+                      disabled={curOptsEmpty}
                     >
                       추가
                     </button>
                   </>
-                )
-              )}
+                );
+              })()}
 
               {/* 메세지 확장 입력 */}
               {curItemType === 'message' && (
@@ -674,7 +823,7 @@ export function ChecklistSetupPanel() {
               )}
 
               {/* 기본 텍스트 입력 */}
-              {curItemType !== 'arrival' && curItemType !== 'fire' && curItemType !== 'message' && curItemType !== 'event' && curItemType !== 'unit' && (
+              {curItemType !== 'arrival' && curItemType !== 'fire' && curItemType !== 'message' && curItemType !== 'incident' && curItemType !== 'unit' && (
                 <>
                   <input
                     className="checklist-setup__add-item-input"
@@ -683,7 +832,8 @@ export function ChecklistSetupPanel() {
                       if (e.key === 'Enter') {
                         const val = (e.target as HTMLInputElement).value.trim();
                         if (!val) return;
-                        addChecklistItem(section.id, val, curItemType);
+                        const pid = getNewItemLinked(section.id) ? resolveParentId(section.id) : undefined;
+                        addChecklistItem(section.id, val, curItemType, pid ? { linkedParentId: pid } : undefined);
                         (e.target as HTMLInputElement).value = '';
                       }
                     }}
@@ -694,7 +844,8 @@ export function ChecklistSetupPanel() {
                       const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
                       const val   = input.value.trim();
                       if (!val) return;
-                      addChecklistItem(section.id, val, curItemType);
+                      const pid = getNewItemLinked(section.id) ? resolveParentId(section.id) : undefined;
+                      addChecklistItem(section.id, val, curItemType, pid ? { linkedParentId: pid } : undefined);
                       input.value = '';
                     }}
                   >
@@ -703,6 +854,20 @@ export function ChecklistSetupPanel() {
                 </>
               )}
             </div>
+
+            {/* 연동 체크박스 (새 항목, 섹션에 항목이 있을 때만) */}
+            {section.items.length > 0 && (
+              <div className="checklist-setup__parent-link-row">
+                <span className="checklist-setup__parent-link-label">↳ 연동</span>
+                <input
+                  type="checkbox"
+                  className="checklist-setup__link-cb"
+                  checked={getNewItemLinked(section.id)}
+                  title="바로 위 항목과 연동"
+                  onChange={e => setNewItemLinked(prev => ({ ...prev, [section.id]: e.target.checked }))}
+                />
+              </div>
+            )}
           </div>
         );
       })}

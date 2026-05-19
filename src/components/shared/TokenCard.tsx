@@ -68,7 +68,6 @@ export function TokenCard({ token, absPos }: Props) {
     left: number; top: number; right: number; bottom: number; width: number; height: number;
   } | null>(null);
   const [isRecent,     setIsRecent]     = useState(false);
-  const [isHovered,    setIsHovered]    = useState(false);
   // 뷰포트 상단 근접 시 오버레이를 아래쪽으로 전환 (좌표 추적 없이 boolean만)
   const [overlayBelow, setOverlayBelow] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -136,8 +135,8 @@ export function TokenCard({ token, absPos }: Props) {
 
   const handleClose = useCallback(() => setBarMenu(null), []);
 
-  // customNote 말풍선: 설정된 경우 항상 표시 (X로 닫기 가능)
-  const showBubble = !!token.customNote && !barMenu;
+  // 출동대 상태메세지: 항상 토큰 위에 표시 (X로 닫기)
+  const showStatusMsg = !!token.customNote;
 
   // ── 절대 위치 스타일 ─────────────────────────
   const wrapperStyle: React.CSSProperties | undefined = absPos
@@ -160,7 +159,7 @@ export function TokenCard({ token, absPos }: Props) {
     ? (arrivalCountdowns[token.id] ?? null) : null;
 
   const hasBadges    = token.badges.length > 0;
-  const hasMission   = !!token.missionTag;
+  const hasMission   = (token.missionTags?.length ?? 0) > 0;
 
   // 카운트다운은 우측 고정 위치 표시용으로 포털 유지
   // (드래그 중 표시되지 않으므로 좌표 지연 문제 없음)
@@ -223,7 +222,7 @@ export function TokenCard({ token, absPos }: Props) {
     isWaterEmpty    ? 'token-card--water-empty'     : '',
   ].filter(Boolean).join(' ');
 
-  const hasOverlay = hasBadges || (!!token.statusTag && !isHydrantBroken);
+  const hasOverlay = hasBadges; // statusTag는 토큰 하단으로 이동
 
   // ─────────────────────────────────────────────
   // 렌더
@@ -236,8 +235,6 @@ export function TokenCard({ token, absPos }: Props) {
         style={wrapperStyle}
         ref={wrapperRef}
         data-token-id={token.id}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         {/* 모드 소스 링 */}
         {isSource && (
@@ -285,51 +282,49 @@ export function TokenCard({ token, absPos }: Props) {
               </div>
             )}
 
-            {/* 상태 태그 (소화전 고장은 토큰 본문에 표시) */}
-            {token.statusTag && !isHydrantBroken && (() => {
-              const baseCol = STATUS_TAG_COLORS[token.statusTag!.color] ?? STATUS_TAG_COLORS.white;
-              const col = aerialBansuNoSource ? STATUS_TAG_COLORS.red : baseCol;
-              return (
-                <div className="token-status-tag-overlay">
-                  <div
-                    className="token-status-tag"
-                    style={{ background: col.bg, borderColor: col.border, color: col.text }}
-                  >
-                    <span className="token-status-tag__main">{token.statusTag!.label}</span>
-                    {token.customNote && (
-                      <span className="token-status-tag__linked">{token.customNote}</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
 
           </div>
         )}
 
-        {/* ── 좌측 임무 레이블 (세로쓰기, 3글자씩 컬럼) ── */}
-        {hasMission && (() => {
-          const m    = token.missionTag!;
-          const col  = STATUS_TAG_COLORS[m.color] ?? STATUS_TAG_COLORS.white;
-          const chars = [...m.label];
-          const cols: string[][] = [];
-          for (let i = 0; i < chars.length; i += 3) cols.push(chars.slice(i, i + 3));
-          return (
-            <div
-              className="token-mission-label"
-              style={{ background: col.bg, borderColor: col.border, color: col.text }}
-              aria-label={m.label}
-            >
-              {cols.map((colChars, ci) => (
-                <span key={ci} className="token-mission-label__col">
-                  {colChars.map((ch, i) => (
-                    <span key={i} className="token-mission-label__char">{ch}</span>
+        {/* ── 상단 출동대 상태메세지 ── */}
+        {showStatusMsg && (
+          <div className="token-status-msg">
+            <span className="token-status-msg__text">{token.customNote}</span>
+            <button
+              className="token-status-msg__close"
+              onMouseDown={e => { e.stopPropagation(); setCustomNote(token.id, ''); }}
+              aria-label="메세지 닫기"
+            >×</button>
+          </div>
+        )}
+
+        {/* ── 좌측 임무 레이블 (복수, 간격 없이 나란히) ── */}
+        {hasMission && (
+          <div className="token-mission-labels">
+            {token.missionTags!.map(m => {
+              const col   = STATUS_TAG_COLORS[m.color] ?? STATUS_TAG_COLORS.white;
+              const chars = [...m.label];
+              const cols: string[][] = [];
+              for (let i = 0; i < chars.length; i += 3) cols.push(chars.slice(i, i + 3));
+              return (
+                <div
+                  key={m.label}
+                  className="token-mission-label"
+                  style={{ background: col.bg, borderColor: col.border, color: col.text }}
+                  aria-label={m.label}
+                >
+                  {cols.map((colChars, ci) => (
+                    <span key={ci} className="token-mission-label__col">
+                      {colChars.map((ch, i) => (
+                        <span key={i} className="token-mission-label__char">{ch}</span>
+                      ))}
+                    </span>
                   ))}
-                </span>
-              ))}
-            </div>
-          );
-        })()}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div
           className={cardClasses}
@@ -343,17 +338,21 @@ export function TokenCard({ token, absPos }: Props) {
           {isHydrantBroken ? `${token.label} [고장]` : token.label}
         </div>
 
-        {/* ── customNote 말풍선 (항상 표시, X로 닫기) ── */}
-        {showBubble && (
-          <div className="token-bubble" aria-label={`메모: ${token.customNote}`}>
-            <span className="token-bubble__text">{token.customNote}</span>
-            <button
-              className="token-bubble__close"
-              onMouseDown={e => { e.stopPropagation(); setCustomNote(token.id, ''); }}
-              aria-label="메모 닫기"
-            >×</button>
-          </div>
-        )}
+        {/* ── 하단 상태 태그 (임무/상태 프리셋) ── */}
+        {token.statusTag && !isHydrantBroken && (() => {
+          const baseCol = STATUS_TAG_COLORS[token.statusTag!.color] ?? STATUS_TAG_COLORS.white;
+          const col = aerialBansuNoSource ? STATUS_TAG_COLORS.red : baseCol;
+          return (
+            <div className="token-status-tag-below">
+              <div
+                className="token-status-tag"
+                style={{ background: col.bg, borderColor: col.border, color: col.text }}
+              >
+                <span className="token-status-tag__main">{token.statusTag!.label}</span>
+              </div>
+            </div>
+          );
+        })()}
 
         {showWaterGauge && (
           <WaterGauge levelL={waterLevelL} capacityL={waterCapL} />

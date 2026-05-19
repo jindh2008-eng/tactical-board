@@ -146,7 +146,7 @@ export interface UnitToken {
   unitType: string;                    // 출동대 종류 키 (e.g. 'suppression', 'pump', 'ladder')
   zoneKey:  string | null;             // 현재 위치 구역 키 (null = pool/출동대현황)
   badges:   TokenBadge[];              // 시스템 전용 상태 배지 (구조중 등)
-  missionTag?: StatusTag;              // 임무 태그 (토큰 좌측 표시, 1개 토글)
+  missionTags?: StatusTag[];            // 임무 태그 (토큰 좌측 표시, 복수 선택)
   statusTag?:  StatusTag;              // 상태 태그 (토큰 위 표시, 1개 토글)
   customNote?: string;                 // 메모 (말풍선 표시, X로 닫음)
   /**

@@ -83,7 +83,7 @@ export interface SettingsState {
 // 훈련 진행 체크리스트
 // ─────────────────────────────────────────────
 
-export type ChecklistItemType = 'procedure' | 'event' | 'arrival' | 'message' | 'fire' | 'xvr' | 'unit';
+export type ChecklistItemType = 'procedure' | 'event' | 'arrival' | 'message' | 'fire' | 'xvr' | 'unit' | 'incident';
 
 /** 출동대 유형별 사전 정의 상태메세지 목록 */
 export type UnitStatusConfig = Record<string, string[]>;
@@ -114,8 +114,14 @@ export interface ChecklistItem {
   messageBody?:      string;     // 메세지 타입일 때 본문 (줄바꿈 포함)
   eventId?:          string;     // 이벤트 타입일 때 대상 돌발상황 ID
   eventTargetStatus?: string;    // 이벤트 타입일 때 목표 상태
-  unitRosterId?:     string;     // 출동대 타입일 때 대상 로스터 ID
-  unitStatusText?:   string;     // 출동대 타입일 때 상태 메세지
+  linkedParentId?:    string;     // 연동할 상위 항목 ID (체크 시 하위 항목 자동 트리거)
+  unitRosterId?:      string;     // 출동대 타입일 때 대상 로스터 ID
+  unitEffectType?:    'statusMsg' | 'mission' | 'status'; // 출동대 효과 종류
+  unitStatusText?:    string;     // statusMsg — 상태메세지 내용
+  unitMissionLabel?:  string;     // mission — 임무 라벨
+  unitMissionColor?:  string;     // mission — 임무 색상
+  unitStatusTagLabel?: string;    // status — 상태 태그 라벨
+  unitStatusTagColor?: string;    // status — 상태 태그 색상
 }
 
 export interface ChecklistSection {
