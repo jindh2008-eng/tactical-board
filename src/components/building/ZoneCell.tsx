@@ -293,6 +293,16 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
         />
       )}
 
+      {!isStair && smokeLevel !== 'none' && (
+        <div
+          className={[
+            'zone-cell__interior-smoke',
+            smokeLevel === 'weak' ? 'zone-cell__interior-smoke--weak' : '',
+          ].filter(Boolean).join(' ')}
+          aria-label="연기"
+        />
+      )}
+
       {defaultLabel && <span className="zone-cell__zone-label">{defaultLabel}</span>}
 
       {showIcons && hasFire  && <span className="zone-cell__icon" title="화염">🔥</span>}

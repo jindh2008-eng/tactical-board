@@ -158,8 +158,10 @@ export function loadTrainingSession(): TrainingSessionState | null {
 const KEY_EVENTS = 'tactical-board.runtime.events';
 
 export interface EventSessionState {
-  positions: Record<string, { x: number; y: number }>;
-  statuses:  Record<string, EventStatus>;
+  positions:        Record<string, { x: number; y: number }>;
+  statuses:         Record<string, EventStatus>;
+  floorIds?:        Record<string, string>;  // eventId → floorId (드롭 시점 저장, 구버전 호환 optional)
+  firePercentages?: Record<string, number>;  // 이벤트 화재 진행도 (구버전 호환 optional)
 }
 
 export function saveEventSession(state: EventSessionState): void {
@@ -233,6 +235,51 @@ export function loadWaterConnSession(): WaterConnSessionItem[] | null {
 }
 
 // ─────────────────────────────────────────────
+// 소화전 고장 상태 세션
+// ─────────────────────────────────────────────
+
+const KEY_HYDRANT = 'tactical-board.runtime.hydrant';
+
+export function saveHydrantSession(brokenIds: ReadonlySet<string>): void {
+  try {
+    sessionStorage.setItem(KEY_HYDRANT, JSON.stringify([...brokenIds]));
+  } catch { /* ignore */ }
+}
+
+export function loadHydrantSession(): Set<string> | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_HYDRANT);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? new Set<string>(parsed) : null;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
+// 수량 세션
+// ─────────────────────────────────────────────
+
+const KEY_WATER_LEVELS = 'tactical-board.runtime.waterlevels';
+
+export interface WaterLevelSessionState {
+  levels: Record<string, number>;
+}
+
+export function saveWaterLevelSession(state: WaterLevelSessionState): void {
+  try {
+    sessionStorage.setItem(KEY_WATER_LEVELS, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+export function loadWaterLevelSession(): WaterLevelSessionState | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_WATER_LEVELS);
+    if (!raw) return null;
+    return JSON.parse(raw) as WaterLevelSessionState;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
 // 전체 초기화 (새 훈련 시작 시 호출)
 // ─────────────────────────────────────────────
 
@@ -244,5 +291,7 @@ export function clearRuntimeSession(): void {
     sessionStorage.removeItem(KEY_EVENTS);
     sessionStorage.removeItem(KEY_BUILDING);
     sessionStorage.removeItem(KEY_WATERCONN);
+    sessionStorage.removeItem(KEY_HYDRANT);
+    sessionStorage.removeItem(KEY_WATER_LEVELS);
   } catch { /* ignore */ }
 }

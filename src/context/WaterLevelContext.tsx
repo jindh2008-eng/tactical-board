@@ -6,6 +6,8 @@ import type { SprayState }    from '../types';
 import { useTokens }         from './TokenContext';
 import { useWaterConnections } from './WaterConnectionContext';
 import { useTraining }       from './TrainingContext';
+import { useFireCommand }    from './FireCommandContext';
+import { saveWaterLevelSession, loadWaterLevelSession } from '../utils/runtimeSession';
 
 // ─────────────────────────────────────────────
 // 용량·유량 상수 (추후 설정창에서 조정 가능하도록 분리)
@@ -41,16 +43,11 @@ function sprayMultiplier(state: SprayState | null | undefined): number {
   return 0;
 }
 
-// 초진(initial) 상태인 층 ID 집합을 DOM에서 읽어 반환
-// FloorRow[data-floor-id] 내부에 .zone-cell--fs-initial 이 있는 경우
-function getInitialFloorIds(): Set<string> {
+function initialFloorIdsFromStates(fireStates: Record<string, import('../types').FireStatus | null>): Set<string> {
   const ids = new Set<string>();
-  document.querySelectorAll<HTMLElement>('[data-floor-id]').forEach(el => {
-    if (el.querySelector('.zone-cell--fs-initial')) {
-      const fid = el.getAttribute('data-floor-id');
-      if (fid) ids.add(fid);
-    }
-  });
+  for (const [floorId, status] of Object.entries(fireStates)) {
+    if (status === 'initial') ids.add(floorId);
+  }
   return ids;
 }
 
@@ -67,14 +64,19 @@ function computeNetFlowRates(
     if (t.unitType === 'pump' || t.unitType === 'water_tank') net[t.id] = 0;
   }
 
-  // 0. 고가차/굴절차 방수 — 연결된 펌프/물탱크에서 1800/min 소모 (고장 시 skip)
-  for (const conn of connections) {
-    if (!(conn.fromId in net)) continue;
-    if (brokenSenderIds.has(conn.fromId)) continue;
-    const toToken = tokens.find(t => t.id === conn.toId);
-    if (!toToken || !AERIAL_TYPES.has(toToken.unitType)) continue;
-    if (toToken.aerialSprayTarget == null) continue;
-    net[conn.fromId] -= MONITOR_FLOW_PER_MIN;
+  // 0. 고가차/굴절차 방수 — 연결된 펌프/물탱크에서 1800/min 소모, 복수 공급 시 균등 분담
+  const aerialsWithSpray = tokens.filter(
+    t => AERIAL_TYPES.has(t.unitType) && t.aerialSprayTarget != null
+  );
+  for (const aerial of aerialsWithSpray) {
+    const supplyConns = connections.filter(
+      c => c.toId === aerial.id && c.fromId in net && !brokenSenderIds.has(c.fromId)
+    );
+    if (supplyConns.length === 0) continue;
+    const perPump = MONITOR_FLOW_PER_MIN / supplyConns.length;
+    for (const conn of supplyConns) {
+      net[conn.fromId] -= perPump;
+    }
   }
 
   // 0a. 펌프/물탱크차 방수포 자체 소모 — 자신의 aerialSprayTarget 설정 시 1800/min (고장 시 skip)
@@ -86,12 +88,14 @@ function computeNetFlowRates(
     net[t.id] -= MONITOR_FLOW_PER_MIN;
   }
 
-  // 1. 펌프/물탱크 → 진압대 소모 (고장 차량 skip, sprayState 비율 적용)
+  // 1. 펌프/물탱크 → 진압대·구조대 소모 (고장 차량 skip, sprayState 비율 적용)
   // 초진 구역 방수 시 SUPPRESSION_INITIAL_FLOW_PER_MIN(100) 적용
   for (const t of tokens) {
-    if ((t.unitType !== 'pump' && t.unitType !== 'water_tank') || !(t.id in net)) continue;
+    if (!WATER_SOURCES.has(t.unitType) || !(t.id in net)) continue;
     if (brokenSenderIds.has(t.id)) continue;
-    const suppConns = connections.filter(c => c.fromId === t.id && c.toType === 'suppression');
+    const suppConns = connections.filter(
+      c => c.fromId === t.id && (c.toType === 'suppression' || c.toType === 'rescue')
+    );
     for (const conn of suppConns) {
       const suppToken = tokens.find(tk => tk.id === conn.toId);
       const mult = sprayMultiplier(suppToken?.sprayState);
@@ -122,19 +126,25 @@ function computeNetFlowRates(
   }
 
   // 3. 소화전 → 차량
-  //    수신 차량이 100% 미만이면 최대 유량(1000)으로 채움
+  //    소화전 1개당 최대 1000/min, 복수 차량 연결 시 균등 분담
   //    수신 차량이 만수이면 소모량만큼만 공급 (demand-pull)
   //    소화전 고장 시 HydrantBarMenu에서 연결을 먼저 제거하므로 별도 체크 불필요
+  const hydrantGroups = new Map<string, typeof connections>();
   for (const conn of connections) {
     if (conn.fromType !== 'hydrant' || !(conn.toId in net)) continue;
-
-    const toCap   = capacities[conn.toId] ?? 0;
-    const toLevel = levels[conn.toId] ?? toCap;
-    const give = toLevel < toCap
-      ? HYDRANT_FLOW_PER_MIN
-      : Math.min(HYDRANT_FLOW_PER_MIN, Math.max(0, -net[conn.toId]));
-
-    net[conn.toId] += give;
+    if (!hydrantGroups.has(conn.fromId)) hydrantGroups.set(conn.fromId, []);
+    hydrantGroups.get(conn.fromId)!.push(conn);
+  }
+  for (const conns of hydrantGroups.values()) {
+    const perVehicle = HYDRANT_FLOW_PER_MIN / conns.length;
+    for (const conn of conns) {
+      const toCap   = capacities[conn.toId] ?? 0;
+      const toLevel = levels[conn.toId] ?? toCap;
+      const give = toLevel < toCap
+        ? perVehicle
+        : Math.min(perVehicle, Math.max(0, -net[conn.toId]));
+      net[conn.toId] += give;
+    }
   }
 
   return net;
@@ -166,6 +176,7 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
   const { tokens, addLog, setSprayState, setAerialSprayTarget } = useTokens();
   const { connections } = useWaterConnections();
   const { status, elapsed } = useTraining();
+  const { getFireStates } = useFireCommand();
 
   // tokenId → 최대 용량 맵
   const capacityMap = useMemo(() => {
@@ -176,11 +187,14 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
     return m;
   }, [tokens]);
 
-  // 초기 잔량: 최대 용량으로 시작
+  // 초기 잔량: 세션 복원 우선, 없으면 최대 용량으로 시작
   const [levels, setLevels] = useState<Record<string, number>>(() => {
+    const saved = loadWaterLevelSession();
     const m: Record<string, number> = {};
     for (const t of tokens) {
-      if (t.unitType in WATER_CAPACITIES) m[t.id] = WATER_CAPACITIES[t.unitType];
+      if (t.unitType in WATER_CAPACITIES) {
+        m[t.id] = saved?.levels[t.id] ?? WATER_CAPACITIES[t.unitType];
+      }
     }
     return m;
   });
@@ -239,6 +253,11 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
   useEffect(() => { effectiveBrokenIdRef.current = effectiveBrokenIds; }, [effectiveBrokenIds]);
   useEffect(() => { levelsRef.current            = levels;            }, [levels]);
   useEffect(() => { addLogRef.current            = addLog;            }, [addLog]);
+
+  // 잔량 변경 시 세션 저장 (페이지 전환 후 복원용)
+  useEffect(() => {
+    saveWaterLevelSession({ levels });
+  }, [levels]);
 
   // 펌프 고장·소진 시 연결된 진압대/고가차·굴절차 방수 자동 중단
   const setSprayStateRef        = useRef(setSprayState);
@@ -349,7 +368,7 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
       effectiveBrokenIdRef.current,
       levelsRef.current,
       capacityRef.current,
-      getInitialFloorIds(),
+      initialFloorIdsFromStates(getFireStates()),
     );
     setLevels(prev => {
       const next = { ...prev };
@@ -366,7 +385,7 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
 
   // 현재 순유량 (표시용 — 렌더링 기준)
   const flowRates = useMemo(
-    () => computeNetFlowRates(tokens, connections, effectiveBrokenIds, levels, capacityMap, getInitialFloorIds()),
+    () => computeNetFlowRates(tokens, connections, effectiveBrokenIds, levels, capacityMap, initialFloorIdsFromStates(getFireStates())),
     [tokens, connections, effectiveBrokenIds, levels, capacityMap],
   );
 

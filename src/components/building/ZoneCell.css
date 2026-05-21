@@ -205,31 +205,29 @@
   z-index: 2;
   pointer-events: none;
 
-  /* 진한 회청 그라데이션 — SVG가 비치되 연기 유입이 한눈에 보이게 */
+  background: linear-gradient(
+    to bottom,
+    rgba(85, 90, 115, 0.94) 0%,
+    rgba(95, 100, 125, 0.86) 55%,
+    rgba(110, 115, 138, 0.72) 100%
+  );
+
+  box-shadow:
+    inset 0 0 0 1.5px rgba(60, 70, 105, 0.75),
+    inset 0 3px 8px rgba(40, 48, 78, 0.45);
+}
+
+/* 약한 연기 (옥상 개방 배연 중) */
+.zone-cell__stair-smoke--weak {
   background: linear-gradient(
     to bottom,
     rgba(110, 115, 135, 0.78) 0%,
     rgba(120, 125, 145, 0.62) 55%,
     rgba(130, 135, 150, 0.45) 100%
   );
-
-  /* 셀 경계를 흐린 청회 inset shadow로 강조 */
   box-shadow:
     inset 0 0 0 1.5px rgba(80, 90, 120, 0.55),
     inset 0 3px 6px rgba(60, 65, 90, 0.30);
-}
-
-/* 약한 연기 (옥상 개방, 화재 활성 상태) */
-.zone-cell__stair-smoke--weak {
-  background: linear-gradient(
-    to bottom,
-    rgba(110, 115, 135, 0.30) 0%,
-    rgba(120, 125, 145, 0.22) 55%,
-    rgba(130, 135, 150, 0.14) 100%
-  );
-  box-shadow:
-    inset 0 0 0 1.5px rgba(80, 90, 120, 0.22),
-    inset 0 3px 6px rgba(60, 65, 90, 0.12);
 }
 
 /* 연기 시작층 아이콘 — 오버레이 위에 작게 표시 */
@@ -242,6 +240,32 @@
   line-height: 1;
   pointer-events: none;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+/* ─────────────────────────────────────────────
+   내부 구역 연기 오버레이 (center + right 공용)
+   화점층: 항상 full / 상층부: 계단실 연기 + 방화문 열림 시 표시
+   z-index 없음(auto) → DOM 순서상 토큰·fire-panel이 위에 렌더링됨
+   ─────────────────────────────────────────────*/
+.zone-cell__interior-smoke {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(85, 90, 118, 0.82) 0%,
+    rgba(95, 100, 128, 0.72) 55%,
+    rgba(108, 113, 138, 0.58) 100%
+  );
+}
+
+.zone-cell__interior-smoke--weak {
+  background: linear-gradient(
+    to bottom,
+    rgba(100, 105, 130, 0.60) 0%,
+    rgba(110, 115, 140, 0.50) 55%,
+    rgba(120, 125, 148, 0.40) 100%
+  );
 }
 
 /* ─────────────────────────────────────────────

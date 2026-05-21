@@ -164,12 +164,12 @@
   display: flex;
   flex-direction: column;
 
-  border: 2.5px solid var(--ctr-border-hard);
+  /* 상단·우측은 RF 내부가 개방된 형태로 표현 — 층 셀에서 선택적으로 복원 */
+  border-left:   2.5px solid var(--ctr-border-hard);
+  border-bottom: 2.5px solid var(--ctr-border-hard);
   background-color: var(--ctr-surface);
   overflow: hidden;
   box-sizing: border-box;
 
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.16),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
 }

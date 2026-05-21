@@ -80,7 +80,7 @@ interface TokenContextValue {
   moveAerialTarget:     (tokenId: string, x: number, y: number, floorId?: string) => void;
   setAerialSprayTarget: (tokenId: string, target: { floorId: string; x: number; y: number } | null) => void;
   changeTokenColor:  (tokenId: string, color: TokenColor) => void;
-  addLog:            (entry: Omit<LogEntry, 'id' | 'timestamp'>) => void;
+  addLog:            (entry: Omit<LogEntry, 'id' | 'timestamp' | 'elapsedSec'>) => void;
 }
 
 const TokenContext = createContext<TokenContextValue | null>(null);
@@ -151,6 +151,10 @@ export function TokenProvider({
       return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
     }
     return nowHHMM();
+  }
+
+  function nowElapsedSec(): number | undefined {
+    return getElapsedRef.current?.();
   }
 
   // ── 세션 데이터 1회 로드 (최초 렌더에서만) ──────────────────────────
@@ -304,6 +308,8 @@ export function TokenProvider({
         setLogs(prev => [{
           id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           timestamp:  nowTimestamp(),
+          elapsedSec: nowElapsedSec(),
+          logSource:  'system' as const,
           logType:    'move' as const,
           tokenId:    current.id,
           tokenName:  current.label,
@@ -376,6 +382,8 @@ export function TokenProvider({
             return {
               id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
               timestamp:  nowTimestamp(),
+              elapsedSec: nowElapsedSec(),
+              logSource:  'system' as const,
               logType:    'move' as const,
               tokenId:    tokenId,
               tokenName:  token?.label ?? tokenId,
@@ -532,6 +540,7 @@ export function TokenProvider({
         const entry: LogEntry = {
           id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           timestamp:  nowTimestamp(),
+          elapsedSec: nowElapsedSec(),
           logType:    'move',
           tokenId:    token.id,
           tokenName:  token.label,
@@ -604,6 +613,7 @@ export function TokenProvider({
     const entry: LogEntry = {
       id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       timestamp:  nowTimestamp(),
+      elapsedSec: nowElapsedSec(),
       logType:    'rescue',
       tokenId:    token.id,
       tokenName:  token.label,
@@ -639,6 +649,8 @@ export function TokenProvider({
         return [{
           id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           timestamp:  nowTimestamp(),
+          elapsedSec: nowElapsedSec(),
+          logSource:  'system' as const,
           logType:    'move' as const,
           tokenId:    t.id,
           tokenName:  t.label,
@@ -653,19 +665,50 @@ export function TokenProvider({
 
   // ── 배지 ────────────────────────────────────
   const addBadge = useCallback((tokenId: string, badge: Omit<TokenBadge, 'id'>) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
     setTokens(prev => prev.map(t =>
       t.id === tokenId
         ? { ...t, badges: [...t.badges, { ...badge, id: generateId() }] }
         : t
     ));
+    if (token) {
+      setLogs(prev => [{
+        id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp:  nowTimestamp(),
+        elapsedSec: nowElapsedSec(),
+        logType:    'status-tag' as const,
+        tokenId,
+        tokenName:  token.label,
+        tokenColor: token.color,
+        fromZoneId: token.zoneKey ?? '',
+        toZoneId:   '',
+        note:       `배지 추가: ${badge.line1}${badge.line2 ? ' ' + badge.line2 : ''}`,
+      }, ...prev]);
+    }
   }, []);
 
   const removeBadge = useCallback((tokenId: string, badgeId: string) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
+    const badge = token?.badges.find(b => b.id === badgeId);
     setTokens(prev => prev.map(t =>
       t.id === tokenId
         ? { ...t, badges: t.badges.filter(b => b.id !== badgeId) }
         : t
     ));
+    if (token && badge) {
+      setLogs(prev => [{
+        id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp:  nowTimestamp(),
+        elapsedSec: nowElapsedSec(),
+        logType:    'status-tag' as const,
+        tokenId,
+        tokenName:  token.label,
+        tokenColor: token.color,
+        fromZoneId: token.zoneKey ?? '',
+        toZoneId:   '',
+        note:       `배지 제거: ${badge.line1}${badge.line2 ? ' ' + badge.line2 : ''}`,
+      }, ...prev]);
+    }
   }, []);
 
   const clearBadges = useCallback((tokenId: string) => {
@@ -674,11 +717,12 @@ export function TokenProvider({
     ));
   }, []);
 
-  const addLog = useCallback((entry: Omit<LogEntry, 'id' | 'timestamp'>) => {
+  const addLog = useCallback((entry: Omit<LogEntry, 'id' | 'timestamp' | 'elapsedSec'>) => {
     setLogs(prev => [{
       ...entry,
-      id:        `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      timestamp: nowTimestamp(),
+      id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp:  nowTimestamp(),
+      elapsedSec: nowElapsedSec(),
     }, ...prev]);
   }, []);
 
@@ -695,9 +739,10 @@ export function TokenProvider({
     ));
     const note = exists ? `임무 해제: ${tag.label}` : `임무: ${tag.label}`;
     setLogs(prev => [{
-      id:        `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      timestamp: nowTimestamp(),
-      logType:   'status-tag' as const,
+      id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp:  nowTimestamp(),
+      elapsedSec: nowElapsedSec(),
+      logType:    'status-tag' as const,
       tokenId,
       tokenName:  token.label,
       tokenColor: token.color,
@@ -715,9 +760,10 @@ export function TokenProvider({
     ));
     const note = tag ? tag.label : `${token.statusTag?.label ?? '상태'} 해제`;
     setLogs(prev => [{
-      id:        `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      timestamp: nowTimestamp(),
-      logType:   'status-tag' as const,
+      id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp:  nowTimestamp(),
+      elapsedSec: nowElapsedSec(),
+      logType:    'status-tag' as const,
       tokenId,
       tokenName:  token.label,
       tokenColor: token.color,
@@ -738,17 +784,49 @@ export function TokenProvider({
     state:   SprayState | null,
     target?: { x: number; y: number; floorId?: string } | null,
   ) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
     setTokens(prev => prev.map(t => {
       if (t.id !== tokenId) return t;
       if (state === null) return { ...t, sprayState: null, sprayTarget: null };
       return { ...t, sprayState: state, sprayTarget: target !== undefined ? target : t.sprayTarget };
     }));
+    if (token) {
+      const note = state === null ? '방수 중단' : `방수 ${state}`;
+      setLogs(prev => [{
+        id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp:  nowTimestamp(),
+        elapsedSec: nowElapsedSec(),
+        logType:    'status-tag' as const,
+        tokenId,
+        tokenName:  token.label,
+        tokenColor: token.color,
+        fromZoneId: token.zoneKey ?? '',
+        toZoneId:   '',
+        note,
+      }, ...prev]);
+    }
   }, []);
 
   const setAerialTarget = useCallback((tokenId: string, target: { floorId: string; x: number; y: number; deployLabel: string } | null) => {
+    const token = tokensRef.current.find(t => t.id === tokenId);
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, aerialTarget: target ?? undefined, aerialSprayTarget: null } : t
     ));
+    if (token) {
+      const note = target === null ? '전개 해제' : `${target.deployLabel} 전개 (${target.floorId})`;
+      setLogs(prev => [{
+        id:         `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp:  nowTimestamp(),
+        elapsedSec: nowElapsedSec(),
+        logType:    'status-tag' as const,
+        tokenId,
+        tokenName:  token.label,
+        tokenColor: token.color,
+        fromZoneId: token.zoneKey ?? '',
+        toZoneId:   target?.floorId ?? '',
+        note,
+      }, ...prev]);
+    }
   }, []);
 
   const moveAerialTarget = useCallback((tokenId: string, x: number, y: number, floorId?: string) => {

@@ -15,9 +15,11 @@ interface EventContextValue {
   positions:         Record<string, EventPos>;
   statuses:          Record<string, EventStatus>;
   firePercentages:   Record<string, number>;   // 화재계 이벤트 연속 % (0~100)
+  floorIds:          Record<string, string>;   // eventId → floorId (드롭된 층, 층 외부면 키 없음)
   moveEvent:         (id: string, x: number, y: number) => void;
   setEventStatus:    (id: string, status: EventStatus) => void;
   setFirePercentage: (id: string, pct: number) => void;
+  setEventFloorId:   (id: string, floorId: string | null) => void;
 }
 
 const EventContext = createContext<EventContextValue | null>(null);
@@ -47,7 +49,15 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     return (saved?.statuses ?? {}) as Record<string, EventStatus>;
   });
 
-  const [firePercentages, setFirePercentages] = useState<Record<string, number>>({});
+  const [firePercentages, setFirePercentages] = useState<Record<string, number>>(() => {
+    const saved = loadEventSession();
+    return saved?.firePercentages ?? {};
+  });
+
+  const [floorIds, setFloorIds] = useState<Record<string, string>>(() => {
+    const saved = loadEventSession();
+    return saved?.floorIds ?? {};
+  });
 
   // 새로 활성화된 이벤트에 기본 상태 부여 (위치는 EventOverlay가 초기화)
   useEffect(() => {
@@ -66,13 +76,24 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   // 변경 시 세션 저장
   useEffect(() => {
-    saveEventSession({ positions, statuses });
-  }, [positions, statuses]);
+    saveEventSession({ positions, statuses, floorIds, firePercentages });
+  }, [positions, statuses, floorIds, firePercentages]);
 
   // ── 액션 ──────────────────────────────────
 
   const moveEvent = useCallback((id: string, x: number, y: number) => {
     setPositions(prev => ({ ...prev, [id]: { x, y } }));
+  }, []);
+
+  const setEventFloorId = useCallback((id: string, floorId: string | null) => {
+    setFloorIds(prev => {
+      if (floorId === null) {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      return { ...prev, [id]: floorId };
+    });
   }, []);
 
   const setFirePercentage = useCallback((id: string, pct: number) => {
@@ -94,7 +115,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <EventContext.Provider value={{ enabledEvents, positions, statuses, firePercentages, moveEvent, setEventStatus, setFirePercentage }}>
+    <EventContext.Provider value={{ enabledEvents, positions, statuses, firePercentages, floorIds, moveEvent, setEventStatus, setFirePercentage, setEventFloorId }}>
       {children}
     </EventContext.Provider>
   );

@@ -89,10 +89,28 @@ interface Props {
   y:               number;
   onMove:          (id: string, x: number, y: number) => void;
   onStatusChange:  (id: string, status: EventStatus) => void;
+  onDrop?:         (id: string, floorId: string | null) => void;
+}
+
+function readFloorIdAtPoint(cx: number, cy: number): string | null {
+  let faceKey: string | null = null;
+  for (const el of document.elementsFromPoint(cx, cy)) {
+    let cur: Element | null = el;
+    while (cur) {
+      const fid = cur.getAttribute('data-floor-id');
+      if (fid) return fid;
+      if (!faceKey) {
+        const zk = cur.getAttribute('data-zone-key');
+        if (zk?.startsWith('face-')) faceKey = zk;
+      }
+      cur = cur.parentElement;
+    }
+  }
+  return faceKey;
 }
 
 export function EventTokenCard({
-  id, label, icon, eventType, status, firePercentage, x, y, onMove, onStatusChange,
+  id, label, icon, eventType, status, firePercentage, x, y, onMove, onStatusChange, onDrop,
 }: Props) {
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [radialCenter, setRadialCenter] = useState<{ x: number; y: number } | null>(null);
@@ -118,10 +136,11 @@ export function EventTokenCard({
       const newY = Math.max(0, Math.min(r.height - TOKEN_H, ev.clientY - r.top  - dragOffsetRef.current.y));
       onMove(id, newX, newY);
     }
-    function onMouseUp() {
+    function onMouseUp(ev: MouseEvent) {
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup',   onMouseUp);
+      onDrop?.(id, readFloorIdAtPoint(ev.clientX, ev.clientY));
     }
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup',   onMouseUp);

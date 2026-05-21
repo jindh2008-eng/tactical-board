@@ -225,20 +225,26 @@ function AerialSprayTargetOverlay() {
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     const elements = document.elementsFromPoint(e.clientX, e.clientY);
     let floorEl: Element | null = null;
+    let faceKey: string | null  = null;
     for (const el of elements) {
       let cur: Element | null = el;
       while (cur) {
-        if (cur.getAttribute('data-floor-id')) { floorEl = cur; break; }
+        if (!floorEl && cur.getAttribute('data-floor-id')) { floorEl = cur; }
+        if (!faceKey) {
+          const zk = cur.getAttribute('data-zone-key');
+          if (zk?.startsWith('face-')) faceKey = zk;
+        }
+        if (floorEl && faceKey) break;
         cur = cur.parentElement;
       }
-      if (floorEl) break;
+      if (floorEl && faceKey) break;
     }
 
     const board = document.getElementById('tactical-area');
     const rect  = board?.getBoundingClientRect();
     if (!rect) return;
 
-    const floorId = floorEl?.getAttribute('data-floor-id') ?? null;
+    const floorId = floorEl?.getAttribute('data-floor-id') ?? faceKey ?? null;
 
     if (mode.type !== 'aerial-spray-target') return;
     const token = tokens.find(t => t.id === mode.sourceId);
@@ -466,9 +472,9 @@ export function PlayPage() {
           {/* ActionModeProvider: TokenContext + VictimContext 내부에 배치 */}
           <ActionModeProvider>
           <WaterConnectionProvider>
+          <FireCommandProvider>
           <WaterLevelProvider>
           <HydrantStateProvider>
-          <FireCommandProvider>
             <div className="play-layout">
               {/* ── 자원대기소 Drawer (상단 절반) ── */}
               <div className={`left-drawer left-drawer--resource${leftPanel === 'resource' ? ' left-drawer--open' : ''}`}>
@@ -550,9 +556,9 @@ export function PlayPage() {
               <AerialTargetOverlay />
               <AerialSprayTargetOverlay />
             </div>
-          </FireCommandProvider>
           </HydrantStateProvider>
           </WaterLevelProvider>
+          </FireCommandProvider>
           </WaterConnectionProvider>
           </ActionModeProvider>
         </VictimProvider>

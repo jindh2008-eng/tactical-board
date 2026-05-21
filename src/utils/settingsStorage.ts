@@ -244,6 +244,9 @@ export interface SettingsExport {
   exportedAt: string;
   settingsList: SettingsSet[];
   workingPresets: WorkingPresets;
+  commandProcedureConfigs?: CommandProcedureConfigs;
+  unitStatusConfig?: UnitStatusConfig;
+  unitTagPresetConfig?: UnitTagPresetConfig;
 }
 
 export function exportSettings(): void {
@@ -252,6 +255,9 @@ export function exportSettings(): void {
     exportedAt: new Date().toISOString(),
     settingsList: loadSettingsList(),
     workingPresets: loadWorkingPresets(),
+    commandProcedureConfigs: loadCommandProcedureConfigs(),
+    unitStatusConfig: loadUnitStatusConfig(),
+    unitTagPresetConfig: loadUnitTagPresetConfig(),
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -277,6 +283,12 @@ export function importSettings(file: File): Promise<void> {
         }
         localStorage.setItem(SETTINGS_LIST_KEY, JSON.stringify(data.settingsList));
         localStorage.setItem(WORKING_PRESETS_KEY, JSON.stringify(data.workingPresets));
+        if (data.commandProcedureConfigs)
+          localStorage.setItem(COMMAND_PROCEDURE_KEY, JSON.stringify(data.commandProcedureConfigs));
+        if (data.unitStatusConfig)
+          localStorage.setItem(UNIT_STATUS_KEY, JSON.stringify(data.unitStatusConfig));
+        if (data.unitTagPresetConfig)
+          localStorage.setItem(TAG_PRESET_KEY, JSON.stringify(data.unitTagPresetConfig));
         resolve();
       } catch {
         reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));

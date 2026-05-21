@@ -33,10 +33,10 @@ interface Props {
   onClose:    () => void;
 }
 
-const WATER_SOURCE_TYPES = new Set(['pump', 'water_tank']);
-const SUPPRESSION_TYPES  = new Set(['suppression']);
-const MONITOR_TYPES      = new Set(['pump', 'water_tank']);
-const AERIAL_TYPES       = new Set(['aerial', 'ladder']);
+const WATER_SOURCE_TYPES  = new Set(['pump', 'water_tank']);
+const SPRAY_CAPABLE_TYPES = new Set(['suppression', 'rescue']);
+const MONITOR_TYPES       = new Set(['pump', 'water_tank']);
+const AERIAL_TYPES        = new Set(['aerial', 'ladder']);
 
 const GAP = 8; // 토큰 엣지와 배지 그룹 사이 간격(px)
 
@@ -57,16 +57,16 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const canWaterConnect   = WATER_SOURCE_TYPES.has(token.unitType);
   const isAerialVehicle   = AERIAL_TYPES.has(token.unitType);
   const deployLabel       = token.unitType === 'aerial' ? '사다리전개' : '바스켓전개';
-  const isSuppressionUnit = SUPPRESSION_TYPES.has(token.unitType);
-  const hasWaterSource    = isSuppressionUnit &&
+  const isSprayCapable    = SPRAY_CAPABLE_TYPES.has(token.unitType);
+  const hasWaterSource    = isSprayCapable &&
     connections.some(c => c.toId === token.id && WATER_SOURCE_TYPES.has(c.fromType));
-  const isSprayActive     = isSuppressionUnit && token.sprayState != null;
+  const isSprayActive     = isSprayCapable && token.sprayState != null;
   const isMonitorUnit     = MONITOR_TYPES.has(token.unitType);
   const isMonitorActive   = isMonitorUnit && token.aerialSprayTarget != null;
 
   const hasFuncButtons =
     isAerialVehicle ||
-    (isSuppressionUnit && (hasWaterSource || isSprayActive)) ||
+    (isSprayCapable && (hasWaterSource || isSprayActive)) ||
     canWaterConnect ||
     isMonitorUnit;
 
@@ -290,8 +290,8 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
             </button>
           )}
 
-          {/* 방수개시 / 방수중단 (진압대) */}
-          {isSuppressionUnit && hasWaterSource && !isSprayActive && (
+          {/* 방수개시 / 방수중단 (진압대·구조대) */}
+          {isSprayCapable && hasWaterSource && !isSprayActive && (
             <button
               className="usbm__badge usbm__badge--spray-start"
               onMouseDown={e => { e.stopPropagation(); handleSprayStart(); }}

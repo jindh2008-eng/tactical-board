@@ -177,17 +177,19 @@ export interface UnitToken {
 export type LogType = 'move' | 'assignment' | 'rescue' | 'fire-status' | 'status-tag' | 'water-relay' | 'door' | 'smoke' | 'event-status' | 'checklist';
 
 export interface LogEntry {
-  id:             string;
-  timestamp:      string;
-  logType:        LogType;
-  tokenId:        string;
-  tokenName:      string;
-  tokenColor?:    TokenColor;
-  fromZoneId:     string;
-  toZoneId:       string;
-  face?:          Face;
+  id:              string;
+  timestamp:       string;
+  elapsedSec?:     number;                          // 경과 초 (정렬·비교용, 구버전 세션 호환 optional)
+  logSource?:      'user' | 'system' | 'ai-event'; // 생성 주체 (미지정 = 사용자 액션)
+  logType:         LogType;
+  tokenId:         string;
+  tokenName:       string;
+  tokenColor?:     TokenColor;
+  fromZoneId:      string;
+  toZoneId:        string;
+  face?:           Face;
   assignmentType?: AssignmentType;
-  note?:          string;
+  note?:           string;
 }
 
 // ─────────────────────────────────────────────

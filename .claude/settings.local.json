@@ -41,7 +41,10 @@
       "Bash(Remove-Item \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\left\\\\VictimCreator.tsx\" -Force)",
       "Bash(Remove-Item \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\left\\\\VictimCreator.css\" -Force)",
       "Bash(Get-ChildItem -Path 'd:\\\\claude\\\\tactical-board' -Recurse -Filter '*Settings*')",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(python -c \"from PIL import Image; img = Image.open\\('public/smoke_image.png'\\); print\\(img.size, img.mode\\)\")",
+      "Bash(Remove-Item \"src\\\\components\\\\building\\\\StairwellSmokeColumn.tsx\" -Force)",
+      "Bash(Remove-Item \"src\\\\components\\\\building\\\\StairwellSmokeColumn.css\" -Force)"
     ]
   }
 }

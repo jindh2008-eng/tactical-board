@@ -24,7 +24,7 @@ const PAD      = 8;
 const ROW3_H   = 166; // TacticalArea row 3 고정 높이
 
 export function EventLayer() {
-  const { enabledEvents, positions, statuses, firePercentages, moveEvent, setEventStatus } = useEvents();
+  const { enabledEvents, positions, statuses, firePercentages, moveEvent, setEventStatus, setEventFloorId } = useEvents();
   const { addLog } = useTokens();
   const layerRef = useRef<HTMLDivElement>(null);
   const initRef  = useRef(false);
@@ -105,6 +105,7 @@ export function EventLayer() {
             y={pos.y}
             onMove={moveEvent}
             onStatusChange={handleStatusChange}
+            onDrop={setEventFloorId}
           />
         );
       })}
