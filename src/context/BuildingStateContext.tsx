@@ -323,6 +323,10 @@ export function useBuildingState(): BuildingStateValue {
   return ctx;
 }
 
+export function useOptionalBuildingState(): BuildingStateValue | null {
+  return useContext(BuildingStateContext);
+}
+
 // ─────────────────────────────────────────────
 // 계단실 연기 레벨 계산 유틸
 //

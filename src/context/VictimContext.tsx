@@ -14,6 +14,8 @@ import {
 import { buildValidVictimZoneKeys } from '../data/buildingData';
 import {
   saveVictimSession, loadVictimSession,
+  saveVictimSearchSession, loadVictimSearchSession,
+  type FloorSearchRecord,
 } from '../utils/runtimeSession';
 
 // ─────────────────────────────────────────────
@@ -22,7 +24,6 @@ import {
 
 export type VictimPos = Pos;
 
-/** updateVictim 에 전달 가능한 변경 필드 */
 export interface VictimUpdate {
   condition?:   VictimCondition;
   subLocation?: string;
@@ -30,12 +31,23 @@ export interface VictimUpdate {
 }
 
 interface VictimContextValue {
-  victims:         VictimToken[];
-  victimPositions: Record<string, VictimPos>;
-  createVictim:    (input: CreateVictimInput) => void;
-  createRandom:    (subLocation: string) => void;
-  moveVictim:      (victimId: string, toZoneKey: string | null, pos?: VictimPos) => void;
-  updateVictim:    (victimId: string, update: VictimUpdate) => void;
+  victims:             VictimToken[];
+  victimPositions:     Record<string, VictimPos>;
+  discoveredVictimIds: Set<string>;
+  /** 인명검색 활성 세션 (floorId → 레코드) */
+  activeSearches:      Record<string, FloorSearchRecord>;
+  /** 표시용 현재 점수 (tokenId → 점수) */
+  searchScores:        Record<string, number>;
+  createVictim:        (input: CreateVictimInput) => void;
+  createRandom:        (subLocation: string) => void;
+  moveVictim:          (victimId: string, toZoneKey: string | null, pos?: VictimPos) => void;
+  updateVictim:        (victimId: string, update: VictimUpdate) => void;
+  /** 유닛을 해당 층 인명검색에 추가. 이미 다른 층 검색 중이면 먼저 제거 후 추가. */
+  addUnitToSearch:     (tokenId: string, floorId: string, primaryInitial: number, secondaryInitial: number, decrementRate: number, startInSecondary: boolean) => void;
+  /** 유닛을 인명검색에서 제거 (점수는 유지). */
+  removeUnitFromSearch: (tokenId: string) => void;
+  /** 지정 층들을 2차 검색으로 전환 (초진 도달 시 호출). */
+  transitionToSecondarySearch: (floorIds: string[]) => void;
 }
 
 const VictimContext = createContext<VictimContextValue | null>(null);
@@ -58,6 +70,37 @@ function victimDisplayName(v: VictimToken): string {
 }
 
 // ─────────────────────────────────────────────
+// 점수 기반 발견 스케줄 생성
+// N명을 initialScore 구간에 균등 배분:
+//   i번째 (0-indexed, 랜덤 순서): revealAtScore = round(initialScore*(N-1-i)/N)
+//   마지막: revealAtScore = 0
+// ─────────────────────────────────────────────
+
+function buildSearchSchedule(
+  victimIds:    string[],
+  initialScore: number,
+): Array<{ victimId: string; revealAtScore: number }> {
+  if (victimIds.length === 0) return [];
+  const shuffled = [...victimIds].sort(() => Math.random() - 0.5);
+  const n = shuffled.length;
+  return shuffled.map((victimId, i) => ({
+    victimId,
+    revealAtScore: Math.round(initialScore * (n - 1 - i) / n),
+  }));
+}
+
+// 해당 층 미발견 구조대상자 IDs
+function undiscoveredVictimIds(
+  victims:    VictimToken[],
+  floorId:    string,
+  discovered: Set<string>,
+): string[] {
+  return victims
+    .filter(v => v.zoneKey && !v.zoneKey.startsWith('face-') && v.zoneKey.split('-')[0] === floorId && !discovered.has(v.id))
+    .map(v => v.id);
+}
+
+// ─────────────────────────────────────────────
 // Provider
 // ─────────────────────────────────────────────
 
@@ -69,36 +112,27 @@ export function VictimProvider({
 }: {
   children:            React.ReactNode;
   initialVictimSetup?: VictimSetupItem[];
-  /** 배치 가능 구역 검증에 사용. 미전달 시 검증 생략. */
   buildingConfig?:     BuildingConfig;
   fireFloor?:          number;
 }) {
-  const { addLog } = useTokens();
+  const { addLog, tokens } = useTokens();
 
-  // ── 배치 가능 구역 집합 (마운트 시 1회 계산) ─────────────────────────
-  // 세션 복원 시 범위 행에 속한 구역의 구조대상자를 pool 로 이동하는 데 사용
   const validZoneKeysRef = useRef<Set<string>>(
     buildingConfig !== undefined
       ? buildValidVictimZoneKeys(buildingConfig, fireFloor ?? 1)
       : new Set<string>()
   );
 
-  /**
-   * victim 의 zoneKey 가 현재 건물 설정 기준 유효하지 않으면 pool 로 이동.
-   * (요약 행으로 묶인 층에 배치된 구버전 데이터 마이그레이션)
-   */
   function sanitizeVictim(v: VictimToken): VictimToken {
     if (!buildingConfig) return v;
     if (v.zoneKey === null) return v;
     if (validZoneKeysRef.current.has(v.zoneKey)) return v;
-    // 유효하지 않은 구역 → pool 이동
     return { ...v, zoneKey: null };
   }
 
-  // ── victimsRef — 로그 기록용 안정적 참조 ──────────────────────────────
   const victimsRef = useRef<VictimToken[]>([]);
 
-  // ── 구조대상자 상태 (세션 복원 우선) ─────────────────────────────────
+  // ── 구조대상자 상태 ───────────────────────────────────────────────
   const [victims, setVictims] = useState<VictimToken[]>(() => {
     const session = loadVictimSession();
     if (session && session.victims.length > 0) return session.victims.map(sanitizeVictim);
@@ -107,11 +141,9 @@ export function VictimProvider({
       : [];
   });
 
-  // ── 구조대상자 위치 (세션 복원 → 오프셋 초기 계산 → 빈 객체) ─────────
   const [victimPositions, setVictimPositions] = useState<Record<string, VictimPos>>(() => {
     const session = loadVictimSession();
     if (session && session.victims.length > 0) {
-      // sanitize 로 pool 이동된 victim 의 위치도 제거
       const invalidIds = new Set(
         session.victims
           .filter(v => v.zoneKey !== null && buildingConfig && !validZoneKeysRef.current.has(v.zoneKey))
@@ -122,8 +154,6 @@ export function VictimProvider({
       for (const id of invalidIds) delete cleaned[id];
       return cleaned;
     }
-
-    // 세션이 없을 때: setup 기반 초기 오프셋 계산
     if (initialVictimSetup && initialVictimSetup.length > 0) {
       const initialTokens = initialVictimSetup.map(victimSetupToToken);
       return computeInitialPositions(initialTokens);
@@ -133,7 +163,32 @@ export function VictimProvider({
 
   useEffect(() => { victimsRef.current = victims; }, [victims]);
 
-  // ── sessionStorage 저장 (500ms debounce) ─────────────────────────────
+  // ── 인명검색 상태 ─────────────────────────────────────────────────
+  const [discoveredVictimIds, setDiscoveredVictimIds] = useState<Set<string>>(() => {
+    const session = loadVictimSearchSession();
+    return new Set(session?.discoveredVictimIds ?? []);
+  });
+
+  const [activeSearches, setActiveSearches] = useState<Record<string, FloorSearchRecord>>(() => {
+    const session = loadVictimSearchSession();
+    if (!session) return {};
+    // 복원 시 units[] 초기화 — 시작 버튼을 눌러야만 진행되도록
+    const restored: Record<string, FloorSearchRecord> = {};
+    for (const [fid, rec] of Object.entries(session.activeSearches as Record<string, FloorSearchRecord>)) {
+      restored[fid] = { ...rec, units: [] };
+    }
+    return restored;
+  });
+
+  const [searchScores, setSearchScores] = useState<Record<string, number>>({});
+
+  const discoveredVictimIdsRef = useRef<Set<string>>(discoveredVictimIds);
+  const activeSearchesRef      = useRef<Record<string, FloorSearchRecord>>(activeSearches);
+
+  useEffect(() => { discoveredVictimIdsRef.current = discoveredVictimIds; }, [discoveredVictimIds]);
+  useEffect(() => { activeSearchesRef.current = activeSearches; }, [activeSearches]);
+
+  // ── sessionStorage 저장 ───────────────────────────────────────────
   useEffect(() => {
     const timer = setTimeout(() => {
       saveVictimSession({ victims, victimPositions });
@@ -141,7 +196,119 @@ export function VictimProvider({
     return () => clearTimeout(timer);
   }, [victims, victimPositions]);
 
-  // ── 구조대상자 생성 ──────────────────────────────────────────────────
+  useEffect(() => {
+    saveVictimSearchSession({
+      discoveredVictimIds: [...discoveredVictimIds],
+      activeSearches,
+    });
+  }, [discoveredVictimIds, activeSearches]);
+
+  // ── 토큰 이동 감지 → 다른 층으로 이동 시 자동 검색 중단 ──────────
+  useEffect(() => {
+    setActiveSearches(prev => {
+      let changed = false;
+      const next: Record<string, FloorSearchRecord> = {};
+      for (const [floorId, rec] of Object.entries(prev)) {
+        const stillHere = rec.units.filter(u => {
+          const token = tokens.find(t => t.id === u.tokenId);
+          if (!token?.zoneKey || token.zoneKey.startsWith('face-')) return false;
+          return token.zoneKey.split('-')[0] === floorId;
+        });
+        if (stillHere.length !== rec.units.length) changed = true;
+        next[floorId] = { ...rec, units: stillHere };
+      }
+      return changed ? next : prev;
+    });
+  }, [tokens]);
+
+  // ── 인명검색 점수 tick (1초마다) ──────────────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const searches = activeSearchesRef.current;
+      if (Object.keys(searches).length === 0) return;
+
+      const newlyDiscovered: string[] = [];
+      const updatedSearches: Record<string, FloorSearchRecord> = {};
+      const newScores:       Record<string, number>            = {};
+
+      for (const [floorId, rec] of Object.entries(searches)) {
+        const combinedRate = rec.units.reduce((s, u) => s + u.decrementRate, 0);
+
+        // 유닛 없으면 점수 유지, 레코드 보존
+        if (combinedRate === 0) {
+          updatedSearches[floorId] = rec;
+          continue;
+        }
+
+        let newPrimary   = rec.primaryScore;
+        let newSecondary = rec.secondaryScore;
+
+        if (!rec.primaryFrozen) {
+          newPrimary = Math.max(0, rec.primaryScore - combinedRate);
+        }
+        if (rec.secondaryActive) {
+          newSecondary = Math.max(0, rec.secondaryScore - combinedRate);
+        }
+
+        // 발견 처리 — 1차
+        const stillPrimary: typeof rec.primarySchedule = [];
+        if (!rec.primaryFrozen) {
+          for (const item of rec.primarySchedule) {
+            if (newPrimary <= item.revealAtScore && !discoveredVictimIdsRef.current.has(item.victimId)) {
+              newlyDiscovered.push(item.victimId);
+            } else if (!discoveredVictimIdsRef.current.has(item.victimId)) {
+              stillPrimary.push(item);
+            }
+          }
+        } else {
+          stillPrimary.push(...rec.primarySchedule);
+        }
+
+        // 발견 처리 — 2차
+        const stillSecondary: typeof rec.secondarySchedule = [];
+        if (rec.secondaryActive) {
+          for (const item of rec.secondarySchedule) {
+            if (newSecondary <= item.revealAtScore && !discoveredVictimIdsRef.current.has(item.victimId)) {
+              newlyDiscovered.push(item.victimId);
+            } else if (!discoveredVictimIdsRef.current.has(item.victimId)) {
+              stillSecondary.push(item);
+            }
+          }
+        } else {
+          stillSecondary.push(...rec.secondarySchedule);
+        }
+
+        // 표시용 점수: 1차 진행 중이면 1차, 2차 진행 중이면 2차
+        const displayScore = !rec.primaryFrozen ? newPrimary : newSecondary;
+        for (const unit of rec.units) {
+          newScores[unit.tokenId] = displayScore;
+        }
+
+        updatedSearches[floorId] = {
+          ...rec,
+          primaryScore:      newPrimary,
+          primarySchedule:   stillPrimary,
+          secondaryScore:    newSecondary,
+          secondarySchedule: stillSecondary,
+        };
+      }
+
+      if (newlyDiscovered.length > 0) {
+        setDiscoveredVictimIds(prev => {
+          const next = new Set(prev);
+          for (const id of newlyDiscovered) next.add(id);
+          return next;
+        });
+      }
+
+      setActiveSearches(updatedSearches);
+      setSearchScores(newScores);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // ── 구조대상자 생성 ───────────────────────────────────────────────
   const createVictim = useCallback((input: CreateVictimInput) => {
     setVictims(prev => [...prev, buildVictim(input)]);
   }, []);
@@ -150,15 +317,7 @@ export function VictimProvider({
     setVictims(prev => [...prev, randomVictim(subLocation)]);
   }, []);
 
-  /**
-   * 토큰 이동.
-   * toZoneKey가 주어지면 zoneKeyToLabel() 로 자동 위치 레이블을 결정하고
-   * displayBottom 을 재계산한다.
-   * pool 복귀(null) 시 location 을 초기화한다.
-   *
-   * originDisplayBottom: 임시의료소·대기 등 특수 구역으로 이동해도 변경하지 않는다.
-   * 최초 실제 배치 구역(건물 층·외곽 방면) 진입 시 1회 기록.
-   */
+  // ── 구조대상자 이동 ───────────────────────────────────────────────
   const moveVictim = useCallback((
     victimId:  string,
     toZoneKey: string | null,
@@ -180,7 +339,6 @@ export function VictimProvider({
     setVictims(prev => prev.map(v => {
       if (v.id !== victimId) return v;
 
-      // 구조위치 스냅샷 — 임시의료소 진입 시 1회만 기록
       const rescueLocation: string | undefined =
         toZoneKey === 'medical-post' && !v.rescueLocation
           ? (() => {
@@ -192,7 +350,6 @@ export function VictimProvider({
             })()
           : v.rescueLocation;
 
-      // 최초 실제 배치 시 위치 표시 스냅샷 — 특수 구역 제외
       const isSpecialZone =
         toZoneKey === null ||
         toZoneKey === 'medical-post' ||
@@ -214,7 +371,7 @@ export function VictimProvider({
     });
   }, [addLog]);
 
-  /** 상태·세부위치·라벨 변경 */
+  // ── 상태·세부위치·라벨 변경 ──────────────────────────────────────
   const updateVictim = useCallback((victimId: string, update: VictimUpdate) => {
     if (update.condition !== undefined) {
       const v = victimsRef.current.find(vic => vic.id === victimId);
@@ -232,10 +389,115 @@ export function VictimProvider({
     setVictims(prev => prev.map(v => v.id !== victimId ? v : { ...v, ...update }));
   }, [addLog]);
 
+  // ── 유닛 추가 ─────────────────────────────────────────────────────
+  const addUnitToSearch = useCallback((
+    tokenId:          string,
+    floorId:          string,
+    primaryInitial:   number,
+    secondaryInitial: number,
+    decrementRate:    number,
+    startInSecondary: boolean,
+  ) => {
+    setActiveSearches(prev => {
+      // 이미 다른 층 검색 중이면 해당 층에서 제거
+      const cleaned: Record<string, FloorSearchRecord> = {};
+      for (const [fid, rec] of Object.entries(prev)) {
+        if (rec.units.some(u => u.tokenId === tokenId)) {
+          const filtered = rec.units.filter(u => u.tokenId !== tokenId);
+          cleaned[fid] = { ...rec, units: filtered };
+        } else {
+          cleaned[fid] = rec;
+        }
+      }
+
+      const existing = cleaned[floorId];
+
+      if (existing) {
+        // 기존 레코드에 유닛 추가 (이미 있으면 무시)
+        if (existing.units.some(u => u.tokenId === tokenId)) return cleaned;
+        return {
+          ...cleaned,
+          [floorId]: { ...existing, units: [...existing.units, { tokenId, decrementRate }] },
+        };
+      }
+
+      // 새 레코드 생성
+      const victims   = victimsRef.current;
+      const discovered = discoveredVictimIdsRef.current;
+      const undiscovered = undiscoveredVictimIds(victims, floorId, discovered);
+
+      const primarySchedule   = startInSecondary ? [] : buildSearchSchedule(undiscovered, primaryInitial);
+      const secondarySchedule = startInSecondary ? buildSearchSchedule(undiscovered, secondaryInitial) : [];
+
+      const record: FloorSearchRecord = {
+        units: [{ tokenId, decrementRate }],
+        primaryInitial,
+        primaryScore:   primaryInitial,
+        primaryFrozen:  startInSecondary,
+        primarySchedule,
+        secondaryInitial,
+        secondaryScore:   secondaryInitial,
+        secondaryActive:  startInSecondary,
+        secondarySchedule,
+      };
+
+      return { ...cleaned, [floorId]: record };
+    });
+
+    setSearchScores(prev => ({
+      ...prev,
+      [tokenId]: startInSecondary ? secondaryInitial : primaryInitial,
+    }));
+  }, []);
+
+  // ── 유닛 제거 (점수 유지) ─────────────────────────────────────────
+  const removeUnitFromSearch = useCallback((tokenId: string) => {
+    setActiveSearches(prev => {
+      const next: Record<string, FloorSearchRecord> = {};
+      for (const [fid, rec] of Object.entries(prev)) {
+        next[fid] = { ...rec, units: rec.units.filter(u => u.tokenId !== tokenId) };
+      }
+      return next;
+    });
+    setSearchScores(prev => {
+      const next = { ...prev };
+      delete next[tokenId];
+      return next;
+    });
+  }, []);
+
+  // ── 2차 전환 (초진 도달 시 BuildingBoard bridge 에서 호출) ────────
+  const transitionToSecondarySearch = useCallback((floorIds: string[]) => {
+    setActiveSearches(prev => {
+      const next = { ...prev };
+      for (const floorId of floorIds) {
+        const rec = next[floorId];
+        if (!rec || rec.primaryFrozen) continue;
+
+        // 미발견 구조대상자 → 2차 스케줄 재생성
+        const remainingIds = rec.primarySchedule
+          .filter(item => !discoveredVictimIdsRef.current.has(item.victimId))
+          .map(item => item.victimId);
+        const secondarySchedule = buildSearchSchedule(remainingIds, rec.secondaryInitial);
+
+        next[floorId] = {
+          ...rec,
+          primaryFrozen:    true,
+          secondaryActive:  true,
+          secondaryScore:   rec.secondaryInitial,
+          secondarySchedule,
+        };
+      }
+      return next;
+    });
+  }, []);
+
   return (
     <VictimContext.Provider value={{
       victims, victimPositions,
+      discoveredVictimIds, activeSearches, searchScores,
       createVictim, createRandom, moveVictim, updateVictim,
+      addUnitToSearch, removeUnitFromSearch, transitionToSecondarySearch,
     }}>
       {children}
     </VictimContext.Provider>

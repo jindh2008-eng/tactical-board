@@ -12,6 +12,7 @@ import { useSettings } from '../../store/settingsStore';
 import { useEvents, type EventPos } from '../../context/EventContext';
 import { resolveEventType } from '../../types/events';
 import { useTraining } from '../../context/TrainingContext';
+import { useVictims } from '../../context/VictimContext';
 import { FloorRow } from './FloorRow';
 import './BuildingBoard.css';
 
@@ -41,6 +42,59 @@ function FireCommandRegistrar() {
   const { setFireStatus } = useBuildingState();
   const { register }      = useFireCommand();
   register(setFireStatus);
+  return null;
+}
+
+// ─────────────────────────────────────────────
+// 인명검색 페이즈 전환 감지 (BuildingStateProvider 내부)
+// 화재층이 initial 도달 시 → 해당 층 2차 전환
+// 모든 화재층 초진 → 비화재층 2차 전환
+// ─────────────────────────────────────────────
+
+const PHASE_POST_INITIAL = new Set<FireStatus>(['initial', 'complete']);
+
+function SearchPhaseMonitor({ allFloorIds }: { allFloorIds: string[] }) {
+  const { fireStates }                  = useBuildingState();
+  const { transitionToSecondarySearch } = useVictims();
+  const prevRef = useRef<Record<string, FireStatus | null> | null>(null);
+
+  useEffect(() => {
+    if (prevRef.current === null) {
+      prevRef.current = { ...fireStates };
+      return;
+    }
+    const prev = prevRef.current;
+    const curr = fireStates;
+
+    const newlyInitial: string[] = [];
+    for (const [floorId, status] of Object.entries(curr)) {
+      if (status !== null && PHASE_POST_INITIAL.has(status)) {
+        const prevStatus = prev[floorId];
+        if (!prevStatus || !PHASE_POST_INITIAL.has(prevStatus)) {
+          newlyInitial.push(floorId);
+        }
+      }
+    }
+
+    if (newlyInitial.length > 0) {
+      transitionToSecondarySearch(newlyInitial);
+
+      // 모든 화재층이 초진 이후이면 → 비화재층도 2차 전환
+      const fireFloorIds = Object.keys(curr).filter(id => curr[id] !== null);
+      const allFireInitial =
+        fireFloorIds.length > 0 &&
+        fireFloorIds.every(id => PHASE_POST_INITIAL.has(curr[id]!));
+
+      if (allFireInitial) {
+        const fireSet    = new Set(fireFloorIds);
+        const noFireIds  = allFloorIds.filter(id => !fireSet.has(id));
+        if (noFireIds.length > 0) transitionToSecondarySearch(noFireIds);
+      }
+    }
+
+    prevRef.current = { ...curr };
+  }, [fireStates, transitionToSecondarySearch, allFloorIds]);
+
   return null;
 }
 
@@ -424,6 +478,7 @@ export function BuildingBoard({
       <FireCommandRegistrar />
       <FireSuppressionEffect />
       <EventFireSuppressionEffect />
+      <SearchPhaseMonitor allFloorIds={allFloorIds} />
       <div
         className="building-body"
         style={{ '--min-row-height': `${minRowPx}px` } as React.CSSProperties}

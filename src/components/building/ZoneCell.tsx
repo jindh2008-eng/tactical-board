@@ -194,14 +194,27 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
   // 출동대 토큰
   const { tokens, positions, moveToken } = useTokens();
   // 구조대상자 토큰
-  const { victims, victimPositions, moveVictim } = useVictims();
+  const { victims, victimPositions, moveVictim, discoveredVictimIds, activeSearches } = useVictims();
+
+  // 인명검색 진행률 (center 구역 전용)
+  const isCenter      = zone.id === 'center';
+  const searchRecord  = isCenter ? (activeSearches[floorId] ?? null) : null;
+  const primaryPct    = searchRecord
+    ? Math.round((searchRecord.primaryInitial - searchRecord.primaryScore) / searchRecord.primaryInitial * 100)
+    : 0;
+  const secondaryPct  = searchRecord?.secondaryActive
+    ? Math.round((searchRecord.secondaryInitial - searchRecord.secondaryScore) / searchRecord.secondaryInitial * 100)
+    : 0;
+  const showSearchProgress = isCenter && searchRecord !== null && (primaryPct > 0 || secondaryPct > 0);
 
   const isDropTarget       = zone.acceptsTokens && !isRight;
   // 요약 행(isRange)에는 구조대상자 배치 불가 — 출동대 토큰만 허용
   const isVictimDropTarget = isDropTarget && !isRange;
   const zoneKey            = `${floorId}-${zone.id}`;
   const zoneTokens         = isDropTarget        ? tokens.filter(t => t.zoneKey === zoneKey)  : [];
-  const zoneVictims        = isVictimDropTarget  ? victims.filter(v => v.zoneKey === zoneKey) : [];
+  // 건물 내부 구역은 discoveredVictimIds에 있는 구조대상자만 표시 (인명검색 후 발견된 것만)
+  const allZoneVictims     = isVictimDropTarget  ? victims.filter(v => v.zoneKey === zoneKey) : [];
+  const zoneVictims        = allZoneVictims.filter(v => discoveredVictimIds.has(v.id));
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     if (!isDropTarget) return;
@@ -332,6 +345,18 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
           onSelect={v => ctxSetFire(floorId, v)}
           onClose={() => setFireRadialPos(null)}
         />
+      )}
+
+      {/* 인명검색 진행률 오버레이 */}
+      {showSearchProgress && searchRecord && (
+        <div className="zone-cell__search-progress">
+          <span className={searchRecord.primaryFrozen ? 'zone-cell__search-done' : ''}>
+            1차: {primaryPct}%
+          </span>
+          {searchRecord.secondaryActive && (
+            <span>2차: {secondaryPct}%</span>
+          )}
+        </div>
       )}
 
       {/* 배치된 출동대 토큰 */}

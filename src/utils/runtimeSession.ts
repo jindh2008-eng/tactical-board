@@ -280,6 +280,51 @@ export function loadWaterLevelSession(): WaterLevelSessionState | null {
 }
 
 // ─────────────────────────────────────────────
+// 인명검색 세션
+// ─────────────────────────────────────────────
+
+const KEY_VICTIM_SEARCH = 'tactical-board.runtime.victim-search';
+
+export interface FloorSearchUnit {
+  tokenId:       string;
+  decrementRate: number;  // 구조대=2, 진압대=1
+}
+
+/** 인명검색 활성 세션 — floorId 기준 1건 */
+export interface FloorSearchRecord {
+  units:             FloorSearchUnit[];
+  // 1차 (초진 이전 / 화재 없는 층은 전체 초진 이전)
+  primaryInitial:    number;   // 100 / 70 / 30
+  primaryScore:      number;   // 현재 점수
+  primaryFrozen:     boolean;  // 초진 도달 시 true
+  primarySchedule:   Array<{ victimId: string; revealAtScore: number }>;
+  // 2차 (초진 이후)
+  secondaryInitial:  number;   // 화재 있는 층=50, 없는 층=30
+  secondaryScore:    number;
+  secondaryActive:   boolean;
+  secondarySchedule: Array<{ victimId: string; revealAtScore: number }>;
+}
+
+export interface VictimSearchSessionState {
+  discoveredVictimIds: string[];
+  activeSearches:      Record<string, FloorSearchRecord>; // floorId → 활성 검색
+}
+
+export function saveVictimSearchSession(state: VictimSearchSessionState): void {
+  try {
+    sessionStorage.setItem(KEY_VICTIM_SEARCH, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+export function loadVictimSearchSession(): VictimSearchSessionState | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_VICTIM_SEARCH);
+    if (!raw) return null;
+    return JSON.parse(raw) as VictimSearchSessionState;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
 // 전체 초기화 (새 훈련 시작 시 호출)
 // ─────────────────────────────────────────────
 
@@ -293,5 +338,6 @@ export function clearRuntimeSession(): void {
     sessionStorage.removeItem(KEY_WATERCONN);
     sessionStorage.removeItem(KEY_HYDRANT);
     sessionStorage.removeItem(KEY_WATER_LEVELS);
+    sessionStorage.removeItem(KEY_VICTIM_SEARCH);
   } catch { /* ignore */ }
 }

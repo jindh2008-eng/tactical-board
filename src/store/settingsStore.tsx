@@ -208,7 +208,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [unitTagPresetConfig, setUnitTagPresetConfig] = useState<UnitTagPresetConfig>(
     loadUnitTagPresetConfig
   );
-
   // ── 설정 세트 ─────────────────────────────────
   const [settingsList,       setSettingsList]       = useState<SettingsSet[]>(loadSettingsList);
   const [activeSettingsId,   setActiveSettingsId]   = useState<string | null>(null);

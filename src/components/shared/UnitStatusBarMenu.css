@@ -126,6 +126,22 @@
   color:        #ff7777;
 }
 
+/* ── 인명검색 버튼 ──────────────────────────── */
+
+.usbm__badge--search-start {
+  background:   #1a1a0a;
+  border-color: #aa8800;
+  color:        #ffdd44;
+}
+
+.usbm__badge--search-stop {
+  background:   #1a0a1a;
+  border-color: #882299;
+  color:        #dd66ff;
+  min-width:    90px;
+  text-align:   center;
+}
+
 /* ── 출동대 상태메세지 프리셋 배지 ─────────── */
 
 .usbm__badge--msg {

@@ -147,6 +147,7 @@ export function VictimSetupPanel() {
 
         </div>
       )}
+
     </div>
   );
 }

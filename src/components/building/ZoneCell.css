@@ -529,3 +529,34 @@
   color: rgba(180, 180, 185, 0.85);
   font-size: 0.80rem;
 }
+
+/* ─────────────────────────────────────────────
+   인명검색 진행률 오버레이 (center 구역 좌측 상단)
+   ─────────────────────────────────────────────*/
+.zone-cell__search-progress {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.zone-cell__search-progress span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #88ccff;
+  background: rgba(0, 10, 30, 0.72);
+  padding: 1px 4px;
+  border-radius: 2px;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.zone-cell__search-progress .zone-cell__search-done {
+  color: #aaaaaa;
+}

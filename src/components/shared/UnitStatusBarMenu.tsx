@@ -5,6 +5,8 @@ import { useTokens } from '../../context/TokenContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useSettings } from '../../store/settingsStore';
+import { useVictims } from '../../context/VictimContext';
+import { useOptionalBuildingState, computeStairSmokeLevel } from '../../context/BuildingStateContext';
 import './UnitStatusBarMenu.css';
 
 // ─────────────────────────────────────────────
@@ -33,10 +35,24 @@ interface Props {
   onClose:    () => void;
 }
 
-const WATER_SOURCE_TYPES  = new Set(['pump', 'water_tank']);
-const SPRAY_CAPABLE_TYPES = new Set(['suppression', 'rescue']);
-const MONITOR_TYPES       = new Set(['pump', 'water_tank']);
-const AERIAL_TYPES        = new Set(['aerial', 'ladder']);
+const WATER_SOURCE_TYPES   = new Set(['pump', 'water_tank']);
+const SPRAY_CAPABLE_TYPES  = new Set(['suppression', 'rescue']);
+const SEARCH_CAPABLE_TYPES = new Set(['suppression', 'rescue']);
+const MONITOR_TYPES        = new Set(['pump', 'water_tank']);
+const AERIAL_TYPES         = new Set(['aerial', 'ladder']);
+
+/** zoneKey(예: "3F-center")에서 층 번호를 추출. 외곽면(face-A 등) → null */
+function getFloorNumFromZoneKey(zoneKey: string | null): number | null {
+  if (!zoneKey || zoneKey.startsWith('face-')) return null;
+  const floorId = zoneKey.split('-')[0];
+  if (floorId === 'RF') return null;
+  if (floorId.startsWith('B')) {
+    const n = parseInt(floorId.slice(1), 10);
+    return isNaN(n) ? null : -n;
+  }
+  const match = floorId.match(/^(\d+)F$/);
+  return match ? parseInt(match[1], 10) : null;
+}
 
 const GAP = 8; // 토큰 엣지와 배지 그룹 사이 간격(px)
 
@@ -49,6 +65,11 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const { enterMode }           = useActionMode();
   const { connections }         = useWaterConnections();
   const { unitTagPresetConfig, unitStatusConfig } = useSettings();
+  const { activeSearches, searchScores, addUnitToSearch, removeUnitFromSearch, victims, discoveredVictimIds } = useVictims();
+  const buildingState      = useOptionalBuildingState();
+  const stairSmokeFloor    = buildingState?.stairSmokeFloor    ?? null;
+  const smokeConcentration = buildingState?.smokeConcentration ?? 0;
+  const fireStates         = buildingState?.fireStates         ?? {};
 
   const [noteOpen,  setNoteOpen]  = useState(false);
   const [noteDraft, setNoteDraft] = useState(token.customNote ?? '');
@@ -64,11 +85,72 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const isMonitorUnit     = MONITOR_TYPES.has(token.unitType);
   const isMonitorActive   = isMonitorUnit && token.aerialSprayTarget != null;
 
+  // ── 인명검색 ──────────────────────────────────
+  const isSearchCapable = SEARCH_CAPABLE_TYPES.has(token.unitType);
+  const tokenZoneKey    = token.zoneKey;
+  // 건물 내부(face- 아닌 것)이고 배치된 상태인지
+  const isInInterior    = !!tokenZoneKey && !tokenZoneKey.startsWith('face-');
+
+  // 층 ID 추출 (예: "3F-center" → "3F")
+  const floorId = isInInterior && tokenZoneKey ? tokenZoneKey.split('-')[0] : null;
+
+  // 현재 층의 농연 여부 계산
+  const floorNum = getFloorNumFromZoneKey(tokenZoneKey);
+  const smokeLevel = floorNum !== null
+    ? computeStairSmokeLevel({ floorEndNum: floorNum, stairSmokeFloor, smokeConcentration })
+    : 'none';
+  const hasDenseSmoke = smokeLevel !== 'none';
+
+  // 현재 층의 화염 여부 (연소확대·최성기·큰불잡음 → 활성 화재 100점)
+  const ACTIVE_FIRE_STATUSES = new Set(['extension-peak', 'peak', 'seventy']);
+  const POST_INITIAL_SET     = new Set(['initial', 'complete']);
+  const floorFireStatus = floorId ? (fireStates[floorId] ?? null) : null;
+  const hasActiveFire   = !!floorFireStatus && ACTIVE_FIRE_STATUSES.has(floorFireStatus);
+
+  // 인명검색 초기 점수: 화염 100, 농연 70, 없음 30
+  const initialScore  = hasActiveFire ? 100 : hasDenseSmoke ? 70 : 30;
+  // 초당 감소율: 구조대 2, 진압대 1
+  const decrementRate = token.unitType === 'rescue' ? 2 : 1;
+
+  // 2차 시작 점수: 화재 있는 층=50, 없는 층=30
+  const isFireFloor      = floorId !== null && fireStates[floorId] != null;
+  const secondaryInitial = isFireFloor ? 50 : 30;
+
+  // 2차 전환 여부: 초진 이후면 바로 2차로 시작
+  const allFireFloorsInitial = Object.values(fireStates)
+    .filter(s => s !== null)
+    .every(s => POST_INITIAL_SET.has(s as string));
+  const startInSecondary = floorId !== null
+    ? (isFireFloor
+        ? POST_INITIAL_SET.has(floorFireStatus as string)
+        : allFireFloorsInitial)
+    : false;
+
+  // 현재 층에 미발견 구조대상자가 있는지 (내부 구역 전체 — 층 단위 검색)
+  const hasUndiscoveredVictims = floorId !== null
+    ? victims.some(v => {
+        if (!v.zoneKey || v.zoneKey.startsWith('face-')) return false;
+        return v.zoneKey.split('-')[0] === floorId && !discoveredVictimIds.has(v.id);
+      })
+    : false;
+
+  // 이 토큰이 현재 층에서 검색 중인지
+  const isSearchActive = floorId !== null
+    ? (activeSearches[floorId]?.units.some(u => u.tokenId === token.id) ?? false)
+    : false;
+
+  // 중단 버튼에 표시할 현재 점수
+  const searchScore = token.id in searchScores ? searchScores[token.id] : null;
+
+  // 인명검색 버튼 표시: 내부 구역 배치 + 인명검색 가능 대 + (해당 층에 미발견 대상 있거나 이미 검색 중)
+  const showSearchButton = isSearchCapable && isInInterior && (hasUndiscoveredVictims || isSearchActive);
+
   const hasFuncButtons =
     isAerialVehicle ||
     (isSprayCapable && (hasWaterSource || isSprayActive)) ||
     canWaterConnect ||
-    isMonitorUnit;
+    isMonitorUnit ||
+    showSearchButton;
 
   // ── 방향별 그룹 위치 계산 ────────────────────
   const cx = anchorRect.left + anchorRect.width  / 2;
@@ -165,6 +247,17 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   function handleMonitorStop() {
     setAerialSprayTarget(token.id, null);
     setStatusTag(token.id, null);
+    onClose();
+  }
+
+  function handleSearchStart() {
+    if (!floorId) return;
+    addUnitToSearch(token.id, floorId, initialScore, secondaryInitial, decrementRate, startInSecondary);
+    onClose();
+  }
+
+  function handleSearchStop() {
+    removeUnitFromSearch(token.id);
     onClose();
   }
 
@@ -333,6 +426,25 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
                 onMouseDown={e => { e.stopPropagation(); handleMonitorStart(); }}
               >
                 방수포
+              </button>
+            )
+          )}
+
+          {/* 인명검색 (진압대·구조대) */}
+          {showSearchButton && (
+            isSearchActive ? (
+              <button
+                className="usbm__badge usbm__badge--search-stop"
+                onMouseDown={e => { e.stopPropagation(); handleSearchStop(); }}
+              >
+                인명검색 중단{searchScore !== null ? ` (${searchScore})` : ''}
+              </button>
+            ) : (
+              <button
+                className="usbm__badge usbm__badge--search-start"
+                onMouseDown={e => { e.stopPropagation(); handleSearchStart(); }}
+              >
+                인명검색
               </button>
             )
           )}

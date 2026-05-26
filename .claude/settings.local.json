@@ -44,7 +44,11 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(python -c \"from PIL import Image; img = Image.open\\('public/smoke_image.png'\\); print\\(img.size, img.mode\\)\")",
       "Bash(Remove-Item \"src\\\\components\\\\building\\\\StairwellSmokeColumn.tsx\" -Force)",
-      "Bash(Remove-Item \"src\\\\components\\\\building\\\\StairwellSmokeColumn.css\" -Force)"
+      "Bash(Remove-Item \"src\\\\components\\\\building\\\\StairwellSmokeColumn.css\" -Force)",
+      "Bash(npx playwright *)",
+      "Read(//Users/daehyun/Library/**)",
+      "Read(//Users/daehyun/.npm/**)",
+      "Bash(npm list *)"
     ]
   }
 }
