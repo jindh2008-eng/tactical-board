@@ -98,6 +98,13 @@
   background: #5544cc;
 }
 
+.slp__btn--saved {
+  background: #1a4a1a;
+  border-color: #2a6a2a;
+  color: #7ccc7c;
+  transition: background 0.2s, color 0.2s;
+}
+
 .slp__btn--new {
   background: #1a3a1a;
   border-color: #2a5a2a;

@@ -99,7 +99,11 @@ export function upsertSettingsSet(list: SettingsSet[], set: SettingsSet): Settin
   const idx = list.findIndex(s => s.id === entry.id);
   const next = [...list];
   if (idx >= 0) { next[idx] = entry; } else { next.push(entry); }
-  localStorage.setItem(SETTINGS_LIST_KEY, JSON.stringify(next));
+  try {
+    localStorage.setItem(SETTINGS_LIST_KEY, JSON.stringify(next));
+  } catch (e) {
+    console.error('[settingsStorage] 설정 목록 저장 실패:', e);
+  }
   return next;
 }
 
@@ -138,13 +142,14 @@ export function loadWorkingPresets(): WorkingPresets {
     // - floor: 구버전은 항상 number였음 → null 허용
     const victimSetup = (parsed.victimSetup ?? []).map((v: VictimSetupItem) => ({
       ...v,
-      detailLocation: v.detailLocation ?? '',
+      detailLocation:     v.detailLocation ?? '',
       // face/floor: null 허용 (구버전은 항상 값이 있었음)
-      face:  v.face  ?? null,
+      face:               v.face  ?? null,
       // floor 마이그레이션: 'RF' 문자열 → 그대로 유지, 숫자 문자열 → 숫자, 그 외 → null
-      floor: v.floor === 'RF'
+      floor:              v.floor === 'RF'
         ? 'RF' as const
         : (v.floor != null && !isNaN(Number(v.floor))) ? Number(v.floor) : null,
+      immediatelyVisible: v.immediatelyVisible ?? false,
     }));
     // 구버전 dispatchSetup에 waterTank 필드가 없을 수 있으므로 기본값으로 보정
     const rawSetup = parsed.dispatchSetup ?? DEFAULT_DISPATCH_SETUP;

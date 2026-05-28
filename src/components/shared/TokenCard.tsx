@@ -54,11 +54,12 @@ const STATUS_TAG_COLORS: Record<string, { bg: string; border: string; text: stri
 };
 
 interface Props {
-  token:   UnitToken;
-  absPos?: TokenPos;
+  token:     UnitToken;
+  absPos?:   TokenPos;
+  onRemove?: () => void;
 }
 
-export function TokenCard({ token, absPos }: Props) {
+export function TokenCard({ token, absPos, onRemove }: Props) {
   const { mode, clearMode }        = useActionMode();
   const { addConnection, connections } = useWaterConnections();
   const waterLevel                 = useWaterLevel();
@@ -333,7 +334,6 @@ export function TokenCard({ token, absPos }: Props) {
           onDragEnd={handleDragEnd}
           onContextMenu={handleContextMenu}
           onClick={handleClick}
-          title={token.label}
         >
           {isHydrantBroken ? `${token.label} [고장]` : token.label}
         </div>
@@ -381,7 +381,7 @@ export function TokenCard({ token, absPos }: Props) {
         <HydrantBarMenu token={token} anchorRect={barMenu} onClose={handleClose} />
       )}
       {barMenu && !isHydrant && (
-        <UnitStatusBarMenu token={token} anchorRect={barMenu} onClose={handleClose} />
+        <UnitStatusBarMenu token={token} anchorRect={barMenu} onClose={handleClose} onRemove={onRemove} />
       )}
     </>
   );

@@ -196,7 +196,6 @@ export function VictimCard({ victim, absPos }: Props) {
             onDragStart={handleDragStart}
             onContextMenu={isRescueMode ? e => e.preventDefault() : handleContextMenu}
             onClick={isRescueTarget ? handleRescueClick : undefined}
-            title={isRescueTarget ? `${title} — 클릭하여 구조` : title}
             style={isRescueTarget ? { cursor: 'pointer' } : undefined}
           >
             {victim.gender === '남' ? <MaleIcon /> : <FemaleIcon />}
@@ -218,6 +217,7 @@ export function VictimCard({ victim, absPos }: Props) {
           >
             <span className="tooltip__age">{victim.age ?? '?'}세</span>
             <span className="tooltip__cond">{victim.condition ?? '경상'}</span>
+            {subLoc && <span className="tooltip__loc">{subLoc}</span>}
           </div>,
           document.body,
         )}

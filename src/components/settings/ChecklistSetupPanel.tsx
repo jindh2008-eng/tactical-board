@@ -35,8 +35,6 @@ const FIRE_STATUS_LABELS: Partial<Record<FireStatus, string>> = {
   complete:         '완진',
 };
 
-const ZONE_OPTIONS = ['A면', 'B면', 'C면', 'D면', '직전대기', '임시의료소'];
-
 const CP_LEVELS: CommandProcedureLevel[] = ['beginner', 'intermediate', 'advanced'];
 const CP_LEVEL_LABELS: Record<CommandProcedureLevel, string> = {
   beginner:     '초급',
@@ -83,9 +81,6 @@ export function ChecklistSetupPanel() {
   const [newFireStatuses,     setNewFireStatuses]      = useState<Record<string, FireStatus>>({});
 
   // 메세지 타입 전용 상태
-  const [msgLocType,  setMsgLocType]  = useState<Record<string, 'floor' | 'zone'>>({});
-  const [msgFloor,    setMsgFloor]    = useState<Record<string, string>>({});
-  const [msgZone,     setMsgZone]     = useState<Record<string, string>>({});
   const [msgBody,     setMsgBody]     = useState<Record<string, string>>({});
 
   // 이벤트 타입 전용 상태
@@ -113,19 +108,10 @@ export function ChecklistSetupPanel() {
   const [overSectionIndex, setOverSectionIndex] = useState<number | null>(null);
   const [overItemKey,      setOverItemKey]       = useState<string | null>(null);
 
-  // 건물 층 목록 생성 (위 → 아래)
-  const { aboveGroundFloors, basementFloors } = building.config;
-  const allFloorOptions: { id: string; label: string }[] = [];
-  if (aboveGroundFloors >= 1) allFloorOptions.push({ id: 'RF', label: 'RF' });
-  for (let f = aboveGroundFloors; f >= 1; f--) {
-    allFloorOptions.push({ id: `${f}층`, label: `${f}층` });
-  }
-  for (let b = 1; b <= basementFloors; b++) {
-    allFloorOptions.push({ id: `B${b}층`, label: `B${b}층` });
-  }
-
   // 화재층 범위: 화점층 ~ 화점층+2 (건물 층 이내)
-  const availableFireFloors = [building.fireFloor, building.fireFloor + 1, building.fireFloor + 2]
+  const { aboveGroundFloors } = building.config;
+  const availableFireFloors = [0, 1, 2, 3, 4]
+    .map(offset => building.fireFloor + offset)
     .filter(f => f >= 1 && f <= aboveGroundFloors);
 
   const allOrders = arrivalMode === 'order'
@@ -151,15 +137,6 @@ export function ChecklistSetupPanel() {
   }
   function getFireStatus(sectionId: string): FireStatus {
     return newFireStatuses[sectionId] ?? 'complete';
-  }
-  function getMsgLocType(sectionId: string): 'floor' | 'zone' {
-    return msgLocType[sectionId] ?? 'floor';
-  }
-  function getMsgFloor(sectionId: string): string {
-    return msgFloor[sectionId] ?? (allFloorOptions[0]?.id ?? '1층');
-  }
-  function getMsgZone(sectionId: string): string {
-    return msgZone[sectionId] ?? 'A면';
   }
   function getMsgBody(sectionId: string): string {
     return msgBody[sectionId] ?? '';
@@ -350,9 +327,8 @@ export function ChecklistSetupPanel() {
     } else if (itemType === 'message') {
       const body = getMsgBody(sectionId).trim();
       if (!body) return;
-      const locType  = getMsgLocType(sectionId);
-      const location = locType === 'floor' ? getMsgFloor(sectionId) : getMsgZone(sectionId);
-      addChecklistItem(sectionId, location, 'message', { messageLocation: location, messageBody: body, ...parentOpts });
+      const firstLine = body.split('\n')[0].slice(0, 40);
+      addChecklistItem(sectionId, firstLine, 'message', { messageBody: body, ...parentOpts });
       setMsgBody(prev => ({ ...prev, [sectionId]: '' }));
 
     } else {
@@ -466,7 +442,6 @@ export function ChecklistSetupPanel() {
         const curOrder          = getNewItemOrder(section.id);
         const curFireFloor      = getFireFloor(section.id);
         const curFireStatus     = getFireStatus(section.id);
-        const curMsgLocType     = getMsgLocType(section.id);
         const availableOrders   = allOrders.filter(o => !usedOrders.has(o) || o === curOrder);
         const canAddArrival     = arrivalMode === 'order' && availableOrders.length > 0;
 
@@ -772,37 +747,6 @@ export function ChecklistSetupPanel() {
               {/* 메세지 확장 입력 */}
               {curItemType === 'message' && (
                 <div className="checklist-setup__message-panel">
-                  <div className="checklist-setup__message-loc-row">
-                    <div className="checklist-setup__message-loc-tabs">
-                      <button
-                        type="button"
-                        className={`checklist-setup__message-loc-tab${curMsgLocType === 'floor' ? ' checklist-setup__message-loc-tab--active' : ''}`}
-                        onClick={() => setMsgLocType(prev => ({ ...prev, [section.id]: 'floor' }))}
-                      >층</button>
-                      <button
-                        type="button"
-                        className={`checklist-setup__message-loc-tab${curMsgLocType === 'zone' ? ' checklist-setup__message-loc-tab--active' : ''}`}
-                        onClick={() => setMsgLocType(prev => ({ ...prev, [section.id]: 'zone' }))}
-                      >구역</button>
-                    </div>
-                    {curMsgLocType === 'floor' ? (
-                      <select
-                        className="checklist-setup__message-loc-select"
-                        value={getMsgFloor(section.id)}
-                        onChange={e => setMsgFloor(prev => ({ ...prev, [section.id]: e.target.value }))}
-                      >
-                        {allFloorOptions.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-                      </select>
-                    ) : (
-                      <select
-                        className="checklist-setup__message-loc-select"
-                        value={getMsgZone(section.id)}
-                        onChange={e => setMsgZone(prev => ({ ...prev, [section.id]: e.target.value }))}
-                      >
-                        {ZONE_OPTIONS.map(z => <option key={z} value={z}>{z}</option>)}
-                      </select>
-                    )}
-                  </div>
                   <textarea
                     className="checklist-setup__message-textarea"
                     placeholder="내용 입력... (Enter: 다음 줄)"

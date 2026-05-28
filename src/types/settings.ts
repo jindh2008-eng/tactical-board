@@ -220,17 +220,18 @@ export interface HydrantSetupItem {
 
 /** 시나리오 설정용 구조대상자 항목. 실행 중 VictimToken과 별개. */
 export interface VictimSetupItem {
-  id:             string;
-  gender:         VictimGender;
-  ageGroup:       VictimAgeGroup;
-  condition:      VictimCondition;
+  id:               string;
+  gender:           VictimGender;
+  ageGroup:         VictimAgeGroup;
+  condition:        VictimCondition;
   /** 방면 — null: 없음(미지정) */
-  face:           VictimFace | null;
+  face:             VictimFace | null;
   /**
    * 층 — null: 없음(미지정).
    * 양수 = 지상층, 음수 = 지하층, 'RF' = 옥상.
    * 단, 화면에서 요약 행으로 묶인 층 번호는 유효하지 않음.
    */
-  floor:          number | 'RF' | null;
-  detailLocation: string;  // 상세위치 (예: '203호', '엘리베이터 앞')
+  floor:            number | 'RF' | null;
+  detailLocation:   string;           // 상세위치 (예: '203호', '엘리베이터 앞')
+  immediatelyVisible?: boolean;       // true: 인명검색 없이 처음부터 화면에 표시
 }

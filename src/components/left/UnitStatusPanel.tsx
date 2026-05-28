@@ -24,7 +24,7 @@ function typePriority(unitType: string): number {
 
 /** 출동대현황 — pool(미배치) 토큰 목록 + 반환 드롭 영역 */
 export function UnitStatusPanel() {
-  const { tokens, moveToken, arrivalCountdowns } = useTokens();
+  const { tokens, moveToken, removeToken, arrivalCountdowns } = useTokens();
   const { arrivalMode, dispatchRoster }          = useSettings();
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -126,10 +126,10 @@ export function UnitStatusPanel() {
             return (
               <div className="unit-status-panel__columns">
                 <div className="unit-status-panel__col">
-                  {left.map(token => <TokenCard key={token.id} token={token} />)}
+                  {left.map(token => <TokenCard key={token.id} token={token} onRemove={() => removeToken(token.id)} />)}
                 </div>
                 <div className="unit-status-panel__col">
-                  {right.map(token => <TokenCard key={token.id} token={token} />)}
+                  {right.map(token => <TokenCard key={token.id} token={token} onRemove={() => removeToken(token.id)} />)}
                 </div>
               </div>
             );
@@ -142,7 +142,7 @@ export function UnitStatusPanel() {
               return (
                 <div key={token.id} className="usp-order-row">
                   <div className="usp-order-row__card">
-                    <TokenCard token={token} />
+                    <TokenCard token={token} onRemove={() => removeToken(token.id)} />
                   </div>
                   <div className="usp-order-row__btns">
                     {order != null && (

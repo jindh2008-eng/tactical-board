@@ -300,13 +300,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // ── 구조대상자 생성 설정 ──────────────────────
   const addVictimSetupItem = useCallback(() => {
     setVictimSetup(prev => [...prev, {
-      id:             generateId(),
-      gender:         '남',
-      ageGroup:       '40대',
-      condition:      '중상',
-      face:           null,    // "없음" 기본값
-      floor:          null,    // "없음" 기본값
-      detailLocation: '',
+      id:                 generateId(),
+      gender:             '남',
+      ageGroup:           '40대',
+      condition:          '중상',
+      face:               null,
+      floor:              null,
+      detailLocation:     '',
+      immediatelyVisible: false,
     }]);
   }, []);
 
@@ -468,7 +469,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
@@ -484,7 +485,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [config, fireFloor, fireStatus, targetName, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -511,11 +512,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     // victimSetup 마이그레이션 (detailLocation, face/floor null 허용, 'RF' 지원)
     const loadedVictims = (set.victimSetup ?? []).map((v: VictimSetupItem) => ({
       ...v,
-      detailLocation: v.detailLocation ?? '',
-      face:  v.face  ?? null,
-      floor: v.floor === 'RF'
+      detailLocation:     v.detailLocation ?? '',
+      face:               v.face  ?? null,
+      floor:              v.floor === 'RF'
         ? 'RF' as const
         : (v.floor != null && !isNaN(Number(v.floor))) ? Number(v.floor) : null,
+      immediatelyVisible: v.immediatelyVisible ?? false,
     }));
     setVictimSetup(loadedVictims);
     setArrivalMode(set.arrivalMode ?? 'time');

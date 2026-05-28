@@ -48,7 +48,8 @@
       "Bash(npx playwright *)",
       "Read(//Users/daehyun/Library/**)",
       "Read(//Users/daehyun/.npm/**)",
-      "Bash(npm list *)"
+      "Bash(npm list *)",
+      "Bash(findstr /r \"VictimProvider\" src\\\\pages\\\\PlayPage.tsx)"
     ]
   }
 }

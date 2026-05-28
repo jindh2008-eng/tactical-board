@@ -24,8 +24,8 @@ import { LogDrawer }          from '../components/overlays/LogDrawer';
 import { ChecklistPanel }     from '../components/panels/ChecklistPanel';
 import './PlayPage.css';
 
-type LeftPanel  = 'resource' | 'unit' | null;
-type RightPanel = 'checklist' | null;
+type LeftPanelKey = 'resource' | 'unit';
+type RightPanel   = 'checklist' | null;
 
 // ─────────────────────────────────────────────
 // ActionMode 오버레이 배너
@@ -440,11 +440,15 @@ export function PlayPage() {
   );
 
   const started = status === 'running';
-  const [leftPanel,  setLeftPanel]  = useState<LeftPanel>(null);
+  const [leftPanels, setLeftPanels] = useState<Set<LeftPanelKey>>(new Set());
   const [rightPanel, setRightPanel] = useState<RightPanel>(null);
 
-  function togglePanel(panel: LeftPanel) {
-    setLeftPanel(v => v === panel ? null : panel);
+  function togglePanel(panel: LeftPanelKey) {
+    setLeftPanels(prev => {
+      const next = new Set(prev);
+      if (next.has(panel)) next.delete(panel); else next.add(panel);
+      return next;
+    });
   }
 
   function toggleRightPanel(panel: RightPanel) {
@@ -477,7 +481,7 @@ export function PlayPage() {
           <HydrantStateProvider>
             <div className="play-layout">
               {/* ── 자원대기소 Drawer (상단 절반) ── */}
-              <div className={`left-drawer left-drawer--resource${leftPanel === 'resource' ? ' left-drawer--open' : ''}`}>
+              <div className={`left-drawer left-drawer--resource${leftPanels.has('resource') ? ' left-drawer--open' : ''}`}>
                 <div className="left-drawer__panel">
                   <ResourcePanel />
                 </div>
@@ -491,7 +495,7 @@ export function PlayPage() {
               </div>
 
               {/* ── 출동대현황 Drawer (하단) ── */}
-              <div className={`left-drawer left-drawer--unit${leftPanel === 'unit' ? ' left-drawer--open' : ''}`}>
+              <div className={`left-drawer left-drawer--unit${leftPanels.has('unit') ? ' left-drawer--open' : ''}`}>
                 <div className="left-drawer__panel">
                   <UnitInfoPanel />
                 </div>

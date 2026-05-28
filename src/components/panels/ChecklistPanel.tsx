@@ -183,8 +183,11 @@ export function ChecklistPanel() {
           });
         }
       }
+    } else if (t === 'message') {
+      if (checking) setActiveMessage(child);
+      else setActiveMessage(prev => prev?.id === child.id ? null : prev);
     }
-    // procedure, event, xvr, message: 사이드이펙트 없음
+    // procedure, event, xvr: 사이드이펙트 없음
   }
 
   function triggerLinkedChildren(parentId: string, checking: boolean) {
@@ -204,6 +207,8 @@ export function ChecklistPanel() {
     if (checking) {
       children.forEach(c => addLog({ logType: 'checklist', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '', note: c.text }));
     }
+    // 자식의 자식도 연쇄 적용 (다단계 연동)
+    children.forEach(c => triggerLinkedChildren(c.id, checking));
   }
 
   function toggleMessageItem(item: ChecklistItem) {
@@ -338,11 +343,13 @@ export function ChecklistPanel() {
       {activeMessage && createPortal(
         <div className="checklist-panel__msg-overlay">
           <div className="checklist-panel__msg-popup">
-            <div className="checklist-panel__msg-location">
-              {activeMessage.messageLocation ?? activeMessage.text}
-            </div>
+            {activeMessage.messageLocation && (
+              <div className="checklist-panel__msg-location">
+                {activeMessage.messageLocation}
+              </div>
+            )}
             <div className="checklist-panel__msg-body">
-              {activeMessage.messageBody ?? ''}
+              {activeMessage.messageBody ?? activeMessage.text}
             </div>
             <div className="checklist-panel__msg-footer">
               <button className="checklist-panel__msg-close" onClick={() => setActiveMessage(null)}>

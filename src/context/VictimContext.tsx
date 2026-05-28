@@ -166,7 +166,14 @@ export function VictimProvider({
   // ── 인명검색 상태 ─────────────────────────────────────────────────
   const [discoveredVictimIds, setDiscoveredVictimIds] = useState<Set<string>>(() => {
     const session = loadVictimSearchSession();
-    return new Set(session?.discoveredVictimIds ?? []);
+    const base = new Set<string>(session?.discoveredVictimIds ?? []);
+    // 바로보임 체크된 구조대상자는 세션 유무와 무관하게 항상 발견 상태
+    if (initialVictimSetup) {
+      for (const item of initialVictimSetup) {
+        if (item.immediatelyVisible) base.add(`victim-setup-${item.id}`);
+      }
+    }
+    return base;
   });
 
   const [activeSearches, setActiveSearches] = useState<Record<string, FloorSearchRecord>>(() => {

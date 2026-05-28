@@ -97,6 +97,14 @@
 .victim-tooltip-portal.victim-cond--critical .tooltip__cond { color: #f07070; }
 .victim-tooltip-portal.victim-cond--dead     .tooltip__cond { color: #aaaaaa; }
 
+.tooltip__loc {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #b0b8cc;
+  border-left: 1px solid rgba(120, 110, 180, 0.35);
+  padding-left: 6px;
+}
+
 /* ─────────────────────────────────────────────
    다수 구조대상자 (group)
    ─────────────────────────────────────────────*/

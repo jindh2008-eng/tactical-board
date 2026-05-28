@@ -68,6 +68,7 @@ interface TokenContextValue {
     unitType?:   string,
   ) => void;
   moveToken:   (tokenId: string, toZoneKey: string | null, pos?: TokenPos, opts?: MoveTokenOptions) => void;
+  removeToken: (tokenId: string) => void;
   rescueUnit:  (tokenId: string, victimLabel: string) => void;
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
   removeBadge:       (tokenId: string, badgeId: string) => void;
@@ -849,10 +850,14 @@ export function TokenProvider({
     ));
   }, []);
 
+  const removeToken = useCallback((tokenId: string) => {
+    setTokens(prev => prev.filter(t => t.id !== tokenId));
+  }, []);
+
   return (
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
-      createToken, moveToken, rescueUnit,
+      createToken, moveToken, removeToken, rescueUnit,
       addBadge, removeBadge, clearBadges, toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, moveAerialTarget, setAerialSprayTarget, changeTokenColor, addLog,
     }}>
       {children}

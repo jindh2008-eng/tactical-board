@@ -22,13 +22,16 @@ export function SettingsLibraryPanel() {
     newSettings,
   } = useSettings();
 
-  const [showList,   setShowList]   = useState(false);
-  const [showSaveAs, setShowSaveAs] = useState(false);
-  const [saveAsName, setSaveAsName] = useState('');
+  const [showList,    setShowList]    = useState(false);
+  const [showSaveAs,  setShowSaveAs]  = useState(false);
+  const [saveAsName,  setSaveAsName]  = useState('');
+  const [savedFlash,  setSavedFlash]  = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleSave() {
     saveSettings();
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1500);
   }
 
   function handleSaveAs() {
@@ -75,8 +78,11 @@ export function SettingsLibraryPanel() {
           />
         </div>
         <div className="slp__actions">
-          <button className="slp__btn slp__btn--primary" onClick={handleSave}>
-            저장
+          <button
+            className={`slp__btn ${savedFlash ? 'slp__btn--saved' : 'slp__btn--primary'}`}
+            onClick={handleSave}
+          >
+            {savedFlash ? '저장됨 ✓' : '저장'}
           </button>
           <button
             className="slp__btn"

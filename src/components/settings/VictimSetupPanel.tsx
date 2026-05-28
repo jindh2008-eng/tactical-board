@@ -37,7 +37,7 @@ export function VictimSetupPanel() {
       ) : (
         <div className="vsp__table">
 
-          {/* 컬럼 헤더 — [#, 성별, 나이, 상태, 면, 층, 상세위치, X] */}
+          {/* 컬럼 헤더 — [#, 성별, 나이, 상태, 면, 층, 상세위치, 바로보임, X] */}
           <div className="vsp__thead">
             <span className="vsp__th vsp__th--idx">#</span>
             <span className="vsp__th">성별</span>
@@ -46,6 +46,7 @@ export function VictimSetupPanel() {
             <span className="vsp__th vsp__th--sm">면</span>
             <span className="vsp__th vsp__th--sm">층</span>
             <span className="vsp__th">상세위치</span>
+            <span className="vsp__th vsp__th--visible" title="인명검색 없이 처음부터 화면에 표시">바로보임</span>
             <span className="vsp__th vsp__th--del"></span>
           </div>
 
@@ -126,6 +127,16 @@ export function VictimSetupPanel() {
                   placeholder="상세위치"
                   value={item.detailLocation}
                   onChange={e => updateVictimSetupItem(item.id, { detailLocation: e.target.value })}
+                />
+              </span>
+
+              <span className="vsp__cell vsp__cell--visible">
+                <input
+                  className="vsp__visible-cb"
+                  type="checkbox"
+                  checked={item.immediatelyVisible ?? false}
+                  title="인명검색 없이 처음부터 화면에 표시"
+                  onChange={e => updateVictimSetupItem(item.id, { immediatelyVisible: e.target.checked })}
                 />
               </span>
 
