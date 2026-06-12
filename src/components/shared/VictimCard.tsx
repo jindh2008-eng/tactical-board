@@ -165,7 +165,7 @@ export function VictimCard({ victim, absPos }: Props) {
 
   const displayTop =
     victim.kind === 'person'
-      ? [victim.gender, victim.age, victim.condition].filter(v => v != null).join('/')
+      ? [victim.gender, victim.ageGroup ?? victim.age, victim.condition].filter(v => v != null).join('/')
       : victim.kind === 'group' ? `다수 ${victim.groupCount ?? 2}명`
       : victim.customLabel?.trim() || '기타';
   const title = [displayTop, buildVictimDisplayLine(victim)].filter(Boolean).join(' · ');
@@ -215,7 +215,7 @@ export function VictimCard({ victim, absPos }: Props) {
               pointerEvents: 'none',
             }}
           >
-            <span className="tooltip__age">{victim.age ?? '?'}세</span>
+            <span className="tooltip__age">{victim.ageGroup ?? (victim.age != null ? `${victim.age}세` : '?세')}</span>
             <span className="tooltip__cond">{victim.condition ?? '경상'}</span>
             {subLoc && <span className="tooltip__loc">{subLoc}</span>}
           </div>,

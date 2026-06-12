@@ -49,7 +49,9 @@
       "Read(//Users/daehyun/Library/**)",
       "Read(//Users/daehyun/.npm/**)",
       "Bash(npm list *)",
-      "Bash(findstr /r \"VictimProvider\" src\\\\pages\\\\PlayPage.tsx)"
+      "Bash(findstr /r \"VictimProvider\" src\\\\pages\\\\PlayPage.tsx)",
+      "Bash(\\\\.tsx\")",
+      "Bash(Remove-Item \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\settings\\\\VehicleSetupPanel.tsx\")"
     ]
   }
 }

@@ -24,7 +24,7 @@ export interface WaterConnection {
 
 interface WaterConnectionContextValue {
   connections:      WaterConnection[];
-  addConnection:    (fromId: string, toId: string, fromType: string, toType: string, fromNameOverride?: string) => void;
+  addConnection:    (fromId: string, toId: string, fromType: string, toType: string, fromNameOverride?: string, toNameOverride?: string) => void;
   removeConnection: (id: string) => void;
 }
 
@@ -74,13 +74,14 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
     fromType: string,
     toType:   string,
     fromNameOverride?: string,
+    toNameOverride?:   string,
   ) => {
     if (connectionsRef.current.some(c => c.fromId === fromId && c.toId === toId)) return;
 
     const fromToken = tokensRef.current.find(t => t.id === fromId);
     const toToken   = tokensRef.current.find(t => t.id === toId);
     const fromName  = fromNameOverride ?? fromToken?.label ?? fromId;
-    const toName    = toToken?.label   ?? toId;
+    const toName    = toNameOverride   ?? toToken?.label   ?? toId;
 
     addLog({
       logType:    'water-relay',
@@ -112,10 +113,6 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
         toZoneId:   conn.toId,
         note:       `${fromName} → ${toName} 해제`,
       });
-      // 진압대 연결 해제 시 방수 자동 중단
-      if (conn.toType === 'suppression' && toToken?.sprayState != null) {
-        setSprayState(conn.toId, null);
-      }
       // 고가차/굴절차 연결 해제 시 방수 자동 중단
       if (AERIAL_TYPES.has(conn.toType) && toToken?.aerialSprayTarget != null) {
         setAerialSprayTarget(conn.toId, null);
@@ -135,7 +132,7 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
         c => c.toId === token.id && WATER_SOURCES.has(c.fromType),
       );
       if (!hasWater) {
-        if (token.sprayState != null) setSprayState(token.id, null);
+        // 진압대·구조대는 송수 없이도 방수 가능 — 초기화하지 않음
         if (AERIAL_TYPES.has(token.unitType) && token.aerialSprayTarget != null) {
           setAerialSprayTarget(token.id, null);
         }

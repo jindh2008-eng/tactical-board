@@ -1,7 +1,9 @@
 import type { DisplayFloor, FireStatus } from '../../types';
 import { useBuildingState, computeStairSmokeLevel } from '../../context/BuildingStateContext';
 import type { SmokeLevel } from '../../context/BuildingStateContext';
+import { useSettings } from '../../store/settingsStore';
 import { ZoneCell } from './ZoneCell';
+import { IndoorHydrantIcon } from './IndoorHydrantIcon';
 import './FloorRow.css';
 
 const ACTIVE_FIRE_STATUSES = new Set<FireStatus>(['extension-peak', 'peak', 'seventy', 'half']);
@@ -23,6 +25,8 @@ export function FloorRow({
   ].filter(Boolean).join(' ');
 
   const { stairSmokeFloor, smokeConcentration, doorStates, fireStates } = useBuildingState();
+  const { building } = useSettings();
+  const hasIndoorHydrant = building.hasIndoorHydrant ?? false;
 
   // RF의 endFloor = aboveGroundFloors + 1
   const floorEndNum = floor.id === 'RF'
@@ -79,6 +83,9 @@ export function FloorRow({
               smokeLevel={zone.id === 'stair' ? smokeLevel : interiorSmokeLevel}
             />
           ))}
+        {hasIndoorHydrant && floor.id !== 'RF' && (
+          <IndoorHydrantIcon floorId={floor.id} />
+        )}
       </div>
     </div>
   );

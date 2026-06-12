@@ -4,6 +4,20 @@
   gap: 18px;
 }
 
+.unit-status-panel__section-title {
+  font-size: 0.80rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: 0.04em;
+  margin-bottom: -6px;
+}
+
+.unit-status-panel__section-divider {
+  border: none;
+  border-top: 1.5px solid var(--color-border);
+  margin: 2px 0;
+}
+
 .unit-status-panel__group {
   display: flex;
   flex-direction: column;

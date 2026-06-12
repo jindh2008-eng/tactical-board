@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useSettings } from '../../store/settingsStore';
-import type { ChecklistItemType, CommandProcedureLevel, CommandProcedureItemType, TagPreset } from '../../types/settings';
+import type { ChecklistItemType, CommandProcedureLevel, CommandProcedureItemType, TagPreset, VictimSetupItem } from '../../types/settings';
 import type { FireStatus } from '../../types';
 import { EVENT_TYPE_STATUSES, resolveEventType } from '../../types/events';
 import { generateId } from '../../utils/settingsStorage';
@@ -16,7 +16,18 @@ const TYPE_LABELS: Record<ChecklistItemType, string> = {
   xvr:       'XVR',
   unit:      '출동대',
   incident:  '돌발상황',
+  victim:    '구조대상자',
 };
+
+function formatVictimLabel(item: VictimSetupItem, idx: number): string {
+  const parts: string[] = [item.gender, item.ageGroup, item.condition];
+  if (item.floor !== null) {
+    parts.push(item.floor === 'RF' ? '옥상' : item.floor > 0 ? `${item.floor}층` : `B${-item.floor}층`);
+  }
+  if (item.face) parts.push(`${item.face}면`);
+  if (item.detailLocation.trim()) parts.push(item.detailLocation.trim());
+  return `#${idx + 1} ${parts.join('/')}`;
+}
 
 const FIRE_STATUS_OPTIONS: { value: FireStatus; label: string }[] = [
   { value: 'peak',     label: '최성기' },
@@ -58,6 +69,7 @@ export function ChecklistSetupPanel() {
     arrivalMode,
     building,
     eventSetup,
+    victimSetup,
     unitStatusConfig,
     unitTagPresetConfig,
     commandProcedureConfigs,
@@ -80,8 +92,14 @@ export function ChecklistSetupPanel() {
   const [newFireFloors,       setNewFireFloors]        = useState<Record<string, number>>({});
   const [newFireStatuses,     setNewFireStatuses]      = useState<Record<string, FireStatus>>({});
 
-  // 메세지 타입 전용 상태
+  // 메세지 타입 전용 상태 (새 항목 추가용)
+  const [msgTitle,    setMsgTitle]    = useState<Record<string, string>>({});
   const [msgBody,     setMsgBody]     = useState<Record<string, string>>({});
+
+  // 메세지 항목 인라인 편집 상태
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editTitle,     setEditTitle]     = useState('');
+  const [editBody,      setEditBody]      = useState('');
 
   // 이벤트 타입 전용 상태
   const [newEventIds,      setNewEventIds]      = useState<Record<string, string>>({});
@@ -93,6 +111,10 @@ export function ChecklistSetupPanel() {
   const [newUnitStatusTexts,   setNewUnitStatusTexts]   = useState<Record<string, string>>({});
   const [newUnitMissionLabels, setNewUnitMissionLabels] = useState<Record<string, string>>({});
   const [newUnitStatusTagLabels, setNewUnitStatusTagLabels] = useState<Record<string, string>>({});
+
+  // 구조대상자 타입 전용 상태
+  const [newVictimIds,          setNewVictimIds]          = useState<Record<string, string>>({});
+  const [newVictimVisibilities, setNewVictimVisibilities] = useState<Record<string, 'show' | 'hide'>>({});
 
   // 연동 체크박스 (새 항목용) — true = 바로 위 항목과 연동
   const [newItemLinked, setNewItemLinked] = useState<Record<string, boolean>>({});
@@ -137,6 +159,9 @@ export function ChecklistSetupPanel() {
   }
   function getFireStatus(sectionId: string): FireStatus {
     return newFireStatuses[sectionId] ?? 'complete';
+  }
+  function getMsgTitle(sectionId: string): string {
+    return msgTitle[sectionId] ?? '';
   }
   function getMsgBody(sectionId: string): string {
     return msgBody[sectionId] ?? '';
@@ -188,16 +213,38 @@ export function ChecklistSetupPanel() {
   function getUnitStatusTagLabel(sectionId: string): string {
     return newUnitStatusTagLabels[sectionId] ?? (getStatusTagOptions(sectionId)[0]?.label ?? '');
   }
+  function getVictimId(sectionId: string): string {
+    return newVictimIds[sectionId] ?? (victimSetup[0]?.id ?? '');
+  }
+  function getVictimVisibility(sectionId: string): 'show' | 'hide' {
+    return newVictimVisibilities[sectionId] ?? 'show';
+  }
+
   function getNewItemLinked(sectionId: string): boolean {
     return newItemLinked[sectionId] ?? false;
   }
 
-  /** 바로 위 항목 기준으로 연결할 상위 ID 계산 */
+  /** 체인을 따라 올라가 루트 부모 ID를 반환 (순환 방지 포함) */
+  function resolveRootId(startId: string, items: ChecklistItem[]): string {
+    let current = startId;
+    const visited = new Set<string>();
+    while (true) {
+      if (visited.has(current)) break;
+      visited.add(current);
+      const it = items.find(i => i.id === current);
+      if (!it?.linkedParentId) break;
+      current = it.linkedParentId;
+    }
+    return current;
+  }
+
+  /** 바로 위 항목 기준으로 연결할 루트 상위 ID 계산 */
   function resolveParentId(sectionId: string): string | undefined {
     const section = checklistConfig.sections.find(s => s.id === sectionId);
     if (!section || section.items.length === 0) return undefined;
     const above = section.items[section.items.length - 1];
-    return above.linkedParentId ?? above.id;
+    const startId = above.linkedParentId ?? above.id;
+    return resolveRootId(startId, section.items);
   }
 
   function resetUnitSelections(sectionId: string) {
@@ -263,6 +310,19 @@ export function ChecklistSetupPanel() {
     const parentId = getNewItemLinked(sectionId) ? resolveParentId(sectionId) : undefined;
     const parentOpts = parentId ? { linkedParentId: parentId } : {};
 
+    if (itemType === 'victim') {
+      if (victimSetup.length === 0) return;
+      const victimId   = getVictimId(sectionId);
+      const victimItem = victimSetup.find(v => v.id === victimId);
+      if (!victimItem) return;
+      const visibility = getVictimVisibility(sectionId);
+      const visLabel   = visibility === 'show' ? '보임' : '안보임';
+      const idx        = victimSetup.indexOf(victimItem);
+      const text       = `${formatVictimLabel(victimItem, idx)} → ${visLabel}`;
+      addChecklistItem(sectionId, text, 'victim', { victimSetupId: victimId, victimVisibility: visibility, ...parentOpts });
+      return;
+    }
+
     if (itemType === 'incident') {
       if (eventSetup.length === 0) return;
       const eventId  = getEventId(sectionId);
@@ -325,10 +385,11 @@ export function ChecklistSetupPanel() {
       addChecklistItem(sectionId, `${floor}층 → ${label}`, 'fire', { fireFloor: floor, fireTargetStatus: status, ...parentOpts });
 
     } else if (itemType === 'message') {
-      const body = getMsgBody(sectionId).trim();
-      if (!body) return;
-      const firstLine = body.split('\n')[0].slice(0, 40);
-      addChecklistItem(sectionId, firstLine, 'message', { messageBody: body, ...parentOpts });
+      const title = getMsgTitle(sectionId).trim();
+      const body  = getMsgBody(sectionId).trim();
+      if (!title || !body) return;
+      addChecklistItem(sectionId, title.slice(0, 40), 'message', { messageTitle: title, messageBody: body, ...parentOpts });
+      setMsgTitle(prev => ({ ...prev, [sectionId]: '' }));
       setMsgBody(prev => ({ ...prev, [sectionId]: '' }));
 
     } else {
@@ -486,66 +547,129 @@ export function ChecklistSetupPanel() {
             {/* 항목 목록 */}
             <div className="checklist-setup__items">
               {section.items.map((item, itemIndex) => {
-                const itemKey    = `${section.id}:${itemIndex}`;
-                const isReadonly = item.itemType === 'arrival' || item.itemType === 'fire' || item.itemType === 'message' || item.itemType === 'incident' || item.itemType === 'unit';
+                const itemKey          = `${section.id}:${itemIndex}`;
+                const isReadonly       = item.itemType === 'arrival' || item.itemType === 'fire' || item.itemType === 'message' || item.itemType === 'incident' || item.itemType === 'unit' || item.itemType === 'victim';
+                const isEditingThisMsg = item.itemType === 'message' && editingItemId === item.id;
+                const arrivalUnits     = item.itemType === 'arrival'
+                  ? dispatchRoster.filter(r => r.arrivalOrder === (item.arrivalOrder ?? 1) && r.linkedTo === null).map(computeRosterDisplayName).join(', ')
+                  : '';
                 return (
-                  <div
-                    key={item.id}
-                    className={[
-                      'checklist-setup__item',
-                      overItemKey === itemKey && dragItem.current?.index !== itemIndex ? 'checklist-setup__item--drag-over' : '',
-                      item.linkedParentId ? 'checklist-setup__item--linked' : '',
-                    ].filter(Boolean).join(' ')}
-                    onDragOver={e => onItemDragOver(e, section.id, itemIndex)}
-                    onDrop={e => onItemDrop(e, section.id, itemIndex)}
-                  >
-                    <span
-                      className="checklist-setup__drag-handle checklist-setup__drag-handle--item"
-                      draggable
-                      onDragStart={e => onItemDragStart(e, section.id, itemIndex)}
-                      onDragEnd={onDragEnd}
-                      title="드래그하여 순서 변경"
-                    >⠿</span>
-                    {item.linkedParentId && <span className="checklist-setup__link-icon">└</span>}
-                    <span className={`checklist-setup__type-badge checklist-setup__type-badge--${item.itemType}`}>
-                      {TYPE_LABELS[item.itemType ?? 'procedure']}
-                    </span>
-                    {isReadonly ? (
-                      <span className="checklist-setup__item-text">
-                        {item.text}
-                        {item.itemType === 'message' && item.messageBody && (
-                          <span className="checklist-setup__message-preview">
-                            {' — '}{item.messageBody.split('\n')[0].slice(0, 30)}{item.messageBody.length > 30 ? '…' : ''}
-                          </span>
-                        )}
+                  <div key={item.id} className="checklist-setup__item-wrap">
+                    <div
+                      className={[
+                        'checklist-setup__item',
+                        overItemKey === itemKey && dragItem.current?.index !== itemIndex ? 'checklist-setup__item--drag-over' : '',
+                        item.linkedParentId ? 'checklist-setup__item--linked' : '',
+                      ].filter(Boolean).join(' ')}
+                      onDragOver={e => onItemDragOver(e, section.id, itemIndex)}
+                      onDrop={e => onItemDrop(e, section.id, itemIndex)}
+                    >
+                      <span
+                        className="checklist-setup__drag-handle checklist-setup__drag-handle--item"
+                        draggable
+                        onDragStart={e => onItemDragStart(e, section.id, itemIndex)}
+                        onDragEnd={onDragEnd}
+                        title="드래그하여 순서 변경"
+                      >⠿</span>
+                      {item.linkedParentId && <span className="checklist-setup__link-icon">└</span>}
+                      <span className={`checklist-setup__type-badge checklist-setup__type-badge--${item.itemType}`}>
+                        {TYPE_LABELS[item.itemType ?? 'procedure']}
                       </span>
-                    ) : (
-                      <input
-                        className="checklist-setup__item-input"
-                        value={item.text}
-                        onChange={e => updateChecklistItem(section.id, item.id, { text: e.target.value })}
-                      />
+                      {isReadonly ? (
+                        <span className="checklist-setup__item-text">
+                          {item.itemType === 'message' ? (item.messageTitle ?? item.text) : item.text}
+                          {arrivalUnits && <span className="checklist-setup__item-units"> ({arrivalUnits})</span>}
+                        </span>
+                      ) : (
+                        <input
+                          className="checklist-setup__item-input"
+                          value={item.text}
+                          onChange={e => updateChecklistItem(section.id, item.id, { text: e.target.value })}
+                        />
+                      )}
+                      {/* 메세지 항목 수정 버튼 */}
+                      {item.itemType === 'message' && (
+                        <button
+                          className={`checklist-setup__edit-btn${isEditingThisMsg ? ' checklist-setup__edit-btn--active' : ''}`}
+                          title="메세지 수정"
+                          onClick={() => {
+                            if (isEditingThisMsg) {
+                              setEditingItemId(null);
+                            } else {
+                              setEditingItemId(item.id);
+                              setEditTitle(item.messageTitle ?? item.text);
+                              setEditBody(item.messageBody ?? '');
+                            }
+                          }}
+                        >✎</button>
+                      )}
+                      {/* 상위 연동 체크박스 (첫 번째 항목 제외) */}
+                      {itemIndex > 0 && (
+                        <input
+                          type="checkbox"
+                          className="checklist-setup__link-cb"
+                          checked={!!item.linkedParentId}
+                          title="바로 위 항목과 연동"
+                          onClick={e => e.stopPropagation()}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              const above = section.items[itemIndex - 1];
+                              const startId = above.linkedParentId ?? above.id;
+                              const parentId = resolveRootId(startId, section.items);
+                              updateChecklistItem(section.id, item.id, { linkedParentId: parentId });
+                            } else {
+                              updateChecklistItem(section.id, item.id, { linkedParentId: undefined });
+                            }
+                          }}
+                        />
+                      )}
+                      <button className="checklist-setup__delete-btn" onClick={() => removeChecklistItem(section.id, item.id)} title="항목 삭제">✕</button>
+                    </div>
+
+                    {/* 메세지 인라인 편집 패널 */}
+                    {isEditingThisMsg && (
+                      <div className="checklist-setup__msg-edit-panel">
+                        <input
+                          className="checklist-setup__msg-edit-loc"
+                          placeholder="제목 (필수)"
+                          value={editTitle}
+                          onChange={e => setEditTitle(e.target.value)}
+                          autoFocus
+                        />
+                        <textarea
+                          className="checklist-setup__message-textarea"
+                          placeholder="내용"
+                          value={editBody}
+                          onChange={e => setEditBody(e.target.value)}
+                          rows={3}
+                        />
+                        <div className="checklist-setup__msg-edit-actions">
+                          <button
+                            className="checklist-setup__import-cancel-btn"
+                            onClick={() => setEditingItemId(null)}
+                          >
+                            취소
+                          </button>
+                          <button
+                            className="checklist-setup__import-confirm-btn"
+                            disabled={!editTitle.trim() || !editBody.trim()}
+                            onClick={() => {
+                              const title = editTitle.trim();
+                              const body  = editBody.trim();
+                              if (!title || !body) return;
+                              updateChecklistItem(section.id, item.id, {
+                                text:         title.slice(0, 40),
+                                messageTitle: title,
+                                messageBody:  body,
+                              });
+                              setEditingItemId(null);
+                            }}
+                          >
+                            저장
+                          </button>
+                        </div>
+                      </div>
                     )}
-                    {/* 상위 연동 체크박스 (첫 번째 항목 제외) */}
-                    {itemIndex > 0 && (
-                      <input
-                        type="checkbox"
-                        className="checklist-setup__link-cb"
-                        checked={!!item.linkedParentId}
-                        title="바로 위 항목과 연동"
-                        onClick={e => e.stopPropagation()}
-                        onChange={e => {
-                          if (e.target.checked) {
-                            const above = section.items[itemIndex - 1];
-                            const parentId = above.linkedParentId ?? above.id;
-                            updateChecklistItem(section.id, item.id, { linkedParentId: parentId });
-                          } else {
-                            updateChecklistItem(section.id, item.id, { linkedParentId: undefined });
-                          }
-                        }}
-                      />
-                    )}
-                    <button className="checklist-setup__delete-btn" onClick={() => removeChecklistItem(section.id, item.id)} title="항목 삭제">✕</button>
                   </div>
                 );
               })}
@@ -563,6 +687,7 @@ export function ChecklistSetupPanel() {
                 <option value="event">이벤트</option>
                 <option value="incident">돌발상황</option>
                 <option value="unit">출동대</option>
+                <option value="victim">구조대상자</option>
                 <option value="message">메세지</option>
                 <option value="fire">화재</option>
                 <option value="xvr">XVR</option>
@@ -744,9 +869,55 @@ export function ChecklistSetupPanel() {
                 );
               })()}
 
+              {/* 구조대상자 선택 */}
+              {curItemType === 'victim' && (
+                victimSetup.length === 0 ? (
+                  <span style={{ fontSize: '0.74rem', color: 'var(--color-text-dim)' }}>
+                    구조대상자 설정에서 먼저 추가하세요.
+                  </span>
+                ) : (
+                  <>
+                    <select
+                      className="checklist-setup__fire-select"
+                      style={{ flex: 1 }}
+                      value={getVictimId(section.id)}
+                      onChange={e => setNewVictimIds(prev => ({ ...prev, [section.id]: e.target.value }))}
+                    >
+                      {victimSetup.map((v, idx) => (
+                        <option key={v.id} value={v.id}>{formatVictimLabel(v, idx)}</option>
+                      ))}
+                    </select>
+                    <div className="checklist-setup__message-loc-tabs">
+                      {(['show', 'hide'] as const).map(vis => (
+                        <button
+                          key={vis}
+                          type="button"
+                          className={`checklist-setup__message-loc-tab${getVictimVisibility(section.id) === vis ? ' checklist-setup__message-loc-tab--active' : ''}`}
+                          onClick={() => setNewVictimVisibilities(prev => ({ ...prev, [section.id]: vis }))}
+                        >
+                          {vis === 'show' ? '보임' : '안보임'}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      className="checklist-setup__add-item-btn"
+                      onClick={() => handleAddItem(section.id)}
+                    >
+                      추가
+                    </button>
+                  </>
+                )
+              )}
+
               {/* 메세지 확장 입력 */}
               {curItemType === 'message' && (
                 <div className="checklist-setup__message-panel">
+                  <input
+                    className="checklist-setup__msg-edit-loc"
+                    placeholder="제목 (필수)"
+                    value={getMsgTitle(section.id)}
+                    onChange={e => setMsgTitle(prev => ({ ...prev, [section.id]: e.target.value }))}
+                  />
                   <textarea
                     className="checklist-setup__message-textarea"
                     placeholder="내용 입력... (Enter: 다음 줄)"
@@ -758,7 +929,7 @@ export function ChecklistSetupPanel() {
                     <button
                       className="checklist-setup__add-item-btn"
                       onClick={() => handleAddItem(section.id)}
-                      disabled={!getMsgBody(section.id).trim()}
+                      disabled={!getMsgTitle(section.id).trim() || !getMsgBody(section.id).trim()}
                     >
                       + 추가
                     </button>
@@ -767,7 +938,7 @@ export function ChecklistSetupPanel() {
               )}
 
               {/* 기본 텍스트 입력 */}
-              {curItemType !== 'arrival' && curItemType !== 'fire' && curItemType !== 'message' && curItemType !== 'incident' && curItemType !== 'unit' && (
+              {curItemType !== 'arrival' && curItemType !== 'fire' && curItemType !== 'message' && curItemType !== 'incident' && curItemType !== 'unit' && curItemType !== 'victim' && (
                 <>
                   <input
                     className="checklist-setup__add-item-input"

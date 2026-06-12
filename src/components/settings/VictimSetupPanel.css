@@ -58,11 +58,11 @@
   overflow: hidden;
 }
 
-/* 9컬럼: [#, 성별, 나이, 상태, 면, 층, 상세위치, 바로보임, X] */
+/* 10컬럼: [#, 성별, 나이, 상태, 면, 층, 계단실, 상세위치, 바로보임, X] */
 .vsp__thead,
 .vsp__row {
   display: grid;
-  grid-template-columns: 24px 52px 1fr 1fr 48px 52px 1.4fr 52px 28px;
+  grid-template-columns: 24px 52px 1fr 1fr 48px 52px 44px 1.4fr 52px 28px;
   gap: 4px;
   align-items: center;
   padding: 5px 8px;
@@ -115,6 +115,24 @@
 
 .vsp__cell--del {
   justify-content: center;
+}
+
+.vsp__th--stair,
+.vsp__cell--stair {
+  justify-content: center;
+  text-align: center;
+}
+
+.vsp__stair-cb {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: #88aacc;
+}
+
+.vsp__stair-cb:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .vsp__th--visible,

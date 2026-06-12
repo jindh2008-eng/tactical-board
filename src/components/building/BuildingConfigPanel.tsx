@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { BuildingConfig, FireStatus } from '../../types';
+import type { BuildingConfig, FireStatus, Face } from '../../types';
 import type { ExtraFireFloor } from '../../types/settings';
 import { floorLabel, buildFloorList } from '../../utils/floorOptions';
 import './BuildingConfigPanel.css';
@@ -13,17 +13,25 @@ const FIRE_STATUS_OPTIONS: { value: FireStatus; label: string }[] = [
   { value: 'complete',       label: '완진'     },
 ];
 
+const SIAMESE_FACES: { value: Face; label: string }[] = [
+  { value: 'A', label: 'A면' },
+];
+
 interface Props {
-  config:                   BuildingConfig;
-  onChange:                 (next: BuildingConfig) => void;
-  fireFloor:                number;
-  onFireFloorChange:        (n: number) => void;
-  fireStatus:               FireStatus | null;
-  onFireStatusChange:       (s: FireStatus | null) => void;
-  targetName:               string;
-  onTargetNameChange:       (name: string) => void;
-  extraFireFloors:          ExtraFireFloor[];
-  onExtraFireFloorsChange:  (floors: ExtraFireFloor[]) => void;
+  config:                    BuildingConfig;
+  onChange:                  (next: BuildingConfig) => void;
+  fireFloor:                 number;
+  onFireFloorChange:         (n: number) => void;
+  fireStatus:                FireStatus | null;
+  onFireStatusChange:        (s: FireStatus | null) => void;
+  targetName:                string;
+  onTargetNameChange:        (name: string) => void;
+  extraFireFloors:           ExtraFireFloor[];
+  onExtraFireFloorsChange:   (floors: ExtraFireFloor[]) => void;
+  siamesePipeFaces:          Face[];
+  onSiamesePipeFacesChange:  (faces: Face[]) => void;
+  hasIndoorHydrant:          boolean;
+  onIndoorHydrantChange:     (v: boolean) => void;
 }
 
 export function BuildingConfigPanel({
@@ -32,6 +40,8 @@ export function BuildingConfigPanel({
   fireStatus, onFireStatusChange,
   targetName, onTargetNameChange,
   extraFireFloors, onExtraFireFloorsChange,
+  siamesePipeFaces, onSiamesePipeFacesChange,
+  hasIndoorHydrant, onIndoorHydrantChange,
 }: Props) {
   const [above,    setAbove]    = useState(String(config.aboveGroundFloors));
   const [basement, setBasement] = useState(String(config.basementFloors));
@@ -195,6 +205,47 @@ export function BuildingConfigPanel({
             + 층 추가
           </button>
         )}
+      </div>
+
+      {/* ── 연결송수구 ── */}
+      <div className="bcf__siamese-section">
+        <span className="bcf__fire-label">연결송수구</span>
+        <div className="bcf__siamese-faces">
+          {SIAMESE_FACES.map(({ value, label }) => {
+            const checked = siamesePipeFaces.includes(value);
+            return (
+              <label key={value} className="bcf__siamese-label">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => {
+                    if (checked) {
+                      onSiamesePipeFacesChange(siamesePipeFaces.filter(f => f !== value));
+                    } else {
+                      onSiamesePipeFacesChange([...siamesePipeFaces, value]);
+                    }
+                  }}
+                />
+                {label}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── 옥내소화전 ── */}
+      <div className="bcf__siamese-section">
+        <span className="bcf__fire-label">옥내소화전</span>
+        <div className="bcf__siamese-faces">
+          <label className="bcf__siamese-label">
+            <input
+              type="checkbox"
+              checked={hasIndoorHydrant}
+              onChange={e => onIndoorHydrantChange(e.target.checked)}
+            />
+            표시
+          </label>
+        </div>
       </div>
     </div>
   );

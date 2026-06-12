@@ -119,6 +119,7 @@
 .floor-row__zones {
   display: flex;
   flex: 1;
+  position: relative;
 }
 
 /* ─────────────────────────────────────────────

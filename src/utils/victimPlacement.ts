@@ -140,14 +140,14 @@ export const VICTIM_FALLBACK_ZONE: string | null = null;
  *   2. floor 없고 face 있음 → 외곽 면 구역 ("face-A" 등)
  *   3. 둘 다 없음 → null (pool/미배치)
  */
-export function victimSetupZoneKey(floor: number | 'RF' | null, face: VictimFace | null): string | null {
+export function victimSetupZoneKey(floor: number | 'RF' | null, face: VictimFace | null, isStair?: boolean): string | null {
   if (floor !== null) {
     if (floor === 'RF') return 'RF-center';
     const floorId = floor > 0 ? `${floor}F` : `B${-floor}`;
-    return `${floorId}-center`;
+    return isStair ? `${floorId}-stair` : `${floorId}-center`;
   }
   if (face !== null) {
-    return `face-${face}`;  // "face-A", "face-B", ...
+    return `face-${face}`;
   }
   return VICTIM_FALLBACK_ZONE;
 }
@@ -157,14 +157,15 @@ export function victimSetupZoneKey(floor: number | 'RF' | null, face: VictimFace
 // ─────────────────────────────────────────────
 
 export function victimSetupToToken(item: VictimSetupItem): VictimToken {
-  const zoneKey = victimSetupZoneKey(item.floor, item.face);
+  const zoneKey = victimSetupZoneKey(item.floor, item.face, item.isStair);
   const age     = ageGroupToAge(item.ageGroup);
 
-  // originDisplayBottom: 층/면/상세위치 슬래시 형식으로 1회 계산
+  // originDisplayBottom: 층/계단실/면/상세위치 슬래시 형식으로 1회 계산
   const bottomParts: string[] = [];
   if (item.floor !== null) {
     bottomParts.push(item.floor === 'RF' ? '옥상' : floorNumberToLabel(item.floor));
   }
+  if (item.isStair && item.floor !== null) bottomParts.push('계단실');
   if (item.face !== null) bottomParts.push(`${item.face}면`);
   const detail = item.detailLocation.trim();
   if (detail) bottomParts.push(detail);
@@ -175,6 +176,7 @@ export function victimSetupToToken(item: VictimSetupItem): VictimToken {
     kind:                'person',
     gender:              item.gender,
     age,
+    ageGroup:            item.ageGroup,
     condition:           item.condition,
     face:                item.face,
     subLocation:         item.detailLocation.trim(),

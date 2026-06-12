@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { BuildingConfig, FireStatus } from '../types';
+import type { BuildingConfig, FireStatus, Face } from '../types';
 import type {
   BuildingSettings, TimingSettings,
-  DispatchSetup, DispatchRosterItem, VictimSetupItem, ArrivalMode, HydrantSetupItem,
+  DispatchSetup, DispatchRosterItem, DispatchExtraUnit, VictimSetupItem, ArrivalMode, HydrantSetupItem,
   FireSuppressionConfig, AerialSuppressionConfig, ChecklistConfig, ChecklistSection, ChecklistItem, ChecklistItemType,
   ExtraFireFloor,
   CommandProcedureConfigs, CommandProcedureLevel, CommandProcedureCategory,
@@ -36,20 +36,24 @@ import { DEFAULT_BUILDING_CONFIG } from '../data/buildingData';
 interface SettingsContextValue {
   // ── 건물 설정 ────────────────────────────────
   building:             BuildingSettings;
-  updateBuildingConfig: (config: BuildingConfig) => void;
-  updateFireFloor:      (floor: number) => void;
-  updateFireStatus:        (status: FireStatus | null) => void;
-  updateTargetName:        (name: string) => void;
-  updateExtraFireFloors:   (floors: ExtraFireFloor[]) => void;
+  updateBuildingConfig:     (config: BuildingConfig) => void;
+  updateFireFloor:          (floor: number) => void;
+  updateFireStatus:         (status: FireStatus | null) => void;
+  updateTargetName:         (name: string) => void;
+  updateExtraFireFloors:    (floors: ExtraFireFloor[]) => void;
+  updateSiamesePipeFaces:   (faces: Face[]) => void;
+  updateIndoorHydrant:      (has: boolean) => void;
 
   // ── 타이밍 설정 ───────────────────────────────
   timing:        TimingSettings;
   updateTiming:  (next: Partial<TimingSettings>) => void;
 
   // ── 출동대 생성 설정 ──────────────────────────
-  dispatchSetup:           DispatchSetup;
-  updateDispatchUnits:     (u: Partial<DispatchSetup['units']>)    => void;
-  updateDispatchVehicles:  (v: Partial<DispatchSetup['vehicles']>) => void;
+  dispatchSetup:              DispatchSetup;
+  updateDispatchUnits:        (u: Partial<DispatchSetup['units']>)    => void;
+  updateDispatchVehicles:     (v: Partial<DispatchSetup['vehicles']>) => void;
+  addDispatchExtraUnit:       (name: string, unitType: DispatchExtraUnit['unitType']) => void;
+  removeDispatchExtraUnit:    (id: string) => void;
 
   // ── 도착설정 방식 ─────────────────────────────
   arrivalMode:             ArrivalMode;
@@ -158,6 +162,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [extraFireFloors, setExtraFireFloors] = useState<ExtraFireFloor[]>(
     () => loadWorkingPresets().building?.extraFireFloors ?? []
   );
+  const [siamesePipeFaces, setSiamesePipeFaces] = useState<Face[]>(
+    () => loadWorkingPresets().building?.siamesePipeFaces ?? []
+  );
+  const [hasIndoorHydrant, setHasIndoorHydrant] = useState<boolean>(
+    () => loadWorkingPresets().building?.hasIndoorHydrant ?? false
+  );
 
   // ── 타이밍 (자동 복원) ──────────────────────────
   const [timing, setTiming] = useState<TimingSettings>(
@@ -227,23 +237,25 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     saveWorkingPresets({
       sharedBadgePresets: [], unitBadgePresets: [],
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant },
       timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
       fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
       unitTagPresetConfig,
     });
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   // ── 건물 설정 ──────────────────────────────────
 
   const updateBuildingConfig = useCallback((next: BuildingConfig) => {
     setConfig(next);
   }, []);
-  const updateFireFloor        = useCallback((floor: number)          => setFireFloor(floor),           []);
-  const updateFireStatus       = useCallback((s: FireStatus | null)   => setFireStatus(s),              []);
-  const updateTargetName       = useCallback((name: string)           => setTargetName(name),           []);
-  const updateExtraFireFloors  = useCallback((floors: ExtraFireFloor[]) => setExtraFireFloors(floors),  []);
+  const updateFireFloor           = useCallback((floor: number)          => setFireFloor(floor),              []);
+  const updateFireStatus          = useCallback((s: FireStatus | null)   => setFireStatus(s),                 []);
+  const updateTargetName          = useCallback((name: string)           => setTargetName(name),              []);
+  const updateExtraFireFloors     = useCallback((floors: ExtraFireFloor[]) => setExtraFireFloors(floors),     []);
+  const updateSiamesePipeFaces    = useCallback((faces: Face[])           => setSiamesePipeFaces(faces),      []);
+  const updateIndoorHydrant       = useCallback((has: boolean)            => setHasIndoorHydrant(has),          []);
 
   // ── 타이밍 설정 ──────────────────────────────
   const updateTiming = useCallback((next: Partial<TimingSettings>) => {
@@ -257,6 +269,20 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const updateDispatchVehicles = useCallback((v: Partial<DispatchSetup['vehicles']>) => {
     setDispatchSetup(prev => ({ ...prev, vehicles: { ...prev.vehicles, ...v } }));
+  }, []);
+
+  const addDispatchExtraUnit = useCallback((name: string, unitType: DispatchExtraUnit['unitType']) => {
+    setDispatchSetup(prev => ({
+      ...prev,
+      extraUnits: [...(prev.extraUnits ?? []), { id: generateId(), name, unitType }],
+    }));
+  }, []);
+
+  const removeDispatchExtraUnit = useCallback((id: string) => {
+    setDispatchSetup(prev => ({
+      ...prev,
+      extraUnits: (prev.extraUnits ?? []).filter(u => u.id !== id),
+    }));
   }, []);
 
   const updateRosterArrival = useCallback((id: string, secs: number, syncLinked = false) => {
@@ -306,6 +332,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       condition:          '중상',
       face:               null,
       floor:              null,
+      isStair:            false,
       detailLocation:     '',
       immediatelyVisible: false,
     }]);
@@ -432,9 +459,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       sections: prev.sections.map((s: ChecklistSection) => {
         if (s.id !== sectionId) return s;
         const items = [...s.items];
-        const [moved] = items.splice(fromIndex, 1);
+        const [rawMoved] = items.splice(fromIndex, 1);
+        // 이동 시 연동 해제 (위치 변경으로 부모-자식 관계 무효화)
+        const moved: ChecklistItem = rawMoved.linkedParentId
+          ? { ...rawMoved, linkedParentId: undefined }
+          : rawMoved;
         items.splice(toIndex, 0, moved);
-        return { ...s, items };
+        // 이동된 항목을 부모로 가리키던 항목 중 이제 그 항목보다 위에 있는 것도 연동 해제
+        const movedNewIdx = items.findIndex(i => i.id === moved.id);
+        return {
+          ...s,
+          items: items.map((it, idx) =>
+            it.linkedParentId === moved.id && idx < movedNewIdx
+              ? { ...it, linkedParentId: undefined }
+              : it
+          ),
+        };
       }),
     }));
   }, []);
@@ -460,7 +500,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const id = activeSettingsId ?? generateId();
     const set: SettingsSet = {
       id, name: activeSettingsName, updatedAt: '',
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant },
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
@@ -469,13 +509,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
     const set: SettingsSet = {
       id, name: newName, updatedAt: '',
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant },
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
@@ -485,7 +525,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -531,6 +571,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     else setChecklistConfig({ level: 'junior', sections: [] });
     // 지휘절차 / 출동대 상태메세지 / 태그 프리셋은 메인 설정 불러오기 시 변경하지 않음
     setExtraFireFloors(set.building?.extraFireFloors ? JSON.parse(JSON.stringify(set.building.extraFireFloors)) : []);
+    setSiamesePipeFaces(set.building?.siamesePipeFaces ?? []);
+    setHasIndoorHydrant(set.building?.hasIndoorHydrant ?? false);
     setActiveSettingsId(id);
     setActiveSettingsName(set.name);
   }, [settingsList]);
@@ -557,20 +599,24 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setChecklistConfig({ level: 'junior', sections: [] });
     // 지휘절차 / 출동대 상태메세지 / 태그 프리셋은 신규 작성 시에도 유지
     setExtraFireFloors([]);
+    setSiamesePipeFaces([]);
+    setHasIndoorHydrant(false);
     setActiveSettingsId(null);
     setActiveSettingsName('새 설정');
   }, []);
 
   return (
     <SettingsContext.Provider value={{
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant },
       updateBuildingConfig, updateFireFloor, updateFireStatus, updateTargetName, updateExtraFireFloors,
+      updateSiamesePipeFaces, updateIndoorHydrant,
       timing, updateTiming,
       arrivalMode, updateArrivalMode,
       medicalPostChief, stagingAreaChief,
       updateMedicalPostChief, updateStagingAreaChief,
       eventSetup, addEventSetupItem, updateEventSetupItem, removeEventSetupItem,
       dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
+      addDispatchExtraUnit, removeDispatchExtraUnit,
       dispatchRoster, updateRosterArrival, updateRosterOrder, updateRosterPrefix,
       victimSetup, addVictimSetupItem, updateVictimSetupItem, removeVictimSetupItem,
       hydrantSetup, addHydrantSetupItem, updateHydrantSetupItem, removeHydrantSetupItem,

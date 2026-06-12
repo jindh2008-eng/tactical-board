@@ -275,9 +275,6 @@
   font-weight:    700;
   color:          #88ccee;
   letter-spacing: 0.03em;
-  max-width:      120px;
-  overflow:       hidden;
-  text-overflow:  ellipsis;
 }
 
 .token-status-msg__close {

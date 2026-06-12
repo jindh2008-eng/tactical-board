@@ -2,8 +2,10 @@ import { useState }          from 'react';
 import { createPortal }      from 'react-dom';
 import { useSettings }       from '../../store/settingsStore';
 import { useTokens }         from '../../context/TokenContext';
+import { useVictims }        from '../../context/VictimContext';
 import { useFireCommand }    from '../../context/FireCommandContext';
 import { useEvents }         from '../../context/EventContext';
+import { computeRosterDisplayName } from '../../utils/dispatchRoster';
 import type { ChecklistItem, ChecklistItemType } from '../../types/settings';
 import type { FireStatus }    from '../../types';
 import './ChecklistPanel.css';
@@ -26,6 +28,7 @@ const TYPE_LABELS: Record<ChecklistItemType, string> = {
   xvr:       'XVR',
   unit:      '출동대',
   incident:  '돌발상황',
+  victim:    '구조대상자',
 };
 
 function floorNumToId(n: number): string {
@@ -35,12 +38,21 @@ function floorNumToId(n: number): string {
 export function ChecklistPanel() {
   const { checklistConfig, dispatchRoster } = useSettings();
   const { tokens, moveToken, addLog, setCustomNote, toggleMissionTag, setStatusTag } = useTokens();
+  const { setVictimDiscovered }             = useVictims();
   const { callSetFire }                     = useFireCommand();
   const { setEventStatus }                  = useEvents();
   const [checked,         setChecked]         = useState<Set<string>>(new Set());
   const [collapsed,       setCollapsed]       = useState<Set<string>>(new Set());
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
-  const [activeMessage,   setActiveMessage]   = useState<ChecklistItem | null>(null);
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(() => {
+    const parents = new Set<string>();
+    for (const sec of checklistConfig.sections) {
+      for (const it of sec.items) {
+        if (it.linkedParentId) parents.add(it.linkedParentId);
+      }
+    }
+    return parents;
+  });
+  const [activeMessages,  setActiveMessages]  = useState<ChecklistItem[]>([]);
 
   function getArrivalTokenIds(order: number): string[] {
     return dispatchRoster
@@ -184,8 +196,13 @@ export function ChecklistPanel() {
         }
       }
     } else if (t === 'message') {
-      if (checking) setActiveMessage(child);
-      else setActiveMessage(prev => prev?.id === child.id ? null : prev);
+      if (checking) setActiveMessages(prev => prev.some(m => m.id === child.id) ? prev : [...prev, child]);
+      else          setActiveMessages(prev => prev.filter(m => m.id !== child.id));
+    } else if (t === 'victim') {
+      const tokenId = child.victimSetupId ? `victim-setup-${child.victimSetupId}` : null;
+      if (!tokenId) return;
+      const vis = child.victimVisibility ?? 'show';
+      setVictimDiscovered(tokenId, checking ? vis === 'show' : vis === 'hide');
     }
     // procedure, event, xvr: 사이드이펙트 없음
   }
@@ -211,15 +228,31 @@ export function ChecklistPanel() {
     children.forEach(c => triggerLinkedChildren(c.id, checking));
   }
 
+  function toggleVictimItem(item: ChecklistItem) {
+    const isCk      = checked.has(item.id);
+    const tokenId   = item.victimSetupId ? `victim-setup-${item.victimSetupId}` : null;
+    if (!tokenId) return;
+    const visibility = item.victimVisibility ?? 'show';
+    if (!isCk) {
+      setVictimDiscovered(tokenId, visibility === 'show');
+      setChecked(prev => new Set([...prev, item.id]));
+      addLog({ logType: 'checklist', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '', note: item.text });
+    } else {
+      setVictimDiscovered(tokenId, visibility === 'hide');
+      setChecked(prev => { const n = new Set(prev); n.delete(item.id); return n; });
+    }
+  }
+
   function toggleMessageItem(item: ChecklistItem) {
     const isCk = checked.has(item.id);
     if (!isCk) {
       setChecked(prev => new Set([...prev, item.id]));
       addLog({ logType: 'checklist', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '', note: item.text });
+      setActiveMessages(prev => prev.some(m => m.id === item.id) ? prev : [...prev, item]);
     } else {
       setChecked(prev => { const n = new Set(prev); n.delete(item.id); return n; });
+      setActiveMessages(prev => prev.filter(m => m.id !== item.id));
     }
-    setActiveMessage(activeMessage?.id === item.id ? null : item);
   }
 
   function toggleSection(sectionId: string) {
@@ -270,8 +303,11 @@ export function ChecklistPanel() {
                 {!isCollapsed && section.items.map(item => {
                   const itemType  = item.itemType ?? 'procedure';
                   const isChecked = checked.has(item.id);
-                  const order     = item.arrivalOrder ?? 1;
-                  const isLocked  = itemType === 'arrival' && isChecked && isArrivalLocked(order);
+                  const order       = item.arrivalOrder ?? 1;
+                  const isLocked    = itemType === 'arrival' && isChecked && isArrivalLocked(order);
+                  const arrivalUnits = itemType === 'arrival'
+                    ? dispatchRoster.filter(r => r.arrivalOrder === order && r.linkedTo === null).map(computeRosterDisplayName).join(', ')
+                    : '';
                   const isLinked  = !!item.linkedParentId;
                   const isParent  = parentItemIds.has(item.id);
 
@@ -291,6 +327,7 @@ export function ChecklistPanel() {
                     else if (itemType === 'message')  toggleMessageItem(item);
                     else if (itemType === 'incident') toggleEventItem(item);
                     else if (itemType === 'unit')     toggleUnitItem(item);
+                    else if (itemType === 'victim')   toggleVictimItem(item);
                     else                              toggleItem(item.id, item.text);
                     triggerLinkedChildren(item.id, checking);
                   }
@@ -311,22 +348,25 @@ export function ChecklistPanel() {
                       <span className={`checklist-panel__item-badge checklist-panel__item-badge--${itemType}`}>
                         {TYPE_LABELS[itemType] ?? itemType}
                       </span>
-                      <span className="checklist-panel__item-text">{item.text}</span>
+                      <span className="checklist-panel__item-text">
+                        {item.text}
+                        {arrivalUnits && <span className="checklist-panel__item-units"> ({arrivalUnits})</span>}
+                      </span>
                       {isLocked && <span className="checklist-panel__lock-icon">🔒</span>}
                       {/* 상위 항목 하위 숨김/표시 체크박스 */}
                       {isParent && (
                         <input
                           type="checkbox"
                           className="checklist-panel__expand-cb"
-                          checked={!expandedParents.has(item.id)}
+                          checked={expandedParents.has(item.id)}
                           title={expandedParents.has(item.id) ? '하위 항목 숨기기' : '하위 항목 표시'}
                           onClick={e => e.stopPropagation()}
                           onChange={e => {
                             e.stopPropagation();
                             setExpandedParents(prev => {
                               const next = new Set(prev);
-                              if (e.target.checked) next.delete(item.id);
-                              else                  next.add(item.id);
+                              if (e.target.checked) next.add(item.id);
+                              else                  next.delete(item.id);
                               return next;
                             });
                           }}
@@ -340,22 +380,30 @@ export function ChecklistPanel() {
           })
         )}
       </div>
-      {activeMessage && createPortal(
-        <div className="checklist-panel__msg-overlay">
-          <div className="checklist-panel__msg-popup">
-            {activeMessage.messageLocation && (
-              <div className="checklist-panel__msg-location">
-                {activeMessage.messageLocation}
+      {activeMessages.length > 0 && createPortal(
+        <div className="checklist-panel__msg-overlay" onClick={() => setActiveMessages([])}>
+          <div className="checklist-panel__msg-stack" onClick={e => e.stopPropagation()}>
+            {activeMessages.map(msg => (
+              <div key={msg.id} className="checklist-panel__msg-popup">
+                <div className="checklist-panel__msg-header">
+                  <span className="checklist-panel__msg-title">
+                    {msg.messageTitle ?? msg.text}
+                  </span>
+                </div>
+                <hr className="checklist-panel__msg-divider" />
+                <div className="checklist-panel__msg-body">
+                  {msg.messageBody ?? msg.text}
+                </div>
+                <div className="checklist-panel__msg-footer">
+                  <button
+                    className="checklist-panel__msg-close"
+                    onClick={() => setActiveMessages(prev => prev.filter(m => m.id !== msg.id))}
+                  >
+                    닫기
+                  </button>
+                </div>
               </div>
-            )}
-            <div className="checklist-panel__msg-body">
-              {activeMessage.messageBody ?? activeMessage.text}
-            </div>
-            <div className="checklist-panel__msg-footer">
-              <button className="checklist-panel__msg-close" onClick={() => setActiveMessage(null)}>
-                ✕
-              </button>
-            </div>
+            ))}
           </div>
         </div>,
         document.body

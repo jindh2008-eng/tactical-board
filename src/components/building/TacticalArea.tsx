@@ -6,6 +6,8 @@ import { BFaceWithStandby } from './BFaceWithStandby';
 import { MedicalPostBox, BottomStandbyBoxes } from './StandbyColumn';
 import { RescueStats } from './RescueStats';
 import { ImminentStandby } from './ImminentStandby';
+import { FireLine } from './FireLine';
+import { useFireLine } from '../../context/FireLineContext';
 import { EventLayer } from '../events/EventLayer';
 import './TacticalArea.css';
 
@@ -35,6 +37,7 @@ export function TacticalArea({
   initialFireStatus = null,
   extraFireFloors   = [],
 }: Props) {
+  const { showFireLine } = useFireLine();
   const displayFloors  = buildDisplayFloors(config, fireFloor);
   const aboveRows      = displayFloors.filter(f => !f.isBasement).length;
   const basementRows   = displayFloors.filter(f => f.isBasement).length;
@@ -85,8 +88,12 @@ export function TacticalArea({
       {/* row 2, col 3 — D면 */}
       <ExteriorZone face="D" />
 
-      {/* row 2, 전체 폭 — 1층 바닥 슬래브 */}
-      <div className="tactical-area__slab" aria-hidden="true" />
+      {/* row 2, 전체 폭 — 1층 바닥 슬래브 + 소방통제선 */}
+      <div className="tactical-area__slab" aria-hidden="true">
+        {showFireLine && (
+          <FireLine height={15} style={{ position: 'absolute', top: 'calc(var(--above-pct, 100%) - 9px)', left: 0, right: 0 }} />
+        )}
+      </div>
 
       {/* row 3, col 1 — 직전대기 */}
       <ImminentStandby />

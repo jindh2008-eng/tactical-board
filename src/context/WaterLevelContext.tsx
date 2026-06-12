@@ -125,6 +125,39 @@ function computeNetFlowRates(
     net[conn.toId]   += give;
   }
 
+  // 2a. 펌프/물탱크 → 연결송수구 → 옥내소화전 → 진압대/구조대
+  //     연결송수구 자체는 수량 소모 없음; 진압대 방수량을 활성 펌프 수로 균등 분담
+  {
+    const activeSiamesePumpIds = [
+      ...new Set(
+        connections
+          .filter(c => c.toType === 'siamese_pipe' && c.fromId in net && !brokenSenderIds.has(c.fromId))
+          .map(c => c.fromId),
+      ),
+    ];
+
+    if (activeSiamesePumpIds.length > 0) {
+      let totalFlow = 0;
+      for (const conn of connections) {
+        if (conn.fromType !== 'indoor_hydrant') continue;
+        if (conn.toType !== 'suppression' && conn.toType !== 'rescue') continue;
+        const suppToken = tokens.find(tk => tk.id === conn.toId);
+        const mult = sprayMultiplier(suppToken?.sprayState);
+        if (mult > 0) {
+          const floorId   = suppToken?.sprayTarget?.floorId;
+          const isInitial = !!floorId && initialFloorIds.has(floorId);
+          totalFlow += mult * (isInitial ? SUPPRESSION_INITIAL_FLOW_PER_MIN : SUPPRESSION_FLOW_PER_MIN);
+        }
+      }
+      if (totalFlow > 0) {
+        const perPump = totalFlow / activeSiamesePumpIds.length;
+        for (const pumpId of activeSiamesePumpIds) {
+          net[pumpId] -= perPump;
+        }
+      }
+    }
+  }
+
   // 3. 소화전 → 차량
   //    소화전 1개당 최대 1000/min, 복수 차량 연결 시 균등 분담
   //    수신 차량이 만수이면 소모량만큼만 공급 (demand-pull)

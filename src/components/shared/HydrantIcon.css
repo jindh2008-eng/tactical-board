@@ -51,6 +51,51 @@
   paint-order:         stroke fill;
 }
 
+/* ── 활성 상태메시지 배지 ────────────────────── */
+.hydrant-icon__msg {
+  align-self: center;
+}
+
+/* ── 장비 상태메세지 공통 (소화전/옥내소화전/연결송수구) ── */
+.equip-status-msg {
+  display:         flex;
+  align-items:     center;
+  gap:             4px;
+  padding:         2px 6px 2px 8px;
+  background:      rgba(10, 20, 30, 0.92);
+  border:          1px solid rgba(255, 220, 80, 0.45);
+  border-radius:   10px;
+  white-space:     nowrap;
+  pointer-events:  auto;
+  backdrop-filter: blur(3px);
+  box-shadow:      0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+.equip-status-msg__text {
+  font-size:   0.65rem;
+  font-weight: 700;
+  color:       #ffee88;
+}
+
+.equip-status-msg__close {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           13px;
+  height:          13px;
+  border:          none;
+  background:      transparent;
+  color:           rgba(200, 180, 80, 0.65);
+  font-size:       10px;
+  cursor:          pointer;
+  padding:         0;
+  flex-shrink:     0;
+  line-height:     1;
+}
+.equip-status-msg__close:hover {
+  color: #ff8888;
+}
+
 /* ── 고장 상태 ──────────────────────────────── */
 .hydrant-icon--broken .hydrant-icon__img {
   filter:  grayscale(0.7) brightness(0.6) sepia(0.5) hue-rotate(-10deg);
@@ -149,4 +194,53 @@
   width:      1px;
   background: rgba(255, 255, 255, 0.12);
   margin:     6px 0;
+}
+
+/* 상태메시지 섹션 구분선 */
+.hi-menu__section-sep {
+  height:     1px;
+  background: rgba(255, 255, 255, 0.10);
+  margin:     0;
+}
+
+/* 상태메시지 목록 */
+.hi-menu__msg-list {
+  display:        flex;
+  flex-direction: column;
+  padding:        4px 0;
+  max-height:     160px;
+  overflow-y:     auto;
+}
+
+/* 연결송수구처럼 bar 없이 메시지만 있는 경우 상단 패딩 제거 */
+.hi-menu__msg-list--standalone {
+  padding-top: 0;
+}
+
+.hi-menu__msg-btn {
+  padding:     5px 14px;
+  background:  transparent;
+  border:      none;
+  font-size:   0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  color:       #c8daf0;
+  text-align:  left;
+  cursor:      pointer;
+  white-space: nowrap;
+  transition:  background 0.1s;
+}
+
+.hi-menu__msg-btn:hover {
+  background: #162840;
+  color:      #e8f2ff;
+}
+
+/* 현재 활성(선택됨) 메시지 */
+.hi-menu__msg-btn--active {
+  color:      #ffee88;
+  background: rgba(255, 238, 136, 0.10);
+}
+.hi-menu__msg-btn--active:hover {
+  background: rgba(255, 238, 136, 0.18);
 }

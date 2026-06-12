@@ -88,8 +88,9 @@ export function WaterConnectionOverlay() {
   const { showWaterConn }                 = useDisplayOptions();
   const { mode }                          = useActionMode();
 
-  function isConnectionBroken(fromId: string, fromType: string): boolean {
-    if (fromType === 'hydrant') return isHydrantBroken(fromId);
+  function isConnectionBroken(fromId: string, fromType: string, toId: string, toType: string): boolean {
+    if (fromType === 'hydrant' || fromType === 'indoor_hydrant') return isHydrantBroken(fromId);
+    if (toType === 'indoor_hydrant') return isHydrantBroken(toId);
     const src = tokens.find(t => t.id === fromId);
     if (src?.statusTag?.label === '펌프고장') return true;
     return waterLevel?.emptyVehicleIds.has(fromId) ?? false;
@@ -169,7 +170,7 @@ export function WaterConnectionOverlay() {
 
         <g clipPath="url(#wco-token-clip)">
           {connections.map(conn => {
-            const broken = isConnectionBroken(conn.fromId, conn.fromType);
+            const broken = isConnectionBroken(conn.fromId, conn.fromType, conn.toId, conn.toType);
             return (
               <g key={conn.id} className={broken ? 'wco-group--broken' : ''}>
                 <path

@@ -18,7 +18,7 @@
   grid-template-columns: 180px 1fr 180px;
   grid-template-rows: 140px 1fr 200px;
 
-  gap: 2px;
+  gap: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -130,6 +130,13 @@
   border-bottom: 1px solid #5a5148;
 }
 
+.tactical-area__fire-line {
+  position: absolute;
+  top: var(--above-pct, 100%);
+  left: 0;
+  right: 0;
+}
+
 /* 대기1단계 — col 1, rows 1+2 (140px + RF 높이) */
 .tactical-area__bottom-standby {
   grid-column: 1;
@@ -144,6 +151,7 @@
   grid-column: 2;
   grid-row: -2 / -1;
   min-width: 0;
+  z-index: 15; /* 연결송수구가 건물/슬래브보다 위 레이어 */
 }
 
 /* 직전대기 — col 1, 마지막 행 */

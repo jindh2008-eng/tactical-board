@@ -138,5 +138,19 @@ export function buildRoster(
     }
   }
 
+  // 유관기관·직접입력 추가 항목 (ID 기준으로 이전 도착설정 보존)
+  const prevById = new Map(prevRoster.map(r => [r.id, r]));
+  for (const extra of (setup.extraUnits ?? [])) {
+    const prev = prevById.get(extra.id);
+    result.push({
+      id:           extra.id,
+      name:         extra.name,
+      unitType:     extra.unitType,
+      linkedTo:     null,
+      arrivalSec:   prev?.arrivalSec   ?? 0,
+      arrivalOrder: prev?.arrivalOrder ?? 1,
+    });
+  }
+
   return result;
 }

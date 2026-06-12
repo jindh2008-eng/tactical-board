@@ -48,6 +48,8 @@ interface VictimContextValue {
   removeUnitFromSearch: (tokenId: string) => void;
   /** 지정 층들을 2차 검색으로 전환 (초진 도달 시 호출). */
   transitionToSecondarySearch: (floorIds: string[]) => void;
+  /** 체크리스트 등에서 직접 구조대상자 발견 상태를 변경. */
+  setVictimDiscovered: (victimTokenId: string, visible: boolean) => void;
 }
 
 const VictimContext = createContext<VictimContextValue | null>(null);
@@ -65,7 +67,7 @@ export function useVictims(): VictimContextValue {
 function victimDisplayName(v: VictimToken): string {
   if (v.customLabel) return v.customLabel;
   if (v.kind === 'group') return `${v.groupCount ?? '?'}명`;
-  const parts = [v.gender, v.age != null ? `${v.age}세` : undefined, v.condition].filter(Boolean);
+  const parts = [v.gender, v.ageGroup ?? (v.age != null ? `${v.age}세` : undefined), v.condition].filter(Boolean);
   return parts.length > 0 ? (parts as string[]).join('/') : '구조대상자';
 }
 
@@ -87,6 +89,16 @@ function buildSearchSchedule(
     victimId,
     revealAtScore: Math.round(initialScore * (n - 1 - i) / n),
   }));
+}
+
+// RF=Infinity, 3F=3, B1=-1, 비해당=null
+function floorIdToNum(floorId: string): number | null {
+  if (floorId === 'RF') return Infinity;
+  const above = floorId.match(/^(\d+)F$/);
+  if (above) return parseInt(above[1]);
+  const below = floorId.match(/^B(\d+)$/);
+  if (below) return -parseInt(below[1]);
+  return null;
 }
 
 // 해당 층 미발견 구조대상자 IDs
@@ -225,6 +237,34 @@ export function VictimProvider({
         next[floorId] = { ...rec, units: stillHere };
       }
       return changed ? next : prev;
+    });
+  }, [tokens]);
+
+  // ── 계단실 피해자: 출동대 배치층 >= 계단실층 → discoveredVictimIds에 영구 등록 ──
+  useEffect(() => {
+    const stairVictims = victimsRef.current.filter(
+      v => v.zoneKey?.endsWith('-stair') && !discoveredVictimIdsRef.current.has(v.id)
+    );
+    if (stairVictims.length === 0) return;
+
+    const toDiscover: string[] = [];
+    for (const victim of stairVictims) {
+      const floorId       = victim.zoneKey!.slice(0, -'-stair'.length);
+      const victimFloorNum = floorIdToNum(floorId);
+      if (victimFloorNum === null) continue;
+      const triggered = tokens.some(t => {
+        if (!t.zoneKey) return false;
+        const unitFloorNum = floorIdToNum(t.zoneKey.split('-')[0]);
+        return unitFloorNum !== null && unitFloorNum >= victimFloorNum;
+      });
+      if (triggered) toDiscover.push(victim.id);
+    }
+
+    if (toDiscover.length === 0) return;
+    setDiscoveredVictimIds(prev => {
+      const next = new Set(prev);
+      for (const id of toDiscover) next.add(id);
+      return next;
     });
   }, [tokens]);
 
@@ -473,6 +513,16 @@ export function VictimProvider({
     });
   }, []);
 
+  // ── 직접 발견 상태 변경 (체크리스트 등) ────────────────────────────
+  const setVictimDiscovered = useCallback((victimTokenId: string, visible: boolean) => {
+    setDiscoveredVictimIds(prev => {
+      const next = new Set(prev);
+      if (visible) next.add(victimTokenId);
+      else next.delete(victimTokenId);
+      return next;
+    });
+  }, []);
+
   // ── 2차 전환 (초진 도달 시 BuildingBoard bridge 에서 호출) ────────
   const transitionToSecondarySearch = useCallback((floorIds: string[]) => {
     setActiveSearches(prev => {
@@ -505,6 +555,7 @@ export function VictimProvider({
       discoveredVictimIds, activeSearches, searchScores,
       createVictim, createRandom, moveVictim, updateVictim,
       addUnitToSearch, removeUnitFromSearch, transitionToSecondarySearch,
+      setVictimDiscovered,
     }}>
       {children}
     </VictimContext.Provider>

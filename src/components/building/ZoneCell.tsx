@@ -5,10 +5,21 @@ import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { useBuildingState } from '../../context/BuildingStateContext';
 import type { SmokeLevel } from '../../context/BuildingStateContext';
+import { useDisplayOptions } from '../../context/DisplayOptionsContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { FlameIcon } from '../shared/FlameIcon';
 import './ZoneCell.css';
+
+// RF=Infinity, 3F=3, B1=-1, 비해당=null
+function floorIdToNum(floorId: string): number | null {
+  if (floorId === 'RF') return Infinity;
+  const above = floorId.match(/^(\d+)F$/);
+  if (above) return parseInt(above[1]);
+  const below = floorId.match(/^B(\d+)$/);
+  if (below) return -parseInt(below[1]);
+  return null;
+}
 
 // ─────────────────────────────────────────────
 // 화재단계 정의
@@ -195,6 +206,7 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
   const { tokens, positions, moveToken } = useTokens();
   // 구조대상자 토큰
   const { victims, victimPositions, moveVictim, discoveredVictimIds, activeSearches } = useVictims();
+  const { showAllVictims } = useDisplayOptions();
 
   // 인명검색 진행률 (center 구역 전용)
   const isCenter      = zone.id === 'center';
@@ -214,7 +226,22 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
   const zoneTokens         = isDropTarget        ? tokens.filter(t => t.zoneKey === zoneKey)  : [];
   // 건물 내부 구역은 discoveredVictimIds에 있는 구조대상자만 표시 (인명검색 후 발견된 것만)
   const allZoneVictims     = isVictimDropTarget  ? victims.filter(v => v.zoneKey === zoneKey) : [];
-  const zoneVictims        = allZoneVictims.filter(v => discoveredVictimIds.has(v.id));
+
+  // 계단실 구조대상자: 바로보임 외에 출동대 배치층 >= 계단실층이면 표시
+  const stairVisible = (() => {
+    if (!isStair) return false;
+    const victimFloorNum = floorIdToNum(floorId);
+    if (victimFloorNum === null) return false;
+    return tokens.some(t => {
+      if (!t.zoneKey) return false;
+      const unitFloorNum = floorIdToNum(t.zoneKey.split('-')[0]);
+      return unitFloorNum !== null && unitFloorNum >= victimFloorNum;
+    });
+  })();
+
+  const zoneVictims = showAllVictims
+    ? allZoneVictims
+    : allZoneVictims.filter(v => discoveredVictimIds.has(v.id) || stairVisible);
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     if (!isDropTarget) return;

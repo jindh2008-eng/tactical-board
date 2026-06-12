@@ -12,6 +12,7 @@ import { WaterConnectionProvider } from '../context/WaterConnectionContext';
 import { WaterLevelProvider }      from '../context/WaterLevelContext';
 import { HydrantStateProvider }    from '../context/HydrantStateContext';
 import { FireCommandProvider }     from '../context/FireCommandContext';
+import { FireLineProvider }        from '../context/FireLineContext';
 import { SprayOverlay }            from '../components/overlay/SprayOverlay';
 import { AerialOverlay }          from '../components/overlay/AerialOverlay';
 import { UnitStatusPanel as UnitInfoPanel } from '../components/left/UnitStatusPanel';
@@ -99,8 +100,8 @@ function isValidSprayZone(cx: number, cy: number, sourceZoneKey: string | null):
   const { floorId, zoneKey } = getPointInfo(cx, cy);
 
   if (sourceZoneKey.startsWith('face-')) {
-    // 방면 구역: data-zone-key 직접 일치
-    return zoneKey === sourceZoneKey;
+    // 방면 구역: 같은 방면이거나 건물 내부(층 구역) 허용
+    return zoneKey === sourceZoneKey || floorId != null;
   }
   // 층 구역: floor ID 비교
   const srcFloorId = floorIdFromZoneKey(sourceZoneKey);
@@ -124,9 +125,9 @@ function SprayTargetOverlay() {
     const rect  = board?.getBoundingClientRect();
     if (!rect) return;
 
-    // 방면 구역은 zoneKey, 층 구역은 floorId를 방수 지점에 저장
+    // 내부 층이면 floorId, 방면이면 zoneKey(face-X)를 방수 지점에 저장
     const resolvedFloorId = sprayMode.sourceZoneKey?.startsWith('face-')
-      ? (zoneKey ?? floorId)
+      ? (floorId ?? zoneKey)
       : floorId;
 
     setSprayState(sprayMode.sourceId, '100%', {
@@ -334,16 +335,17 @@ function ResourcePanel() {
 // nav 옵션 드롭다운
 // ─────────────────────────────────────────────
 
-type OptionKey = 'waterConn' | 'spray' | 'waterLevel';
+type OptionKey = 'waterConn' | 'spray' | 'waterLevel' | 'victims';
 
 interface NavOptionsMenuProps {
-  showWaterConn:  boolean;
-  showSpray:      boolean;
-  showWaterLevel: boolean;
-  onToggle:       (key: OptionKey) => void;
+  showWaterConn:   boolean;
+  showSpray:       boolean;
+  showWaterLevel:  boolean;
+  showAllVictims:  boolean;
+  onToggle:        (key: OptionKey) => void;
 }
 
-function NavOptionsMenu({ showWaterConn, showSpray, showWaterLevel, onToggle }: NavOptionsMenuProps) {
+function NavOptionsMenu({ showWaterConn, showSpray, showWaterLevel, showAllVictims, onToggle }: NavOptionsMenuProps) {
   return (
     <div className="nav-options">
       <span className="nav-options__label">표시옵션</span>
@@ -359,6 +361,10 @@ function NavOptionsMenu({ showWaterConn, showSpray, showWaterLevel, onToggle }: 
         <input type="checkbox" checked={showWaterLevel} onChange={() => onToggle('waterLevel')} />
         수량표시
       </label>
+      <label className="nav-options__item">
+        <input type="checkbox" checked={showAllVictims} onChange={() => onToggle('victims')} />
+        구조대상자
+      </label>
     </div>
   );
 }
@@ -372,14 +378,16 @@ export function PlayPage() {
   const { runKey, status, elapsed, loadSettings, start, stop }         = useTraining();
   const { openOverlay }                                                 = useUIOverlay();
 
-  const [showWaterConn,  setShowWaterConn]  = useState(true);
-  const [showSpray,      setShowSpray]      = useState(true);
-  const [showWaterLevel, setShowWaterLevel] = useState(true);
+  const [showWaterConn,   setShowWaterConn]   = useState(true);
+  const [showSpray,       setShowSpray]       = useState(true);
+  const [showWaterLevel,  setShowWaterLevel]  = useState(true);
+  const [showAllVictims,  setShowAllVictims]  = useState(false);
 
   function handleOptionToggle(key: OptionKey) {
-    if (key === 'waterConn')  setShowWaterConn(v => !v);
-    else if (key === 'spray') setShowSpray(v => !v);
-    else                      setShowWaterLevel(v => !v);
+    if (key === 'waterConn')       setShowWaterConn(v => !v);
+    else if (key === 'spray')      setShowSpray(v => !v);
+    else if (key === 'waterLevel') setShowWaterLevel(v => !v);
+    else                           setShowAllVictims(v => !v);
   }
 
   const elapsedRef = useRef(elapsed);
@@ -407,6 +415,7 @@ export function PlayPage() {
           showWaterConn={showWaterConn}
           showSpray={showSpray}
           showWaterLevel={showWaterLevel}
+          showAllVictims={showAllVictims}
           onToggle={handleOptionToggle}
         />
         <div className="play-nav__divider" />
@@ -457,7 +466,8 @@ export function PlayPage() {
 
   return (
     <div className="play-page" onContextMenu={e => e.preventDefault()}>
-      <DisplayOptionsContext.Provider value={{ showWaterConn, showSpray, showWaterLevel }}>
+      <FireLineProvider>
+      <DisplayOptionsContext.Provider value={{ showWaterConn, showSpray, showWaterLevel, showAllVictims }}>
       <EventProvider key={runKey}>
       <TokenProvider
         key={runKey}
@@ -569,6 +579,7 @@ export function PlayPage() {
       </TokenProvider>
       </EventProvider>
       </DisplayOptionsContext.Provider>
+      </FireLineProvider>
     </div>
   );
 }

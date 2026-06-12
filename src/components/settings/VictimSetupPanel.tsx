@@ -37,7 +37,7 @@ export function VictimSetupPanel() {
       ) : (
         <div className="vsp__table">
 
-          {/* 컬럼 헤더 — [#, 성별, 나이, 상태, 면, 층, 상세위치, 바로보임, X] */}
+          {/* 컬럼 헤더 — [#, 성별, 나이, 상태, 면, 층, 계단실, 상세위치, 바로보임, X] */}
           <div className="vsp__thead">
             <span className="vsp__th vsp__th--idx">#</span>
             <span className="vsp__th">성별</span>
@@ -45,6 +45,7 @@ export function VictimSetupPanel() {
             <span className="vsp__th">상태</span>
             <span className="vsp__th vsp__th--sm">면</span>
             <span className="vsp__th vsp__th--sm">층</span>
+            <span className="vsp__th vsp__th--stair" title="층 선택 시 해당 층 계단실에 배치">계단실</span>
             <span className="vsp__th">상세위치</span>
             <span className="vsp__th vsp__th--visible" title="인명검색 없이 처음부터 화면에 표시">바로보임</span>
             <span className="vsp__th vsp__th--del"></span>
@@ -118,6 +119,17 @@ export function VictimSetupPanel() {
                     </option>
                   ))}
                 </select>
+              </span>
+
+              <span className="vsp__cell vsp__cell--stair">
+                <input
+                  className="vsp__stair-cb"
+                  type="checkbox"
+                  checked={item.isStair ?? false}
+                  disabled={item.floor === null}
+                  title={item.floor === null ? '층을 먼저 선택하세요' : '해당 층 계단실에 배치'}
+                  onChange={e => updateVictimSetupItem(item.id, { isStair: e.target.checked })}
+                />
               </span>
 
               <span className="vsp__cell">

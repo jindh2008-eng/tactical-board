@@ -167,9 +167,9 @@ export function VictimContextBarMenu({
   const headerText =
     victim.kind === 'person'
       ? [victim.gender,
-         victim.age != null ? `${victim.age}세` : null,
+         victim.ageGroup ?? (victim.age != null ? `${victim.age}세` : null),
          victim.condition,
-        ].filter((v): v is string => v != null && v !== '').join(' · ')
+        ].filter((v): v is NonNullable<typeof v> => v != null).join(' · ')
       : victim.kind === 'group'
         ? `다수 ${victim.groupCount ?? 2}명`
         : victim.customLabel?.trim() || '기타';

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { Face, FaceZone } from '../../types';
+import { FireLine } from './FireLine';
+import { useFireLine } from '../../context/FireLineContext';
 
 // ── 드롭 위치 보정 상수 ──────────────────────────────────────
 const DROP_NUDGE_X = 0;
@@ -11,6 +13,7 @@ import { useSettings } from '../../store/settingsStore';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { HydrantIcon } from '../shared/HydrantIcon';
+import { SiamesePipeIcon } from './SiamesePipeIcon';
 import './ExteriorZone.css';
 
 // ─────────────────────────────────────────────
@@ -45,7 +48,8 @@ function cornerStyle(corner: HydrantCorner): React.CSSProperties {
 function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
   const { tokens, positions, moveToken }         = useTokens();
   const { victims, victimPositions, moveVictim } = useVictims();
-  const { hydrantSetup }                         = useSettings();
+  const { hydrantSetup, building }               = useSettings();
+  const hasSiamesePipe = face !== 'D' && (building.siamesePipeFaces ?? []).includes(face);
   const [isDragOver, setIsDragOver] = useState(false);
 
   // 이 방면에 배정된 소화전 필터링 후 코너별 그룹화
@@ -130,6 +134,8 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
           ))}
         </div>
       )}
+
+      {hasSiamesePipe && <SiamesePipeIcon face={face} />}
     </div>
   );
 }
@@ -147,6 +153,7 @@ export function ExteriorZone({ face }: Props) {
   const zones     = getFaceZones(face);
   const faceZone  = zones.find(z => z.category === 'face')!;
   const isHorizontal = face === 'A' || face === 'C';
+  const { showFireLine } = useFireLine();
 
   return (
     <div
@@ -158,6 +165,9 @@ export function ExteriorZone({ face }: Props) {
       ].filter(Boolean).join(' ')}
       data-deployment-face={face}
     >
+      {face === 'A' && showFireLine && (
+        <FireLine height={15} style={{ position: 'absolute', top: -9, left: 0, right: 0, zIndex: 2 }} />
+      )}
       <div className="exterior-zone__content">
         <FaceGeneralZone zone={faceZone} face={face} />
       </div>

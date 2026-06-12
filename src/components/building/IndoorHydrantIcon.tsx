@@ -1,32 +1,35 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useActionMode }  from '../../context/ActionModeContext';
-import { useHydrantState } from '../../context/HydrantStateContext';
-import { useSettings }    from '../../store/settingsStore';
-import { useTokens }      from '../../context/TokenContext';
-import './HydrantIcon.css';
+import { useActionMode }       from '../../context/ActionModeContext';
+import { useHydrantState }     from '../../context/HydrantStateContext';
+import { useSettings }         from '../../store/settingsStore';
+import { useTokens }           from '../../context/TokenContext';
+import '../shared/HydrantIcon.css';  // hi-menu 스타일 + hi-pulse 키프레임 공유
+import './IndoorHydrantIcon.css';
 
-// ─────────────────────────────────────────────
-// Props
-// ─────────────────────────────────────────────
-
-interface Props {
-  id:        string;   // hydrantSetup item id — data-token-id 기준
-  name:      string;
-  distanceM: number;
+function floorLabel(floorId: string): string {
+  if (floorId === 'RF') return '옥상';
+  const n = parseInt(floorId, 10);
+  if (isNaN(n)) return floorId;
+  return n < 0 ? `지하${Math.abs(n)}층` : `${n}층`;
 }
 
 // ─────────────────────────────────────────────
-// HydrantIcon
+// IndoorHydrantIcon
 // ─────────────────────────────────────────────
 
-export function HydrantIcon({ id, name, distanceM }: Props) {
+interface Props { floorId: string; }
+
+export function IndoorHydrantIcon({ floorId }: Props) {
+  const id = `indoor-hydrant-${floorId}`;
+  const label = `옥내소화전(${floorLabel(floorId)})`;
+
   const { mode, enterMode, clearMode }                                       = useActionMode();
   const { isBroken, toggleBroken, getEquipmentMessage,
           setEquipmentMessage, clearEquipmentMessage }                       = useHydrantState();
   const { unitStatusConfig }                                                 = useSettings();
   const { addLog }                                                           = useTokens();
-  const statusMessages = unitStatusConfig['hydrant'] ?? [];
+  const statusMessages = unitStatusConfig['indoor_hydrant'] ?? [];
   const activeMsg      = getEquipmentMessage(id);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -40,7 +43,7 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
     visibility: 'hidden', position: 'fixed', left: 0, top: 0,
   });
 
-  // ── 우클릭 핸들러 ──────────────────────────
+  // ── 우클릭 → 메뉴 ────────────────────────────
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -48,14 +51,14 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
     setMenuOpen(true);
   }
 
-  // ── 송수 연결 모드 진입 ──────────────────────
+  // ── 송수 연결 모드 진입 ───────────────────────
   function handleWaterConnect() {
     if (broken) return;
-    enterMode({ type: 'water-connect', sourceId: id, sourceType: 'hydrant', sourceName: name });
+    enterMode({ type: 'water-connect', sourceId: id, sourceType: 'indoor_hydrant', sourceName: label });
     setMenuOpen(false);
   }
 
-  // ── 소화전고장 토글 ─────────────────────────
+  // ── 소화전고장 토글 ──────────────────────────
   function handleToggleBroken() {
     toggleBroken(id);
     setMenuOpen(false);
@@ -69,7 +72,7 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
       setEquipmentMessage(id, msg);
       addLog({
         logType: 'status-tag',
-        tokenId: id, tokenName: name,
+        tokenId: id, tokenName: label,
         fromZoneId: '', toZoneId: '',
         note: msg,
       });
@@ -77,7 +80,7 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
     setMenuOpen(false);
   }
 
-  // ── 메뉴 위치 계산 ─────────────────────────
+  // ── 메뉴 위치 계산 ───────────────────────────
   useLayoutEffect(() => {
     if (!menuOpen || !menuRef.current || !wrapperRef.current) return;
     const menu   = menuRef.current;
@@ -101,7 +104,7 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
     setMenuStyle({ position: 'fixed', left, top, visibility: 'visible' });
   }, [menuOpen]);
 
-  // ── 외부 클릭·ESC → 메뉴 닫기 ─────────────
+  // ── 외부 클릭·ESC → 메뉴 닫기 ──────────────
   useEffect(() => {
     if (!menuOpen) return;
     function onMouseDown(e: MouseEvent) {
@@ -127,18 +130,22 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
       <div
         ref={wrapperRef}
         className={[
-          'hydrant-icon',
-          broken   ? 'hydrant-icon--broken' : '',
-          isSource ? 'hydrant-icon--source' : '',
+          'indoor-hydrant-icon',
+          broken   ? 'indoor-hydrant-icon--broken' : '',
+          isSource ? 'indoor-hydrant-icon--source' : '',
         ].filter(Boolean).join(' ')}
         data-token-id={id}
+        style={{ pointerEvents: mode.type === null ? 'auto' : 'none' }}
         onContextMenu={handleContextMenu}
       >
-        <span className="hydrant-icon__name">{name}</span>
-        <img src="/소화전.png" className="hydrant-icon__img" alt="소화전" draggable={false} />
-        <span className="hydrant-icon__dist">{distanceM}m</span>
+        <img
+          src="/옥내소화전_미작동.png"
+          alt="옥내소화전"
+          className="indoor-hydrant-icon__img"
+          draggable={false}
+        />
         {activeMsg && (
-          <div className="hydrant-icon__msg equip-status-msg">
+          <div className="indoor-hydrant-icon__msg equip-status-msg">
             <span className="equip-status-msg__text">{activeMsg}</span>
             <button
               className="equip-status-msg__close"
@@ -149,7 +156,9 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
         )}
 
         {/* 송수연결 소스 펄스 링 */}
-        {isSource && <div className="hydrant-icon__pulse-ring" aria-hidden="true" />}
+        {isSource && (
+          <div className="indoor-hydrant-icon__pulse-ring" aria-hidden="true" />
+        )}
       </div>
 
       {/* ── 우클릭 컨텍스트 메뉴 ── */}

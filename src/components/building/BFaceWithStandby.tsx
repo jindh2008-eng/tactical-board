@@ -3,10 +3,12 @@ import { getFaceZones, getFaceZoneDataAttrs } from '../../data/faceZoneData';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { useSettings } from '../../store/settingsStore';
+import { useFireLine } from '../../context/FireLineContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { HydrantIcon } from '../shared/HydrantIcon';
 import './BFaceWithStandby.css';
+import './ExteriorZone.css';
 
 // ─────────────────────────────────────────────
 // B면 드롭 영역
@@ -18,7 +20,7 @@ const DROP_NUDGE_Y = 0;
 function BFaceDropZone() {
   const { tokens, positions, moveToken }         = useTokens();
   const { victims, victimPositions, moveVictim } = useVictims();
-  const { hydrantSetup }                         = useSettings();
+  const { hydrantSetup } = useSettings();
   const [isDragOver, setIsDragOver] = useState(false);
 
   // B면에 배정된 소화전 — 좌측하단 고정
@@ -102,6 +104,7 @@ function BFaceDropZone() {
           ))}
         </div>
       )}
+
     </div>
   );
 }
@@ -111,11 +114,18 @@ function BFaceDropZone() {
 // ─────────────────────────────────────────────
 
 export function BFaceWithStandby() {
+  const { showFireLine, toggleFireLine } = useFireLine();
   return (
     <div className="exterior-zone exterior-zone--b exterior-zone--primary exterior-zone--vertical">
       <div className="exterior-zone__content">
         <BFaceDropZone />
       </div>
+      <button
+        className={`fire-line-toggle${showFireLine ? ' fire-line-toggle--active' : ''}`}
+        onClick={toggleFireLine}
+      >
+        소방통제선 {showFireLine ? '해제' : '표시'}
+      </button>
     </div>
   );
 }

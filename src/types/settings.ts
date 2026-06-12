@@ -1,4 +1,4 @@
-import type { BuildingConfig, FireStatus } from './index';
+import type { BuildingConfig, FireStatus, Face } from './index';
 import type { VictimGender, VictimAgeGroup, VictimCondition, VictimFace } from './victim';
 export type { VictimFace };
 
@@ -10,11 +10,13 @@ export interface ExtraFireFloor {
 
 /** 건물 및 화재 상황 설정 */
 export interface BuildingSettings {
-  config:            BuildingConfig;
-  fireFloor:         number;
-  fireStatus:        FireStatus | null;  // 초기 화재상태
-  targetName:        string;             // 대상명 (훈련 건물명)
-  extraFireFloors?:  ExtraFireFloor[];   // 화점층 외 추가 화재 층
+  config:              BuildingConfig;
+  fireFloor:           number;
+  fireStatus:          FireStatus | null;  // 초기 화재상태
+  targetName:          string;             // 대상명 (훈련 건물명)
+  extraFireFloors?:    ExtraFireFloor[];   // 화점층 외 추가 화재 층
+  siamesePipeFaces?:   Face[];            // 연결송수구 설치 방면 (A/B/D)
+  hasIndoorHydrant?:   boolean;           // 옥내소화전 표시 여부
 }
 
 /** 출동대 행동 타이밍 설정 */
@@ -83,7 +85,7 @@ export interface SettingsState {
 // 훈련 진행 체크리스트
 // ─────────────────────────────────────────────
 
-export type ChecklistItemType = 'procedure' | 'event' | 'arrival' | 'message' | 'fire' | 'xvr' | 'unit' | 'incident';
+export type ChecklistItemType = 'procedure' | 'event' | 'arrival' | 'message' | 'fire' | 'xvr' | 'unit' | 'incident' | 'victim';
 
 /** 출동대 유형별 사전 정의 상태메세지 목록 */
 export type UnitStatusConfig = Record<string, string[]>;
@@ -110,6 +112,7 @@ export interface ChecklistItem {
   arrivalOrder?:     number;     // 출동대 도착 타입일 때 착대 순서
   fireFloor?:        number;     // 화재 타입일 때 대상 층
   fireTargetStatus?: FireStatus; // 화재 타입일 때 목표 화재상태
+  messageTitle?:     string;     // 메세지 타입일 때 제목
   messageLocation?:  string;     // 메세지 타입일 때 층/구역 위치
   messageBody?:      string;     // 메세지 타입일 때 본문 (줄바꿈 포함)
   eventId?:          string;     // 이벤트 타입일 때 대상 돌발상황 ID
@@ -122,6 +125,8 @@ export interface ChecklistItem {
   unitMissionColor?:  string;     // mission — 임무 색상
   unitStatusTagLabel?: string;    // status — 상태 태그 라벨
   unitStatusTagColor?: string;    // status — 상태 태그 색상
+  victimSetupId?:     string;     // victim 타입일 때 대상 VictimSetupItem ID
+  victimVisibility?:  'show' | 'hide';  // victim 타입일 때 보임/안보임
 }
 
 export interface ChecklistSection {
@@ -164,6 +169,12 @@ export type CommandProcedureConfigs = Partial<Record<CommandProcedureLevel, Comm
 // 출동대 사전 생성 설정 (설정창 전용)
 // ─────────────────────────────────────────────
 
+export interface DispatchExtraUnit {
+  id:       string;
+  name:     string;
+  unitType: 'agency' | 'general';
+}
+
 export interface DispatchSetup {
   units: {
     suppression: number;  // 진압대
@@ -177,11 +188,13 @@ export interface DispatchSetup {
     command:      number;  // 지휘차
     waterTank:    number;  // 물탱크
   };
+  extraUnits?: DispatchExtraUnit[];
 }
 
 export const DEFAULT_DISPATCH_SETUP: DispatchSetup = {
   units:    { suppression: 0, rescue: 0, ems: 0 },
   vehicles: { aerial: 0, ladder: 0, smokeExhaust: 0, command: 0, waterTank: 0 },
+  extraUnits: [],
 };
 
 /** 도착설정 방식 — 훈련 전체에 하나만 적용 */
@@ -232,6 +245,7 @@ export interface VictimSetupItem {
    * 단, 화면에서 요약 행으로 묶인 층 번호는 유효하지 않음.
    */
   floor:            number | 'RF' | null;
+  isStair?:         boolean;          // true: 해당 층 계단실에 배치
   detailLocation:   string;           // 상세위치 (예: '203호', '엘리베이터 앞')
   immediatelyVisible?: boolean;       // true: 인명검색 없이 처음부터 화면에 표시
 }

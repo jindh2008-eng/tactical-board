@@ -36,7 +36,7 @@ interface Props {
   onRemove?:  () => void;
 }
 
-const WATER_SOURCE_TYPES   = new Set(['pump', 'water_tank']);
+const WATER_SOURCE_TYPES   = new Set(['pump', 'water_tank', 'indoor_hydrant']);
 const SPRAY_CAPABLE_TYPES  = new Set(['suppression', 'rescue']);
 const SEARCH_CAPABLE_TYPES = new Set(['suppression', 'rescue']);
 const MONITOR_TYPES        = new Set(['pump', 'water_tank']);
@@ -66,7 +66,7 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose, onRemove }: Prop
   const { enterMode }           = useActionMode();
   const { connections }         = useWaterConnections();
   const { unitTagPresetConfig, unitStatusConfig } = useSettings();
-  const { activeSearches, searchScores, addUnitToSearch, removeUnitFromSearch, victims, discoveredVictimIds } = useVictims();
+  const { activeSearches, searchScores, addUnitToSearch, removeUnitFromSearch } = useVictims();
   const buildingState      = useOptionalBuildingState();
   const stairSmokeFloor    = buildingState?.stairSmokeFloor    ?? null;
   const smokeConcentration = buildingState?.smokeConcentration ?? 0;
@@ -80,8 +80,6 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose, onRemove }: Prop
   const isAerialVehicle   = AERIAL_TYPES.has(token.unitType);
   const deployLabel       = token.unitType === 'aerial' ? '사다리전개' : '바스켓전개';
   const isSprayCapable    = SPRAY_CAPABLE_TYPES.has(token.unitType);
-  const hasWaterSource    = isSprayCapable &&
-    connections.some(c => c.toId === token.id && WATER_SOURCE_TYPES.has(c.fromType));
   const isSprayActive     = isSprayCapable && token.sprayState != null;
   const isMonitorUnit     = MONITOR_TYPES.has(token.unitType);
   const isMonitorActive   = isMonitorUnit && token.aerialSprayTarget != null;
@@ -127,14 +125,6 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose, onRemove }: Prop
         : allFireFloorsInitial)
     : false;
 
-  // 현재 층에 미발견 구조대상자가 있는지 (내부 구역 전체 — 층 단위 검색)
-  const hasUndiscoveredVictims = floorId !== null
-    ? victims.some(v => {
-        if (!v.zoneKey || v.zoneKey.startsWith('face-')) return false;
-        return v.zoneKey.split('-')[0] === floorId && !discoveredVictimIds.has(v.id);
-      })
-    : false;
-
   // 이 토큰이 현재 층에서 검색 중인지
   const isSearchActive = floorId !== null
     ? (activeSearches[floorId]?.units.some(u => u.tokenId === token.id) ?? false)
@@ -143,12 +133,12 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose, onRemove }: Prop
   // 중단 버튼에 표시할 현재 점수
   const searchScore = token.id in searchScores ? searchScores[token.id] : null;
 
-  // 인명검색 버튼 표시: 내부 구역 배치 + 인명검색 가능 대 + (해당 층에 미발견 대상 있거나 이미 검색 중)
-  const showSearchButton = isSearchCapable && isInInterior && (hasUndiscoveredVictims || isSearchActive);
+  // 인명검색 버튼 표시: 내부 구역 배치 + 인명검색 가능 대 (구조대상자 유무와 무관)
+  const showSearchButton = isSearchCapable && isInInterior;
 
   const hasFuncButtons =
     isAerialVehicle ||
-    (isSprayCapable && (hasWaterSource || isSprayActive)) ||
+    isSprayCapable ||
     canWaterConnect ||
     isMonitorUnit ||
     showSearchButton ||
@@ -386,7 +376,7 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose, onRemove }: Prop
           )}
 
           {/* 방수개시 / 방수중단 (진압대·구조대) */}
-          {isSprayCapable && hasWaterSource && !isSprayActive && (
+          {isSprayCapable && !isSprayActive && (
             <button
               className="usbm__badge usbm__badge--spray-start"
               onMouseDown={e => { e.stopPropagation(); handleSprayStart(); }}

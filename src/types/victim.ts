@@ -29,6 +29,7 @@ export interface VictimToken {
   kind:         VictimKind;
   gender?:      VictimGender;
   age?:         number;
+  ageGroup?:    VictimAgeGroup;
   condition?:   VictimCondition;
   customLabel?: string;
   groupCount?:  number;

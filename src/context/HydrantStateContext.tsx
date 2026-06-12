@@ -1,7 +1,7 @@
 import {
   createContext, useContext, useState, useCallback, useEffect, type ReactNode,
 } from 'react';
-import { saveHydrantSession, loadHydrantSession } from '../utils/runtimeSession';
+import { saveHydrantSession, loadHydrantSession, saveEquipMsgSession, loadEquipMsgSession } from '../utils/runtimeSession';
 import { useTokens } from './TokenContext';
 
 // ─────────────────────────────────────────────
@@ -9,9 +9,13 @@ import { useTokens } from './TokenContext';
 // ─────────────────────────────────────────────
 
 interface HydrantStateContextValue {
-  brokenHydrants: ReadonlySet<string>;
-  isBroken:       (id: string) => boolean;
-  toggleBroken:   (id: string) => void;
+  brokenHydrants:      ReadonlySet<string>;
+  isBroken:            (id: string) => boolean;
+  toggleBroken:        (id: string) => void;
+  equipmentMessages:   Readonly<Record<string, string>>;
+  getEquipmentMessage: (id: string) => string;
+  setEquipmentMessage: (id: string, msg: string) => void;
+  clearEquipmentMessage: (id: string) => void;
 }
 
 const HydrantStateContext = createContext<HydrantStateContextValue | null>(null);
@@ -32,10 +36,17 @@ export function HydrantStateProvider({ children }: { children: ReactNode }) {
   const [brokenHydrants, setBrokenHydrants] = useState<Set<string>>(
     () => loadHydrantSession() ?? new Set(),
   );
+  const [equipmentMessages, setEquipmentMessages] = useState<Record<string, string>>(
+    () => loadEquipMsgSession() ?? {},
+  );
 
   useEffect(() => {
     saveHydrantSession(brokenHydrants);
   }, [brokenHydrants]);
+
+  useEffect(() => {
+    saveEquipMsgSession(equipmentMessages);
+  }, [equipmentMessages]);
 
   const isBroken = useCallback(
     (id: string) => brokenHydrants.has(id),
@@ -60,8 +71,28 @@ export function HydrantStateProvider({ children }: { children: ReactNode }) {
     });
   }, [addLog]);
 
+  const getEquipmentMessage = useCallback(
+    (id: string) => equipmentMessages[id] ?? '',
+    [equipmentMessages],
+  );
+
+  const setEquipmentMessage = useCallback((id: string, msg: string) => {
+    setEquipmentMessages(prev => ({ ...prev, [id]: msg }));
+  }, []);
+
+  const clearEquipmentMessage = useCallback((id: string) => {
+    setEquipmentMessages(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
+
   return (
-    <HydrantStateContext.Provider value={{ brokenHydrants, isBroken, toggleBroken }}>
+    <HydrantStateContext.Provider value={{
+      brokenHydrants, isBroken, toggleBroken,
+      equipmentMessages, getEquipmentMessage, setEquipmentMessage, clearEquipmentMessage,
+    }}>
       {children}
     </HydrantStateContext.Provider>
   );

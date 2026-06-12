@@ -4,7 +4,6 @@ import { BuildingConfigPanel }   from '../components/building/BuildingConfigPane
 import { SettingsLibraryPanel }  from '../components/settings/SettingsLibraryPanel';
 import { HydrantSetupPanel }     from '../components/settings/HydrantSetupPanel';
 import { DispatchSetupPanel }    from '../components/settings/DispatchSetupPanel';
-import { VehicleSetupPanel }     from '../components/settings/VehicleSetupPanel';
 import { VictimSetupPanel }      from '../components/settings/VictimSetupPanel';
 import { EventSetupPanel }       from '../components/settings/EventSetupPanel';
 import { ChecklistSetupPanel }   from '../components/settings/ChecklistSetupPanel';
@@ -15,7 +14,7 @@ import { ScenarioModal }         from '../components/overlays/ScenarioModal';
 import './SettingsPage.css';
 
 type SettingsSection =
-  | 'library' | 'building' | 'hydrant' | 'timing' | 'dispatch' | 'vehicle' | 'victim' | 'event'
+  | 'library' | 'building' | 'hydrant' | 'timing' | 'dispatch' | 'victim' | 'event'
   | 'commandprocedure'
   | 'unitstatus'
   | 'tagpreset'
@@ -28,7 +27,6 @@ const TRAINING_ITEMS: { key: SettingsSection; label: string }[] = [
   { key: 'hydrant',  label: '소화전 설정' },
   { key: 'timing',   label: '타이밍 설정' },
   { key: 'dispatch', label: '출동대 설정' },
-  { key: 'vehicle',  label: '차량 설정' },
   { key: 'victim',   label: '구조대상자 설정' },
   { key: 'event',    label: '돌발상황' },
 ];
@@ -46,6 +44,8 @@ export function SettingsPage() {
     timing,
     updateTiming,
     updateExtraFireFloors,
+    updateSiamesePipeFaces,
+    updateIndoorHydrant,
   } = useSettings();
 
   return (
@@ -90,7 +90,7 @@ export function SettingsPage() {
             className={`settings-page__sidebar-top-item${section === 'unitstatus' ? ' settings-page__sidebar-top-item--active' : ''}`}
             onClick={() => setSection('unitstatus')}
           >
-            출동대 상태메세지
+            이벤트 메세지
           </button>
 
           <button
@@ -139,6 +139,10 @@ export function SettingsPage() {
                 onTargetNameChange={updateTargetName}
                 extraFireFloors={building.extraFireFloors ?? []}
                 onExtraFireFloorsChange={updateExtraFireFloors}
+                siamesePipeFaces={building.siamesePipeFaces ?? []}
+                onSiamesePipeFacesChange={updateSiamesePipeFaces}
+                hasIndoorHydrant={building.hasIndoorHydrant ?? false}
+                onIndoorHydrantChange={updateIndoorHydrant}
               />
             </section>
           )}
@@ -201,16 +205,6 @@ export function SettingsPage() {
             </section>
           )}
 
-          {section === 'vehicle' && (
-            <section className="settings-page__section">
-              <h3 className="settings-page__section-title">차량 설정</h3>
-              <p className="settings-page__hint">
-                고가차·굴절차 등 별도 투입 차량 수량을 설정합니다.
-                펌프·구조차는 활동대 수량과 자동 연동됩니다.
-              </p>
-              <VehicleSetupPanel />
-            </section>
-          )}
 
           {section === 'victim' && (
             <section className="settings-page__section">
@@ -247,11 +241,7 @@ export function SettingsPage() {
 
           {section === 'unitstatus' && (
             <section className="settings-page__section">
-              <h3 className="settings-page__section-title">출동대 상태메세지</h3>
-              <p className="settings-page__hint">
-                출동대 유형별 상태메세지를 등록합니다.
-                시나리오/체크리스트의 '출동대' 항목에서 불러와 사용할 수 있습니다.
-              </p>
+              <h3 className="settings-page__section-title">이벤트 메세지</h3>
               <UnitStatusPanel />
             </section>
           )}

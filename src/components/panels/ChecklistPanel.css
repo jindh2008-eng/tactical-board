@@ -233,6 +233,11 @@
   transition: color 0.15s, text-decoration 0.15s;
 }
 
+.checklist-panel__item-units {
+  font-size: 0.68rem;
+  color: var(--color-text-dim);
+}
+
 /* ── 잠금 아이콘 ── */
 
 .checklist-panel__lock-icon {
@@ -244,67 +249,103 @@
 
 /* ── 메세지 팝업 오버레이 ── */
 
+@keyframes msg-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes msg-pop-in {
+  from { opacity: 0; transform: scale(0.92) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
 .checklist-panel__msg-overlay {
   position: fixed;
   inset: 0;
-  pointer-events: none;
+  pointer-events: all;
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  animation: msg-fade-in 0.15s ease;
+}
+
+.checklist-panel__msg-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 4px 0;
 }
 
 .checklist-panel__msg-popup {
-  pointer-events: all;
-  background: var(--color-surface, #1e1e1e);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  min-width: 240px;
-  max-width: 400px;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 260px;
+  max-width: 440px;
   width: max-content;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: msg-pop-in 0.18s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
-.checklist-panel__msg-location {
-  font-size: 0.82rem;
+.checklist-panel__msg-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 16px 10px;
+}
+
+.checklist-panel__msg-title {
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #55cc88;
-  padding: 10px 14px 6px;
-  border-bottom: 1px solid var(--color-border);
+  color: #111111;
+  line-height: 1.3;
+}
+
+.checklist-panel__msg-divider {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 0;
 }
 
 .checklist-panel__msg-body {
-  font-size: 0.80rem;
-  color: var(--color-text);
-  line-height: 1.65;
-  padding: 8px 14px;
+  font-size: 0.84rem;
+  color: #1a1a1a;
+  line-height: 1.75;
+  padding: 14px 16px;
   white-space: pre-wrap;
-  max-height: 240px;
+  max-height: 260px;
   overflow-y: auto;
 }
 
 .checklist-panel__msg-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 6px 10px;
-  border-top: 1px solid var(--color-border);
+  padding: 8px 12px;
+  border-top: 1px solid #e8e8e8;
+  background: #f8f8f8;
 }
 
 .checklist-panel__msg-close {
-  font-size: 0.74rem;
-  padding: 2px 10px;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  color: var(--color-text-dim);
+  font-size: 0.78rem;
+  padding: 4px 18px;
+  background: #1a1a1a;
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
   cursor: pointer;
-  transition: background-color 0.1s, color 0.1s;
+  font-weight: 600;
+  transition: background-color 0.1s;
 }
 
 .checklist-panel__msg-close:hover {
-  background-color: var(--color-header-bg);
-  color: var(--color-text);
+  background-color: #333;
 }

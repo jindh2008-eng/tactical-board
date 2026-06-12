@@ -173,6 +173,37 @@
   border-color: var(--color-accent);
 }
 
+/* ── 연결송수구 ── */
+
+.bcf__siamese-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bcf__siamese-faces {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bcf__siamese-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.bcf__siamese-label input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--color-accent);
+  width: 14px;
+  height: 14px;
+}
+
 /* ─────────────────────────────────────────────
    건물 정보 입력 바 (PlayPage 상단 툴바 — 기존 유지)
    ─────────────────────────────────────────────*/

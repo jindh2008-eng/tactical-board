@@ -256,6 +256,29 @@ export function loadHydrantSession(): Set<string> | null {
 }
 
 // ─────────────────────────────────────────────
+// 장비 활성 메시지 세션 (소화전/옥내소화전/연결송수구)
+// ─────────────────────────────────────────────
+
+const KEY_EQUIP_MSG = 'tactical-board.runtime.equip-msg';
+
+export function saveEquipMsgSession(msgs: Record<string, string>): void {
+  try {
+    sessionStorage.setItem(KEY_EQUIP_MSG, JSON.stringify(msgs));
+  } catch { /* ignore */ }
+}
+
+export function loadEquipMsgSession(): Record<string, string> | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_EQUIP_MSG);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object' && !Array.isArray(parsed))
+      ? (parsed as Record<string, string>)
+      : null;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
 // 수량 세션
 // ─────────────────────────────────────────────
 

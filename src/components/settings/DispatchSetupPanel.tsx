@@ -4,6 +4,8 @@ import type { DispatchSetup } from '../../types/settings';
 import { secsToMmss, mmssToSecs, computeRosterDisplayName } from '../../utils/dispatchRoster';
 import './DispatchSetupPanel.css';
 
+const AGENCY_PRESETS = ['지휘차', '시청', '경찰', '보건소', '군부대', '한전', '가스'];
+
 // ── 활동대 행 정의 ──────────────────────────────
 const UNIT_ROWS: { key: keyof DispatchSetup['units']; label: string }[] = [
   { key: 'suppression', label: '진압대' },
@@ -66,9 +68,12 @@ export function DispatchSetupPanel() {
   const {
     arrivalMode, updateArrivalMode,
     dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
+    addDispatchExtraUnit, removeDispatchExtraUnit,
     dispatchRoster, updateRosterArrival, updateRosterOrder, updateRosterPrefix,
   } = useSettings();
-  const { units, vehicles } = dispatchSetup;
+  const { units, vehicles, extraUnits = [] } = dispatchSetup;
+
+  const [customInput, setCustomInput] = useState('');
 
   // 로스터 도착시간 로컬 입력 상태 (MM:SS 문자열) — 시간모드 전용
   const [arrivalInputs, setArrivalInputs] = useState<Record<string, string>>(() =>
@@ -144,6 +149,71 @@ export function DispatchSetupPanel() {
             />
           </div>
         ))}
+      </div>
+
+      {/* 유관기관 및 직접입력 */}
+      <div className="dsp__group">
+        <div className="dsp__group-title">유관기관 및 직접입력</div>
+
+        {/* 유관기관 프리셋 버튼 */}
+        <div className="dsp__extra-presets">
+          {AGENCY_PRESETS.map(name => (
+            <button
+              key={name}
+              className="dsp__extra-btn"
+              type="button"
+              onClick={() => addDispatchExtraUnit(name, 'agency')}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+
+        {/* 직접입력 */}
+        <div className="dsp__extra-input-row">
+          <input
+            className="dsp__extra-input"
+            type="text"
+            placeholder="직접입력..."
+            maxLength={16}
+            value={customInput}
+            onChange={e => setCustomInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                const t = customInput.trim();
+                if (t) { addDispatchExtraUnit(t, 'general'); setCustomInput(''); }
+              }
+            }}
+          />
+          <button
+            className="dsp__extra-btn"
+            type="button"
+            onClick={() => {
+              const t = customInput.trim();
+              if (t) { addDispatchExtraUnit(t, 'general'); setCustomInput(''); }
+            }}
+          >
+            추가
+          </button>
+        </div>
+
+        {/* 추가된 항목 목록 */}
+        {extraUnits.length > 0 && (
+          <div className="dsp__extra-list">
+            {extraUnits.map(u => (
+              <div key={u.id} className="dsp__extra-item">
+                <span className="dsp__extra-name">{u.name}</span>
+                <button
+                  className="dsp__extra-remove"
+                  type="button"
+                  onClick={() => removeDispatchExtraUnit(u.id)}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 출동대 목록 및 도착설정 */}
