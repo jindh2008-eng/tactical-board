@@ -74,6 +74,56 @@ function escapeCell(value: string): string {
   return value;
 }
 
+// ── PDF 인쇄(저장) 함수 ───────────────────────────────────────────────────
+
+export function exportLogsAsPdf(logs: LogEntry[], targetName: string): void {
+  if (logs.length === 0) return;
+
+  const today   = new Date();
+  const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+  const title   = `이벤트 로그 — ${targetName || '훈련'} (${dateStr})`;
+
+  const rows = [...logs].reverse().map(entry => {
+    const typeLabel = LOG_TYPE_LABELS[entry.logType] ?? entry.logType;
+    const content   = entryContent(entry);
+    return `<tr><td class="col-time">${entry.timestamp}</td><td class="col-type">${typeLabel}</td><td class="col-content">${content}</td></tr>`;
+  }).join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<title>${title}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Malgun Gothic','맑은 고딕',sans-serif;font-size:10pt;color:#111;background:#fff;padding:16mm 14mm}
+h1{font-size:13pt;font-weight:700;margin-bottom:10px;border-bottom:2px solid #333;padding-bottom:6px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+thead th{background:#333;color:#fff;padding:5px 8px;text-align:left;font-size:9pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+tbody tr:nth-child(even){background:#f5f5f5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+tbody td{padding:4px 8px;border-bottom:1px solid #ddd;vertical-align:top}
+.col-time{white-space:nowrap;width:76px;color:#444}
+.col-type{white-space:nowrap;width:68px;font-weight:600}
+</style>
+</head>
+<body>
+<h1>${title}</h1>
+<table>
+<thead><tr><th class="col-time">시간</th><th class="col-type">유형</th><th class="col-content">내용</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=820,height=640');
+  if (!win) return;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); win.close(); }, 300);
+}
+
 // ── 메인 내보내기 함수 ────────────────────────────────────────────────────
 
 export function exportLogsAsCsv(logs: LogEntry[], targetName: string): void {

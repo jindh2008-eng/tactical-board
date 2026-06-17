@@ -56,10 +56,12 @@ const STATUS_TAG_COLORS: Record<string, { bg: string; border: string; text: stri
 interface Props {
   token:     UnitToken;
   absPos?:   TokenPos;
-  onRemove?: () => void;
+  selectMode?:     boolean;
+  selected?:       boolean;
+  onToggleSelect?: () => void;
 }
 
-export function TokenCard({ token, absPos, onRemove }: Props) {
+export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect }: Props) {
   const { mode, clearMode }        = useActionMode();
   const { addConnection, connections } = useWaterConnections();
   const waterLevel                 = useWaterLevel();
@@ -232,11 +234,16 @@ export function TokenCard({ token, absPos, onRemove }: Props) {
   return (
     <>
       <div
-        className="token-card-wrapper"
+        className={`token-card-wrapper${selectMode ? ' token-card-wrapper--select' : ''}`}
         style={wrapperStyle}
         ref={wrapperRef}
         data-token-id={token.id}
       >
+        {selectMode && (
+          <label className="token-card__checkbox" onMouseDown={e => e.stopPropagation()}>
+            <input type="checkbox" checked={!!selected} onChange={onToggleSelect} />
+          </label>
+        )}
         {/* 모드 소스 링 */}
         {isSource && (
           <div className="token-card-mode-ring" aria-hidden="true" />
@@ -381,7 +388,7 @@ export function TokenCard({ token, absPos, onRemove }: Props) {
         <HydrantBarMenu token={token} anchorRect={barMenu} onClose={handleClose} />
       )}
       {barMenu && !isHydrant && (
-        <UnitStatusBarMenu token={token} anchorRect={barMenu} onClose={handleClose} onRemove={onRemove} />
+        <UnitStatusBarMenu token={token} anchorRect={barMenu} onClose={handleClose} />
       )}
     </>
   );

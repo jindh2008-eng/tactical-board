@@ -51,7 +51,10 @@
       "Bash(npm list *)",
       "Bash(findstr /r \"VictimProvider\" src\\\\pages\\\\PlayPage.tsx)",
       "Bash(\\\\.tsx\")",
-      "Bash(Remove-Item \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\settings\\\\VehicleSetupPanel.tsx\")"
+      "Bash(Remove-Item \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\settings\\\\VehicleSetupPanel.tsx\")",
+      "Bash(findstr -i \"export\\\\|log\")",
+      "PowerShell(Start-Process \"npm\" -ArgumentList \"run\",\"dev\" -WorkingDirectory \"d:\\\\claude\\\\tactical-board\" -WindowStyle Hidden)",
+      "PowerShell(npx --yes playwright --version 2>&1)"
     ]
   }
 }

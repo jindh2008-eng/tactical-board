@@ -1,6 +1,55 @@
 /* ─────────────────────────────────────────────
    출동대현황 — 토큰 표시용 placeholder 패널
    ─────────────────────────────────────────────*/
+/* ─── 헤더 선택삭제 UI ─── */
+.usp__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.usp__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.usp__header-btn {
+  font-size:     0.62rem;
+  font-weight:   700;
+  font-family:   inherit;
+  padding:       1px 6px;
+  border-radius: 3px;
+  border:        1px solid #2a4a3a;
+  background:    transparent;
+  color:         #5a8a7a;
+  cursor:        pointer;
+  line-height:   1.5;
+  transition:    color 0.12s, border-color 0.12s, background 0.12s;
+}
+
+.usp__header-btn:hover {
+  color:        #88ccaa;
+  border-color: #3a6a5a;
+  background:   rgba(30, 70, 55, 0.3);
+}
+
+.usp__header-btn--delete {
+  border-color: #6a2230;
+  color:        #cc4466;
+}
+
+.usp__header-btn--delete:hover:not(:disabled) {
+  background: rgba(80, 20, 30, 0.35);
+  color:      #ff5577;
+}
+
+.usp__header-btn--delete:disabled {
+  opacity: 0.35;
+  cursor:  default;
+}
+
 .unit-status-panel {
   border-color: #2a4a3a;
   background-color: #0a1410;

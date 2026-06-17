@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useSettings } from '../../store/settingsStore';
-import type { ChecklistItemType, CommandProcedureLevel, CommandProcedureItemType, TagPreset, VictimSetupItem } from '../../types/settings';
+import type { ChecklistItem, ChecklistItemType, CommandProcedureLevel, CommandProcedureItemType, TagPreset, VictimSetupItem } from '../../types/settings';
 import type { FireStatus } from '../../types';
 import { EVENT_TYPE_STATUSES, resolveEventType } from '../../types/events';
 import { generateId } from '../../utils/settingsStorage';

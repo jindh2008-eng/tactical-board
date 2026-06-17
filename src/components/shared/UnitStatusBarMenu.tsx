@@ -33,7 +33,6 @@ interface Props {
   token:      UnitToken;
   anchorRect: AnchorRect;
   onClose:    () => void;
-  onRemove?:  () => void;
 }
 
 const WATER_SOURCE_TYPES   = new Set(['pump', 'water_tank', 'indoor_hydrant']);
@@ -61,10 +60,10 @@ const GAP = 8; // 토큰 엣지와 배지 그룹 사이 간격(px)
 // UnitStatusBarMenu
 // ─────────────────────────────────────────────
 
-export function UnitStatusBarMenu({ token, anchorRect, onClose, onRemove }: Props) {
+export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const { toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialSprayTarget } = useTokens();
   const { enterMode }           = useActionMode();
-  const { connections }         = useWaterConnections();
+  useWaterConnections();
   const { unitTagPresetConfig, unitStatusConfig } = useSettings();
   const { activeSearches, searchScores, addUnitToSearch, removeUnitFromSearch } = useVictims();
   const buildingState      = useOptionalBuildingState();
@@ -141,8 +140,7 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose, onRemove }: Prop
     isSprayCapable ||
     canWaterConnect ||
     isMonitorUnit ||
-    showSearchButton ||
-    !!onRemove;
+    showSearchButton;
 
   // ── 방향별 그룹 위치 계산 ────────────────────
   const cx = anchorRect.left + anchorRect.width  / 2;
@@ -441,15 +439,6 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose, onRemove }: Prop
             )
           )}
 
-          {/* 훈련에서 제거 (출동대현황 패널에서만 표시) */}
-          {onRemove && (
-            <button
-              className="usbm__badge usbm__badge--remove"
-              onMouseDown={e => { e.stopPropagation(); onRemove(); onClose(); }}
-            >
-              훈련에서 제거
-            </button>
-          )}
         </div>
       )}
 

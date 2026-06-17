@@ -1,7 +1,7 @@
 import type { LogEntry } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
-import { exportLogsAsCsv } from '../../utils/exportLog';
+import { exportLogsAsCsv, exportLogsAsPdf } from '../../utils/exportLog';
 import './LogPanel.css';
 
 // ─────────────────────────────────────────────
@@ -171,19 +171,33 @@ export function LogPanel({ collapsed, onToggle }: LogPanelProps) {
     exportLogsAsCsv(logs, building.targetName ?? '');
   }
 
+  function handlePdfExport(e: React.MouseEvent) {
+    e.stopPropagation();
+    exportLogsAsPdf(logs, building.targetName ?? '');
+  }
+
   return (
     <div className={`panel log-panel${collapsed ? ' log-panel--collapsed' : ''}`}>
       <div className="panel__header panel__header--toggleable" onClick={onToggle}>
         이벤트 로그
         <div className="log-panel__header-right">
           {logs.length > 0 && (
-            <button
-              className="log-panel__export-btn"
-              onClick={handleExport}
-              title="이벤트 로그를 CSV로 저장"
-            >
-              ↓ CSV
-            </button>
+            <>
+              <button
+                className="log-panel__export-btn"
+                onClick={handlePdfExport}
+                title="이벤트 로그를 PDF로 저장"
+              >
+                ↓ PDF
+              </button>
+              <button
+                className="log-panel__export-btn"
+                onClick={handleExport}
+                title="이벤트 로그를 CSV로 저장"
+              >
+                ↓ CSV
+              </button>
+            </>
           )}
           <span className="panel__toggle-icon">{collapsed ? '▼' : '▲'}</span>
         </div>

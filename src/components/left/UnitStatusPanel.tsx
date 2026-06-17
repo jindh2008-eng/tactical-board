@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
 import { TokenCard } from '../shared/TokenCard';
@@ -27,9 +27,42 @@ export function UnitStatusPanel() {
   const { tokens, moveToken, removeToken, arrivalCountdowns } = useTokens();
   const { arrivalMode, dispatchRoster }          = useSettings();
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected]     = useState<Set<string>>(new Set());
 
   // ── pool 토큰 ────────────────────────────────
   const poolTokens = tokens.filter(t => t.zoneKey === null);
+
+  // 선택모드 중 pool에서 빠진 토큰은 선택 해제
+  const poolIds = useMemo(() => new Set(poolTokens.map(t => t.id)), [poolTokens]);
+  useEffect(() => {
+    if (!selectMode) return;
+    setSelected(prev => {
+      const next = new Set([...prev].filter(id => poolIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [selectMode, poolIds]);
+
+  function toggleSelect(tokenId: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(tokenId)) next.delete(tokenId); else next.add(tokenId);
+      return next;
+    });
+  }
+
+  function handleBulkRemove() {
+    if (selected.size === 0) return;
+    if (!window.confirm(`선택한 ${selected.size}개 출동대를 삭제하겠습니까?`)) return;
+    for (const id of selected) removeToken(id);
+    setSelected(new Set());
+    setSelectMode(false);
+  }
+
+  function handleCancelSelect() {
+    setSelected(new Set());
+    setSelectMode(false);
+  }
 
   // ── 착대모드: roster ID → arrivalOrder 매핑 ──
   const orderMap = useMemo(
@@ -108,7 +141,32 @@ export function UnitStatusPanel() {
 
   return (
     <div className="panel unit-status-panel">
-      <div className="panel__header">출동대현황</div>
+      <div className="panel__header usp__header">
+        <span>출동대현황</span>
+        {poolTokens.length > 0 && (
+          <div className="usp__header-actions">
+            {selectMode ? (
+              <>
+                <button
+                  className="usp__header-btn usp__header-btn--delete"
+                  onClick={handleBulkRemove}
+                  disabled={selected.size === 0}
+                  title="선택한 출동대 삭제"
+                >
+                  🗑 {selected.size > 0 && selected.size}
+                </button>
+                <button className="usp__header-btn" onClick={handleCancelSelect}>
+                  취소
+                </button>
+              </>
+            ) : (
+              <button className="usp__header-btn" onClick={() => setSelectMode(true)}>
+                선택삭제
+              </button>
+            )}
+          </div>
+        )}
+      </div>
       <div
         className={bodyClass}
         onDragOver={handleDragOver}
@@ -126,10 +184,18 @@ export function UnitStatusPanel() {
             return (
               <div className="unit-status-panel__columns">
                 <div className="unit-status-panel__col">
-                  {left.map(token => <TokenCard key={token.id} token={token} onRemove={() => removeToken(token.id)} />)}
+                  {left.map(token => (
+                    <TokenCard key={token.id} token={token}
+                      selectMode={selectMode} selected={selected.has(token.id)}
+                      onToggleSelect={() => toggleSelect(token.id)} />
+                  ))}
                 </div>
                 <div className="unit-status-panel__col">
-                  {right.map(token => <TokenCard key={token.id} token={token} onRemove={() => removeToken(token.id)} />)}
+                  {right.map(token => (
+                    <TokenCard key={token.id} token={token}
+                      selectMode={selectMode} selected={selected.has(token.id)}
+                      onToggleSelect={() => toggleSelect(token.id)} />
+                  ))}
                 </div>
               </div>
             );
@@ -142,7 +208,9 @@ export function UnitStatusPanel() {
               return (
                 <div key={token.id} className="usp-order-row">
                   <div className="usp-order-row__card">
-                    <TokenCard token={token} onRemove={() => removeToken(token.id)} />
+                    <TokenCard token={token}
+                      selectMode={selectMode} selected={selected.has(token.id)}
+                      onToggleSelect={() => toggleSelect(token.id)} />
                   </div>
                   <div className="usp-order-row__btns">
                     {order != null && (

@@ -9,6 +9,27 @@
   display:  inline-block;
 }
 
+.token-card-wrapper--select {
+  display:     inline-flex;
+  align-items: center;
+  gap:         4px;
+}
+
+.token-card__checkbox {
+  display:     flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor:      pointer;
+}
+
+.token-card__checkbox input[type="checkbox"] {
+  width:      14px;
+  height:     14px;
+  accent-color: #cc4466;
+  cursor:     pointer;
+  margin:     0;
+}
+
 .token-card {
   display: inline-flex;
   align-items: center;

@@ -57,6 +57,7 @@ export function SettingsLibraryPanel() {
     e.target.value = '';
     try {
       await importSettings(file);
+      alert('설정을 성공적으로 가져왔습니다.');
       window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : '불러오기 실패');
