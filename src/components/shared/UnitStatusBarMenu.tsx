@@ -41,7 +41,15 @@ const SEARCH_CAPABLE_TYPES = new Set(['suppression', 'rescue']);
 const MONITOR_TYPES        = new Set(['pump', 'water_tank']);
 const AERIAL_TYPES         = new Set(['aerial', 'ladder']);
 
-/** zoneKey(예: "3F-center")에서 층 번호를 추출. 외곽면(face-A 등) → null */
+type TabKey = 'mission' | 'status' | 'statusMsg' | 'func';
+
+const TAB_COLORS: Record<TabKey, { bg: string; border: string; text: string; activeBg: string }> = {
+  mission:   { bg: '#0d1e3a', border: '#2255aa', text: '#88bbff', activeBg: '#142a4a' },
+  status:    { bg: '#0a1e10', border: '#228844', text: '#55cc88', activeBg: '#0e2a16' },
+  statusMsg: { bg: '#1e1800', border: '#997700', text: '#ddaa33', activeBg: '#2a2200' },
+  func:      { bg: '#1a1030', border: '#6644aa', text: '#aa88ee', activeBg: '#221640' },
+};
+
 function getFloorNumFromZoneKey(zoneKey: string | null): number | null {
   if (!zoneKey || zoneKey.startsWith('face-')) return null;
   const floorId = zoneKey.split('-')[0];
@@ -54,7 +62,7 @@ function getFloorNumFromZoneKey(zoneKey: string | null): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
-const GAP = 8; // 토큰 엣지와 배지 그룹 사이 간격(px)
+const GAP = 6;
 
 // ─────────────────────────────────────────────
 // UnitStatusBarMenu
@@ -71,9 +79,12 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const smokeConcentration = buildingState?.smokeConcentration ?? 0;
   const fireStates         = buildingState?.fireStates         ?? {};
 
-  const [noteOpen,  setNoteOpen]  = useState(false);
-  const [noteDraft, setNoteDraft] = useState(token.customNote ?? '');
+  const [activeTab,  setActiveTab]  = useState<TabKey | null>(null);
+  const [noteOpen,   setNoteOpen]   = useState(false);
+  const [noteDraft,  setNoteDraft]  = useState(token.customNote ?? '');
+  const menuRef      = useRef<HTMLDivElement>(null);
   const noteInputRef = useRef<HTMLInputElement>(null);
+  const tabRefs      = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const canWaterConnect   = WATER_SOURCE_TYPES.has(token.unitType);
   const isAerialVehicle   = AERIAL_TYPES.has(token.unitType);
@@ -86,35 +97,26 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   // ── 인명검색 ──────────────────────────────────
   const isSearchCapable = SEARCH_CAPABLE_TYPES.has(token.unitType);
   const tokenZoneKey    = token.zoneKey;
-  // 건물 내부(face- 아닌 것)이고 배치된 상태인지
   const isInInterior    = !!tokenZoneKey && !tokenZoneKey.startsWith('face-');
-
-  // 층 ID 추출 (예: "3F-center" → "3F")
   const floorId = isInInterior && tokenZoneKey ? tokenZoneKey.split('-')[0] : null;
 
-  // 현재 층의 농연 여부 계산
   const floorNum = getFloorNumFromZoneKey(tokenZoneKey);
   const smokeLevel = floorNum !== null
     ? computeStairSmokeLevel({ floorEndNum: floorNum, stairSmokeFloor, smokeConcentration })
     : 'none';
   const hasDenseSmoke = smokeLevel !== 'none';
 
-  // 현재 층의 화염 여부 (연소확대·최성기·큰불잡음 → 활성 화재 100점)
   const ACTIVE_FIRE_STATUSES = new Set(['extension-peak', 'peak', 'seventy']);
   const POST_INITIAL_SET     = new Set(['initial', 'complete']);
   const floorFireStatus = floorId ? (fireStates[floorId] ?? null) : null;
   const hasActiveFire   = !!floorFireStatus && ACTIVE_FIRE_STATUSES.has(floorFireStatus);
 
-  // 인명검색 초기 점수: 화염 100, 농연 70, 없음 30
   const initialScore  = hasActiveFire ? 100 : hasDenseSmoke ? 70 : 30;
-  // 초당 감소율: 구조대 2, 진압대 1
   const decrementRate = token.unitType === 'rescue' ? 2 : 1;
 
-  // 2차 시작 점수: 화재 있는 층=50, 없는 층=30
   const isFireFloor      = floorId !== null && fireStates[floorId] != null;
   const secondaryInitial = isFireFloor ? 50 : 30;
 
-  // 2차 전환 여부: 초진 이후면 바로 2차로 시작
   const allFireFloorsInitial = Object.values(fireStates)
     .filter(s => s !== null)
     .every(s => POST_INITIAL_SET.has(s as string));
@@ -124,15 +126,12 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
         : allFireFloorsInitial)
     : false;
 
-  // 이 토큰이 현재 층에서 검색 중인지
   const isSearchActive = floorId !== null
     ? (activeSearches[floorId]?.units.some(u => u.tokenId === token.id) ?? false)
     : false;
 
-  // 중단 버튼에 표시할 현재 점수
   const searchScore = token.id in searchScores ? searchScores[token.id] : null;
 
-  // 인명검색 버튼 표시: 내부 구역 배치 + 인명검색 가능 대 (구조대상자 유무와 무관)
   const showSearchButton = isSearchCapable && isInInterior;
 
   const hasFuncButtons =
@@ -142,42 +141,22 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
     isMonitorUnit ||
     showSearchButton;
 
-  // ── 방향별 그룹 위치 계산 ────────────────────
-  const cx = anchorRect.left + anchorRect.width  / 2;
-  const cy = anchorRect.top  + anchorRect.height / 2;
+  // ── 데이터 ──────────────────────────────────
+  const missionPresets  = unitTagPresetConfig[token.unitType]?.missions ?? [];
+  const statusPresets   = unitTagPresetConfig[token.unitType]?.statuses ?? [];
+  const statusMessages  = unitStatusConfig[token.unitType] ?? [];
+  const isDirectInput   = !!token.customNote && !statusMessages.includes(token.customNote);
 
-  // 상단: 하단 엣지 = 토큰 상단 - GAP  (위로 성장)
-  const topStyle: React.CSSProperties = {
-    position:  'fixed',
-    bottom:    `${window.innerHeight - anchorRect.top + GAP}px`,
-    left:      `${cx}px`,
-    transform: 'translateX(-50%)',
-    zIndex:    9998,
-  };
-  // 좌측: 우측 엣지 = 토큰 좌측 - GAP
-  const leftStyle: React.CSSProperties = {
-    position:  'fixed',
-    right:     `${window.innerWidth - anchorRect.left + GAP}px`,
-    top:       `${cy}px`,
-    transform: 'translateY(-50%)',
-    zIndex:    9998,
-  };
-  // 우측: 좌측 엣지 = 토큰 우측 + GAP
-  const rightStyle: React.CSSProperties = {
-    position:  'fixed',
-    left:      `${anchorRect.right + GAP}px`,
-    top:       `${cy}px`,
-    transform: 'translateY(-50%)',
-    zIndex:    9998,
-  };
-  // 하단: 상단 엣지 = 토큰 하단 + GAP
-  const bottomStyle: React.CSSProperties = {
-    position:  'fixed',
-    top:       `${anchorRect.bottom + GAP}px`,
-    left:      `${cx}px`,
-    transform: 'translateX(-50%)',
-    zIndex:    9998,
-  };
+  // ── 표시할 탭 결정 ──────────────────────────
+  const tabs: { key: TabKey; label: string }[] = [];
+  if (missionPresets.length > 0)                    tabs.push({ key: 'mission',   label: '임무' });
+  if (statusPresets.length > 0)                     tabs.push({ key: 'status',    label: '상태' });
+  if (statusMessages.length > 0 || true)            tabs.push({ key: 'statusMsg', label: '상태메세지' });
+  if (hasFuncButtons)                               tabs.push({ key: 'func',      label: '기능' });
+
+  // ── 위/아래 배치 결정 ────────────────────────
+  const cx = anchorRect.left + anchorRect.width / 2;
+  const showAbove = anchorRect.top > 160;
 
   // ── 외부 클릭 / Esc ──────────────────────────
   useEffect(() => {
@@ -189,6 +168,15 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   }, [onClose]);
 
   // ── 핸들러 ──────────────────────────────────
+
+  function handleTabHover(key: TabKey) {
+    setActiveTab(key);
+    setNoteOpen(false);
+  }
+
+  function handleTabLeave() {
+    // 팝업 위로 마우스가 이동하면 유지되므로 여기서는 아무것도 안 함
+  }
 
   function handleMission(label: string, color: string) {
     toggleMissionTag(token.id, { label, color });
@@ -256,93 +244,21 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
     onClose();
   }
 
+  // ── 팝업 내용 렌더 ──────────────────────────
 
-  // ── 데이터 ──────────────────────────────────
-  const missionPresets  = unitTagPresetConfig[token.unitType]?.missions ?? [];
-  const statusPresets   = unitTagPresetConfig[token.unitType]?.statuses ?? [];
-  const statusMessages  = unitStatusConfig[token.unitType] ?? [];
-  const isDirectInput   = !!token.customNote && !statusMessages.includes(token.customNote);
+  function renderPopup() {
+    if (!activeTab) return null;
 
-  // ─────────────────────────────────────────────
-  // 렌더 — 방향별 배지 그룹
-  // ─────────────────────────────────────────────
-
-  return createPortal(
-    <>
-      {/* 전체 클릭 닫기 백드롭 */}
-      <div className="usbm__backdrop" onMouseDown={onClose} />
-
-      {/* ── 상단: 출동대 상태메세지 ──────────────────────── */}
-      <div className="usbm__group usbm__group--top" style={topStyle} onMouseDown={e => e.stopPropagation()}>
-        {noteOpen ? (
-          <div className="usbm__note-panel">
-            <input
-              ref={noteInputRef}
-              className="usbm__note-input"
-              value={noteDraft}
-              onChange={e => setNoteDraft(e.target.value)}
-              onKeyDown={e => {
-                e.stopPropagation();
-                if (e.key === 'Enter')  handleSaveNote();
-                if (e.key === 'Escape') setNoteOpen(false);
-              }}
-              placeholder="직접 입력…"
-              maxLength={40}
-              autoFocus
-            />
-            <div className="usbm__note-row">
-              {token.customNote && (
-                <button className="usbm__note-clear" onMouseDown={e => { e.stopPropagation(); handleClearNote(); }}>
-                  삭제
-                </button>
-              )}
-              <button className="usbm__note-save" onMouseDown={e => { e.stopPropagation(); handleSaveNote(); }}>
-                저장
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* 등록된 프리셋 메세지 배지 */}
-            {statusMessages.map(msg => {
-              const isActive = token.customNote === msg;
-              return (
-                <button
-                  key={msg}
-                  className={['usbm__badge usbm__badge--msg', isActive ? 'usbm__badge--msg-active' : ''].filter(Boolean).join(' ')}
-                  onMouseDown={e => {
-                    e.stopPropagation();
-                    setCustomNote(token.id, isActive ? '' : msg);
-                    onClose();
-                  }}
-                >
-                  {isActive && <span className="usbm__check">✓</span>}
-                  {msg}
-                </button>
-              );
-            })}
-            {/* 직접 입력 버튼 */}
-            <button
-              className={['usbm__badge usbm__badge--note', isDirectInput ? 'usbm__badge--note-has' : ''].filter(Boolean).join(' ')}
-              onMouseDown={e => { e.stopPropagation(); setNoteOpen(true); setNoteDraft(token.customNote ?? ''); }}
-            >
-              ✎ {isDirectInput ? token.customNote : '직접입력'}
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* ── 좌측: 임무 ───────────────────────────────────── */}
-      {missionPresets.length > 0 && (
-        <div className="usbm__group usbm__group--left" style={leftStyle} onMouseDown={e => e.stopPropagation()}>
-          <span className="usbm__dir-label usbm__dir-label--right">임무</span>
+    if (activeTab === 'mission') {
+      return (
+        <div className="usbm2__popup-items">
           {missionPresets.map(preset => {
             const isActive = token.missionTags?.some(m => m.label === preset.label) ?? false;
             const col = TAG_COLORS[preset.color] ?? TAG_COLORS.white;
             return (
               <button
                 key={preset.label}
-                className={['usbm__badge', isActive ? 'usbm__badge--active' : ''].filter(Boolean).join(' ')}
+                className={['usbm2__popup-btn', isActive ? 'usbm2__popup-btn--active' : ''].filter(Boolean).join(' ')}
                 style={{
                   background:  col.bg,
                   borderColor: isActive ? col.text : col.border,
@@ -351,32 +267,119 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
                 }}
                 onMouseDown={e => { e.stopPropagation(); handleMission(preset.label, preset.color); }}
               >
-                {isActive && <span className="usbm__check">✓</span>}
+                {isActive && <span className="usbm2__check">✓</span>}
                 {preset.label}
               </button>
             );
           })}
         </div>
-      )}
+      );
+    }
 
-      {/* ── 우측: 기능 ───────────────────────────────────── */}
-      {hasFuncButtons && (
-        <div className="usbm__group usbm__group--right" style={rightStyle} onMouseDown={e => e.stopPropagation()}>
-          {/* 고가차/굴절차 전개 */}
+    if (activeTab === 'status') {
+      return (
+        <div className="usbm2__popup-items">
+          {statusPresets.map(preset => {
+            const isActive = token.statusTag?.label === preset.label;
+            const col = TAG_COLORS[preset.color] ?? TAG_COLORS.white;
+            return (
+              <button
+                key={preset.label}
+                className={['usbm2__popup-btn', isActive ? 'usbm2__popup-btn--active' : ''].filter(Boolean).join(' ')}
+                style={{
+                  background:  col.bg,
+                  borderColor: isActive ? col.text : col.border,
+                  color:       col.text,
+                  ...(isActive ? { boxShadow: `0 0 0 2px ${col.text}` } : {}),
+                }}
+                onMouseDown={e => { e.stopPropagation(); handleStatus(preset.label, preset.color); }}
+              >
+                {isActive && <span className="usbm2__check">✓</span>}
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (activeTab === 'statusMsg') {
+      if (noteOpen) {
+        return (
+          <div className="usbm2__popup-items">
+            <div className="usbm2__note-panel">
+              <input
+                ref={noteInputRef}
+                className="usbm2__note-input"
+                value={noteDraft}
+                onChange={e => setNoteDraft(e.target.value)}
+                onKeyDown={e => {
+                  e.stopPropagation();
+                  if (e.key === 'Enter')  handleSaveNote();
+                  if (e.key === 'Escape') setNoteOpen(false);
+                }}
+                placeholder="직접 입력…"
+                maxLength={40}
+                autoFocus
+              />
+              <div className="usbm2__note-row">
+                {token.customNote && (
+                  <button className="usbm2__note-clear" onMouseDown={e => { e.stopPropagation(); handleClearNote(); }}>
+                    삭제
+                  </button>
+                )}
+                <button className="usbm2__note-save" onMouseDown={e => { e.stopPropagation(); handleSaveNote(); }}>
+                  저장
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="usbm2__popup-items">
+          {statusMessages.map(msg => {
+            const isActive = token.customNote === msg;
+            return (
+              <button
+                key={msg}
+                className={['usbm2__popup-btn usbm2__popup-btn--msg', isActive ? 'usbm2__popup-btn--msg-active' : ''].filter(Boolean).join(' ')}
+                onMouseDown={e => {
+                  e.stopPropagation();
+                  setCustomNote(token.id, isActive ? '' : msg);
+                  onClose();
+                }}
+              >
+                {isActive && <span className="usbm2__check">✓</span>}
+                {msg}
+              </button>
+            );
+          })}
+          <button
+            className={['usbm2__popup-btn usbm2__popup-btn--note', isDirectInput ? 'usbm2__popup-btn--note-has' : ''].filter(Boolean).join(' ')}
+            onMouseDown={e => { e.stopPropagation(); setNoteOpen(true); setNoteDraft(token.customNote ?? ''); }}
+          >
+            ✎ {isDirectInput ? token.customNote : '직접입력'}
+          </button>
+        </div>
+      );
+    }
+
+    if (activeTab === 'func') {
+      return (
+        <div className="usbm2__popup-items">
           {isAerialVehicle && (
             <button
-              className="usbm__badge"
+              className="usbm2__popup-btn usbm2__popup-btn--func"
               style={{ background: '#2a1e00', borderColor: '#aa7700', color: '#ffcc44' }}
               onMouseDown={e => { e.stopPropagation(); handleAerialDeploy(deployLabel); }}
             >
               {deployLabel}
             </button>
           )}
-
-          {/* 방수개시 / 방수중단 (진압대·구조대) */}
           {isSprayCapable && !isSprayActive && (
             <button
-              className="usbm__badge usbm__badge--spray-start"
+              className="usbm2__popup-btn usbm2__popup-btn--spray-start"
               onMouseDown={e => { e.stopPropagation(); handleSprayStart(); }}
             >
               방수개시
@@ -384,92 +387,139 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
           )}
           {isSprayActive && (
             <button
-              className="usbm__badge usbm__badge--spray-stop"
+              className="usbm2__popup-btn usbm2__popup-btn--spray-stop"
               onMouseDown={e => { e.stopPropagation(); handleSprayStop(); }}
             >
               방수중단
             </button>
           )}
-
-          {/* 송수 연결 (펌프/물탱크) */}
           {canWaterConnect && (
             <button
-              className="usbm__badge usbm__badge--water"
+              className="usbm2__popup-btn usbm2__popup-btn--water"
               onMouseDown={e => { e.stopPropagation(); handleWaterConnect(); }}
             >
               송수
             </button>
           )}
-
-          {/* 방수포 (펌프/물탱크) */}
           {isMonitorUnit && (
             isMonitorActive ? (
               <button
-                className="usbm__badge usbm__badge--spray-stop"
+                className="usbm2__popup-btn usbm2__popup-btn--spray-stop"
                 onMouseDown={e => { e.stopPropagation(); handleMonitorStop(); }}
               >
                 방수중단
               </button>
             ) : (
               <button
-                className="usbm__badge usbm__badge--spray-start"
+                className="usbm2__popup-btn usbm2__popup-btn--spray-start"
                 onMouseDown={e => { e.stopPropagation(); handleMonitorStart(); }}
               >
                 방수포
               </button>
             )
           )}
-
-          {/* 인명검색 (진압대·구조대) */}
           {showSearchButton && (
             isSearchActive ? (
               <button
-                className="usbm__badge usbm__badge--search-stop"
+                className="usbm2__popup-btn usbm2__popup-btn--search-stop"
                 onMouseDown={e => { e.stopPropagation(); handleSearchStop(); }}
               >
                 인명검색 중단{searchScore !== null ? ` (${searchScore})` : ''}
               </button>
             ) : (
               <button
-                className="usbm__badge usbm__badge--search-start"
+                className="usbm2__popup-btn usbm2__popup-btn--search-start"
                 onMouseDown={e => { e.stopPropagation(); handleSearchStart(); }}
               >
                 인명검색
               </button>
             )
           )}
-
         </div>
-      )}
+      );
+    }
 
-      {/* ── 하단: 상태 ───────────────────────────────────── */}
-      {statusPresets.length > 0 && (
-        <div className="usbm__group usbm__group--bottom" style={bottomStyle} onMouseDown={e => e.stopPropagation()}>
-          <span className="usbm__dir-label">상태</span>
-          <div className="usbm__badge-row">
-            {statusPresets.map(preset => {
-              const isActive = token.statusTag?.label === preset.label;
-              const col = TAG_COLORS[preset.color] ?? TAG_COLORS.white;
-              return (
-                <button
-                  key={preset.label}
-                  className={['usbm__badge', isActive ? 'usbm__badge--active' : ''].filter(Boolean).join(' ')}
-                  style={{
-                    background:  col.bg,
-                    borderColor: isActive ? col.text : col.border,
-                    color:       col.text,
-                    ...(isActive ? { boxShadow: `0 0 0 2px ${col.text}` } : {}),
-                  }}
-                  onMouseDown={e => { e.stopPropagation(); handleStatus(preset.label, preset.color); }}
-                >
-                  {isActive && <span className="usbm__check">✓</span>}
-                  {preset.label}
-                </button>
-              );
-            })}
-          </div>
+    return null;
+  }
+
+  // ── 탭바 위치 ────────────────────────────────
+  const barStyle: React.CSSProperties = showAbove
+    ? {
+        position:  'fixed',
+        bottom:    `${window.innerHeight - anchorRect.top + GAP}px`,
+        left:      `${cx}px`,
+        transform: 'translateX(-50%)',
+        zIndex:    9998,
+      }
+    : {
+        position:  'fixed',
+        top:       `${anchorRect.bottom + GAP}px`,
+        left:      `${cx}px`,
+        transform: 'translateX(-50%)',
+        zIndex:    9998,
+      };
+
+  return createPortal(
+    <>
+      <div className="usbm2__backdrop" onMouseDown={onClose} />
+
+      <div
+        ref={menuRef}
+        className="usbm2"
+        style={barStyle}
+        onMouseDown={e => e.stopPropagation()}
+        onContextMenu={e => e.preventDefault()}
+        onMouseLeave={() => { if (!noteOpen) setActiveTab(null); }}
+      >
+        {/* 탭바 — 위치 고정 기준 */}
+        <div className="usbm2__tabbar">
+          {tabs.map(tab => {
+            const tc = TAB_COLORS[tab.key];
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                ref={el => { tabRefs.current[tab.key] = el; }}
+                className={['usbm2__tab', isActive ? 'usbm2__tab--active' : ''].filter(Boolean).join(' ')}
+                style={{
+                  background:    isActive ? tc.activeBg : tc.bg,
+                  borderColor:   tc.border,
+                  color:         tc.text,
+                  boxShadow:     isActive ? `inset 0 -2px 0 ${tc.text}` : 'none',
+                }}
+                onMouseEnter={() => handleTabHover(tab.key)}
+                onMouseLeave={handleTabLeave}
+                onMouseDown={e => {
+                  e.stopPropagation();
+                  setActiveTab(prev => prev === tab.key ? null : tab.key);
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+
+          {/* 2차 팝업 — 활성 탭 바로 위에 정렬 */}
+          {activeTab && (() => {
+            const tabEl   = tabRefs.current[activeTab];
+            const barEl   = menuRef.current?.querySelector('.usbm2__tabbar') as HTMLElement | null;
+            let leftPx    = 0;
+            if (tabEl && barEl) {
+              const tabRect = tabEl.getBoundingClientRect();
+              const barRect = barEl.getBoundingClientRect();
+              leftPx = tabRect.left - barRect.left + tabRect.width / 2;
+            }
+            return (
+              <div
+                className={`usbm2__popup ${showAbove ? 'usbm2__popup--above' : 'usbm2__popup--below'}`}
+                style={{ left: `${leftPx}px` }}
+              >
+                {renderPopup()}
+              </div>
+            );
+          })()}
         </div>
-      )}
+      </div>
     </>,
     document.body,
   );

@@ -43,15 +43,7 @@ export function ChecklistPanel() {
   const { setEventStatus }                  = useEvents();
   const [checked,         setChecked]         = useState<Set<string>>(new Set());
   const [collapsed,       setCollapsed]       = useState<Set<string>>(new Set());
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(() => {
-    const parents = new Set<string>();
-    for (const sec of checklistConfig.sections) {
-      for (const it of sec.items) {
-        if (it.linkedParentId) parents.add(it.linkedParentId);
-      }
-    }
-    return parents;
-  });
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
   const [activeMessages,  setActiveMessages]  = useState<ChecklistItem[]>([]);
 
   function getArrivalTokenIds(order: number): string[] {

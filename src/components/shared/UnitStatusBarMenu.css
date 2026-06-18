@@ -1,80 +1,128 @@
 /* ─────────────────────────────────────────────
-   UnitStatusBarMenu — 방향별 배지 팝업
-   토큰 기준: 상단=메세지, 좌=임무, 우=기능, 하=상태
+   UnitStatusBarMenu v2 — 탭바 + 2차 팝업
+   토큰 위(또는 아래)에 수평 탭바 고정 표시,
+   마우스 오버 시 2차 팝업이 탭바 위로 펼쳐짐
    ─────────────────────────────────────────────*/
 
 /* 전체 닫기 백드롭 */
-.usbm__backdrop {
+.usbm2__backdrop {
   position: fixed;
   inset:    0;
   z-index:  9997;
   cursor:   default;
 }
 
-/* ── 방향별 배지 그룹 ──────────────────────── */
+/* ── 루트 컨테이너 ────────────────────────── */
 
-.usbm__group {
-  display:        flex;
-  flex-direction: column;
-  gap:            5px;
+.usbm2 {
   pointer-events: auto;
 }
 
-/* 좌측 그룹: 아이템을 오른쪽 정렬 (토큰 방향) */
-.usbm__group--left {
-  align-items: flex-end;
+/* ── 탭바 — 위치 고정 기준점 ──────────────── */
+
+.usbm2__tabbar {
+  position:       relative;
+  display:        flex;
+  flex-direction: row;
+  background:     #111118;
+  border:         1px solid #3a3a4a;
+  border-radius:  8px;
+  overflow:       visible;
+  box-shadow:     0 4px 16px rgba(0, 0, 0, 0.60);
+  user-select:    none;
 }
 
-/* 우측 그룹: 아이템을 왼쪽 정렬 (토큰 방향) */
-.usbm__group--right {
-  align-items: flex-start;
+/* ── 탭 버튼 ───────────────────────────────── */
+
+.usbm2__tab {
+  padding:       7px 14px;
+  border:        none;
+  border-right:  1px solid rgba(60, 60, 80, 0.35);
+  font-size:     0.76rem;
+  font-weight:   700;
+  font-family:   inherit;
+  cursor:        pointer;
+  white-space:   nowrap;
+  transition:    background 0.12s, color 0.12s, filter 0.12s;
+  position:      relative;
 }
 
-/* 상단 그룹: 중앙 정렬 */
-.usbm__group--top {
-  align-items: center;
+.usbm2__tab:first-child {
+  border-radius: 7px 0 0 7px;
 }
 
-/* 하단 그룹: 중앙 정렬 */
-.usbm__group--bottom {
-  align-items: center;
-  gap:         4px;
+.usbm2__tab:last-of-type {
+  border-right:  none;
+  border-radius: 0 7px 7px 0;
 }
 
-/* 하단 상태 배지 가로 나열 */
-.usbm__badge-row {
-  display:   flex;
-  flex-wrap: wrap;
-  gap:       5px;
-  justify-content: center;
+.usbm2__tab:only-of-type {
+  border-radius: 7px;
 }
 
-/* ── 방향 레이블 (임무 / 상태) ─────────────── */
-
-.usbm__dir-label {
-  font-size:      0.60rem;
-  font-weight:    700;
-  color:          #777;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  text-align:     center;
+.usbm2__tab:hover {
+  filter: brightness(1.3);
 }
 
-/* 좌측 그룹 레이블: 오른쪽 정렬 */
-.usbm__dir-label--right {
-  text-align: right;
+.usbm2__tab--active {
+  filter: brightness(1.4);
 }
 
-/* ── 배지 공통 ──────────────────────────────── */
+/* ── 2차 팝업 — 탭바 기준 절대 위치 ────────── */
 
-.usbm__badge {
+/* left는 인라인으로 활성 탭 중심에 맞춰 설정됨 */
+.usbm2__popup {
+  position:   absolute;
+  transform:  translateX(-50%);
+  z-index:    10;
+  animation:  usbm2-fade-in 0.12s ease-out;
+}
+
+/* 위쪽으로 펼침 — 탭바 상단 기준 */
+.usbm2__popup--above {
+  bottom:         calc(100% + 2px);
+  animation-name: usbm2-fade-in-up;
+}
+
+/* 아래쪽으로 펼침 — 탭바 하단 기준 */
+.usbm2__popup--below {
+  top: calc(100% + 2px);
+}
+
+@keyframes usbm2-fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(3px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0);   }
+}
+
+@keyframes usbm2-fade-in-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(-3px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0);    }
+}
+
+.usbm2__popup-items {
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
+  background:     #14141c;
+  border:         1px solid #3a3a4a;
+  border-radius:  8px;
+  padding:        8px;
+  box-shadow:     0 6px 20px rgba(0, 0, 0, 0.65);
+  min-width:      140px;
+  max-height:     280px;
+  overflow-y:     auto;
+}
+
+/* ── 팝업 내 버튼 공통 ─────────────────────── */
+
+.usbm2__popup-btn {
   display:         inline-flex;
   align-items:     center;
   gap:             5px;
-  padding:         6px 12px;
-  border-radius:   20px;          /* pill 형태 */
-  border:          1.5px solid;
-  background:      #1e1e22;
+  padding:         6px 14px;
+  border-radius:   6px;
+  border:          1.5px solid #333345;
+  background:      #1e1e2a;
   color:           #ccc;
   font-size:       0.78rem;
   font-weight:     700;
@@ -83,131 +131,113 @@
   white-space:     nowrap;
   user-select:     none;
   transition:      filter 0.10s, transform 0.10s, box-shadow 0.10s;
-  box-shadow:      0 2px 8px rgba(0, 0, 0, 0.55);
+  text-align:      left;
+  width:           100%;
 }
 
-.usbm__badge:hover {
-  filter:    brightness(1.35);
-  transform: scale(1.07);
+.usbm2__popup-btn:hover {
+  filter:    brightness(1.30);
+  transform: scale(1.03);
 }
 
-.usbm__badge:active {
+.usbm2__popup-btn:active {
   transform: scale(0.97);
   filter:    brightness(0.90);
 }
 
-/* 선택된 상태 */
-.usbm__badge--active {
+.usbm2__popup-btn--active {
   filter: brightness(1.15);
 }
 
-.usbm__check {
+.usbm2__check {
   font-size:   0.70rem;
   line-height: 1;
 }
 
-/* ── 기능 배지 색상 ─────────────────────────── */
+/* ── 상태메세지 배지 색상 ──────────────────── */
 
-.usbm__badge--water {
-  background:   #0e2030;
-  border-color: #1e66aa;
-  color:        #55aaee;
-}
-
-.usbm__badge--spray-start {
-  background:   #0d2a1a;
-  border-color: #1e7a44;
-  color:        #44dd88;
-}
-
-.usbm__badge--spray-stop {
-  background:   #2a0808;
-  border-color: #aa2222;
-  color:        #ff7777;
-}
-
-/* ── 인명검색 버튼 ──────────────────────────── */
-
-.usbm__badge--search-start {
-  background:   #1a1a0a;
-  border-color: #aa8800;
-  color:        #ffdd44;
-}
-
-.usbm__badge--search-stop {
-  background:   #1a0a1a;
-  border-color: #882299;
-  color:        #dd66ff;
-  min-width:    90px;
-  text-align:   center;
-}
-
-.usbm__badge--remove {
-  background:   #2a0808;
-  border-color: #882222;
-  color:        #ff7777;
-}
-
-/* ── 출동대 상태메세지 프리셋 배지 ─────────── */
-
-.usbm__badge--msg {
+.usbm2__popup-btn--msg {
   background:   #0e1c28;
   border-color: rgba(60, 120, 180, 0.50);
   color:        #66aadd;
 }
 
-.usbm__badge--msg:hover {
+.usbm2__popup-btn--msg:hover {
   border-color: rgba(80, 160, 220, 0.80);
   color:        #99ccff;
 }
 
-.usbm__badge--msg-active {
+.usbm2__popup-btn--msg-active {
   background:   #0a2038;
   border-color: #3388cc;
   color:        #88ccff;
   box-shadow:   0 0 0 2px #3388cc !important;
 }
 
-/* ── 메세지(노트) 배지 ──────────────────────── */
-
-.usbm__badge--note {
-  background:   #16100c;
-  border:       1.5px dashed rgba(120, 95, 60, 0.55);
-  color:        #5a4030;
-  font-size:    0.72rem;
-  border-radius: 20px;
+/* 직접입력 버튼 */
+.usbm2__popup-btn--note {
+  background:    #16100c;
+  border:        1.5px dashed rgba(120, 95, 60, 0.55);
+  color:         #5a4030;
+  font-size:     0.72rem;
 }
 
-.usbm__badge--note:hover {
+.usbm2__popup-btn--note:hover {
   border-color: rgba(180, 140, 80, 0.75);
   color:        #aa7744;
   filter:       none;
-  transform:    scale(1.05);
+  transform:    scale(1.03);
 }
 
-/* 메세지가 있을 때 */
-.usbm__badge--note-has {
+.usbm2__popup-btn--note-has {
   border-style: solid;
   border-color: rgba(60, 160, 100, 0.65);
   color:        rgba(80, 200, 130, 0.95);
   background:   #0a1c10;
 }
 
-/* ── 메세지 입력 패널 ────────────────────────── */
+/* ── 기능 배지 색상 ────────────────────────── */
 
-.usbm__note-panel {
+.usbm2__popup-btn--water {
+  background:   #0e2030;
+  border-color: #1e66aa;
+  color:        #55aaee;
+}
+
+.usbm2__popup-btn--spray-start {
+  background:   #0d2a1a;
+  border-color: #1e7a44;
+  color:        #44dd88;
+}
+
+.usbm2__popup-btn--spray-stop {
+  background:   #2a0808;
+  border-color: #aa2222;
+  color:        #ff7777;
+}
+
+.usbm2__popup-btn--search-start {
+  background:   #1a1a0a;
+  border-color: #aa8800;
+  color:        #ffdd44;
+}
+
+.usbm2__popup-btn--search-stop {
+  background:   #1a0a1a;
+  border-color: #882299;
+  color:        #dd66ff;
+}
+
+/* ── 메세지 입력 패널 ──────────────────────── */
+
+.usbm2__note-panel {
   display:        flex;
   flex-direction: column;
   gap:            6px;
-  background:     #18120c;
-  border:         1px solid #4a3010;
-  border-radius:  10px;
-  padding:        8px 10px;
-  box-shadow:     0 4px 16px rgba(0, 0, 0, 0.60);
   min-width:      200px;
 }
 
-.usbm__note-input {
+.usbm2__note-input {
   width:         100%;
   box-sizing:    border-box;
   padding:       6px 9px;
@@ -221,21 +251,21 @@
   transition:    border-color 0.1s;
 }
 
-.usbm__note-input:focus {
+.usbm2__note-input:focus {
   border-color: #8a5520;
 }
 
-.usbm__note-input::placeholder {
+.usbm2__note-input::placeholder {
   color: #3a2810;
 }
 
-.usbm__note-row {
+.usbm2__note-row {
   display:         flex;
   justify-content: flex-end;
   gap:             6px;
 }
 
-.usbm__note-clear {
+.usbm2__note-clear {
   padding:       4px 11px;
   background:    transparent;
   border:        1px solid #6a2230;
@@ -245,11 +275,11 @@
   font-family:   inherit;
   cursor:        pointer;
 }
-.usbm__note-clear:hover {
+.usbm2__note-clear:hover {
   background: #2a0812;
 }
 
-.usbm__note-save {
+.usbm2__note-save {
   padding:       4px 14px;
   background:    #4433aa;
   border:        none;
@@ -260,6 +290,6 @@
   font-family:   inherit;
   cursor:        pointer;
 }
-.usbm__note-save:hover {
+.usbm2__note-save:hover {
   background: #5544cc;
 }

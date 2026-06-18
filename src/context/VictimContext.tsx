@@ -523,30 +523,26 @@ export function VictimProvider({
     });
   }, []);
 
-  // ── 2차 전환 (초진 도달 시 BuildingBoard bridge 에서 호출) ────────
+  // ── 초진 도달 시 해당 층 인명검색 중단 (수동 재시작 필요) ────────
   const transitionToSecondarySearch = useCallback((floorIds: string[]) => {
+    const removedTokenIds: string[] = [];
     setActiveSearches(prev => {
       const next = { ...prev };
       for (const floorId of floorIds) {
         const rec = next[floorId];
         if (!rec || rec.primaryFrozen) continue;
-
-        // 미발견 구조대상자 → 2차 스케줄 재생성
-        const remainingIds = rec.primarySchedule
-          .filter(item => !discoveredVictimIdsRef.current.has(item.victimId))
-          .map(item => item.victimId);
-        const secondarySchedule = buildSearchSchedule(remainingIds, rec.secondaryInitial);
-
-        next[floorId] = {
-          ...rec,
-          primaryFrozen:    true,
-          secondaryActive:  true,
-          secondaryScore:   rec.secondaryInitial,
-          secondarySchedule,
-        };
+        rec.units.forEach(u => removedTokenIds.push(u.tokenId));
+        delete next[floorId];
       }
       return next;
     });
+    if (removedTokenIds.length > 0) {
+      setSearchScores(prev => {
+        const next = { ...prev };
+        removedTokenIds.forEach(id => delete next[id]);
+        return next;
+      });
+    }
   }, []);
 
   return (
