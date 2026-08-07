@@ -7,6 +7,8 @@ import { useWaterConnections } from '../../context/WaterConnectionContext';
 import type { UnitToken } from '../../types';
 import { PRESET_COLORS } from '../../types/presets';
 import { secsToMmss } from '../../utils/dispatchRoster';
+import { setDragGrabOffset } from '../../utils/dragDrop';
+import { logDragEvent } from '../../utils/dragDiagnostics';
 import { useWaterLevel }       from '../../context/WaterLevelContext';
 import { useDisplayOptions }   from '../../context/DisplayOptionsContext';
 import { UnitStatusBarMenu } from './UnitStatusBarMenu';
@@ -59,9 +61,11 @@ interface Props {
   selectMode?:     boolean;
   selected?:       boolean;
   onToggleSelect?: () => void;
+  hideQuantity?:   boolean; // true면 수량(물탱크 게이지) 항상 숨김 — 대기 패널용
+  onDoubleClick?:  () => void; // 대기 패널 간 더블클릭 이동용
 }
 
-export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect }: Props) {
+export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect, hideQuantity, onDoubleClick }: Props) {
   const { mode, clearMode }        = useActionMode();
   const { addConnection, connections } = useWaterConnections();
   const waterLevel                 = useWaterLevel();
@@ -101,18 +105,25 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect 
   // ── 이벤트 핸들러 ────────────────────────────
 
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
-    if (mode.type !== null) { e.preventDefault(); return; }
+    if (mode.type !== null) {
+      logDragEvent('TokenCard dragstart blocked', `token=${token.label} mode=${mode.type}`);
+      e.preventDefault();
+      return;
+    }
     const el = e.currentTarget;
     e.dataTransfer.setData('tokenId', token.id);
     e.dataTransfer.setData('tokenW', String(el.offsetWidth));
     e.dataTransfer.setData('tokenH', String(el.offsetHeight));
+    setDragGrabOffset(e);
     e.dataTransfer.effectAllowed = 'move';
     setBarMenu(null);
     if (wrapperRef.current) wrapperRef.current.dataset.dragging = 'true';
+    logDragEvent('TokenCard dragstart', `token=${token.label} id=${token.id}`);
   }
 
   function handleDragEnd() {
     if (wrapperRef.current) delete wrapperRef.current.dataset.dragging;
+    logDragEvent('TokenCard dragend', token.label);
   }
 
   function handleContextMenu(e: React.MouseEvent) {
@@ -211,7 +222,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect 
   // ── 수량 소진 (0%) ───────────────────────────
   const isWaterEmpty   = isWaterUnit && waterLevelL === 0;
   // 수량표시 OFF여도 소진 시에는 게이지 표시
-  const showWaterGauge = isWaterUnit && (showWaterLevel || isWaterEmpty);
+  const showWaterGauge = !hideQuantity && isWaterUnit && (showWaterLevel || isWaterEmpty);
 
   // ── CSS 클래스 조합 ──────────────────────────
   const cardClasses = [
@@ -341,6 +352,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect 
           onDragEnd={handleDragEnd}
           onContextMenu={handleContextMenu}
           onClick={handleClick}
+          onDoubleClick={onDoubleClick && mode.type === null ? (e => { e.stopPropagation(); onDoubleClick(); }) : undefined}
         >
           {isHydrantBroken ? `${token.label} [고장]` : token.label}
         </div>

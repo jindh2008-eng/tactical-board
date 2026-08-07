@@ -14,14 +14,12 @@ import './EventLayer.css';
 // ─────────────────────────────────────────────
 
 // 토큰 크기 (클램핑용)
-const TOKEN_W = 54;
-const TOKEN_H = 54;
+const TOKEN_W = 104;
+const TOKEN_H = 104;
 
-// 초기 배치 상수 (직전대기 좌측 영역)
-const COLS     = 3;
-const GAP      = 4;
-const PAD      = 8;
-const ROW3_H   = 166; // TacticalArea row 3 고정 높이
+// 초기 배치 상수 (A면 중앙 상단)
+const GAP = 4;
+const PAD = 8;
 
 export function EventLayer() {
   const { enabledEvents, positions, statuses, firePercentages, moveEvent, setEventStatus, setEventFloorId } = useEvents();
@@ -40,49 +38,55 @@ export function EventLayer() {
     setEventStatus(id, status);
   }, [enabledEvents, addLog, setEventStatus]);
 
-  // 최초 마운트 시 위치 미지정 이벤트를 좌측 하단 직전대기 옆 공간에 배치
-  useLayoutEffect(() => {
-    if (initRef.current || !layerRef.current) return;
-    const { height } = layerRef.current.getBoundingClientRect();
-    if (height === 0) return; // 아직 렌더링 전
+  // 위치 미지정 이벤트를 A면 중앙 상단에 배치 (레이어 기준 상대좌표로 환산)
+  const placeUnplaced = useCallback((unplaced: typeof enabledEvents) => {
+    if (!layerRef.current || unplaced.length === 0) return;
+    const aRect = document.querySelector('.exterior-zone--a')?.getBoundingClientRect();
+    if (!aRect) return; // A면 아직 렌더링 전
+    const layerRect = layerRef.current.getBoundingClientRect();
 
-    const unplaced = enabledEvents.filter(ev => !positions[ev.id]);
-    if (unplaced.length === 0) {
-      initRef.current = true;
-      return;
-    }
+    const aCenterX = (aRect.left - layerRect.left) + aRect.width / 2;
+    const aTop     = aRect.top - layerRect.top;
+    // A면 실제 너비에 맞춰 한 줄에 최대한 많이 담아 상단에 밀착시킴
+    // (열 수를 고정하면 이벤트가 많을 때 아래쪽 줄로 밀려 "중앙"처럼 보이는 문제가 있었음)
+    // unplaced.length로 상한을 둬 — 실제 개수보다 열이 많으면 첫 줄이 중앙에서 한쪽으로 치우쳐 보임
+    const maxColsFit = Math.max(1, Math.floor((aRect.width + GAP) / (TOKEN_W + GAP)));
+    const cols       = Math.min(maxColsFit, unplaced.length);
+    const rowWidth = cols * TOKEN_W + (cols - 1) * GAP;
+    const startX   = aCenterX - rowWidth / 2;
+    const baseY    = aTop + PAD;
 
-    const baseY = Math.max(0, height - ROW3_H + PAD);
     unplaced.forEach((ev, i) => {
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = startX + col * (TOKEN_W + GAP);
+      const y = baseY + row * (TOKEN_H + GAP);
       moveEvent(ev.id,
-        PAD + col * (TOKEN_W + GAP),
-        Math.min(height - TOKEN_H, baseY + row * (TOKEN_H + GAP)),
+        Math.max(0, Math.min(layerRect.width - TOKEN_W, x)),
+        Math.max(0, y),
       );
     });
+  }, [moveEvent]);
+
+  // 최초 마운트 시 배치
+  useLayoutEffect(() => {
+    if (initRef.current) return;
+    const unplaced = enabledEvents.filter(ev => !positions[ev.id]);
+    if (unplaced.length === 0) {
+      if (layerRef.current) initRef.current = true;
+      return;
+    }
+    placeUnplaced(unplaced);
     initRef.current = true;
-  }, [enabledEvents, positions, moveEvent]);
+  }, [enabledEvents, positions, placeUnplaced]);
 
   // 새로 추가된 이벤트 (initRef 이후)도 위치 초기화
   useLayoutEffect(() => {
-    if (!initRef.current || !layerRef.current) return;
-    const { height } = layerRef.current.getBoundingClientRect();
-    if (height === 0) return;
-
+    if (!initRef.current) return;
     const unplaced = enabledEvents.filter(ev => !positions[ev.id]);
     if (unplaced.length === 0) return;
-
-    const baseY = Math.max(0, height - ROW3_H + PAD);
-    unplaced.forEach((ev, i) => {
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
-      moveEvent(ev.id,
-        PAD + col * (TOKEN_W + GAP),
-        Math.min(height - TOKEN_H, baseY + row * (TOKEN_H + GAP)),
-      );
-    });
-  }, [enabledEvents, positions, moveEvent]);
+    placeUnplaced(unplaced);
+  }, [enabledEvents, positions, placeUnplaced]);
 
   if (enabledEvents.length === 0) return null;
 

@@ -54,7 +54,11 @@
       "Bash(Remove-Item \"d:\\\\claude\\\\tactical-board\\\\src\\\\components\\\\settings\\\\VehicleSetupPanel.tsx\")",
       "Bash(findstr -i \"export\\\\|log\")",
       "PowerShell(Start-Process \"npm\" -ArgumentList \"run\",\"dev\" -WorkingDirectory \"d:\\\\claude\\\\tactical-board\" -WindowStyle Hidden)",
-      "PowerShell(npx --yes playwright --version 2>&1)"
+      "PowerShell(npx --yes playwright --version 2>&1)",
+      "Bash(npx eslint *)",
+      "Bash(pkill -f \"vite --port 5183\")",
+      "Bash(grep -i \"/\\\\|percent\\\\|ratio\")",
+      "Bash(echo \"EXIT_CODE=$?\")"
     ]
   }
 }

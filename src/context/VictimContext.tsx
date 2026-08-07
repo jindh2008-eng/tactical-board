@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { VictimToken, CreateVictimInput, VictimCondition } from '../types/victim';
 import type { VictimSetupItem } from '../types/settings';
 import type { BuildingConfig, Pos } from '../types';
@@ -9,7 +9,7 @@ import {
 import { useTokens } from './TokenContext';
 import {
   victimSetupToToken,
-  computeInitialPositions,
+  computeVictimOffsets,
 } from '../utils/victimPlacement';
 import { buildValidVictimZoneKeys } from '../data/buildingData';
 import {
@@ -166,14 +166,53 @@ export function VictimProvider({
       for (const id of invalidIds) delete cleaned[id];
       return cleaned;
     }
-    if (initialVictimSetup && initialVictimSetup.length > 0) {
-      const initialTokens = initialVictimSetup.map(victimSetupToToken);
-      return computeInitialPositions(initialTokens);
-    }
+    // 초기 세팅 위치는 실제 DOM(구역 폭/높이)을 측정해야 정확히 계산 가능하므로
+    // 여기서는 빈 값으로 시작하고, 아래 마운트 후 useLayoutEffect에서 채운다.
     return {};
   });
 
   useEffect(() => { victimsRef.current = victims; }, [victims]);
+
+  // ── 초기 세팅 구조대상자 위치 배치 (마운트 후, 실제 구역 크기 기준) ──
+  // 각 구역의 실제 렌더링 크기(계단실/화재실을 제외한 내부 구역만)를 측정해
+  // 우측 하단 모서리부터 겹치지 않게 배치한다. 세션 복원 시에는 이미 위치가
+  // 있으므로 대상에서 자동 제외됨.
+  useLayoutEffect(() => {
+    // 마운트 시점 클로저에 담긴 victims — 초기 세팅 배치 용도로는 이 값으로 충분.
+    // (StrictMode의 mount→cleanup→remount 이중 실행에도 안전하도록, 실제 배치는
+    // 아래 setTimeout 콜백 안에서 setVictimPositions의 최신 prev 기준으로 판단한다.
+    // 그래야 첫 번째(가짜) 마운트의 타이머가 cleanup으로 취소되더라도 재마운트 시
+    // 새로 예약되는 타이머가 정상적으로 동작한다.)
+    const mountedVictims = victims;
+
+    // TacticalArea의 건물 높이 고정 로직(useLayoutEffect → setState → 재커밋)이
+    // 먼저 안정화된 뒤에 측정해야 실제 최종 레이아웃 크기를 얻을 수 있어 살짝 지연한다.
+    const timer = setTimeout(() => {
+      setVictimPositions(prev => {
+        const needsPlacement = mountedVictims.filter(v => v.zoneKey && prev[v.id] === undefined);
+        if (needsPlacement.length === 0) return prev;
+
+        const byZone: Record<string, string[]> = {};
+        for (const v of needsPlacement) {
+          (byZone[v.zoneKey!] ??= []).push(v.id);
+        }
+
+        const updates: Record<string, VictimPos> = {};
+        for (const [zoneKey, ids] of Object.entries(byZone)) {
+          const el   = document.querySelector(`[data-zone-key="${zoneKey}"]`);
+          const rect = el?.getBoundingClientRect();
+          const zoneW = rect && rect.width  > 0 ? rect.width  : 120;
+          const zoneH = rect && rect.height > 0 ? rect.height : 80;
+          const offsets = computeVictimOffsets(ids.length, zoneW, zoneH);
+          ids.forEach((id, i) => { updates[id] = offsets[i]; });
+        }
+
+        return { ...prev, ...updates };
+      });
+    }, 80);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── 인명검색 상태 ─────────────────────────────────────────────────
   const [discoveredVictimIds, setDiscoveredVictimIds] = useState<Set<string>>(() => {
@@ -460,12 +499,20 @@ export function VictimProvider({
       const existing = cleaned[floorId];
 
       if (existing) {
-        // 기존 레코드에 유닛 추가 (이미 있으면 무시)
         if (existing.units.some(u => u.tokenId === tokenId)) return cleaned;
-        return {
-          ...cleaned,
-          [floorId]: { ...existing, units: [...existing.units, { tokenId, decrementRate }] },
-        };
+        const updated = { ...existing, units: [...existing.units, { tokenId, decrementRate }] };
+
+        // 1차 동결 + 2차 미시작 → 2차 검색 개시
+        if (existing.primaryFrozen && !existing.secondaryActive) {
+          const victims    = victimsRef.current;
+          const discovered = discoveredVictimIdsRef.current;
+          const undiscovered = undiscoveredVictimIds(victims, floorId, discovered);
+          updated.secondaryActive   = true;
+          updated.secondaryScore    = existing.secondaryInitial;
+          updated.secondarySchedule = buildSearchSchedule(undiscovered, existing.secondaryInitial);
+        }
+
+        return { ...cleaned, [floorId]: updated };
       }
 
       // 새 레코드 생성
@@ -491,9 +538,16 @@ export function VictimProvider({
       return { ...cleaned, [floorId]: record };
     });
 
+    // 기존 frozen 레코드에 합류 → 2차 점수 표시, 아니면 인자 기반
+    const existingRec = activeSearchesRef.current[floorId];
+    const isFrozenJoin = existingRec?.primaryFrozen && !existingRec.secondaryActive;
+    const initialDisplay = (startInSecondary || isFrozenJoin)
+      ? secondaryInitial
+      : primaryInitial;
+
     setSearchScores(prev => ({
       ...prev,
-      [tokenId]: startInSecondary ? secondaryInitial : primaryInitial,
+      [tokenId]: initialDisplay,
     }));
   }, []);
 
@@ -523,7 +577,7 @@ export function VictimProvider({
     });
   }, []);
 
-  // ── 초진 도달 시 해당 층 인명검색 중단 (수동 재시작 필요) ────────
+  // ── 초진 도달 시 해당 층 인명검색 중단 (1차 점수 유지, 유닛 제거) ──
   const transitionToSecondarySearch = useCallback((floorIds: string[]) => {
     const removedTokenIds: string[] = [];
     setActiveSearches(prev => {
@@ -532,7 +586,11 @@ export function VictimProvider({
         const rec = next[floorId];
         if (!rec || rec.primaryFrozen) continue;
         rec.units.forEach(u => removedTokenIds.push(u.tokenId));
-        delete next[floorId];
+        next[floorId] = {
+          ...rec,
+          primaryFrozen: true,
+          units:         [],
+        };
       }
       return next;
     });

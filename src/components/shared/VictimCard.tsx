@@ -8,6 +8,8 @@ import type { UnitToken } from '../../types';
 import type { VictimToken, VictimCondition } from '../../types/victim';
 import { VictimContextBarMenu, type AnchorRect } from './VictimContextBarMenu';
 import { zoneKeyToFullLabel, buildVictimDisplayLine } from '../../utils/victimUtils';
+import { setDragGrabOffset } from '../../utils/dragDrop';
+import { logDragEvent } from '../../utils/dragDiagnostics';
 import './VictimCard.css';
 
 interface Props {
@@ -118,9 +120,11 @@ export function VictimCard({ victim, absPos }: Props) {
     e.dataTransfer.setData('victimId', victim.id);
     e.dataTransfer.setData('tokenW', String(el.offsetWidth));
     e.dataTransfer.setData('tokenH', String(el.offsetHeight));
+    setDragGrabOffset(e);
     e.dataTransfer.effectAllowed = 'move';
     setCtxMenu(null);       // 드래그 시작 시 메뉴 닫기
     setTooltipRect(null);
+    logDragEvent('VictimCard dragstart', `victim=${victim.id}`);
   }
 
   function handleContextMenu(e: React.MouseEvent) {

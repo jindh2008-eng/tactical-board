@@ -118,9 +118,9 @@
 .resource-panel__body .token-card {
   min-width: 0;
   height: auto;
-  padding: 7px 8px;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  padding: 9px 11px;
+  border-radius: 5px;
+  font-size: 1.13rem;
 }
 
 /* ─────────────────────────────────────────────
@@ -468,7 +468,7 @@
 /* 임무 레이블 컨테이너 — 토큰 좌측에 붙어서 복수 레이블을 간격 없이 나열 */
 .token-mission-labels {
   position:       absolute;
-  right:          calc(100% + 3px);
+  right:          calc(100% + 4px);
   top:            0;
   bottom:         0;
   display:        flex;
@@ -479,27 +479,27 @@
 
 /* 개별 임무 레이블 칩 */
 .token-mission-label {
-  padding:        0 3px;
+  padding:        0 4px;
   border:         1px solid;
   display:        flex;
   flex-direction: row-reverse;  /* 첫 번째 컬럼이 토큰에 가장 가깝게 */
   align-items:    stretch;
-  gap:            1px;
+  gap:            2px;
 }
 
 /* 첫 번째(가장 왼쪽) 레이블만 왼쪽 모서리 둥글게 */
 .token-mission-label:first-child {
-  border-radius: 3px 0 0 3px;
+  border-radius: 4px 0 0 4px;
 }
 
 /* 마지막(토큰에 붙는) 레이블만 오른쪽 모서리 둥글게 */
 .token-mission-label:last-child {
-  border-radius: 0 3px 3px 0;
+  border-radius: 0 4px 4px 0;
 }
 
 /* 레이블이 1개뿐이면 전체 둥글게 */
 .token-mission-label:only-child {
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 /* 인접 레이블 간 좌측 보더 제거 (이중선 방지) */
@@ -518,7 +518,7 @@
 /* 개별 글자 */
 .token-mission-label__char {
   display:               block;
-  font-size:             9px;
+  font-size:             12px;
   font-weight:           900;
   line-height:           1;
   text-align:            center;

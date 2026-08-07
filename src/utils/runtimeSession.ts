@@ -19,6 +19,20 @@ const KEY_TOKENS  = 'tactical-board.runtime.tokens';
 const KEY_VICTIMS = 'tactical-board.runtime.victims';
 
 // ─────────────────────────────────────────────
+// 복원 형태 검증 헬퍼
+// ─────────────────────────────────────────────
+
+/**
+ * Record<string, T> 형태로 인덱싱해도 안전한 값인지 확인.
+ * JSON.parse 결과가 문법적으로는 정상이어도 필드가 누락되거나
+ * 타입이 다르면(null/배열/원시값) 소비처에서 인덱싱·Object.entries 시
+ * TypeError가 나므로, 복원 단계에서 미리 걸러낸다.
+ */
+function isPlainRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+// ─────────────────────────────────────────────
 // 저장 형식
 // ─────────────────────────────────────────────
 
@@ -204,7 +218,16 @@ export function loadBuildingSession(): BuildingSessionState | null {
   try {
     const raw = sessionStorage.getItem(KEY_BUILDING);
     if (!raw) return null;
-    return JSON.parse(raw) as BuildingSessionState;
+    const parsed = JSON.parse(raw) as BuildingSessionState;
+
+    // 형태 검증 — 소비처(BuildingStateContext)가 이 세 필드를 그대로 인덱싱하므로
+    // 하나라도 객체가 아니면 복원을 포기하고 설정값 기반 초기화로 넘긴다.
+    // (구버전 세션·부분 저장본으로 인한 마운트 시점 크래시 방지)
+    if (!isPlainRecord(parsed.doorStates))      return null;
+    if (!isPlainRecord(parsed.fireStates))      return null;
+    if (!isPlainRecord(parsed.firePercentages)) return null;
+
+    return parsed;
   } catch { return null; }
 }
 
@@ -343,7 +366,16 @@ export function loadVictimSearchSession(): VictimSearchSessionState | null {
   try {
     const raw = sessionStorage.getItem(KEY_VICTIM_SEARCH);
     if (!raw) return null;
-    return JSON.parse(raw) as VictimSearchSessionState;
+    const parsed = JSON.parse(raw) as VictimSearchSessionState;
+
+    // 형태 검증 — 소비처(VictimContext)가 activeSearches를 Object.entries()에
+    // 바로 넘기므로 객체가 아니면 마운트 시점에 TypeError가 난다.
+    if (!isPlainRecord(parsed.activeSearches)) return null;
+    if (!Array.isArray(parsed.discoveredVictimIds)) {
+      parsed.discoveredVictimIds = [];
+    }
+
+    return parsed;
   } catch { return null; }
 }
 

@@ -478,7 +478,10 @@ export function TokenProvider({
     setTokens(prev => [
       ...prev,
       {
-        id:       `${baseKey}-${Date.now()}`,
+        // Date.now()는 1ms 해상도라 연타 시 동일 ID가 생성될 수 있음 —
+        // 로그 ID와 동일하게 랜덤 접미사를 붙여 충돌 방지
+        // (ID를 파싱하는 코드는 없으므로 형식 변경은 기존 데이터와 무관)
+        id:       `${baseKey}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         label:    formatLabel(count),
         type,
         color,
@@ -511,6 +514,13 @@ export function TokenProvider({
       delete arrivalTargetAtRef.current[tokenId];
     }
 
+    // 구조 처리 중(임시의료소 카운트다운 진행 중) 지정 시간 전 수동 이동 →
+    // 타이머·카운트다운뿐 아니라 '구조중' 배지도 함께 정리한다.
+    // (완료 타이머는 zoneKey==='medical-post' 조건에 걸려 나중에 실행돼도
+    //  배지를 지우지 못해 영구 잔류하는 문제가 있었음 — P0-RESCUE-01)
+    const wasRescuing = zoneChanged && token.zoneKey === 'medical-post' &&
+      token.badges.some(b => b.line1 === '구조중');
+
     if (zoneChanged && token.zoneKey === 'medical-post') {
       if (medicalTimers.current[tokenId]) {
         clearTimeout(medicalTimers.current[tokenId]);
@@ -534,6 +544,9 @@ export function TokenProvider({
             update.sprayState  = null;
             update.sprayTarget = null;
           }
+          if (wasRescuing) {
+            update.badges = t.badges.filter(b => b.line1 !== '구조중');
+          }
           return { ...t, ...update };
         })
       );
@@ -548,6 +561,7 @@ export function TokenProvider({
           tokenColor: token.color,
           fromZoneId: token.zoneKey ?? 'pool',
           toZoneId:   toZoneKey,
+          note:       wasRescuing ? '구조 처리 중단 후 수동 이동' : undefined,
         };
         setLogs(prev => [entry, ...prev]);
 
@@ -598,11 +612,11 @@ export function TokenProvider({
 
     setTokens(prev => prev.map(t => {
       if (t.id !== tokenId) return t;
-      return {
-        ...t,
-        zoneKey: 'medical-post',
-        badges:  [...t.badges, { id: generateId(), line1: '구조중' }],
-      };
+      // 이미 구조중이면 중복 배지를 추가하지 않음
+      const badges = t.badges.some(b => b.line1 === '구조중')
+        ? t.badges
+        : [...t.badges, { id: generateId(), line1: '구조중' }];
+      return { ...t, zoneKey: 'medical-post', badges };
     }));
 
     setPositions(prev => {
@@ -851,6 +865,11 @@ export function TokenProvider({
   }, []);
 
   const removeToken = useCallback((tokenId: string) => {
+    // 삭제되는 토큰에 걸린 구조 처리 완료 타이머가 남아있으면 정리
+    if (medicalTimers.current[tokenId]) {
+      clearTimeout(medicalTimers.current[tokenId]);
+      delete medicalTimers.current[tokenId];
+    }
     setTokens(prev => prev.filter(t => t.id !== tokenId));
   }, []);
 

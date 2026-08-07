@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
-import { TokenCard } from '../shared/TokenCard';
+import { useResourceStatus } from '../../context/ResourceStatusContext';
+import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
 import './UnitStatusPanel.css';
 
 const ZONE_STANDBY1 = 'standby-standby1';
@@ -26,7 +27,7 @@ function typePriority(unitType: string): number {
 export function UnitStatusPanel() {
   const { tokens, moveToken, removeToken, arrivalCountdowns } = useTokens();
   const { arrivalMode, dispatchRoster }          = useSettings();
-  const [isDragOver, setIsDragOver] = useState(false);
+  const { resourceAssigned }        = useResourceStatus();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected]     = useState<Set<string>>(new Set());
 
@@ -102,7 +103,8 @@ export function UnitStatusPanel() {
     });
   }, [poolTokens, arrivalMode, arrivalCountdowns, orderMap]);
 
-  // ── 버튼 이동: 활동대 + 연동 차량 동시 이동 ───
+  // ── 더블클릭 이동: 활동대 + 연동 차량 동시 이동 ───
+  // 자원대기소가 "지정"(운영) 상태면 자원대기소로, 아니면 대기1단계로 바로 이동
   function handleButtonMove(tokenId: string, zoneKey: string) {
     moveToken(tokenId, zoneKey);
 
@@ -114,30 +116,21 @@ export function UnitStatusPanel() {
     }
   }
 
+  function handleTokenDoubleClick(tokenId: string) {
+    handleButtonMove(tokenId, resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1);
+  }
+
   // ── 드롭 핸들러 ──────────────────────────────
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
-  }
-
-  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    setIsDragOver(false);
     const tokenId = e.dataTransfer.getData('tokenId');
     if (tokenId) moveToken(tokenId, null);
   }
-
-  const bodyClass = [
-    'unit-status-panel__body',
-    isDragOver ? 'drop-target--active' : '',
-  ].filter(Boolean).join(' ');
 
   return (
     <div className="panel unit-status-panel">
@@ -168,73 +161,21 @@ export function UnitStatusPanel() {
         )}
       </div>
       <div
-        className={bodyClass}
+        className="unit-status-panel__body"
         onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {sortedPoolTokens.length === 0 ? (
           <span className="unit-status-panel__placeholder">―</span>
-        ) : arrivalMode === 'time' ? (
-          /* ── 시간모드: 기존 2열 카드 배치 ── */
-          (() => {
-            const n     = sortedPoolTokens.length;
-            const right = sortedPoolTokens.slice(0, Math.ceil(n / 2));
-            const left  = sortedPoolTokens.slice(Math.ceil(n / 2));
-            return (
-              <div className="unit-status-panel__columns">
-                <div className="unit-status-panel__col">
-                  {left.map(token => (
-                    <TokenCard key={token.id} token={token}
-                      selectMode={selectMode} selected={selected.has(token.id)}
-                      onToggleSelect={() => toggleSelect(token.id)} />
-                  ))}
-                </div>
-                <div className="unit-status-panel__col">
-                  {right.map(token => (
-                    <TokenCard key={token.id} token={token}
-                      selectMode={selectMode} selected={selected.has(token.id)}
-                      onToggleSelect={() => toggleSelect(token.id)} />
-                  ))}
-                </div>
-              </div>
-            );
-          })()
         ) : (
-          /* ── 착대모드: 1열 행 배치 + 이동 버튼 ── */
-          <div className="unit-status-panel__order-list">
-            {sortedPoolTokens.map(token => {
-              const order = orderMap.get(token.id);
-              return (
-                <div key={token.id} className="usp-order-row">
-                  <div className="usp-order-row__card">
-                    <TokenCard token={token}
-                      selectMode={selectMode} selected={selected.has(token.id)}
-                      onToggleSelect={() => toggleSelect(token.id)} />
-                  </div>
-                  <div className="usp-order-row__btns">
-                    {order != null && (
-                      <span className="usp-order-row__badge">{order}</span>
-                    )}
-                    <button
-                      className="usp-order-btn usp-order-btn--standby1"
-                      type="button"
-                      onClick={() => handleButtonMove(token.id, ZONE_STANDBY1)}
-                    >
-                      대기
-                    </button>
-                    <button
-                      className="usp-order-btn usp-order-btn--resource"
-                      type="button"
-                      onClick={() => handleButtonMove(token.id, ZONE_RESOURCE)}
-                    >
-                      자원
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <CategorizedTokenGrid
+            tokens={sortedPoolTokens}
+            hideQuantity
+            selectMode={selectMode}
+            selected={selected}
+            onToggleSelect={toggleSelect}
+            onTokenDoubleClick={handleTokenDoubleClick}
+          />
         )}
       </div>
     </div>

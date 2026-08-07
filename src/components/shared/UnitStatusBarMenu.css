@@ -35,10 +35,10 @@
 /* ── 탭 버튼 ───────────────────────────────── */
 
 .usbm2__tab {
-  padding:       7px 14px;
+  padding:       9px 19px;
   border:        none;
   border-right:  1px solid rgba(60, 60, 80, 0.35);
-  font-size:     0.76rem;
+  font-size:     1.01rem;
   font-weight:   700;
   font-family:   inherit;
   cursor:        pointer;
@@ -119,12 +119,12 @@
   display:         inline-flex;
   align-items:     center;
   gap:             5px;
-  padding:         6px 14px;
+  padding:         8px 19px;
   border-radius:   6px;
   border:          1.5px solid #333345;
   background:      #1e1e2a;
   color:           #ccc;
-  font-size:       0.78rem;
+  font-size:       1.04rem;
   font-weight:     700;
   font-family:     inherit;
   cursor:          pointer;
@@ -150,7 +150,7 @@
 }
 
 .usbm2__check {
-  font-size:   0.70rem;
+  font-size:   0.93rem;
   line-height: 1;
 }
 
@@ -179,7 +179,7 @@
   background:    #16100c;
   border:        1.5px dashed rgba(120, 95, 60, 0.55);
   color:         #5a4030;
-  font-size:     0.72rem;
+  font-size:     0.96rem;
 }
 
 .usbm2__popup-btn--note:hover {
@@ -240,12 +240,12 @@
 .usbm2__note-input {
   width:         100%;
   box-sizing:    border-box;
-  padding:       6px 9px;
+  padding:       8px 12px;
   background:    #0e0c08;
   border:        1px solid #4a3010;
   border-radius: 6px;
   color:         #cc9955;
-  font-size:     0.78rem;
+  font-size:     1.04rem;
   font-family:   inherit;
   outline:       none;
   transition:    border-color 0.1s;
@@ -266,12 +266,12 @@
 }
 
 .usbm2__note-clear {
-  padding:       4px 11px;
+  padding:       5px 15px;
   background:    transparent;
   border:        1px solid #6a2230;
   border-radius: 6px;
   color:         #cc4466;
-  font-size:     0.72rem;
+  font-size:     0.96rem;
   font-family:   inherit;
   cursor:        pointer;
 }
@@ -280,12 +280,12 @@
 }
 
 .usbm2__note-save {
-  padding:       4px 14px;
+  padding:       5px 19px;
   background:    #4433aa;
   border:        none;
   border-radius: 6px;
   color:         #fff;
-  font-size:     0.72rem;
+  font-size:     0.96rem;
   font-weight:   700;
   font-family:   inherit;
   cursor:        pointer;

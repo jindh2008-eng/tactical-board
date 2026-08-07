@@ -84,13 +84,6 @@
   padding-top: 8px;
 }
 
-/* ─── 드롭 피드백 ─── */
-.unit-status-panel__body.drop-target--active {
-  outline: 2px dashed rgba(100, 180, 255, 0.5);
-  outline-offset: -2px;
-  background-color: rgba(100, 180, 255, 0.06) !important;
-}
-
 /* ─── pool 내 token-card-wrapper — stretch 대응 ─── */
 .unit-status-panel .token-card-wrapper {
   display: flex;

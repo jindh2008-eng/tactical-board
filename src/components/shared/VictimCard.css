@@ -12,7 +12,7 @@
 .victim-card {
   display: inline-flex;
   align-items: center;
-  border-radius: 8px;
+  border-radius: 9px;
   cursor: grab;
   user-select: none;
   transition: opacity 0.1s, transform 0.1s;
@@ -34,8 +34,8 @@
 .victim-card--person {
   flex-direction: row;
   align-items: center;
-  gap: 4px;
-  padding: 5px 8px;
+  gap: 5px;
+  padding: 7px 11px;
   background: #ffffff;
   color: #222;
   position: relative;
@@ -48,8 +48,8 @@
 /* 성별 아이콘 */
 .victim-gender-icon {
   flex-shrink: 0;
-  width: 12px;
-  height: 22px;
+  width: 16px;
+  height: 29px;
   display: block;
 }
 
@@ -58,13 +58,13 @@
 
 /* 상세위치 텍스트 */
 .victim-card__subloc {
-  font-size: 0.68rem;
+  font-size: 0.91rem;
   font-weight: 600;
   color: #333;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 64px;
+  max-width: 85px;
 }
 
 /* ─────────────────────────────────────────────
@@ -112,24 +112,24 @@
 .victim-card--group {
   flex-direction: column;
   align-items: center;
-  padding: 6px 8px 5px;
-  gap: 3px;
+  padding: 8px 11px 7px;
+  gap: 4px;
   background: #ffffff;
   border: 1.5px solid #90bfe0;
   color: #1976d2;
-  min-width: 50px;
+  min-width: 67px;
 }
 
 .group-icons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 3px;
+  gap: 4px;
   width: 100%;
 }
 
 .group-person-icon {
-  width: 10px;
-  height: 13px;
+  width: 13px;
+  height: 17px;
   display: block;
   color: inherit;
 }
@@ -137,16 +137,16 @@
 .group-info {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .group-info__count {
-  font-size: 0.74rem;
+  font-size: 0.99rem;
   font-weight: 700;
 }
 
 .group-info__cond {
-  font-size: 0.66rem;
+  font-size: 0.88rem;
   font-weight: 600;
 }
 
@@ -156,21 +156,21 @@
 
 .victim-card--custom {
   flex-direction: column;
-  padding: 3px 8px 2px;
+  padding: 4px 11px 3px;
   background: #0e1218;
   color: #88aacc;
   border: 1px solid #2a4060;
-  min-width: 52px;
+  min-width: 69px;
 }
 
 .victim-card__top {
-  font-size: 0.73rem;
+  font-size: 0.97rem;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 
 .victim-card__bottom {
-  font-size: 0.66rem;
+  font-size: 0.88rem;
   font-weight: 500;
   opacity: 0.85;
   letter-spacing: 0.02em;
@@ -187,16 +187,16 @@
 
 .zone-cell .victim-card--person,
 .face-general-zone .victim-card--person {
-  padding: 3px 6px 2px 4px;
-  gap: 4px;
+  padding: 4px 8px 3px 5px;
+  gap: 5px;
 }
 
 .zone-cell .victim-card__top {
-  font-size: 0.70rem;
+  font-size: 0.93rem;
 }
 
 .zone-cell .victim-card__bottom {
-  font-size: 0.64rem;
+  font-size: 0.85rem;
 }
 
 

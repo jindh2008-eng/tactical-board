@@ -63,10 +63,9 @@
 .standby-box__header--chief {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 3px 6px 3px 10px;
   text-align: left;
-  gap: 4px;
+  gap: 6px;
   white-space: nowrap;
   overflow: hidden;
 }
@@ -86,6 +85,7 @@
   min-width: 0;
   display: flex;
   align-items: center;
+  margin-left: auto;
 }
 
 .standby-chief__select {
@@ -118,6 +118,12 @@
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 3px;
+}
+
+/* CategorizedTokenGrid가 body를 채울 때 — 자체 행 전체를 차지하고 늘어남 */
+.standby-box__body > .ctg {
+  flex: 1 1 100%;
+  min-height: 0;
 }
 
 .standby-box__placeholder {
@@ -290,17 +296,11 @@
   background: #2e7d32;
 }
 
-/* 출동대 지정 — 파란색 */
-.medical-status-btn--unit {
-  background: #1976d2;
-}
-
 /* ─────────────────────────────────────────────
-   임시의료소 토큰 클릭 래퍼
+   임시의료소 담당 출동대 표시 래퍼
    ─────────────────────────────────────────────*/
 
 .medical-post__token-wrap {
-  cursor:         pointer;
   border-radius:  5px;
   outline:        2px solid transparent;
   outline-offset: 2px;
@@ -388,14 +388,4 @@
 .bottom-standby-boxes > .standby-box {
   flex: 1;
   min-height: 0;
-}
-
-/* ── 드롭 피드백 ── */
-
-.standby-box__body.drop-target--active,
-.medical-split__body.drop-target--active,
-.standby-split__body.drop-target--active {
-  outline: 2px dashed rgba(80, 150, 220, 0.6);
-  outline-offset: -2px;
-  background: rgba(100, 160, 230, 0.12) !important;
 }

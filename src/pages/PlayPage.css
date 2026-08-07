@@ -17,130 +17,116 @@
 }
 
 /* ─────────────────────────────────────────────
-   우측 Overlay Drawer — 자원대기소(상단) / 출동대현황(하단)
-   각각 독립적으로 열고 닫힘, 세로 탭으로 토글
+   우측 고정 패널 — 임시의료소/구조활동통계 → 대기1단계 →
+   자원대기소 → 출동대현황. 항상 노출, 실제 레이아웃 공간을 차지
+   (오버레이 아님 — .tactical-board-wrap이 이 폭만큼 빼고 계산됨)
    ─────────────────────────────────────────────*/
-.left-drawer {
+.right-fixed-panel {
   position: absolute;
   right: 0;
-  width: 220px;
-  z-index: 20;
-  transform: translateX(100%);
-  transition: transform 0.22s ease;
-}
-
-.left-drawer--resource {
   top: 0;
-  height: 30%;
-}
-
-.left-drawer--unit {
-  top: 30%;
-  height: 70%;
-}
-
-.left-drawer--open {
-  transform: translateX(0);
-}
-
-/* 패널 내용 영역 */
-.left-drawer__panel {
-  width: 100%;
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background-color: var(--color-surface);
-  border-left: 1.5px solid var(--color-border);
-}
-
-/* 항상 보이는 세로 탭 — drawer 좌측 가장자리에 부착 */
-.left-drawer__tab {
-  position: absolute;
-  top: 0;
-  right: 100%;
-  height: 100%;
-  width: 20px;
-  z-index: 21;
+  width: 550px;
+  z-index: 15;
 
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-
+  flex-direction: column;
+  overflow: hidden;
   background-color: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-right: none;
-  border-radius: 4px 0 0 4px;
-  cursor: pointer;
-  color: var(--color-text-dim);
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  writing-mode: vertical-rl;
-  transition: background-color 0.12s, color 0.12s;
+  border-left: 1.5px solid var(--color-border);
+  box-sizing: border-box;
 }
 
-.left-drawer__tab:hover {
-  background-color: #1a2a3a;
-  color: var(--color-text);
+/* 임시의료소/대기1단계 — 원래 밝은 보드 배경(--ctr-bg)용으로 설계된
+   컴포넌트라 어두운 패널 배경에서는 글자가 잘 안 보임 → 원래 배경 유지 */
+.right-fixed-panel__section--medical,
+.right-fixed-panel__section--standby1 {
+  background-color: var(--ctr-bg);
 }
 
-.left-drawer--open .left-drawer__tab {
-  background-color: #1a2a3a;
-  color: var(--color-text);
+/* 패널 제목 — 좌측 진행상황관리(.checklist-panel__title)와 동일 크기 */
+.right-fixed-panel .standby-box__title,
+.right-fixed-panel .rescue-stats__title,
+.right-fixed-panel .resource-panel__title,
+.right-fixed-panel .panel__header {
+  font-size: 1.0rem;
+}
+
+.right-fixed-panel__section {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.right-fixed-panel__section > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.right-fixed-panel__section + .right-fixed-panel__section {
+  border-top: 1.5px solid var(--color-border);
+}
+
+/* 섹션별 높이 비율 — 임시의료소 절반 축소, 그만큼 대기1단계로 이전 */
+.right-fixed-panel__section--medical  { flex: 1.1; }
+.right-fixed-panel__section--standby1 { flex: 2.1; }
+.right-fixed-panel__section--resource { flex: 1.4; }
+.right-fixed-panel__section--unit     { flex: 3;   }
+
+/* 임시의료소 ⇄ 구조활동통계 전환 버튼 */
+.right-fixed-panel__view-toggle {
+  font-size:      0.66rem;
+  font-weight:    700;
+  padding:        2px 7px;
+  border-radius:  3px;
+  border:         1px solid currentColor;
+  background:     transparent;
+  color:          inherit;
+  cursor:         pointer;
+  white-space:    nowrap;
+  flex-shrink:    0;
+  opacity:        0.85;
+  transition:     opacity 0.12s;
+  margin-left:    auto;
+}
+
+.right-fixed-panel__view-toggle:hover {
+  opacity: 1;
 }
 
 
 /* ─────────────────────────────────────────────
-   좌측 Overlay Drawer — 진행상황 관리 (전체 높이)
-   탭은 패널 바깥에 독립 배치하여 transform 클리핑 방지
+   좌측 고정 패널 — 진행상황 관리 (전체 높이)
+   항상 노출, 우측 끝 드래그로 폭 조절
+   (오버레이 아님 — .tactical-board-wrap이 이 폭만큼 빼고 계산됨)
    ─────────────────────────────────────────────*/
-
-/* 탭 — 항상 좌측 가장자리에 고정, transform 영향 없음 */
-.right-panel__tab {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 20px;
-  z-index: 21;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-
-  background-color: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-left: none;
-  border-radius: 0 4px 4px 0;
-  cursor: pointer;
-  color: var(--color-text-dim);
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  writing-mode: vertical-rl;
-  transition: background-color 0.12s, color 0.12s;
-}
-
-.right-panel__tab:hover,
-.right-panel__tab--active {
-  background-color: #1a2a3a;
-  color: var(--color-text);
-}
-
-/* 패널 — 탭(20px) 바로 오른쪽에서 시작, 닫힐 때 탭까지 포함해 왼쪽으로 숨김 */
 .right-panel {
   position: absolute;
-  left: 20px;
+  left: 0;
   top: 0;
   height: 100%;
   width: 220px;
   z-index: 20;
-  transform: translateX(calc(-100% - 20px));
-  transition: transform 0.22s ease;
+  box-sizing: border-box;
 }
 
-.right-panel--open {
-  transform: translateX(0);
+/* 우측 끝 드래그 리사이즈 핸들 */
+.right-panel__resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 22;
+  background: transparent;
+  transition: background-color 0.12s;
+}
+
+.right-panel__resize-handle:hover,
+.right-panel__resize-handle:active {
+  background-color: rgba(100, 180, 255, 0.35);
 }
 
 .right-panel__panel {
@@ -164,7 +150,7 @@
 .resource-panel__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   padding: 6px 8px;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
@@ -175,6 +161,35 @@
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.resource-status-btn {
+  font-size:      0.65rem;
+  font-weight:    700;
+  padding:        2px 7px;
+  border-radius:  3px;
+  border:         none;
+  color:          #fff;
+  cursor:         pointer;
+  white-space:    nowrap;
+  flex-shrink:    0;
+  letter-spacing: 0.02em;
+  line-height:    1.5;
+  transition:     filter 0.12s;
+  font-family:    inherit;
+}
+
+.resource-status-btn:hover {
+  filter: brightness(1.18);
+}
+
+.resource-status-btn--off {
+  background: #ff8c42;
+}
+
+.resource-status-btn--on {
+  background: #2e7d32;
 }
 
 .resource-panel__chief-select {
@@ -186,24 +201,20 @@
   padding: 1px 4px;
   cursor: pointer;
   max-width: 90px;
+  margin-left: auto;
 }
 
 .resource-panel__body {
   flex: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 4px;
-  padding: 6px;
-  overflow-y: auto;
+  flex-direction: column;
   min-height: 36px;
+  padding: 4px;
   transition: background-color 0.1s;
 }
 
-.resource-panel__body.drop-target--active {
-  background-color: rgba(60, 100, 160, 0.15);
-  outline: 1px dashed #4a7ab0;
-  outline-offset: -2px;
+.resource-panel__body > .ctg {
+  flex: 1;
 }
 
 .resource-panel__placeholder {
@@ -215,14 +226,16 @@
 }
 
 /* ─────────────────────────────────────────────
-   전술상황판 — 항상 전체 영역 차지, 4:3 비율
+   전술상황판 — 우측 고정 패널(550px) 뺀 나머지 영역, 4:3 비율
+   justify-content:flex-end → 보드를 우측(패널쪽)에 붙여서
+   D면과 우측 패널 사이 여백을 최소화 (남는 여백은 좌측으로)
    ─────────────────────────────────────────────*/
 .tactical-board-wrap {
-  width: 100%;
+  width: calc(100% - 550px);
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   overflow: hidden;
 }
 
@@ -306,4 +319,30 @@
   background:   rgba(68, 170, 255, 0.12);
   border-color: #44aaff;
   color:        #88ccff;
+}
+
+/* 방수 지점 선택 중 유효하지 않은 지점 클릭 피드백 */
+.spray-target-overlay__invalid-msg {
+  position:       fixed;
+  z-index:        9900;
+  transform:      translate(-50%, -130%);
+  padding:        4px 10px;
+  background:     rgba(40, 10, 10, 0.94);
+  border:         1px solid rgba(255, 90, 90, 0.55);
+  border-radius:  12px;
+  color:          #ffb0b0;
+  font-size:      0.72rem;
+  font-weight:    600;
+  white-space:    nowrap;
+  pointer-events: none;
+  animation:      spray-invalid-in 0.15s ease-out, spray-invalid-out 0.25s ease-in 0.65s forwards;
+}
+
+@keyframes spray-invalid-in {
+  from { opacity: 0; transform: translate(-50%, -110%); }
+  to   { opacity: 1; transform: translate(-50%, -130%); }
+}
+
+@keyframes spray-invalid-out {
+  to { opacity: 0; }
 }

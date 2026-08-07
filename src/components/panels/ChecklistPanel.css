@@ -14,14 +14,14 @@
 }
 
 .checklist-panel__title {
-  font-size: 0.78rem;
+  font-size: 1.0rem;
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: 0.02em;
 }
 
 .checklist-panel__progress {
-  font-size: 0.70rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-accent);
 }
@@ -36,7 +36,7 @@
 }
 
 .checklist-panel__empty {
-  font-size: 0.70rem;
+  font-size: 0.85rem;
   color: var(--color-text-dim);
   text-align: center;
   margin-top: 12px;
@@ -52,7 +52,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.76rem;
+  font-size: 1.0rem;
   font-weight: 700;
   color: var(--color-text);
   background: none;
@@ -124,7 +124,7 @@
 /* ── 타입 배지 ── */
 
 .checklist-panel__item-badge {
-  font-size: 0.64rem;
+  font-size: 0.80rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -190,11 +190,11 @@
 }
 
 .checklist-panel__item--linked .checklist-panel__item-text {
-  font-size: 0.66rem;
+  font-size: 0.85rem;
 }
 
 .checklist-panel__item--linked .checklist-panel__item-badge {
-  font-size: 0.60rem;
+  font-size: 0.74rem;
   padding: 1px 4px;
 }
 
@@ -226,7 +226,7 @@
 /* ── 항목 텍스트 ── */
 
 .checklist-panel__item-text {
-  font-size: 0.74rem;
+  font-size: 0.95rem;
   color: var(--color-text);
   line-height: 1.4;
   flex: 1;
@@ -234,7 +234,7 @@
 }
 
 .checklist-panel__item-units {
-  font-size: 0.68rem;
+  font-size: 0.80rem;
   color: var(--color-text-dim);
 }
 
@@ -285,10 +285,10 @@
 .checklist-panel__msg-popup {
   background: #ffffff;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
-  min-width: 260px;
-  max-width: 440px;
+  min-width: 420px;
+  max-width: min(95vw, 1600px);
   width: max-content;
   display: flex;
   flex-direction: column;
@@ -299,12 +299,12 @@
 .checklist-panel__msg-header {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 14px 16px 10px;
+  gap: 5px;
+  padding: 22px 26px 14px;
 }
 
 .checklist-panel__msg-title {
-  font-size: 0.92rem;
+  font-size: 2.03rem;
   font-weight: 700;
   color: #111111;
   line-height: 1.3;
@@ -317,29 +317,29 @@
 }
 
 .checklist-panel__msg-body {
-  font-size: 0.84rem;
+  font-size: 1.73rem;
   color: #1a1a1a;
   line-height: 1.75;
-  padding: 14px 16px;
+  padding: 20px 26px;
   white-space: pre-wrap;
-  max-height: 260px;
+  max-height: 60vh;
   overflow-y: auto;
 }
 
 .checklist-panel__msg-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 8px 12px;
+  padding: 12px 18px;
   border-top: 1px solid #e8e8e8;
   background: #f8f8f8;
 }
 
 .checklist-panel__msg-close {
-  font-size: 0.78rem;
-  padding: 4px 18px;
+  font-size: 1.53rem;
+  padding: 8px 26px;
   background: #1a1a1a;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   color: #ffffff;
   cursor: pointer;
   font-weight: 600;

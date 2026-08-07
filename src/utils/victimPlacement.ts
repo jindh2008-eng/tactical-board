@@ -60,20 +60,21 @@ export function floorNumberToLabel(floor: number): string {
 // ─────────────────────────────────────────────
 
 /**
- * zone 내 victim 자동 배치 오프셋.
+ * zone 내 victim 자동 배치 오프셋 — 우측 하단 기준, 겹치지 않게 배치.
  * 기준: zone 너비 ~120px, 높이 ~80px 을 상정.
+ * 카드가 우측 하단 모서리부터 왼쪽으로 채워지고, 한 줄이 차면 위로 새 줄을 쌓는다.
  * 드래그로 수동 재배치는 언제나 가능.
  */
-const PRESETS: Array<Array<Pos>> = [
-  [],
-  [{ x: 60, y: 40 }],
-  [{ x: 38, y: 40 }, { x: 82, y: 40 }],
-  [{ x: 38, y: 30 }, { x: 82, y: 30 }, { x: 60, y: 58 }],
-  [{ x: 38, y: 28 }, { x: 82, y: 28 }, { x: 38, y: 55 }, { x: 82, y: 55 }],
-];
+// 실측 카드 크기(성별 아이콘+상세위치 없음 기준 약 37x39px)보다 여유 있게 잡아
+// 인접 카드끼리 겹치지 않도록 함.
+const MARGIN_X = 24; // 첫 열 카드 중심 x (우측 경계에서 카드 절반 폭만큼 안쪽)
+const MARGIN_Y = 22; // 첫 행(맨 아래) 카드 중심 y (하단 경계에서 카드 절반 높이만큼 안쪽)
+const X_STEP   = 44; // 카드 간 가로 간격 — 겹치지 않는 최소 폭
+const Y_STEP   = 46; // 카드 간 세로 간격(줄 바뀔 때) — 겹치지 않는 최소 높이
 
 /**
  * zone 내 n명 victim 의 초기 배치 좌표를 반환한다.
+ * 우측 하단 모서리부터 겹치지 않게 정렬(왼쪽 → 위쪽 순으로 채움).
  */
 export function computeVictimOffsets(
   count:  number,
@@ -82,47 +83,17 @@ export function computeVictimOffsets(
 ): Pos[] {
   if (count <= 0) return [];
 
-  if (count <= PRESETS.length - 1) {
-    return PRESETS[count].map(p => ({
-      x: Math.round((p.x / 120) * zoneW),
-      y: Math.round((p.y / 80)  * zoneH),
-    }));
-  }
+  const usableW = Math.max(zoneW - MARGIN_X, 1);
+  const cols    = Math.max(1, Math.min(count, Math.floor(usableW / X_STEP)));
 
-  const cols   = 2;
-  const xStep  = Math.min(28, (zoneW - 24) / cols);
-  const yStep  = Math.min(22, (zoneH - 16) / Math.ceil(count / cols));
-  const rows   = Math.ceil(count / cols);
-  const startX = zoneW / 2 - ((cols - 1) * xStep) / 2;
-  const startY = zoneH / 2 - ((rows - 1) * yStep) / 2;
-
-  return Array.from({ length: count }, (_, i) => ({
-    x: Math.min(Math.max(startX + (i % cols) * xStep, 12), zoneW - 12),
-    y: Math.min(Math.max(startY + Math.floor(i / cols) * yStep, 10), zoneH - 10),
-  }));
-}
-
-/**
- * VictimToken 배열에서 zone별 오프셋 좌표를 일괄 계산한다.
- */
-export function computeInitialPositions(
-  victims: VictimToken[],
-  zoneW:   number = 120,
-  zoneH:   number = 80,
-): Record<string, Pos> {
-  const byZone: Record<string, string[]> = {};
-  for (const v of victims) {
-    if (!v.zoneKey) continue;
-    if (!byZone[v.zoneKey]) byZone[v.zoneKey] = [];
-    byZone[v.zoneKey].push(v.id);
-  }
-
-  const positions: Record<string, Pos> = {};
-  for (const ids of Object.values(byZone)) {
-    const offsets = computeVictimOffsets(ids.length, zoneW, zoneH);
-    ids.forEach((id, i) => { positions[id] = offsets[i]; });
-  }
-  return positions;
+  return Array.from({ length: count }, (_, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    return {
+      x: Math.max(zoneW - MARGIN_X - col * X_STEP, 10),
+      y: Math.max(zoneH - MARGIN_Y - row * Y_STEP, 10),
+    };
+  });
 }
 
 // ─────────────────────────────────────────────

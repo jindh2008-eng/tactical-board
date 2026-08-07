@@ -2,7 +2,8 @@ import { useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import type { EventType, EventStatus } from '../../types/events';
 import { EVENT_TYPE_STATUSES } from '../../types/events';
-import { FireEventIcon } from '../shared/FlameIcon';
+import type { FireStatus } from '../../types';
+import { FireEventIcon, FlameIcon, EVENT_STATUS_TO_FIRE, gasElectricFireStage } from '../shared/FlameIcon';
 import './EventTokenCard.css';
 
 // ─────────────────────────────────────────────
@@ -75,8 +76,8 @@ function getStatusItem(eventType: EventType, value: EventStatus) {
 // EventTokenCard — 카드형 UI (아이콘 중심)
 // ─────────────────────────────────────────────
 
-const TOKEN_W = 50;
-const TOKEN_H = 50;
+const TOKEN_W = 100;
+const TOKEN_H = 100;
 
 interface Props {
   id:              string;
@@ -172,8 +173,17 @@ export function EventTokenCard({
 
   // 상태 텍스트를 항상 1줄로 꽉 채우기 위해 글자 수 기반 font-size 계산
   const statusFontSize = statusLabel
-    ? Math.min(14, Math.floor((TOKEN_W - 4) / statusLabel.length))
-    : 14;
+    ? Math.min(24, Math.floor((TOKEN_W - 4) / statusLabel.length))
+    : 24;
+
+  // 화염 오버레이 — 아이콘 위에 반투명 화염 이미지를 겹쳐 "불타는" 느낌 표현
+  // (fire 타입 + 커스텀 아이콘 없음인 경우는 화염 자체가 이미 베이스 아이콘이므로 중복 생략)
+  const flameStatus: FireStatus | null =
+    status === '-' ? null :
+    eventType === 'fire' ? (EVENT_STATUS_TO_FIRE[status] ?? null) :
+    (eventType === 'gas' || eventType === 'electric') && status === '화재' ? gasElectricFireStage(firePercentage) :
+    null;
+  const showFlameOverlay = flameStatus !== null && (Boolean(icon) || eventType !== 'fire');
 
   // ── 상태별 CSS 클래스 ─────────────────────────
   const statusClass = status !== '-' ? `event-token--s-${status.replace('%', 'pct')}` : '';
@@ -210,6 +220,11 @@ export function EventTokenCard({
                   {eventType === 'gas' ? '💨' : '⚡'}
                 </span>
           }
+
+          {/* 화염 오버레이 — 아이콘 위에 반투명하게 겹침 */}
+          {showFlameOverlay && flameStatus && (
+            <FlameIcon status={flameStatus} className="event-token__flame-overlay" />
+          )}
 
           {/* 상태 — 카드 하단 오버레이 */}
           {statusLabel && (

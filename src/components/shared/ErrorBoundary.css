@@ -1,0 +1,152 @@
+/* ─────────────────────────────────────────────
+   전역 오류 경계 — 폴백 UI
+   ───────────────────────────────────────────── */
+
+.error-boundary {
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: center;
+  width:           100%;
+  height:          100%;
+  overflow-y:      auto;
+  padding:         32px 20px;
+  box-sizing:      border-box;
+}
+
+.error-boundary__box {
+  width:         100%;
+  max-width:     720px;
+  padding:       22px 24px;
+  background:    #1a1420;
+  border:        1.5px solid #7a3030;
+  border-radius: 8px;
+  box-shadow:    0 6px 28px rgba(0, 0, 0, 0.5);
+  color:         #e8e0e0;
+}
+
+.error-boundary__title {
+  font-size:      1.15rem;
+  font-weight:    800;
+  color:          #ff9090;
+  margin-bottom:  10px;
+  letter-spacing: 0.01em;
+}
+
+.error-boundary__desc {
+  font-size:   0.85rem;
+  line-height: 1.7;
+  color:       #c8bcc4;
+  margin:      0 0 16px;
+}
+
+.error-boundary__desc b {
+  color: #ffd0a0;
+}
+
+/* ── 동작 버튼 ── */
+
+.error-boundary__actions {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       8px;
+}
+
+.error-boundary__btn {
+  padding:       6px 14px;
+  font-size:     0.82rem;
+  font-weight:   700;
+  font-family:   inherit;
+  background:    #2a2230;
+  border:        1px solid #55445a;
+  border-radius: 4px;
+  color:         #ddd0dd;
+  cursor:        pointer;
+  transition:    background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.error-boundary__btn:hover {
+  background:   #3a2f44;
+  border-color: #7a6488;
+  color:        #fff;
+}
+
+.error-boundary__btn--primary {
+  background:   #2e5a3a;
+  border-color: #4a8a5a;
+  color:        #d8ffe4;
+}
+
+.error-boundary__btn--primary:hover {
+  background:   #3a7048;
+  border-color: #5aa86e;
+}
+
+.error-boundary__btn--danger {
+  background:   #4a1a1a;
+  border-color: #8a3a3a;
+  color:        #ffc0c0;
+}
+
+.error-boundary__btn--danger:hover {
+  background:   #642222;
+  border-color: #aa4a4a;
+}
+
+/* ── 상세 정보 ── */
+
+.error-boundary__details {
+  margin-top: 16px;
+  font-size:  0.78rem;
+}
+
+.error-boundary__details summary {
+  cursor:      pointer;
+  color:       #a89cb0;
+  user-select: none;
+  padding:     3px 0;
+}
+
+.error-boundary__details summary:hover {
+  color: #ccc0d4;
+}
+
+.error-boundary__msg {
+  margin:        8px 0 6px;
+  padding:       6px 9px;
+  background:    rgba(255, 120, 120, 0.10);
+  border-left:   3px solid #aa4a4a;
+  border-radius: 2px;
+  color:         #ffc8c8;
+  font-family:   monospace;
+  word-break:    break-word;
+}
+
+.error-boundary__stack {
+  margin:        0 0 8px;
+  padding:       8px 10px;
+  max-height:    220px;
+  overflow:      auto;
+  background:    #120e16;
+  border:        1px solid #382c40;
+  border-radius: 3px;
+  font-family:   monospace;
+  font-size:     0.72rem;
+  line-height:   1.5;
+  color:         #9a8fa4;
+  white-space:   pre-wrap;
+  word-break:    break-all;
+}
+
+/* ── 최후 수단 ── */
+
+.error-boundary__last-resort {
+  display:     flex;
+  align-items: center;
+  flex-wrap:   wrap;
+  gap:         10px;
+  margin-top:  18px;
+  padding-top: 14px;
+  border-top:  1px solid #3a2c3a;
+  font-size:   0.76rem;
+  color:       #988a98;
+}

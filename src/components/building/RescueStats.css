@@ -54,44 +54,46 @@
   font-style: italic;
 }
 
-/* 증상별 배지 행 */
-.rescue-stats__cond-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-}
-
-.rescue-stats__cond {
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 2px;
-  white-space: nowrap;
-}
-
-.rescue-stats__cond--alive       { color: #2a6a2a; background: rgba(60, 160, 60,  0.14); }
-.rescue-stats__cond--serious     { color: #8a4000; background: rgba(200, 100, 0,  0.14); }
-.rescue-stats__cond--dead        { color: #505050; background: rgba(0,   0,   0,  0.10); }
-.rescue-stats__cond--unconscious { color: #8a2a2a; background: rgba(200, 60,  60, 0.14); }
-.rescue-stats__cond--isolated    { color: #6a5a00; background: rgba(180, 150, 0,  0.12); }
-.rescue-stats__cond--unknown     { color: var(--ctr-text-dim); background: rgba(0,0,0,0.06); }
-
-/* 구역별 요약 */
-.rescue-stats__loc-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.rescue-stats__loc-item {
+/* 구역 × 증상 교차표 */
+.rescue-stats__table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 0.74rem;
-  color: #4a7a5a;
-  line-height: 1.4;
-  padding: 2px 0;
+}
+
+.rescue-stats__th {
+  font-weight: 700;
+  color: #3a5a3a;
+  text-align: center;
+  padding: 3px 5px;
+  border-bottom: 1.5px solid #8aaa88;
   white-space: nowrap;
 }
 
-.rescue-stats__loc-name {
-  color: #5a8a6a;
+.rescue-stats__th--loc {
+  text-align: left;
+}
+
+.rescue-stats__td {
+  text-align: center;
+  padding: 2px 5px;
+  color: #3a5a45;
+  border-bottom: 1px solid rgba(138, 170, 136, 0.35);
+  white-space: nowrap;
+}
+
+.rescue-stats__td--loc {
+  text-align: left;
   font-weight: 600;
+  color: #4a7a5a;
+}
+
+.rescue-stats__td--total {
+  font-weight: 700;
+  color: #1a6a2a;
+}
+
+tfoot .rescue-stats__td {
+  border-bottom: none;
+  border-top: 1.5px solid #8aaa88;
 }

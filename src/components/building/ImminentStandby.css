@@ -1,16 +1,54 @@
 /* ─────────────────────────────────────────────
    직전대기 독립 드롭존
-   TacticalArea col 2, row 3 — A면 좌측 보조 박스
+   A면(ExteriorZone) 내부 좌측 하단에 고정 크기 코너로 배치.
+   높이는 C면 행 높이(140px)와 동일하게 고정.
    ─────────────────────────────────────────────*/
 
 .imminent-standby {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
   background-color: var(--ctr-bg);
-  border: 1.5px dashed #c09090;
+  border: 1.5px solid #c09090;
   border-radius: 3px;
   overflow: hidden;
   min-width: 0;
+}
+
+/* left: 26.71% — TacticalArea.css의 col1:col2:col3 = 1:1.744:1 비율에서
+   col1(B면) 폭 = 1/3.744 ≈ 26.71%. A면이 같은 그리드 폭을 전체 폭으로
+   쓰므로 이 비율로 좌측 정렬하면 정확히 건물(col2) 시작 지점과 맞음.
+
+   width: 330px가 기본값이지만 max-width로 A면 우측 끝을 절대 넘지
+   않도록 캡을 씌움 — 좌측 진행상황관리 패널을 넓게 드래그해서 A면이
+   좁아지는 경우, 고정폭이면 박스가 A면 밖으로 넘쳐 overflow:hidden에
+   잘려 토큰이 안 보이는 문제가 있었음(실측 재현).
+
+   box-shadow 제거 — 박스가 떠 보이던 원인. 윤곽선(solid border)만으로 구분. */
+.exterior-zone--a .imminent-standby {
+  position: absolute;
+  left: 26.71%;
+  bottom: 6px;
+  width: 330px;
+  max-width: calc(100% - 26.71% - 6px);
+  height: 140px;
+  z-index: 6;
+}
+
+/* 좌측 2/3: 직전대기, 우측 1/3: RIT */
+.imminent-standby__sub {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.imminent-standby__sub--imminent {
+  flex: 2;
+  border-right: 1.5px solid #c09090;
+}
+
+.imminent-standby__sub--rit {
+  flex: 1;
 }
 
 .imminent-standby__header {
@@ -51,11 +89,4 @@
 .imminent-standby__body .token-card-wrapper,
 .imminent-standby__body .victim-card-wrapper {
   flex-shrink: 0;
-}
-
-/* 드롭 피드백 */
-.imminent-standby__body.drop-target--active {
-  outline: 2px dashed rgba(220, 80, 80, 0.55);
-  outline-offset: -2px;
-  background: rgba(220, 100, 100, 0.08) !important;
 }

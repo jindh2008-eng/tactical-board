@@ -37,15 +37,15 @@
   display:         flex;
   align-items:     center;
   justify-content: center;
-  padding:         8px 16px;
+  padding:         11px 21px;
   border-radius:   5px;
   border:          1.5px solid;
-  font-size:       0.78rem;
+  font-size:       1.04rem;
   font-weight:     700;
   font-family:     inherit;
   cursor:          pointer;
   white-space:     nowrap;
-  min-height:      38px;
+  min-height:      51px;
   letter-spacing:  0.02em;
   transition:      filter 0.1s, border-color 0.12s;
 }

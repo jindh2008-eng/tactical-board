@@ -1,0 +1,113 @@
+/* ─────────────────────────────────────────────
+   드래그 진단 패널 (개발 모드 전용)
+   ───────────────────────────────────────────── */
+
+.drag-diag {
+  position: fixed;
+  right:    8px;
+  bottom:   8px;
+  z-index:  99999;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.drag-diag__toggle {
+  padding:       5px 10px;
+  background:    #1a1a1a;
+  color:         #0f0;
+  border:        1px solid #444;
+  border-radius: 3px;
+  cursor:        pointer;
+  font-family:   inherit;
+  font-size:     11px;
+}
+
+.drag-diag__panel {
+  width:      380px;
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-top: 4px;
+  padding:    8px;
+  background: #111;
+  color:      #ccc;
+  border:     1px solid #444;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.drag-diag__row {
+  margin-bottom: 4px;
+  color: #ddd;
+}
+
+.drag-diag__row b {
+  color: #ffd54a;
+}
+
+.drag-diag__hint {
+  margin-bottom: 6px;
+  padding:       4px 6px;
+  background:    rgba(255, 213, 74, 0.1);
+  border:        1px solid rgba(255, 213, 74, 0.35);
+  border-radius: 3px;
+  color:         #ffd54a;
+  line-height:   1.4;
+}
+
+.drag-diag__actions {
+  display: flex;
+  gap:     6px;
+  margin-bottom: 6px;
+}
+
+.drag-diag__btn {
+  padding:       3px 8px;
+  background:    #2a2a2a;
+  color:         #0f0;
+  border:        1px solid #444;
+  border-radius: 3px;
+  cursor:        pointer;
+  font-family:   inherit;
+  font-size:     11px;
+}
+
+.drag-diag__btn:hover {
+  background: #333;
+}
+
+.drag-diag__sep {
+  border:     none;
+  border-top: 1px solid #333;
+  margin:     6px 0;
+}
+
+.drag-diag__native-token {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  width:           70px;
+  height:          26px;
+  background:      #2a2a2a;
+  border:          1px dashed #888;
+  border-radius:   3px;
+  color:           #ccc;
+  cursor:          grab;
+  margin-top:      4px;
+}
+
+.drag-diag__log {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+}
+
+.drag-diag__log-row {
+  color:       #8fd68f;
+  white-space: pre-wrap;
+  word-break:  break-all;
+}
+
+.drag-diag__empty {
+  color:      #666;
+  font-style: italic;
+}

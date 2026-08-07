@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { useSettings } from '../../store/settingsStore';
+import { useMedicalPost } from '../../context/MedicalPostContext';
 import { TokenCard } from '../shared/TokenCard';
+import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
 import { VictimCard } from '../shared/VictimCard';
 import { RescueStats } from './RescueStats';
 import './StandbyColumn.css';
@@ -12,21 +14,12 @@ import './StandbyColumn.css';
 // ─────────────────────────────────────────────
 
 function useDropPanel() {
-  const [isDragOver, setIsDragOver] = useState(false);
-
   function onDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
   }
 
-  function onDragLeave(e: React.DragEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
-  }
-
-  return { isDragOver, setIsDragOver, onDragOver, onDragLeave };
+  return { onDragOver };
 }
 
 // ─────────────────────────────────────────────
@@ -63,63 +56,33 @@ function ChiefSelector({ value, onChange, zoneKey }: ChiefSelectorProps) {
 // 임시의료소 — 단일 드롭 영역 (구조대상자 + 출동대)
 // ─────────────────────────────────────────────
 
-export function MedicalPostBox() {
+interface MedicalPostBoxProps {
+  extraHeaderAction?: ReactNode;
+}
+
+export function MedicalPostBox({ extraHeaderAction }: MedicalPostBoxProps) {
   const { tokens, moveToken }   = useTokens();
   const { victims, moveVictim } = useVictims();
-
-  const [isInstalled,  setIsInstalled]  = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
+  const {
+    isInstalled, setIsInstalled,
+    assignedTokenId, setAssignedTokenId,
+  } = useMedicalPost();
 
   const zoneKey     = 'medical-post';
   const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
   const zoneVictims = victims.filter(v => v.zoneKey === zoneKey);
 
-  // selectedUnit 토큰이 구역을 벗어나면 자동 해제
+  // 담당 토큰이 구역을 벗어나면 담당자만 자동 해제 (설치 상태는 유지)
   useEffect(() => {
-    if (selectedUnit && !zoneTokens.some(t => t.label === selectedUnit)) {
-      setSelectedUnit(null);
+    if (assignedTokenId && !zoneTokens.some(t => t.id === assignedTokenId)) {
+      setAssignedTokenId(null);
     }
-  }, [zoneTokens, selectedUnit]);
-
-  // 헤더 버튼: 설치/미설치 토글, OFF 시 selectedUnit 초기화
-  function handleButtonClick() {
-    if (isInstalled || selectedUnit !== null) {
-      setIsInstalled(false);
-      setSelectedUnit(null);
-    } else {
-      setIsInstalled(true);
-    }
-  }
-
-  // 토큰 클릭: selectedUnit 지정 (동일 토큰 재클릭 시 해제)
-  function handleTokenClick(label: string) {
-    if (selectedUnit === label) {
-      setSelectedUnit(null);
-    } else {
-      setSelectedUnit(label);
-      setIsInstalled(true);
-    }
-  }
-
-  // 버튼 표시 텍스트 및 색상 계산
-  let btnLabel:   string;
-  let btnVariant: 'none' | 'installed' | 'unit';
-  if (selectedUnit !== null) {
-    btnLabel   = selectedUnit;
-    btnVariant = 'unit';
-  } else if (isInstalled) {
-    btnLabel   = '설치';
-    btnVariant = 'installed';
-  } else {
-    btnLabel   = '미설치';
-    btnVariant = 'none';
-  }
+  }, [zoneTokens, assignedTokenId, setAssignedTokenId]);
 
   const panel = useDropPanel();
 
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    panel.setIsDragOver(false);
     const victimId = e.dataTransfer.getData('victimId');
     if (victimId) { moveVictim(victimId, zoneKey); return; }
     const tokenId = e.dataTransfer.getData('tokenId');
@@ -131,20 +94,29 @@ export function MedicalPostBox() {
       <div className="standby-box__header standby-box__header--chief">
         <span className="standby-box__title">임시의료소</span>
         <button
-          className={`medical-status-btn medical-status-btn--${btnVariant}`}
-          onClick={handleButtonClick}
+          className={`medical-status-btn medical-status-btn--${isInstalled ? 'installed' : 'none'}`}
+          onClick={() => setIsInstalled(v => !v)}
         >
-          {btnLabel}
+          {isInstalled ? '설치' : '미설치'}
         </button>
+        <div className="standby-chief">
+          <select
+            className="standby-chief__select"
+            value={assignedTokenId ?? ''}
+            onChange={e => setAssignedTokenId(e.target.value || null)}
+          >
+            <option value="">소장 미지정</option>
+            {zoneTokens.map(t => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+        {extraHeaderAction}
       </div>
 
       <div
-        className={[
-          'standby-box__body',
-          panel.isDragOver ? 'drop-target--active' : '',
-        ].filter(Boolean).join(' ')}
+        className="standby-box__body"
         onDragOver={panel.onDragOver}
-        onDragLeave={panel.onDragLeave}
         onDrop={onDrop}
       >
         {zoneVictims.length === 0 && zoneTokens.length === 0 ? (
@@ -157,9 +129,8 @@ export function MedicalPostBox() {
                 key={t.id}
                 className={[
                   'medical-post__token-wrap',
-                  selectedUnit === t.label ? 'medical-post__token-wrap--selected' : '',
+                  assignedTokenId === t.id ? 'medical-post__token-wrap--selected' : '',
                 ].filter(Boolean).join(' ')}
-                onClick={() => handleTokenClick(t.label)}
               >
                 <TokenCard token={t} />
               </div>
@@ -176,21 +147,21 @@ export function MedicalPostBox() {
 // ─────────────────────────────────────────────
 
 interface SimpleStandbyBoxProps {
-  label:          string;
-  zoneKey:        string;
-  colorMod:       string;
-  chief?:         string;
-  onChiefChange?: (name: string) => void;
+  label:               string;
+  zoneKey:             string;
+  colorMod:            string;
+  chief?:              string;
+  onChiefChange?:      (name: string) => void;
+  onTokenDoubleClick?: (tokenId: string) => void;
 }
 
-function SimpleStandbyBox({ label, zoneKey, colorMod, chief, onChiefChange }: SimpleStandbyBoxProps) {
+function SimpleStandbyBox({ label, zoneKey, colorMod, chief, onChiefChange, onTokenDoubleClick }: SimpleStandbyBoxProps) {
   const { tokens, moveToken } = useTokens();
   const zoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
   const panel = useDropPanel();
 
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    panel.setIsDragOver(false);
     const tokenId = e.dataTransfer.getData('tokenId');
     if (tokenId) moveToken(tokenId, zoneKey);
   }
@@ -205,18 +176,14 @@ function SimpleStandbyBox({ label, zoneKey, colorMod, chief, onChiefChange }: Si
       </div>
 
       <div
-        className={[
-          'standby-box__body',
-          panel.isDragOver ? 'drop-target--active' : '',
-        ].filter(Boolean).join(' ')}
+        className="standby-box__body"
         onDragOver={panel.onDragOver}
-        onDragLeave={panel.onDragLeave}
         onDrop={onDrop}
       >
         {zoneTokens.length === 0 ? (
           <span className="standby-box__placeholder">―</span>
         ) : (
-          zoneTokens.map(t => <TokenCard key={t.id} token={t} />)
+          <CategorizedTokenGrid tokens={zoneTokens} hideQuantity onTokenDoubleClick={onTokenDoubleClick} />
         )}
       </div>
     </div>
@@ -236,12 +203,14 @@ function SimpleStandbyBox({ label, zoneKey, colorMod, chief, onChiefChange }: Si
 // ─────────────────────────────────────────────
 
 export function BottomStandbyBoxes() {
+  const { moveToken } = useTokens();
   return (
     <div className="bottom-standby-boxes">
       <SimpleStandbyBox
         label="대기1단계"
         zoneKey="standby-standby1"
         colorMod="standby1"
+        onTokenDoubleClick={id => moveToken(id, 'standby-imminent')}
       />
     </div>
   );

@@ -5,6 +5,7 @@ import { useTokens }         from '../../context/TokenContext';
 import { useVictims }        from '../../context/VictimContext';
 import { useFireCommand }    from '../../context/FireCommandContext';
 import { useEvents }         from '../../context/EventContext';
+import { useChecklistProgress } from '../../context/ChecklistProgressContext';
 import { computeRosterDisplayName } from '../../utils/dispatchRoster';
 import type { ChecklistItem, ChecklistItemType } from '../../types/settings';
 import type { FireStatus }    from '../../types';
@@ -41,7 +42,7 @@ export function ChecklistPanel() {
   const { setVictimDiscovered }             = useVictims();
   const { callSetFire }                     = useFireCommand();
   const { setEventStatus }                  = useEvents();
-  const [checked,         setChecked]         = useState<Set<string>>(new Set());
+  const { checked, setChecked }               = useChecklistProgress();
   const [collapsed,       setCollapsed]       = useState<Set<string>>(new Set());
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
   const [activeMessages,  setActiveMessages]  = useState<ChecklistItem[]>([]);

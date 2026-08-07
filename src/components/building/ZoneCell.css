@@ -1,13 +1,4 @@
 /* ─────────────────────────────────────────────
-   드롭 타겟 하이라이트
-   ─────────────────────────────────────────────*/
-.zone-cell.drop-target--active {
-  outline: 2px dashed rgba(100, 180, 255, 0.6) !important;
-  outline-offset: -2px;
-  background-color: rgba(100, 180, 255, 0.10) !important;
-}
-
-/* ─────────────────────────────────────────────
    구역 내 토큰 컨테이너
    ─────────────────────────────────────────────*/
 .zone-cell__tokens {
@@ -433,13 +424,23 @@
 
 /* --- 단계별 글자색 --- */
 
-/* 빨강 계열 (연소확대, 최성기) → 해당 색 텍스트 + 연한 그림자 */
-.zone-cell--fs-extension-peak .fire-label { color: #b71c1c; text-shadow: 0 1px 3px rgba(255,255,255,0.6); }
-.zone-cell--fs-peak           .fire-label { color: #bf360c; text-shadow: 0 1px 3px rgba(255,255,255,0.6); }
-.zone-cell--fs-seventy        .fire-label { color: #e65100; text-shadow: 0 1px 3px rgba(255,255,255,0.6); }
+/* 빨강 계열 (연소확대, 최성기) → 해당 색 텍스트 + 흰색 윤곽선(가독성 확보) */
+.zone-cell--fs-extension-peak .fire-label,
+.zone-cell--fs-peak           .fire-label,
+.zone-cell--fs-seventy        .fire-label,
+.zone-cell--fs-half           .fire-label {
+  text-shadow:
+    -1px -1px 0 rgba(255, 255, 255, 0.95),
+     1px -1px 0 rgba(255, 255, 255, 0.95),
+    -1px  1px 0 rgba(255, 255, 255, 0.95),
+     1px  1px 0 rgba(255, 255, 255, 0.95);
+}
+.zone-cell--fs-extension-peak .fire-label { color: #b71c1c; }
+.zone-cell--fs-peak           .fire-label { color: #bf360c; }
+.zone-cell--fs-seventy        .fire-label { color: #e65100; }
 
 /* 노랑 계열 (50%) → 어두운 텍스트 */
-.zone-cell--fs-half .fire-label { color: #f57f17; text-shadow: 0 1px 2px rgba(255,255,255,0.7); }
+.zone-cell--fs-half .fire-label { color: #f57f17; }
 
 /* 회색 계열 (초진, 완진) → 흰 윤곽선으로 화염 아이콘과 분리 */
 .zone-cell--fs-initial  .fire-label {

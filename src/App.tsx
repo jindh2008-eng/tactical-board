@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useEffect } from 'react';
+import { memo, useState, useRef, useEffect, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { SettingsProvider } from './store/settingsStore';
 import { TrainingProvider } from './context/TrainingContext';
@@ -7,6 +7,7 @@ import { NavSlotProvider, NavSlot } from './context/NavSlotContext';
 import { SettingsPage }    from './pages/SettingsPage';
 import { PlayPage }        from './pages/PlayPage';
 import { ScenarioModal }   from './components/overlays/ScenarioModal';
+import { ErrorBoundary }   from './components/shared/ErrorBoundary';
 import './App.css';
 
 // ── 메뉴 버튼 (드롭다운) ──────────────────────────────────────────────
@@ -52,6 +53,13 @@ function MenuButton() {
   );
 }
 
+// ── 라우트 변경 시 오류 상태를 자동 해제하는 경계 래퍼 ────────────────
+// 별도 컴포넌트로 분리해 useLocation 구독이 AppShell(memo)까지 전파되지 않게 한다.
+function RouteErrorBoundary({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>;
+}
+
 // ── 앱 쉘 — React.memo로 NavSlotProvider 재렌더 전파 차단 ─────────────
 const AppShell = memo(function AppShell() {
   const { overlay } = useUIOverlay();
@@ -62,11 +70,15 @@ const AppShell = memo(function AppShell() {
         <NavSlot />
       </nav>
       <div className="app-content">
-        <Routes>
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/play"     element={<PlayPage />} />
-          <Route path="*"         element={<Navigate to="/play" replace />} />
-        </Routes>
+        {/* 오류 경계는 Routes만 감싼다 — 상단 nav는 밖에 남겨
+            오류 발생 후에도 메뉴로 화면 이동이 가능하도록 함 */}
+        <RouteErrorBoundary>
+          <Routes>
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/play"     element={<PlayPage />} />
+            <Route path="*"         element={<Navigate to="/play" replace />} />
+          </Routes>
+        </RouteErrorBoundary>
       </div>
       {overlay === 'scenario' && <ScenarioModal />}
     </div>

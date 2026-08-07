@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { getFaceZones, getFaceZoneDataAttrs } from '../../data/faceZoneData';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
@@ -7,6 +6,8 @@ import { useFireLine } from '../../context/FireLineContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { HydrantIcon } from '../shared/HydrantIcon';
+import { computeDropCenter } from '../../utils/dragDrop';
+import { logDragEvent } from '../../utils/dragDiagnostics';
 import './BFaceWithStandby.css';
 import './ExteriorZone.css';
 
@@ -21,7 +22,6 @@ function BFaceDropZone() {
   const { tokens, positions, moveToken }         = useTokens();
   const { victims, victimPositions, moveVictim } = useVictims();
   const { hydrantSetup } = useSettings();
-  const [isDragOver, setIsDragOver] = useState(false);
 
   // B면에 배정된 소화전 — 좌측하단 고정
   const bHydrants = hydrantSetup.filter(h => h.side === 'B');
@@ -36,46 +36,32 @@ function BFaceDropZone() {
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
-  }
-
-  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    setIsDragOver(false);
 
     const tokenId  = e.dataTransfer.getData('tokenId');
     const victimId = e.dataTransfer.getData('victimId');
-    if (!tokenId && !victimId) return;
+    if (!tokenId && !victimId) {
+      logDragEvent('BFaceDropZone drop rejected', 'payload 없음');
+      return;
+    }
 
-    const rect  = e.currentTarget.getBoundingClientRect();
-    const rawX  = (e.clientX - rect.left)  + DROP_NUDGE_X;
-    const rawY  = (e.clientY - rect.top)   + DROP_NUDGE_Y;
-    const tokenW = parseFloat(e.dataTransfer.getData('tokenW')) || 40;
-    const tokenH = parseFloat(e.dataTransfer.getData('tokenH')) || 14;
-    const x = Math.max(tokenW / 2, Math.min(rect.width  - tokenW / 2, rawX));
-    const y = Math.max(tokenH / 2, Math.min(rect.height - tokenH / 2, rawY));
+    const rect = e.currentTarget.getBoundingClientRect();
+    const { x, y } = computeDropCenter(e, rect, DROP_NUDGE_X, DROP_NUDGE_Y);
 
     if (tokenId)  moveToken(tokenId,   zoneKey, { x, y });
     if (victimId) moveVictim(victimId, zoneKey, { x, y });
+    logDragEvent('BFaceDropZone drop', `tokenId=${tokenId} victimId=${victimId}`);
   }
 
   return (
     <div
-      className={[
-        'face-general-zone',
-        'bface-drop-zone',
-        isDragOver ? 'drop-target--active' : '',
-      ].filter(Boolean).join(' ')}
+      className="face-general-zone bface-drop-zone"
       {...getFaceZoneDataAttrs(faceZone)}
       title="B면 일반 이동 영역"
       onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <span className="face-general-zone__label">B</span>

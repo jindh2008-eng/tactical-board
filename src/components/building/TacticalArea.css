@@ -1,21 +1,33 @@
 /* ─────────────────────────────────────────────
    전술 상황판 전체 영역 — 3열 CSS Grid
 
-   열 구성:
-   col 1: 좌측 (180px)  — 자원대기소+대기1단계 / B면 / 직전대기
-   col 2: 건물 (1fr)    — C면 / 건물 / A면
-   col 3: 우측 (180px)  — 임시의료소 / D면 / 구조활동통계
+   열 구성 — fr 비율 (실제 보드 폭이 얼마든 항상 이 비율로 분배되어
+   넘침/잘림이 발생하지 않음. 배율·브라우저 크롬 여백에 영향 안 받음):
+   col 1: 좌측 (1fr)     — B면
+   col 2: 건물 (1.744fr) — C면 / 건물 / A면
+   col 3: 우측 (1fr)     — D면
 
-   행 구성:
-   row 1: 상단  (140px) — 자원대기소+대기1단계 / C면 / 임시의료소
-   row 2: 중앙  (1fr)   — B면 / 건물 / D면
-   row 3: 하단  (200px) — 직전대기 / A면 / 구조활동통계
+   비율 산출 근거(3840×2160 @ Windows 150% 배율, 보드 폭 1872px 기준):
+   500 : 872 : 500 → 1 : 1.744 : 1
+   (건물 컬럼 872px = 고정부(층라벨 34 + 계단실 110 + 화재표현 88 = 232px)
+   + 내부(zone-cell--center, flex:1) 640px = 기존(180/1fr/180 기준) 내부 폭
+   1280px의 절반. 줄어든 640px을 B/D면 컬럼에 절반씩(+320px) 분배한 값)
+
+   ※ 계단실 110px·화재표현 88px은 ZoneCell.css에 px로 고정되어 있어
+   컬럼 비율과 무관하게 항상 그대로 유지됨. 실제 보드 폭이 1872px에서
+   벗어나면 내부(center) 구역 폭만 비율에 따라 약간 달라짐.
+
+   행 구성 — 대기1단계·임시의료소·직전대기·구조활동통계는
+   우측 고정 패널(PlayPage.tsx)로 이동, C면·A면이 전체 폭으로 확장:
+   row 1: 상단  (140px) — C면 (전체 폭)
+   row 2: 중앙  (1fr)   — B면 / 건물 / D면 (B/D면은 RF 트랙까지 확장)
+   row 3: 하단  (200px) — A면 (전체 폭, 직전대기는 좌측 하단 고정 코너)
    ───────────────────────────────────────────── */
 .tactical-area {
   position: relative; /* EventLayer 절대위치 기준점 */
   display: grid;
 
-  grid-template-columns: 180px 1fr 180px;
+  grid-template-columns: 1fr 1.744fr 1fr;
   grid-template-rows: 140px 1fr 200px;
 
   gap: 0;
@@ -31,50 +43,17 @@
    명시적 셀 배치
    ───────────────────────────────────────────── */
 
-/* 임시의료소 — col 3, rows 1+2 (140px + RF 높이) */
-.tactical-area__medical-post {
-  grid-column: 3;
-  grid-row: 1 / 3;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.tactical-area__medical-post > .standby-box {
-  flex: 1;
-  min-height: 0;
-}
-
-/* C면 — col 2, row 1 */
+/* C면 — row 1, 전체 폭 */
 .tactical-area > .exterior-zone--c {
-  grid-column: 2;
+  grid-column: 1 / 4;
   grid-row: 1;
   min-width: 0;
 }
 
-/* 구조활동통계 — col 3, 마지막 행 */
-.tactical-area__rescue-stats {
-  grid-column: 3;
-  grid-row: -2 / -1;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.tactical-area__rescue-stats > .rescue-stats {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* B면 — col 1, row 3 (옥상 제외 지상층 높이) */
+/* B면 — col 1, row 2~3 (RF 트랙 포함 — 옥상 천장까지 확장) */
 .tactical-area > .exterior-zone--b {
   grid-column: 1;
-  grid-row: 3;
+  grid-row: 2 / 4;
   min-width: 0;
   align-self: stretch;
   height: auto;
@@ -92,10 +71,10 @@
   justify-content: center;
 }
 
-/* D면 — col 3, row 3 (옥상 제외 지상층 높이) */
+/* D면 — col 3, row 2~3 (RF 트랙 포함 — 옥상 천장까지 확장) */
 .tactical-area > .exterior-zone--d {
   grid-column: 3;
-  grid-row: 3;
+  grid-row: 2 / 4;
   min-width: 0;
   align-self: stretch;
   height: auto;
@@ -137,28 +116,31 @@
   right: 0;
 }
 
-/* 대기1단계 — col 1, rows 1+2 (140px + RF 높이) */
-.tactical-area__bottom-standby {
-  grid-column: 1;
-  grid-row: 1 / 3;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* A면 — col 2, 마지막 행 */
+/* A면 — 마지막 행, 전체 폭 (직전대기는 내부 좌측 하단 고정 코너로 포함 — ExteriorZone.tsx) */
 .tactical-area > .exterior-zone--a {
-  grid-column: 2;
+  grid-column: 1 / 4;
   grid-row: -2 / -1;
   min-width: 0;
   z-index: 15; /* 연결송수구가 건물/슬래브보다 위 레이어 */
 }
 
-/* 직전대기 — col 1, 마지막 행 */
-.tactical-area > .imminent-standby {
+/* 건물↔A면 높이 조절 핸들 — col 1 폭만큼만, 경계선에 걸치도록 배치 */
+.tactical-area__row-resize-handle {
   grid-column: 1;
   grid-row: -2 / -1;
-  min-width: 0;
+  align-self: start;
+  width: 100%;
+  height: 8px;
+  margin-top: -4px;
+  cursor: ns-resize;
+  z-index: 25;
+  background-color: transparent;
+  transition: background-color 0.12s;
+}
+
+.tactical-area__row-resize-handle:hover,
+.tactical-area__row-resize-handle:active {
+  background-color: rgba(100, 180, 255, 0.35);
 }
 
 /* ─────────────────────────────────────────────

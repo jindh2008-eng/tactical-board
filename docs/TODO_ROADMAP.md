@@ -2,6 +2,8 @@
 
 > 최종 업데이트: 2026-05-05
 
+> 문서 역할: 과거 작업 목록 보존용. 현재 제품 우선순위는 [`PROJECT_PLAN.md`](./PROJECT_PLAN.md), 기술 안정화와 반복 장애는 [`TECHNICAL_IMPROVEMENT_PLAN.md`](./TECHNICAL_IMPROVEMENT_PLAN.md)를 기준으로 관리한다.
+
 ---
 
 ## 1. 현재 불안정하거나 확인이 필요한 부분

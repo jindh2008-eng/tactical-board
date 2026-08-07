@@ -339,6 +339,12 @@
 .checklist-setup__import-bar {
   display: flex;
   justify-content: flex-end;
+  gap: 6px;
+}
+
+.checklist-setup__import-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .checklist-setup__import-btn {

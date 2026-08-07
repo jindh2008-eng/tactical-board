@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────
    소화전 아이콘 — 전술 상황판 방면 구역 고정 표시
-   크기는 출동대 토큰 가로 너비(60px) 기준
+   크기는 출동대 토큰 가로 너비(60px) 기준의 1.5배
    ───────────────────────────────────────────── */
 
 .hydrant-icon {
@@ -8,17 +8,17 @@
   display:        flex;
   flex-direction: column;
   align-items:    center;
-  width:          60px;
+  width:          90px;
   user-select:    none;
   cursor:         context-menu;
   pointer-events: auto;   /* 부모 container 의 pointer-events 상속 차단 */
-  gap:            2px;
+  gap:            3px;
 }
 
 /* ── 명칭 (이미지 위) ──────────────────────── */
 .hydrant-icon__name {
   display:             inline-block;
-  font-size:           0.68rem;
+  font-size:           1.02rem;
   font-weight:         800;
   color:               #FFD400;
   text-align:          center;
@@ -33,7 +33,7 @@
 
 /* ── 이미지 ────────────────────────────────── */
 .hydrant-icon__img {
-  width:          30px;
+  width:          45px;
   height:         auto;
   display:        block;
   pointer-events: none;
@@ -42,7 +42,7 @@
 /* ── 거리 (이미지 아래) ─────────────────────── */
 .hydrant-icon__dist {
   display:             inline-block;
-  font-size:           0.68rem;
+  font-size:           1.02rem;
   font-weight:         800;
   color:               #FFFFFF;
   text-align:          center;

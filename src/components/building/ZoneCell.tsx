@@ -9,6 +9,8 @@ import { useDisplayOptions } from '../../context/DisplayOptionsContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { FlameIcon } from '../shared/FlameIcon';
+import { computeDropCenter } from '../../utils/dragDrop';
+import { logDragEvent } from '../../utils/dragDiagnostics';
 import './ZoneCell.css';
 
 // RF=Infinity, 3F=3, B1=-1, 비해당=null
@@ -199,7 +201,6 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
   const fireStatus  = fireStates[floorId]     ?? null;
   const firePct     = firePercentages[floorId];
 
-  const [isDragOver,    setIsDragOver]    = useState(false);
   const [fireRadialPos, setFireRadialPos] = useState<{ x: number; y: number } | null>(null);
 
   // 출동대 토큰
@@ -254,36 +255,29 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
     } else {
       e.dataTransfer.dropEffect = 'move';
     }
-    setIsDragOver(true);
-  }
-
-  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    setIsDragOver(false);
-    if (!isDropTarget) return;
+    if (!isDropTarget) {
+      logDragEvent('ZoneCell drop rejected', `zone=${zoneKey} isDropTarget=false`);
+      return;
+    }
 
     const tokenId  = e.dataTransfer.getData('tokenId');
     const victimId = e.dataTransfer.getData('victimId');
-    if (!tokenId && !victimId) return;
+    if (!tokenId && !victimId) {
+      logDragEvent('ZoneCell drop rejected', `zone=${zoneKey} payload 없음`);
+      return;
+    }
 
-    // ── 좌표: 커서 위치 = 토큰 중심, 구역 기준 상대좌표 ──────
+    // ── 좌표: 잡았던 지점이 계속 커서 아래 있도록 카드 중심좌표 역산 ──────
     const rect = e.currentTarget.getBoundingClientRect();
-    const rawX = (e.clientX - rect.left) + DROP_NUDGE_X;
-    const rawY = (e.clientY - rect.top)  + DROP_NUDGE_Y;
-
-    const tokenW = parseFloat(e.dataTransfer.getData('tokenW')) || 40;
-    const tokenH = parseFloat(e.dataTransfer.getData('tokenH')) || 14;
-    const x = Math.max(tokenW / 2, Math.min(rect.width  - tokenW / 2, rawX));
-    const y = Math.max(tokenH / 2, Math.min(rect.height - tokenH / 2, rawY));
+    const { x, y } = computeDropCenter(e, rect, DROP_NUDGE_X, DROP_NUDGE_Y);
 
     if (tokenId)                      moveToken(tokenId,   zoneKey, { x, y });
     if (victimId && !isRange)         moveVictim(victimId, zoneKey, { x, y });
+    logDragEvent('ZoneCell drop', `zone=${zoneKey} tokenId=${tokenId} victimId=${victimId}`);
   }
 
   // 옥상(RF)에는 화재상황 패널 표시하지 않음
@@ -302,13 +296,11 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
         hasFire  ? 'zone-cell--fire'  : '',
         hasSmoke ? 'zone-cell--smoke' : '',
         stageMeta?.bgClass ?? '',
-        isDragOver && isDropTarget ? 'drop-target--active' : '',
       ].filter(Boolean).join(' ')}
       data-zone-key={zoneKey}
       data-floor={floorId}
       data-zone={zone.id}
       onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {isStair && <StairDiagram doorState={doorState} showStairs={floorId !== 'RF'} />}

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Face, FaceZone } from '../../types';
 import { FireLine } from './FireLine';
 import { useFireLine } from '../../context/FireLineContext';
@@ -14,6 +13,10 @@ import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { HydrantIcon } from '../shared/HydrantIcon';
 import { SiamesePipeIcon } from './SiamesePipeIcon';
+import { CommandProcedureStatusBox } from './CommandProcedureStatusBox';
+import { ImminentStandby } from './ImminentStandby';
+import { computeDropCenter } from '../../utils/dragDrop';
+import { logDragEvent } from '../../utils/dragDiagnostics';
 import './ExteriorZone.css';
 
 // ─────────────────────────────────────────────
@@ -31,15 +34,27 @@ function getHydrantCorner(face: Face, index: number): HydrantCorner {
   return 'bottom-left';   // B, C
 }
 
-function cornerStyle(corner: HydrantCorner): React.CSSProperties {
-  const base: React.CSSProperties = {
-    position:      'absolute',
-    bottom:        4,
-    display:       'flex',
-    flexDirection: 'column-reverse',
-    gap:           4,
-    zIndex:        3,
-  };
+// A면: 좌/우측에 배치하되 상하 중앙(높이의 중간 지점) 고정
+// 그 외 면: 기존과 동일하게 하단 고정
+function cornerStyle(corner: HydrantCorner, face: Face): React.CSSProperties {
+  const base: React.CSSProperties = face === 'A'
+    ? {
+        position:      'absolute',
+        top:           '50%',
+        transform:     'translateY(-50%)',
+        display:       'flex',
+        flexDirection: 'column',
+        gap:           4,
+        zIndex:        3,
+      }
+    : {
+        position:      'absolute',
+        bottom:        4,
+        display:       'flex',
+        flexDirection: 'column-reverse',
+        gap:           4,
+        zIndex:        3,
+      };
   return corner === 'bottom-left'
     ? { ...base, left: 4, alignItems: 'flex-start' }
     : { ...base, right: 4, alignItems: 'flex-end' };
@@ -50,7 +65,6 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
   const { victims, victimPositions, moveVictim } = useVictims();
   const { hydrantSetup, building }               = useSettings();
   const hasSiamesePipe = face !== 'D' && (building.siamesePipeFaces ?? []).includes(face);
-  const [isDragOver, setIsDragOver] = useState(false);
 
   // 이 방면에 배정된 소화전 필터링 후 코너별 그룹화
   const faceHydrants = hydrantSetup.filter(h => h.side === face);
@@ -64,49 +78,35 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
-  }
-
-  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    setIsDragOver(false);
 
     const tokenId  = e.dataTransfer.getData('tokenId');
     const victimId = e.dataTransfer.getData('victimId');
-    if (!tokenId && !victimId) return;
+    if (!tokenId && !victimId) {
+      logDragEvent('FaceGeneralZone drop rejected', `zone=${zoneKey} payload 없음`);
+      return;
+    }
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const rawX = (e.clientX - rect.left) + DROP_NUDGE_X;
-    const rawY = (e.clientY - rect.top)  + DROP_NUDGE_Y;
-
-    const tokenW = parseFloat(e.dataTransfer.getData('tokenW')) || 40;
-    const tokenH = parseFloat(e.dataTransfer.getData('tokenH')) || 14;
-    const x = Math.max(tokenW / 2, Math.min(rect.width  - tokenW / 2, rawX));
-    const y = Math.max(tokenH / 2, Math.min(rect.height - tokenH / 2, rawY));
+    const { x, y } = computeDropCenter(e, rect, DROP_NUDGE_X, DROP_NUDGE_Y);
 
     if (tokenId)  moveToken(tokenId,   zoneKey, { x, y });
     if (victimId) moveVictim(victimId, zoneKey, { x, y });
+    logDragEvent('FaceGeneralZone drop', `zone=${zoneKey} tokenId=${tokenId} victimId=${victimId}`);
   }
 
   return (
     <div
-      className={[
-        'face-general-zone',
-        isDragOver ? 'drop-target--active' : '',
-      ].filter(Boolean).join(' ')}
+      className="face-general-zone"
       data-zone-key={zoneKey}
       {...getFaceZoneDataAttrs(zone)}
       onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <span className="face-general-zone__label">{zone.face}면</span>
+      <span className="face-general-zone__label">{zone.face}</span>
 
       {/* 출동대 토큰 */}
       {zoneTokens.map(token => (
@@ -117,18 +117,18 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
         <VictimCard key={victim.id} victim={victim} absPos={victimPositions[victim.id]} />
       ))}
 
-      {/* 소화전 아이콘 — 좌측하단 */}
+      {/* 소화전 아이콘 — 좌측 (A면: 상하 중앙 / 그 외: 하단) */}
       {leftHydrants.length > 0 && (
-        <div style={cornerStyle('bottom-left')}>
+        <div style={cornerStyle('bottom-left', face)}>
           {leftHydrants.map(h => (
             <HydrantIcon key={h.id} id={h.id} name={h.name} distanceM={h.distanceM} />
           ))}
         </div>
       )}
 
-      {/* 소화전 아이콘 — 우측하단 */}
+      {/* 소화전 아이콘 — 우측 (A면: 상하 중앙 / 그 외: 하단) */}
       {rightHydrants.length > 0 && (
-        <div style={cornerStyle('bottom-right')}>
+        <div style={cornerStyle('bottom-right', face)}>
           {rightHydrants.map(h => (
             <HydrantIcon key={h.id} id={h.id} name={h.name} distanceM={h.distanceM} />
           ))}
@@ -136,6 +136,12 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
       )}
 
       {hasSiamesePipe && <SiamesePipeIcon face={face} />}
+
+      {/* D면 우측 상단 — 지휘절차 수행 여부 표시 */}
+      {face === 'D' && <CommandProcedureStatusBox />}
+
+      {/* A면 좌측 하단 — 직전대기 고정 코너 (C면과 동일 높이) */}
+      {face === 'A' && <ImminentStandby />}
     </div>
   );
 }

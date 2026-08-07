@@ -127,6 +127,7 @@ export interface ChecklistItem {
   unitStatusTagColor?: string;    // status — 상태 태그 색상
   victimSetupId?:     string;     // victim 타입일 때 대상 VictimSetupItem ID
   victimVisibility?:  'show' | 'hide';  // victim 타입일 때 보임/안보임
+  sourceCommandProcedureItemId?: string; // 지휘절차에서 가져온 항목일 때 원본 CommandProcedureItem ID
 }
 
 export interface ChecklistSection {

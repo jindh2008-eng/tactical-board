@@ -5,6 +5,7 @@ import type { FireStatus } from '../../types';
 import { EVENT_TYPE_STATUSES, resolveEventType } from '../../types/events';
 import { generateId } from '../../utils/settingsStorage';
 import { computeRosterDisplayName } from '../../utils/dispatchRoster';
+import { downloadChecklistMarkdown } from '../../utils/exportChecklistMarkdown';
 import './ChecklistSetupPanel.css';
 
 const TYPE_LABELS: Record<ChecklistItemType, string> = {
@@ -275,6 +276,7 @@ export function ChecklistSetupPanel() {
         id:       generateId(),
         text:     it.text,
         itemType: cpTypeToChecklistType(it.type),
+        sourceCommandProcedureItemId: it.id,
       })),
     }));
     appendChecklistSections(newSections);
@@ -450,7 +452,7 @@ export function ChecklistSetupPanel() {
 
   return (
     <div className="checklist-setup">
-      {/* 지휘절차 불러오기 */}
+      {/* 지휘절차 불러오기 + 마크다운 내보내기 */}
       {!showImport ? (
         <div className="checklist-setup__import-bar">
           <button
@@ -458,6 +460,20 @@ export function ChecklistSetupPanel() {
             onClick={() => { setShowImport(true); setImportSelected(new Set()); }}
           >
             지휘절차에서 불러오기
+          </button>
+          <button
+            className="checklist-setup__import-btn"
+            onClick={() => downloadChecklistMarkdown({
+              checklistConfig,
+              dispatchRoster,
+              targetName: building.targetName,
+              fireFloor:  building.fireFloor,
+              arrivalMode,
+            })}
+            disabled={checklistConfig.sections.every(s => s.items.length === 0)}
+            title="현재 시나리오/체크리스트 전체를 마크다운 파일로 내보냅니다"
+          >
+            마크다운으로 내보내기
           </button>
         </div>
       ) : (

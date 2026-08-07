@@ -59,13 +59,18 @@
   transition: background-color 0.14s, border-color 0.14s;
 }
 
-
-/* ─── 드롭 피드백 ─── */
-.face-general-zone.drop-target--active {
-  background-color: rgba(100, 180, 255, 0.15) !important;
-  border-color: rgba(100, 180, 255, 0.7) !important;
-  border-style: solid !important;
+/* B/D면 표시 — 건물쪽 가장자리에서 좌우폭의 1/4 간격을 두고 건물에 붙여서 표시
+   (B면은 건물이 우측, D면은 건물이 좌측에 있음) */
+.exterior-zone--b .face-general-zone {
+  justify-content: flex-end;
+  padding-right: 25%;
 }
+
+.exterior-zone--d .face-general-zone {
+  justify-content: flex-start;
+  padding-left: 25%;
+}
+
 
 /* ─── 방면 토큰 컨테이너 ─── */
 .face-general-zone__tokens {
@@ -91,17 +96,7 @@
   line-height: 1;
   user-select: none;
   pointer-events: none;
-  /* 크기는 orientation별 오버라이드 */
-}
-
-/* A면/C면(가로): 공간이 충분하므로 크게 */
-.exterior-zone--horizontal .face-general-zone__label {
-  font-size: 2.4rem;
-}
-
-/* B면/D면(세로): 폭이 좁으므로 적당히 */
-.exterior-zone--vertical .face-general-zone__label {
-  font-size: 1.7rem;
+  font-size: 2.4rem; /* A/B/C/D 전 면 동일 */
 }
 
 /* 면별 색상 — 각 면의 특성색을 낮은 불투명도로 */

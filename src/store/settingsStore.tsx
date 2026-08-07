@@ -530,11 +530,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
     if (!set) return;
-    const b = JSON.parse(JSON.stringify(set.building)) as BuildingSettings;
-    setConfig(b.config);
-    setFireFloor(b.fireFloor);
-    setFireStatus(b.fireStatus ?? null);
-    setTargetName(b.targetName ?? '');
+    // 구버전·손상된 저장 세트에 building이 없을 수 있음 —
+    // JSON.parse(undefined)는 SyntaxError를 던지므로 형제 필드(timing/dispatchSetup)와
+    // 동일하게 존재 여부를 먼저 확인하고, 없으면 현재 값을 유지한다.
+    const b = set.building
+      ? JSON.parse(JSON.stringify(set.building)) as BuildingSettings
+      : null;
+    if (b) {
+      setConfig(b.config ?? DEFAULT_BUILDING_CONFIG);
+      setFireFloor(b.fireFloor ?? 1);
+      setFireStatus(b.fireStatus ?? null);
+      setTargetName(b.targetName ?? '');
+    }
     setTiming(set.timing ? JSON.parse(JSON.stringify(set.timing)) : DEFAULT_TIMING);
     // 구버전 저장 세트는 DEFAULT 값으로 채움
     const rawSetup = set.dispatchSetup ? JSON.parse(JSON.stringify(set.dispatchSetup)) as DispatchSetup : DEFAULT_DISPATCH_SETUP;
