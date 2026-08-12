@@ -143,6 +143,10 @@
   background-color: rgba(100, 180, 255, 0.35);
 }
 
+.tactical-area__row-resize-handle--disabled {
+  pointer-events: none;
+}
+
 /* ─────────────────────────────────────────────
    건물 본체
    ─────────────────────────────────────────────*/

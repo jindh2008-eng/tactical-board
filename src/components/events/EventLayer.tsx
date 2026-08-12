@@ -4,6 +4,7 @@ import { resolveEventType, EVENT_TYPE_STATUSES } from '../../types/events';
 import type { EventStatus } from '../../types/events';
 import { useTokens } from '../../context/TokenContext';
 import { EventTokenCard } from './EventTokenCard';
+import { useActionMode } from '../../context/ActionModeContext';
 import './EventLayer.css';
 
 // ─────────────────────────────────────────────
@@ -22,6 +23,8 @@ const GAP = 4;
 const PAD = 8;
 
 export function EventLayer() {
+  const { mode } = useActionMode();
+  const drawingInteraction = mode.type === 'drawing' || mode.type === 'drawing-erase';
   const { enabledEvents, positions, statuses, firePercentages, moveEvent, setEventStatus, setEventFloorId } = useEvents();
   const { addLog } = useTokens();
   const layerRef = useRef<HTMLDivElement>(null);
@@ -91,7 +94,7 @@ export function EventLayer() {
   if (enabledEvents.length === 0) return null;
 
   return (
-    <div className="event-layer" ref={layerRef}>
+    <div className={`event-layer${drawingInteraction ? ' event-layer--drawing' : ''}`} ref={layerRef}>
       {enabledEvents.map(ev => {
         const pos    = positions[ev.id];
         const status = statuses[ev.id] ?? '-';

@@ -7,6 +7,8 @@ import { BFaceWithStandby } from './BFaceWithStandby';
 import { FireLine } from './FireLine';
 import { useFireLine } from '../../context/FireLineContext';
 import { EventLayer } from '../events/EventLayer';
+import { useActionMode } from '../../context/ActionModeContext';
+import { DrawingBoard } from '../drawing/DrawingBoard';
 import './TacticalArea.css';
 
 interface Props {
@@ -42,6 +44,8 @@ export function TacticalArea({
   extraFireFloors   = [],
 }: Props) {
   const { showFireLine } = useFireLine();
+  const { mode } = useActionMode();
+  const drawingInteraction = mode.type === 'drawing' || mode.type === 'drawing-erase';
   const displayFloors  = buildDisplayFloors(config, fireFloor);
   const aboveRows      = displayFloors.filter(f => !f.isBasement).length;
   const basementRows   = displayFloors.filter(f => f.isBasement).length;
@@ -85,6 +89,7 @@ export function TacticalArea({
 
   function handleRowResizeStart(e: React.MouseEvent) {
     e.preventDefault();
+    if (drawingInteraction) return;
     const el = areaRef.current;
     if (!el || buildingHeight == null) return;
 
@@ -150,7 +155,7 @@ export function TacticalArea({
 
       {/* 건물↔A면 높이 조절 핸들 — col 1(좌측)에서만, 훈련 중 실수 클릭 방지 */}
       <div
-        className="tactical-area__row-resize-handle"
+        className={`tactical-area__row-resize-handle${drawingInteraction ? ' tactical-area__row-resize-handle--disabled' : ''}`}
         onMouseDown={handleRowResizeStart}
         title="드래그하여 건물/A면 높이 조절"
       />
@@ -160,6 +165,9 @@ export function TacticalArea({
 
       {/* 이벤트 토큰 오버레이 */}
       <EventLayer />
+
+      {/* ABCD면과 건물을 하나의 좌표계로 사용하는 전술상황판 전체 그림판 */}
+      <DrawingBoard />
     </div>
   );
 }

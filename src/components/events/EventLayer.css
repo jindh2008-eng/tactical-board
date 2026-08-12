@@ -22,3 +22,8 @@
 .event-layer .event-token {
   pointer-events: all;
 }
+
+/* 그리기 중에는 상위 레이어의 이벤트 토큰도 A면 입력을 가로채지 않는다. */
+.event-layer--drawing .event-token {
+  pointer-events: none;
+}

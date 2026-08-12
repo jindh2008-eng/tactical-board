@@ -25,6 +25,8 @@ import {
  *                       건물 층 레이블 클릭 → 해당 층으로 전개/방수 상태 확정
  *                       unitType = 'aerial'(고가차) | 'ladder'(굴절차)
  *                       actionLabel = '사다리전개' | '바스켓전개' | '방수'
+ *
+ * drawing / drawing-erase : 전술상황판 전체 자유선 작성 / 획 단위 삭제 모드
  */
 export type ActionModeState =
   | { type: null }
@@ -34,7 +36,9 @@ export type ActionModeState =
   | { type: 'water-connect';       sourceId: string; sourceType: string; sourceName?: string }
   | { type: 'aerial-floor-select'; sourceId: string; unitType: string; actionLabel: string }
   | { type: 'aerial-spray-target'; sourceId: string }
-  | { type: 'spray-target';        sourceId: string; sourceZoneKey: string | null };
+  | { type: 'spray-target';        sourceId: string; sourceZoneKey: string | null }
+  | { type: 'drawing' }
+  | { type: 'drawing-erase' };
 
 interface ActionModeContextValue {
   mode:       ActionModeState;

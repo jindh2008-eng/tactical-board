@@ -1,0 +1,126 @@
+.drawing-board__strokes,
+.drawing-board__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.drawing-board__input--erase {
+  cursor: cell;
+}
+
+.drawing-board__strokes {
+  z-index: 55;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.drawing-board__input {
+  z-index: 60;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.drawing-toolbar {
+  grid-column: 1 / 4;
+  grid-row: -2 / -1;
+  position: relative;
+  align-self: start;
+  justify-self: start;
+  margin-top: 30px;
+  margin-left: 12px;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid rgba(80, 72, 62, 0.35);
+  border-radius: 6px;
+  background: rgba(250, 248, 242, 0.94);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  user-select: none;
+}
+
+.drawing-toolbar__draw,
+.drawing-toolbar__erase {
+  min-width: 58px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #756d62;
+  border-radius: 4px;
+  background: #fff;
+  color: #39342d;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.drawing-toolbar__draw:hover,
+.drawing-toolbar__erase:hover,
+.drawing-toolbar__utility:hover:not(:disabled) {
+  background: #f0ede7;
+}
+
+.drawing-toolbar__draw--active,
+.drawing-toolbar__erase--active {
+  border-color: #b3261e;
+  background: #b3261e;
+  color: #fff;
+}
+
+.drawing-toolbar__utility {
+  height: 28px;
+  padding: 0 7px;
+  border: 1px solid #9a9287;
+  border-radius: 4px;
+  background: #fff;
+  color: #39342d;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.drawing-toolbar__utility:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.drawing-toolbar__clear {
+  color: #a12620;
+}
+
+.drawing-toolbar__colors {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.drawing-toolbar__color {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  outline: 1px solid rgba(0, 0, 0, 0.35);
+  background: var(--drawing-color);
+  cursor: pointer;
+}
+
+.drawing-toolbar__color:hover {
+  transform: scale(1.08);
+}
+
+.drawing-toolbar__color--selected {
+  box-shadow: 0 0 0 2px #292621;
+}
+
+.drawing-toolbar button:focus-visible {
+  outline: 3px solid rgba(25, 118, 210, 0.55);
+  outline-offset: 2px;
+}

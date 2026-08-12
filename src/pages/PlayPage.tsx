@@ -16,6 +16,7 @@ import { ResourceStatusProvider, useResourceStatus } from '../context/ResourceSt
 import { MedicalPostProvider } from '../context/MedicalPostContext';
 import { FireCommandProvider }     from '../context/FireCommandContext';
 import { FireLineProvider }        from '../context/FireLineContext';
+import { DrawingProvider }         from '../context/DrawingContext';
 import { SprayOverlay }            from '../components/overlay/SprayOverlay';
 import { AerialOverlay }          from '../components/overlay/AerialOverlay';
 import { UnitStatusPanel as UnitInfoPanel } from '../components/left/UnitStatusPanel';
@@ -57,6 +58,10 @@ function ActionModeBanner() {
     message = `전개 지점을 클릭하세요  (ESC 취소)`;
   } else if (mode.type === 'aerial-spray-target') {
     message = '방수 지점을 클릭하세요  (ESC 취소)';
+  } else if (mode.type === 'drawing') {
+    message = '전술상황판에 선을 그리세요  (우클릭 또는 ESC 취소)';
+  } else if (mode.type === 'drawing-erase') {
+    message = '삭제할 선을 클릭하거나 드래그하세요  (우클릭 또는 ESC 취소)';
   }
 
   return (
@@ -608,7 +613,8 @@ export function PlayPage() {
           fireFloor={building.fireFloor}
         >
           {/* ActionModeProvider: TokenContext + VictimContext 내부에 배치 */}
-          <ActionModeProvider>
+          <ActionModeProvider key={runKey}>
+          <DrawingProvider key={runKey}>
           <WaterConnectionProvider>
           <FireCommandProvider>
           <WaterLevelProvider>
@@ -679,6 +685,7 @@ export function PlayPage() {
           </WaterLevelProvider>
           </FireCommandProvider>
           </WaterConnectionProvider>
+          </DrawingProvider>
           </ActionModeProvider>
         </VictimProvider>
       </TokenProvider>
