@@ -26,16 +26,16 @@
 .drawing-toolbar {
   grid-column: 1 / 4;
   grid-row: -2 / -1;
-  position: relative;
   align-self: start;
-  justify-self: start;
+  justify-self: end;
   margin-top: 30px;
-  margin-left: 12px;
+  margin-right: 12px;
   z-index: 70;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 6px;
+  display: grid;
+  grid-template-columns: 28px 28px;
+  grid-template-rows: 12px repeat(4, 28px);
+  gap: 5px;
+  padding: 6px;
   border: 1px solid rgba(80, 72, 62, 0.35);
   border-radius: 6px;
   background: rgba(250, 248, 242, 0.94);
@@ -43,21 +43,51 @@
   user-select: none;
 }
 
+.drawing-toolbar--dragging {
+  cursor: grabbing;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.drawing-toolbar__grip {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 12px;
+  color: #9a9287;
+  font-size: 10px;
+  letter-spacing: 2px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+}
+
+.drawing-toolbar__grip:active {
+  cursor: grabbing;
+}
+
 .drawing-toolbar__draw,
-.drawing-toolbar__erase {
-  min-width: 58px;
+.drawing-toolbar__erase,
+.drawing-toolbar__utility {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-column: 1;
+  width: 28px;
   height: 28px;
-  padding: 0 8px;
+  padding: 0;
   border: 1px solid #756d62;
   border-radius: 4px;
   background: #fff;
   color: #39342d;
-  font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1;
   cursor: pointer;
 }
+
+.drawing-toolbar__draw   { grid-row: 2; }
+.drawing-toolbar__erase  { grid-row: 3; }
+.drawing-toolbar__utility--undo  { grid-row: 4; }
+.drawing-toolbar__utility--clear { grid-row: 5; }
 
 .drawing-toolbar__draw:hover,
 .drawing-toolbar__erase:hover,
@@ -73,17 +103,7 @@
 }
 
 .drawing-toolbar__utility {
-  height: 28px;
-  padding: 0 7px;
-  border: 1px solid #9a9287;
-  border-radius: 4px;
-  background: #fff;
-  color: #39342d;
-  font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
+  border-color: #9a9287;
 }
 
 .drawing-toolbar__utility:disabled {
@@ -96,8 +116,12 @@
 }
 
 .drawing-toolbar__colors {
+  grid-column: 2;
+  grid-row: 2 / 6;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 5px;
 }
 

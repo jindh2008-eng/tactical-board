@@ -3,7 +3,7 @@ import {
   type ReactNode,
 } from 'react';
 
-export type DrawingColor = 'red' | 'blue' | 'yellow';
+export type DrawingColor = 'black' | 'red' | 'blue' | 'yellow';
 
 export interface DrawingPoint {
   x: number;
