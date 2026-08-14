@@ -245,15 +245,20 @@ const EVENT_PCT_THRESHOLDS = {
 } as const;
 
 // pos.x, pos.y 는 보드 대비 0~1 정규화된 토큰 좌상단 — 중심점으로 보정해 층 경계 오탐 방지
-const EVENT_TOKEN_HALF = 27; // TOKEN_W/H = 54
+const EVENT_TOKEN_HALF_BASE = 27; // 기준 화면에서의 보정값
 
 // 건물 내부 → data-floor-id, A/B/C/D면 → data-zone-key("face-*") 반환
 function getEventLocationId(pos: EventPos): string | null {
   const board = document.getElementById('tactical-area');
   if (!board) return null;
   const rect = board.getBoundingClientRect();
-  const cx = rect.left + pos.x * rect.width  + EVENT_TOKEN_HALF;
-  const cy = rect.top  + pos.y * rect.height + EVENT_TOKEN_HALF;
+
+  // 토큰이 --ui-scale 로 줄어들면 중심 보정값도 함께 줄어야 층 판정이 어긋나지 않는다
+  const uiScale = parseFloat(getComputedStyle(board).getPropertyValue('--ui-scale')) || 1;
+  const half = EVENT_TOKEN_HALF_BASE * uiScale;
+
+  const cx = rect.left + pos.x * rect.width  + half;
+  const cy = rect.top  + pos.y * rect.height + half;
   const elements = document.elementsFromPoint(cx, cy);
   for (const el of elements) {
     let cur: Element | null = el;

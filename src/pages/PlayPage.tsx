@@ -16,6 +16,7 @@ import { ResourceStatusProvider, useResourceStatus } from '../context/ResourceSt
 import { MedicalPostProvider } from '../context/MedicalPostContext';
 import { FireCommandProvider }     from '../context/FireCommandContext';
 import { ChecklistCommandProvider } from '../context/ChecklistCommandContext';
+import { useUiScale }              from '../hooks/useUiScale';
 import { FireLineProvider }        from '../context/FireLineContext';
 import { DrawingProvider }         from '../context/DrawingContext';
 import { SprayOverlay }            from '../components/overlay/SprayOverlay';
@@ -560,8 +561,12 @@ export function PlayPage() {
 
   const started = status === 'running';
 
+  // 훈련 화면 공통 배율 — 기준 화면(2560×1364) 대비 비율을 --ui-scale 과 루트 글꼴에 반영
+  const playPageRef = useRef<HTMLDivElement>(null);
+  useUiScale(playPageRef);
+
   return (
-    <div className="play-page" onContextMenu={e => e.preventDefault()}>
+    <div className="play-page" ref={playPageRef} onContextMenu={e => e.preventDefault()}>
       <FireLineProvider>
       <DisplayOptionsContext.Provider value={{ showWaterConn, showSpray, showWaterLevel, showAllVictims }}>
       <EventProvider key={runKey}>

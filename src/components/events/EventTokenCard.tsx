@@ -125,6 +125,11 @@ export function EventTokenCard({
     if (!container) return;
     const rect = container.getBoundingClientRect();
 
+    // 카드가 --ui-scale 로 줄어들 수 있으므로 클램프 경계는 실측값을 쓴다
+    const cardRect = e.currentTarget.getBoundingClientRect();
+    const tw = cardRect.width  || TOKEN_W;
+    const th = cardRect.height || TOKEN_H;
+
     // x, y 는 보드 대비 0~1 정규화 좌표 → 드래그 계산은 px 로 하고 경계에서만 환산
     dragOffsetRef.current = {
       x: e.clientX - rect.left - x * rect.width,
@@ -134,8 +139,8 @@ export function EventTokenCard({
 
     function onMouseMove(ev: MouseEvent) {
       const r = container!.getBoundingClientRect();
-      const newX = Math.max(0, Math.min(r.width  - TOKEN_W, ev.clientX - r.left - dragOffsetRef.current.x));
-      const newY = Math.max(0, Math.min(r.height - TOKEN_H, ev.clientY - r.top  - dragOffsetRef.current.y));
+      const newX = Math.max(0, Math.min(r.width  - tw, ev.clientX - r.left - dragOffsetRef.current.x));
+      const newY = Math.max(0, Math.min(r.height - th, ev.clientY - r.top  - dragOffsetRef.current.y));
       onMove(id, r.width > 0 ? newX / r.width : 0, r.height > 0 ? newY / r.height : 0);
     }
     function onMouseUp(ev: MouseEvent) {
@@ -172,10 +177,12 @@ export function EventTokenCard({
     return statusItem?.color;
   })();
 
-  // 상태 텍스트를 항상 1줄로 꽉 채우기 위해 글자 수 기반 font-size 계산
-  const statusFontSize = statusLabel
+  // 상태 텍스트를 항상 1줄로 꽉 채우기 위해 글자 수 기반 font-size 계산.
+  // 기준 화면 크기로 계산한 뒤 --ui-scale 을 곱해 카드와 같은 비율로 줄인다.
+  const statusFontBase = statusLabel
     ? Math.min(24, Math.floor((TOKEN_W - 4) / statusLabel.length))
     : 24;
+  const statusFontSize = `calc(${statusFontBase}px * var(--ui-scale, 1))`;
 
   // 화염 오버레이 — 아이콘 위에 반투명 화염 이미지를 겹쳐 "불타는" 느낌 표현
   // (fire 타입 + 커스텀 아이콘 없음인 경우는 화염 자체가 이미 베이스 아이콘이므로 중복 생략)

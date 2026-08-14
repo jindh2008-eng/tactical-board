@@ -41,8 +41,18 @@ html, body, #root {
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-main);
-  font-size: 15px;
   -webkit-font-smoothing: antialiased;
+}
+
+/* 기준 글꼴은 html 에만 둔다. 훈련 화면에서 useUiScale 이 이 값을 배율에 맞춰
+   조정하며, body/#root 가 15px 를 다시 박으면 상속이 끊겨 일부 글자만
+   안 줄어든다 → 1rem 으로 html 을 따라가게 한다. */
+html {
+  font-size: 15px;
+}
+
+body, #root {
+  font-size: 1rem;
 }
 
 /* ─────────────────────────────────────────────

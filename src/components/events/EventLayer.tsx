@@ -14,9 +14,9 @@ import './EventLayer.css';
 // — 자체 포인터이벤트 없음, 토큰만 상호작용
 // ─────────────────────────────────────────────
 
-// 토큰 크기 (클램핑용)
-const TOKEN_W = 104;
-const TOKEN_H = 104;
+// 토큰 크기 (클램핑용) — 기준 화면 기준. 실제로는 --ui-scale 을 곱해 쓴다
+const TOKEN_W_BASE = 104;
+const TOKEN_H_BASE = 104;
 
 // 초기 배치 상수 (A면 중앙 상단)
 const GAP = 4;
@@ -50,6 +50,13 @@ export function EventLayer() {
 
     const aCenterX = (aRect.left - layerRect.left) + aRect.width / 2;
     const aTop     = aRect.top - layerRect.top;
+
+    // 토큰이 --ui-scale 로 줄어들면 배치 간격도 같이 줄어야 겹치지 않는다
+    const uiScale = parseFloat(
+      getComputedStyle(layerRef.current).getPropertyValue('--ui-scale')
+    ) || 1;
+    const TOKEN_W = TOKEN_W_BASE * uiScale;
+    const TOKEN_H = TOKEN_H_BASE * uiScale;
     // A면 실제 너비에 맞춰 한 줄에 최대한 많이 담아 상단에 밀착시킴
     // (열 수를 고정하면 이벤트가 많을 때 아래쪽 줄로 밀려 "중앙"처럼 보이는 문제가 있었음)
     // unplaced.length로 상한을 둬 — 실제 개수보다 열이 많으면 첫 줄이 중앙에서 한쪽으로 치우쳐 보임
