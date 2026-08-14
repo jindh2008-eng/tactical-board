@@ -153,11 +153,12 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   const showStatusMsg = !!token.customNote;
 
   // ── 절대 위치 스타일 ─────────────────────────
+  // absPos 는 구역 대비 0~1 정규화 좌표 → 퍼센트로 넘겨 구역 크기 변화에 따라간다
   const wrapperStyle: React.CSSProperties | undefined = absPos
     ? {
         position:  'absolute',
-        left:      absPos.x,
-        top:       absPos.y,
+        left:      `${absPos.x * 100}%`,
+        top:       `${absPos.y * 100}%`,
         transform: 'translate(-50%, -50%)',
         zIndex:    5,
       }

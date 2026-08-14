@@ -36,10 +36,20 @@ function isPlainRecord(v: unknown): v is Record<string, unknown> {
 // 저장 형식
 // ─────────────────────────────────────────────
 
+/**
+ * 좌표 저장 형식 버전.
+ * 'norm' = 구역 대비 0~1 정규화 (현재). 값이 없으면 구버전 px 저장분이다.
+ * → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md Phase 4
+ */
+export type PosFormat = 'norm';
+
 export interface TokenSessionState {
   tokens:     UnitToken[];
   logs:       LogEntry[];
   positions:  Record<string, Pos>;
+
+  /** 없으면 구버전 px 좌표 → 로드 시 positions 폐기 */
+  posFormat?: PosFormat;
 
   /**
    * 절대 도착 시각 (ms timestamp).
@@ -70,6 +80,9 @@ export interface TokenSessionState {
 export interface VictimSessionState {
   victims:         VictimToken[];
   victimPositions: Record<string, Pos>;
+
+  /** 없으면 구버전 px 좌표 → 로드 시 victimPositions 폐기 */
+  posFormat?: PosFormat;
 }
 
 // ─────────────────────────────────────────────
@@ -78,7 +91,7 @@ export interface VictimSessionState {
 
 export function saveTokenSession(state: TokenSessionState): void {
   try {
-    sessionStorage.setItem(KEY_TOKENS, JSON.stringify(state));
+    sessionStorage.setItem(KEY_TOKENS, JSON.stringify({ ...state, posFormat: 'norm' }));
   } catch {
     // quota exceeded 또는 private mode — 무시
   }
@@ -91,6 +104,13 @@ export function loadTokenSession(): TokenSessionState | null {
     const parsed = JSON.parse(raw) as TokenSessionState;
 
     if (!Array.isArray(parsed.tokens)) return null;
+
+    // ── 좌표 형식 마이그레이션: px → 0~1 정규화 ──────────────────────
+    // 구역 크기를 알 수 없는 시점이라 px 값을 환산할 수 없다.
+    // 구역 배치(zoneKey)는 유지하고 구역 내 세부 위치만 버린다 → 기본 흐름 배치로 표시.
+    if (parsed.posFormat !== 'norm') {
+      parsed.positions = {};
+    }
 
     // ── 구버전 마이그레이션: arrivalCountdowns + savedAt → arrivalTargetAt ──
     if (!parsed.arrivalTargetAt && parsed.arrivalCountdowns && typeof parsed.savedAt === 'number') {
@@ -119,7 +139,7 @@ export function loadTokenSession(): TokenSessionState | null {
 
 export function saveVictimSession(state: VictimSessionState): void {
   try {
-    sessionStorage.setItem(KEY_VICTIMS, JSON.stringify(state));
+    sessionStorage.setItem(KEY_VICTIMS, JSON.stringify({ ...state, posFormat: 'norm' }));
   } catch { /* ignore */ }
 }
 
@@ -129,6 +149,12 @@ export function loadVictimSession(): VictimSessionState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as VictimSessionState;
     if (!Array.isArray(parsed.victims)) return null;
+
+    // 좌표 형식 마이그레이션 — loadTokenSession 과 동일 (구버전 px 값 폐기)
+    if (parsed.posFormat !== 'norm') {
+      parsed.victimPositions = {};
+    }
+
     return parsed;
   } catch {
     return null;

@@ -73,8 +73,11 @@ const X_STEP   = 44; // 카드 간 가로 간격 — 겹치지 않는 최소 폭
 const Y_STEP   = 46; // 카드 간 세로 간격(줄 바뀔 때) — 겹치지 않는 최소 높이
 
 /**
- * zone 내 n명 victim 의 초기 배치 좌표를 반환한다.
+ * zone 내 n명 victim 의 초기 배치 좌표를 **구역 대비 0~1 정규화 값**으로 반환한다.
  * 우측 하단 모서리부터 겹치지 않게 정렬(왼쪽 → 위쪽 순으로 채움).
+ *
+ * 간격(MARGIN/STEP)은 카드 실측 크기 기준이라 px 로 계산한 뒤 마지막에 나눈다.
+ * → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md Phase 4
  */
 export function computeVictimOffsets(
   count:  number,
@@ -83,16 +86,18 @@ export function computeVictimOffsets(
 ): Pos[] {
   if (count <= 0) return [];
 
-  const usableW = Math.max(zoneW - MARGIN_X, 1);
+  const w = zoneW > 0 ? zoneW : 120;
+  const h = zoneH > 0 ? zoneH : 80;
+
+  const usableW = Math.max(w - MARGIN_X, 1);
   const cols    = Math.max(1, Math.min(count, Math.floor(usableW / X_STEP)));
 
   return Array.from({ length: count }, (_, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    return {
-      x: Math.max(zoneW - MARGIN_X - col * X_STEP, 10),
-      y: Math.max(zoneH - MARGIN_Y - row * Y_STEP, 10),
-    };
+    const px  = Math.max(w - MARGIN_X - col * X_STEP, 10);
+    const py  = Math.max(h - MARGIN_Y - row * Y_STEP, 10);
+    return { x: px / w, y: py / h };
   });
 }
 

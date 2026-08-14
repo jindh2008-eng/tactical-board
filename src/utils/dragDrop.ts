@@ -16,8 +16,13 @@ export function setDragGrabOffset(e: React.DragEvent<HTMLElement>): void {
 }
 
 /**
- * 드롭 시 카드의 새 중심좌표(구역 기준 상대좌표, 구역 경계로 클램프)를 계산한다.
+ * 드롭 시 카드의 새 중심좌표를 **구역 대비 0~1 정규화 값**으로 계산한다.
  * grabOffset 정보가 없으면(과거 동작과 동일하게) 카드 중심을 기준으로 계산한다.
+ *
+ * 정규화하는 이유: 저장값이 px이면 해상도·배율이 바뀌어 구역 크기가 달라질 때
+ * 토큰이 구역 안에서 밀린다. 0~1로 두면 구역이 커지든 작아지든 상대 위치가 유지되고,
+ * 렌더도 left/top 퍼센트로 그대로 넘길 수 있다.
+ * → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md Phase 4
  */
 export function computeDropCenter(
   e:      React.DragEvent<HTMLElement>,
@@ -39,8 +44,13 @@ export function computeDropCenter(
   const rawX = cursorX - grabOffsetX + tokenW / 2;
   const rawY = cursorY - grabOffsetY + tokenH / 2;
 
+  // 구역 경계로 클램프 (카드가 절반 이상 삐져나가지 않도록)
+  const clampedX = Math.max(tokenW / 2, Math.min(rect.width  - tokenW / 2, rawX));
+  const clampedY = Math.max(tokenH / 2, Math.min(rect.height - tokenH / 2, rawY));
+
+  // 구역이 0폭/0높이로 측정되는 순간(숨겨진 탭 등)에는 중앙으로 떨군다
   return {
-    x: Math.max(tokenW / 2, Math.min(rect.width  - tokenW / 2, rawX)),
-    y: Math.max(tokenH / 2, Math.min(rect.height - tokenH / 2, rawY)),
+    x: rect.width  > 0 ? clampedX / rect.width  : 0.5,
+    y: rect.height > 0 ? clampedY / rect.height : 0.5,
   };
 }

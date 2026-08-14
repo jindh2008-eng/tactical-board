@@ -157,11 +157,12 @@ export function VictimCard({ victim, absPos }: Props) {
     setCtxMenu(null);
   }, [rescueUnit, moveVictim, victim]);
 
+  // absPos 는 구역 대비 0~1 정규화 좌표 (TokenCard 와 동일)
   const wrapperStyle: React.CSSProperties | undefined = absPos
     ? {
         position:  'absolute',
-        left:      absPos.x,
-        top:       absPos.y,
+        left:      `${absPos.x * 100}%`,
+        top:       `${absPos.y * 100}%`,
         transform: 'translate(-50%, -50%)',
         zIndex:    5,
       }
