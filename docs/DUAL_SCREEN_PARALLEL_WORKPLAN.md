@@ -50,7 +50,7 @@
 |---|------|------|
 | 0-1 | `handleClick`을 JSX 맵 밖으로 호이스팅 → `handleItemToggle(item: ChecklistItem)` | `src/components/panels/ChecklistPanel.tsx` |
 | 0-2 | `FireCommandContext` 패턴을 복제한 `ChecklistCommandContext` 신설 (`register` / `callToggleItem`) | `src/context/ChecklistCommandContext.tsx` (신규) |
-| 0-3 | `ChecklistPanel`에 `variant?: 'desktop' \| 'tablet'`, `readOnlyChecked?: Set<string>`, `onExternalToggle?` props 추가 (**동작은 기존과 동일하게 유지**) | `src/components/panels/ChecklistPanel.tsx` |
+| 0-3 | 표시 전용 `ChecklistView` 분리 (설정만 읽고 런타임 Context에 의존하지 않음) | `src/components/panels/ChecklistView.tsx` (신규) |
 | 0-4 | `checked` 세션 영속화 | `src/context/ChecklistProgressContext.tsx`, `src/utils/runtimeSession.ts` |
 | 0-5 | **메시지 타입 확정** — 아래 §3.1 그대로 작성 | `src/sync/protocol.ts` (신규) |
 
@@ -116,6 +116,8 @@ export interface Envelope { v: number; ts: number; msg: SyncMessage; }
 | `src/components/panels/ChecklistPanel.css` | **C** | 터치 variant 추가 |
 | `src/sync/protocol.ts` | **없음(동결)** | Step 0 산출물. 전원 읽기 전용 |
 | `src/components/panels/ChecklistPanel.tsx` | **없음(동결)** | Step 0 산출물. 전원 읽기 전용 |
+| `src/components/panels/ChecklistView.tsx` | **없음(동결)** | Step 0 산출물. 전원 읽기 전용 |
+| `src/context/ChecklistCommandContext.tsx` | **없음(동결)** | Step 0 산출물. 전원 읽기 전용 |
 | 그 외 모든 파일 | **없음** | 수정 금지 |
 
 `App.tsx`가 유일한 교차 지점이다. **B가 소유**하고, `InstructorPage`를 C가 만들 경로(`src/pages/InstructorPage.tsx`)로 미리 import해 둔다. C는 그 경로에 파일을 만들기만 하면 된다.
@@ -185,14 +187,17 @@ export interface Envelope { v: number; ts: number; msg: SyncMessage; }
 
 > 태블릿용 교수 화면을 만들어줘. 체크리스트 하나만 있는 화면이다.
 >
-> **읽을 것**: `src/components/panels/ChecklistPanel.tsx`(수정 금지 — props 계약만 확인), `src/sync/protocol.ts`(수정 금지), `docs/DUAL_SCREEN_SYNC_PLAN.md` §6.2
+> **읽을 것**: `src/components/panels/ChecklistView.tsx`(수정 금지 — props 계약 확인), `src/sync/protocol.ts`(수정 금지), `docs/DUAL_SCREEN_SYNC_PLAN.md` §6.2
+>
+> ★ **`ChecklistPanel` 이 아니라 `ChecklistView` 를 쓴다.** `ChecklistPanel` 은 Token/Victim/Event/FireCommand Context 를 요구하므로 교수 화면에서 렌더하면 훅이 터진다. `ChecklistView` 는 설정(`useSettings`)만 읽으므로 `SettingsProvider` 아래라면 어디서든 안전하다. props 는 이미 확정돼 있다:
+> `{ checked, lockedItemIds?, variant?: 'desktop'|'tablet', onToggle: (item) => void }`
 >
 > **만들 것**
 > 1. `src/pages/InstructorPage.tsx`
 >    - `<SyncProvider role="instructor">` 로 감싼다 (**Track B가 만드는 중이므로, 없으면 동일 시그니처의 임시 스텁을 로컬에 두고 작업한 뒤 통합 시 교체**)
 >    - `settings.bundle` 수신 → `SettingsProvider` 초기값으로 주입
->    - `state.checked` 수신 → `ChecklistPanel` 에 `readOnlyChecked` 로 전달
->    - 항목 탭 → `checklist.toggle` 송신만 한다. **로컬 상태를 직접 바꾸지 않는다** (무상태 미러 — SYNC_PLAN §5.6)
+>    - `state.checked` 수신 → `<ChecklistView checked={...} variant="tablet" />` 로 전달. `lockedItemIds` 는 넘기지 않는다(교수 화면엔 🔒 없음)
+>    - 항목 탭 → `onToggle` 에서 `checklist.toggle` 송신만 한다. **로컬 상태를 직접 바꾸지 않는다** (무상태 미러 — SYNC_PLAN §5.6)
 >    - 연결 끊김 시 목록 전체를 흐리게 + `무플 화면에서 진행하세요` 배너
 >    - 상단에 `n/m 완료` 진행률만 표시. 타이머·훈련제어 버튼·상황요약은 **만들지 않는다**
 > 2. `src/pages/InstructorPage.css`

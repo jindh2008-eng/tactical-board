@@ -15,6 +15,7 @@ import { ChecklistProgressProvider } from '../context/ChecklistProgressContext';
 import { ResourceStatusProvider, useResourceStatus } from '../context/ResourceStatusContext';
 import { MedicalPostProvider } from '../context/MedicalPostContext';
 import { FireCommandProvider }     from '../context/FireCommandContext';
+import { ChecklistCommandProvider } from '../context/ChecklistCommandContext';
 import { FireLineProvider }        from '../context/FireLineContext';
 import { DrawingProvider }         from '../context/DrawingContext';
 import { SprayOverlay }            from '../components/overlay/SprayOverlay';
@@ -617,6 +618,7 @@ export function PlayPage() {
           <DrawingProvider key={runKey}>
           <WaterConnectionProvider>
           <FireCommandProvider>
+          <ChecklistCommandProvider>
           <WaterLevelProvider>
           <HydrantStateProvider>
             <div className="play-layout">
@@ -683,6 +685,7 @@ export function PlayPage() {
             </div>
           </HydrantStateProvider>
           </WaterLevelProvider>
+          </ChecklistCommandProvider>
           </FireCommandProvider>
           </WaterConnectionProvider>
           </DrawingProvider>

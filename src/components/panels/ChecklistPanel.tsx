@@ -1,4 +1,4 @@
-import { useState }          from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal }      from 'react-dom';
 import { useSettings }       from '../../store/settingsStore';
 import { useTokens }         from '../../context/TokenContext';
@@ -6,31 +6,25 @@ import { useVictims }        from '../../context/VictimContext';
 import { useFireCommand }    from '../../context/FireCommandContext';
 import { useEvents }         from '../../context/EventContext';
 import { useChecklistProgress } from '../../context/ChecklistProgressContext';
-import { computeRosterDisplayName } from '../../utils/dispatchRoster';
-import type { ChecklistItem, ChecklistItemType } from '../../types/settings';
-import type { FireStatus }    from '../../types';
+import { useChecklistCommand }  from '../../context/ChecklistCommandContext';
+import { ChecklistView }     from './ChecklistView';
+import type { ChecklistItem } from '../../types/settings';
 import './ChecklistPanel.css';
 
-const FIRE_STATUS_LABELS: Partial<Record<FireStatus, string>> = {
-  'extension-peak': '연소확대',
-  peak:             '최성기',
-  seventy:          '큰불잡음',
-  half:             '50%',
-  initial:          '초진',
-  complete:         '완진',
-};
-
-const TYPE_LABELS: Record<ChecklistItemType, string> = {
-  procedure: '절차',
-  event:     '이벤트',
-  arrival:   '도착',
-  message:   '메세지',
-  fire:      '화재',
-  xvr:       'XVR',
-  unit:      '출동대',
-  incident:  '돌발상황',
-  victim:    '구조대상자',
-};
+/**
+ * ChecklistPanel — 진행상황 관리 (무플 화면용, 부수효과 담당)
+ *
+ * 표시는 ChecklistView 가 맡고, 이 컴포넌트는
+ *  1. 항목 체크 시 발생하는 부수효과(화재·이벤트·출동대·도착·메시지·구조대상자)
+ *  2. 하위 연동 항목 연쇄 적용
+ *  3. 메시지 팝업
+ *  4. 원격 명령(지휘교수 태블릿) 수신 처리기 등록
+ * 을 담당한다.
+ *
+ * 부수효과 로직은 화면 분리 작업 전과 동일하다. 원격 명령도 같은 경로를 타므로
+ * 무플이 직접 누른 것과 태블릿에서 누른 것의 결과가 항상 같다.
+ * → docs/DUAL_SCREEN_SYNC_PLAN.md §4.1, §7 Phase M-1
+ */
 
 function floorNumToId(n: number): string {
   return n < 0 ? `B${-n}` : `${n}F`;
@@ -42,9 +36,8 @@ export function ChecklistPanel() {
   const { setVictimDiscovered }             = useVictims();
   const { callSetFire }                     = useFireCommand();
   const { setEventStatus }                  = useEvents();
-  const { checked, setChecked }               = useChecklistProgress();
-  const [collapsed,       setCollapsed]       = useState<Set<string>>(new Set());
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
+  const { checked, setChecked }             = useChecklistProgress();
+  const { register }                        = useChecklistCommand();
   const [activeMessages,  setActiveMessages]  = useState<ChecklistItem[]>([]);
 
   function getArrivalTokenIds(order: number): string[] {
@@ -248,131 +241,70 @@ export function ChecklistPanel() {
     }
   }
 
-  function toggleSection(sectionId: string) {
-    setCollapsed(prev => {
-      const next = new Set(prev);
-      if (next.has(sectionId)) next.delete(sectionId);
-      else                     next.add(sectionId);
-      return next;
-    });
+  // ── 항목 토글 진입점 ────────────────────────────────────────────────
+  // 로컬 클릭과 원격 명령이 모두 여기로 들어온다.
+  // checking 을 명시로 받아 멱등하게 동작한다 (이미 목표 상태면 무시).
+  function applyItemToggle(item: ChecklistItem, checking: boolean) {
+    if (checked.has(item.id) === checking) return;
+
+    const itemType = item.itemType ?? 'procedure';
+    const order    = item.arrivalOrder ?? 1;
+
+    // 배치된 출동대가 있는 도착 항목은 해제할 수 없다
+    if (itemType === 'arrival' && !checking && isArrivalLocked(order)) return;
+
+    if (itemType === 'arrival')       toggleArrivalItem(item.id, order, item.text);
+    else if (itemType === 'fire')     toggleFireItem(item);
+    else if (itemType === 'message')  toggleMessageItem(item);
+    else if (itemType === 'incident') toggleEventItem(item);
+    else if (itemType === 'unit')     toggleUnitItem(item);
+    else if (itemType === 'victim')   toggleVictimItem(item);
+    else                              toggleItem(item.id, item.text);
+    triggerLinkedChildren(item.id, checking);
   }
 
-  const totalItems   = checklistConfig.sections.reduce((n, s) => n + s.items.length, 0);
-  const checkedCount = checklistConfig.sections.reduce(
-    (n, s) => n + s.items.filter(it => checked.has(it.id)).length, 0
-  );
+  function handleToggle(item: ChecklistItem) {
+    applyItemToggle(item, !checked.has(item.id));
+  }
+
+  // ── 🔒 표시 대상: 배치된 출동대가 있어 해제 불가한 도착 항목 ──────────
+  const lockedItemIds = useMemo(() => {
+    const locked = new Set<string>();
+    for (const sec of checklistConfig.sections) {
+      for (const it of sec.items) {
+        if ((it.itemType ?? 'procedure') !== 'arrival') continue;
+        if (checked.has(it.id) && isArrivalLocked(it.arrivalOrder ?? 1)) locked.add(it.id);
+      }
+    }
+    return locked;
+    // isArrivalLocked 는 tokens·dispatchRoster 에서 파생된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checklistConfig, checked, tokens, dispatchRoster]);
+
+  // ── 원격 명령(지휘교수 태블릿) 수신 처리기 등록 ──────────────────────
+  // 최신 클로저를 유지하기 위해 ref 를 매 렌더 갱신한다.
+  const remoteToggleRef = useRef<(itemId: string, checking: boolean) => void>(() => {});
+  useEffect(() => {
+    remoteToggleRef.current = (itemId, checking) => {
+      for (const sec of checklistConfig.sections) {
+        const item = sec.items.find(it => it.id === itemId);
+        if (item) { applyItemToggle(item, checking); return; }
+      }
+    };
+  });
+
+  useEffect(() => {
+    register((itemId, checking) => remoteToggleRef.current(itemId, checking));
+    return () => register(null);
+  }, [register]);
 
   return (
-    <div className="checklist-panel">
-      <div className="checklist-panel__header">
-        <span className="checklist-panel__title">진행상황 관리</span>
-        {totalItems > 0 && (
-          <span className="checklist-panel__progress">{checkedCount}/{totalItems}</span>
-        )}
-      </div>
-      <div className="checklist-panel__body">
-        {checklistConfig.sections.length === 0 ? (
-          <span className="checklist-panel__empty">설정창에서 체크리스트를 추가하세요.</span>
-        ) : (
-          checklistConfig.sections.map(section => {
-            const isCollapsed = collapsed.has(section.id);
-            // 이 섹션에서 하위 항목을 가진 상위 항목 ID 집합
-            const parentItemIds = new Set(
-              section.items.filter(it => it.linkedParentId).map(it => it.linkedParentId!)
-            );
-
-            return (
-              <div key={section.id} className="checklist-panel__section">
-                <button
-                  className="checklist-panel__section-title"
-                  onClick={() => toggleSection(section.id)}
-                >
-                  <span className="checklist-panel__section-arrow">
-                    {isCollapsed ? '▶' : '▼'}
-                  </span>
-                  {section.title}
-                </button>
-                <div className="checklist-panel__divider" />
-                {!isCollapsed && section.items.map(item => {
-                  const itemType  = item.itemType ?? 'procedure';
-                  const isChecked = checked.has(item.id);
-                  const order       = item.arrivalOrder ?? 1;
-                  const isLocked    = itemType === 'arrival' && isChecked && isArrivalLocked(order);
-                  const arrivalUnits = itemType === 'arrival'
-                    ? dispatchRoster.filter(r => r.arrivalOrder === order && r.linkedTo === null).map(computeRosterDisplayName).join(', ')
-                    : '';
-                  const isLinked  = !!item.linkedParentId;
-                  const isParent  = parentItemIds.has(item.id);
-
-                  // 하위 항목은 상위가 펼쳐진 경우에만 표시
-                  if (isLinked && !expandedParents.has(item.linkedParentId!)) return null;
-
-                  const fireTitle = itemType === 'fire' && item.fireFloor != null
-                    ? `${item.fireFloor}층 → ${FIRE_STATUS_LABELS[item.fireTargetStatus!] ?? ''}`
-                    : undefined;
-                  const title = isLocked ? '배치된 출동대가 있어 해제할 수 없습니다' : fireTitle;
-
-                  function handleClick() {
-                    if (isLocked) return;
-                    const checking = !isChecked;
-                    if (itemType === 'arrival')       toggleArrivalItem(item.id, order, item.text);
-                    else if (itemType === 'fire')     toggleFireItem(item);
-                    else if (itemType === 'message')  toggleMessageItem(item);
-                    else if (itemType === 'incident') toggleEventItem(item);
-                    else if (itemType === 'unit')     toggleUnitItem(item);
-                    else if (itemType === 'victim')   toggleVictimItem(item);
-                    else                              toggleItem(item.id, item.text);
-                    triggerLinkedChildren(item.id, checking);
-                  }
-
-                  return (
-                    <div
-                      key={item.id}
-                      className={[
-                        'checklist-panel__item',
-                        isChecked ? 'checklist-panel__item--checked' : '',
-                        isLocked  ? 'checklist-panel__item--locked'  : '',
-                        isLinked  ? 'checklist-panel__item--linked'   : '',
-                      ].filter(Boolean).join(' ')}
-                      onClick={handleClick}
-                      title={title}
-                    >
-                      {isLinked && <span className="checklist-panel__link-icon">└</span>}
-                      <span className={`checklist-panel__item-badge checklist-panel__item-badge--${itemType}`}>
-                        {TYPE_LABELS[itemType] ?? itemType}
-                      </span>
-                      <span className="checklist-panel__item-text">
-                        {item.text}
-                        {arrivalUnits && <span className="checklist-panel__item-units"> ({arrivalUnits})</span>}
-                      </span>
-                      {isLocked && <span className="checklist-panel__lock-icon">🔒</span>}
-                      {/* 상위 항목 하위 숨김/표시 체크박스 */}
-                      {isParent && (
-                        <input
-                          type="checkbox"
-                          className="checklist-panel__expand-cb"
-                          checked={expandedParents.has(item.id)}
-                          title={expandedParents.has(item.id) ? '하위 항목 숨기기' : '하위 항목 표시'}
-                          onClick={e => e.stopPropagation()}
-                          onChange={e => {
-                            e.stopPropagation();
-                            setExpandedParents(prev => {
-                              const next = new Set(prev);
-                              if (e.target.checked) next.add(item.id);
-                              else                  next.delete(item.id);
-                              return next;
-                            });
-                          }}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })
-        )}
-      </div>
+    <>
+      <ChecklistView
+        checked={checked}
+        lockedItemIds={lockedItemIds}
+        onToggle={handleToggle}
+      />
       {activeMessages.length > 0 && createPortal(
         <div className="checklist-panel__msg-overlay" onClick={() => setActiveMessages([])}>
           <div className="checklist-panel__msg-stack" onClick={e => e.stopPropagation()}>
@@ -401,6 +333,6 @@ export function ChecklistPanel() {
         </div>,
         document.body
       )}
-    </div>
+    </>
   );
 }

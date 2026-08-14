@@ -380,6 +380,39 @@ export function loadVictimSearchSession(): VictimSearchSessionState | null {
 }
 
 // ─────────────────────────────────────────────
+// 진행상황 관리(체크리스트) 세션
+//
+// 화면 분리 후에는 무플 화면이 체크 현황의 단일 원천이 되므로
+// (docs/DUAL_SCREEN_SYNC_PLAN.md §4.1) 새로고침으로 소실되면
+// 교수 태블릿 쪽 표시까지 함께 비어 버린다. 그래서 영속화한다.
+// ─────────────────────────────────────────────
+
+const KEY_CHECKLIST = 'tactical-board.runtime.checklist';
+
+export interface ChecklistSessionState {
+  checkedIds: string[];
+}
+
+export function saveChecklistSession(state: ChecklistSessionState): void {
+  try {
+    sessionStorage.setItem(KEY_CHECKLIST, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+export function loadChecklistSession(): ChecklistSessionState | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_CHECKLIST);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ChecklistSessionState;
+
+    // 형태 검증 — 소비처가 new Set(...)에 그대로 넘기므로 배열이 아니면 폐기
+    if (!Array.isArray(parsed.checkedIds)) return null;
+
+    return parsed;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
 // 전체 초기화 (새 훈련 시작 시 호출)
 // ─────────────────────────────────────────────
 
@@ -394,5 +427,6 @@ export function clearRuntimeSession(): void {
     sessionStorage.removeItem(KEY_HYDRANT);
     sessionStorage.removeItem(KEY_WATER_LEVELS);
     sessionStorage.removeItem(KEY_VICTIM_SEARCH);
+    sessionStorage.removeItem(KEY_CHECKLIST);
   } catch { /* ignore */ }
 }
