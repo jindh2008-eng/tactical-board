@@ -418,17 +418,18 @@ function RightFixedPanel() {
 // nav 옵션 드롭다운
 // ─────────────────────────────────────────────
 
-type OptionKey = 'waterConn' | 'spray' | 'waterLevel' | 'victims';
+type OptionKey = 'waterConn' | 'spray' | 'waterLevel' | 'victims' | 'checklist';
 
 interface NavOptionsMenuProps {
   showWaterConn:   boolean;
   showSpray:       boolean;
   showWaterLevel:  boolean;
   showAllVictims:  boolean;
+  showChecklist:   boolean;
   onToggle:        (key: OptionKey) => void;
 }
 
-function NavOptionsMenu({ showWaterConn, showSpray, showWaterLevel, showAllVictims, onToggle }: NavOptionsMenuProps) {
+function NavOptionsMenu({ showWaterConn, showSpray, showWaterLevel, showAllVictims, showChecklist, onToggle }: NavOptionsMenuProps) {
   return (
     <div className="nav-options">
       <span className="nav-options__label">표시옵션</span>
@@ -448,29 +449,28 @@ function NavOptionsMenu({ showWaterConn, showSpray, showWaterLevel, showAllVicti
         <input type="checkbox" checked={showAllVictims} onChange={() => onToggle('victims')} />
         구조대상자
       </label>
+      {/* 진행상황 관리는 지휘교수 화면으로 분리 예정이라 무플 화면에서는 기본 숨김.
+          태블릿 도입 전이나 서버 장애 시 여기서 다시 켤 수 있다. */}
+      <label className="nav-options__item">
+        <input type="checkbox" checked={showChecklist} onChange={() => onToggle('checklist')} />
+        진행상황 관리
+      </label>
     </div>
   );
 }
 
 // ─────────────────────────────────────────────
-// 진행상황 관리 패널 — 드래그 리사이즈
+// 진행상황 관리 표시 여부 — 표시옵션에 저장
+//
+// 이 패널은 지휘교수 태블릿으로 분리될 예정이라 무플 화면에서는 기본 숨김이다.
+// 폭은 더 이상 드래그로 조절하지 않고 레이아웃 그리드가 정한다.
+// → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md §3.5
 // ─────────────────────────────────────────────
 
-const CHECKLIST_WIDTH_KEY   = 'tacticalBoardChecklistPanelWidth';
-const CHECKLIST_MIN_WIDTH   = 220;
-const CHECKLIST_RIGHT_GAP   = 12; // B면과 최소 간격
+const CHECKLIST_SHOW_KEY = 'tacticalBoardShowChecklistPanel';
 
-// 건물(B면 우측 끝)을 넘지 않는 한도 내에서 최대 폭 계산
-function getChecklistMaxWidth(panelLeft: number): number {
-  const building = document.querySelector('.tactical-area__building');
-  if (!building) return Math.max(CHECKLIST_MIN_WIDTH, 500);
-  const buildingLeft = building.getBoundingClientRect().left;
-  return Math.max(CHECKLIST_MIN_WIDTH, buildingLeft - panelLeft - CHECKLIST_RIGHT_GAP);
-}
-
-function loadSavedChecklistWidth(): number {
-  const saved = Number(localStorage.getItem(CHECKLIST_WIDTH_KEY));
-  return saved && saved >= CHECKLIST_MIN_WIDTH ? saved : CHECKLIST_MIN_WIDTH;
+function loadShowChecklist(): boolean {
+  return localStorage.getItem(CHECKLIST_SHOW_KEY) === '1';
 }
 
 // ─────────────────────────────────────────────
@@ -486,12 +486,17 @@ export function PlayPage() {
   const [showSpray,       setShowSpray]       = useState(true);
   const [showWaterLevel,  setShowWaterLevel]  = useState(true);
   const [showAllVictims,  setShowAllVictims]  = useState(false);
+  const [showChecklist,   setShowChecklist]   = useState(loadShowChecklist);
 
   function handleOptionToggle(key: OptionKey) {
     if (key === 'waterConn')       setShowWaterConn(v => !v);
     else if (key === 'spray')      setShowSpray(v => !v);
     else if (key === 'waterLevel') setShowWaterLevel(v => !v);
-    else                           setShowAllVictims(v => !v);
+    else if (key === 'victims')    setShowAllVictims(v => !v);
+    else setShowChecklist(v => {
+      localStorage.setItem(CHECKLIST_SHOW_KEY, v ? '0' : '1');
+      return !v;
+    });
   }
 
   const elapsedRef = useRef(elapsed);
@@ -520,6 +525,7 @@ export function PlayPage() {
           showSpray={showSpray}
           showWaterLevel={showWaterLevel}
           showAllVictims={showAllVictims}
+          showChecklist={showChecklist}
           onToggle={handleOptionToggle}
         />
         <div className="play-nav__divider" />
@@ -554,43 +560,6 @@ export function PlayPage() {
 
   const started = status === 'running';
 
-  // ── 진행상황 관리 패널 폭 — 항상 노출, 우측 끝 드래그로 리사이즈 ──
-  const rightPanelRef = useRef<HTMLDivElement>(null);
-  const [checklistWidth, setChecklistWidth] = useState<number>(loadSavedChecklistWidth);
-
-  useEffect(() => {
-    // 화면 진입 시 저장된 폭이 현재 건물 위치 기준으로 여전히 유효한지 재검증
-    const panelLeft = rightPanelRef.current?.getBoundingClientRect().left ?? 0;
-    setChecklistWidth(w => Math.min(w, getChecklistMaxWidth(panelLeft)));
-  }, []);
-
-  function handleChecklistResizeStart(e: React.MouseEvent) {
-    e.preventDefault();
-    const startX      = e.clientX;
-    const startWidth  = checklistWidth;
-    const panelLeft   = rightPanelRef.current?.getBoundingClientRect().left ?? 0;
-    document.body.style.cursor     = 'ew-resize';
-    document.body.style.userSelect = 'none';
-
-    function onMove(ev: MouseEvent) {
-      const maxWidth = getChecklistMaxWidth(panelLeft);
-      const next     = Math.min(maxWidth, Math.max(CHECKLIST_MIN_WIDTH, startWidth + (ev.clientX - startX)));
-      setChecklistWidth(next);
-    }
-    function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      document.body.style.cursor     = '';
-      document.body.style.userSelect = '';
-      setChecklistWidth(w => {
-        localStorage.setItem(CHECKLIST_WIDTH_KEY, String(w));
-        return w;
-      });
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  }
-
   return (
     <div className="play-page" onContextMenu={e => e.preventDefault()}>
       <FireLineProvider>
@@ -621,31 +590,18 @@ export function PlayPage() {
           <ChecklistCommandProvider>
           <WaterLevelProvider>
           <HydrantStateProvider>
-            <div className="play-layout">
-              {/* ── 우측 고정 패널 — 임시의료소/구조활동통계 → 대기1단계 → 자원대기소 → 출동대현황 ── */}
-              <RightFixedPanel />
-
-              {/* ── 진행상황 관리 패널 (좌측 고정 노출, 우측 끝 드래그로 폭 조절) ── */}
-              <div
-                ref={rightPanelRef}
-                className="right-panel"
-                style={{ width: checklistWidth }}
-              >
-                <div className="right-panel__panel">
-                  <ChecklistPanel />
+            <div className={`play-layout${showChecklist ? ' play-layout--with-checklist' : ''}`}>
+              {/* ── 진행상황 관리 패널 — 기본 숨김, 표시옵션으로 노출 ── */}
+              {showChecklist && (
+                <div className="right-panel">
+                  <div className="right-panel__panel">
+                    <ChecklistPanel />
+                  </div>
                 </div>
-                <div
-                  className="right-panel__resize-handle"
-                  onMouseDown={handleChecklistResizeStart}
-                  title="드래그하여 폭 조절"
-                />
-              </div>
+              )}
 
-              {/* ── 전술상황판 — 좌우 고정 패널을 뺀 나머지 영역 ── */}
-              <div
-                className="tactical-board-wrap"
-                style={{ marginLeft: checklistWidth, width: `calc(100% - ${checklistWidth}px - 550px)` }}
-              >
+              {/* ── 전술상황판 ── */}
+              <div className="tactical-board-wrap">
                 <div className="tactical-board-inner">
                   <TacticalArea
                     config={building.config}
@@ -655,6 +611,9 @@ export function PlayPage() {
                   />
                 </div>
               </div>
+
+              {/* ── 우측 운영 패널 — 임시의료소/구조활동통계 → 대기1단계 → 자원대기소 → 출동대현황 ── */}
+              <RightFixedPanel />
 
               {/* ── 오버레이 (Drawer / Modal) ── */}
               <UnitAddDrawer />

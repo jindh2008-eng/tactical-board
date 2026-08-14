@@ -7,26 +7,44 @@
   overflow: hidden;
 }
 
-/* ── 메인 레이아웃 컨테이너 ── */
+/* ─────────────────────────────────────────────
+   메인 레이아웃 컨테이너 — 2열 그리드 [전술상황판 | 우측 운영 패널]
+   진행상황 관리를 켜면 좌측에 열이 하나 더 붙는다.
+
+   기준 화면: 2560×1440 CSS px (물리 3840×2160 / Windows 150% 배율).
+   3840 은 물리 픽셀이라 CSS 기준으로 쓰면 안 된다.
+   우측 패널 550px 은 기준 폭의 약 21.5%.
+   → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md §3.1, Phase 1
+   ─────────────────────────────────────────────*/
 .play-layout {
+  --op-panel-w:   clamp(300px, 21.5%, 620px);
+  --checklist-w:  clamp(200px, 12%, 340px);
+
   position:         relative;
   width:            100%;
   height:           100%;
   overflow:         hidden;
   background-color: var(--color-bg);
+
+  display:               grid;
+  grid-template-columns: 1fr var(--op-panel-w);
+  /* 명시적 행 높이 — 암묵 행(auto)에 height:100% 자식을 두면 높이가 0으로 무너진다 */
+  grid-template-rows:    minmax(0, 1fr);
+  align-items:           stretch;
+}
+
+.play-layout--with-checklist {
+  grid-template-columns: var(--checklist-w) 1fr var(--op-panel-w);
 }
 
 /* ─────────────────────────────────────────────
-   우측 고정 패널 — 임시의료소/구조활동통계 → 대기1단계 →
-   자원대기소 → 출동대현황. 항상 노출, 실제 레이아웃 공간을 차지
-   (오버레이 아님 — .tactical-board-wrap이 이 폭만큼 빼고 계산됨)
+   우측 운영 패널 — 임시의료소/구조활동통계 → 대기1단계 →
+   자원대기소 → 출동대현황. 그리드 마지막 열을 차지한다.
    ─────────────────────────────────────────────*/
 .right-fixed-panel {
-  position: absolute;
-  right: 0;
-  top: 0;
+  /* 그리드 열 하나를 차지한다 (폭은 .play-layout 의 --op-panel-w 가 결정) */
+  min-width: 0;
   height: 100%;
-  width: 550px;
   z-index: 15;
 
   display: flex;
@@ -97,36 +115,15 @@
 
 
 /* ─────────────────────────────────────────────
-   좌측 고정 패널 — 진행상황 관리 (전체 높이)
-   항상 노출, 우측 끝 드래그로 폭 조절
-   (오버레이 아님 — .tactical-board-wrap이 이 폭만큼 빼고 계산됨)
+   좌측 열 — 진행상황 관리 (전체 높이)
+   기본 숨김. 표시옵션에서 켜면 그리드 첫 열로 붙는다.
+   지휘교수 태블릿 도입 후에는 사실상 쓰지 않는 폴백 경로.
    ─────────────────────────────────────────────*/
 .right-panel {
-  position: absolute;
-  left: 0;
-  top: 0;
+  min-width: 0;
   height: 100%;
-  width: 220px;
   z-index: 20;
   box-sizing: border-box;
-}
-
-/* 우측 끝 드래그 리사이즈 핸들 */
-.right-panel__resize-handle {
-  position: absolute;
-  top: 0;
-  right: -3px;
-  width: 6px;
-  height: 100%;
-  cursor: ew-resize;
-  z-index: 22;
-  background: transparent;
-  transition: background-color 0.12s;
-}
-
-.right-panel__resize-handle:hover,
-.right-panel__resize-handle:active {
-  background-color: rgba(100, 180, 255, 0.35);
 }
 
 .right-panel__panel {
@@ -231,7 +228,7 @@
    D면과 우측 패널 사이 여백을 최소화 (남는 여백은 좌측으로)
    ─────────────────────────────────────────────*/
 .tactical-board-wrap {
-  width: calc(100% - 550px);
+  min-width: 0;
   height: 100%;
   display: flex;
   align-items: center;
