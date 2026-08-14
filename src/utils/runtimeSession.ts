@@ -198,15 +198,19 @@ export function loadTrainingSession(): TrainingSessionState | null {
 const KEY_EVENTS = 'tactical-board.runtime.events';
 
 export interface EventSessionState {
+  /** 보드(.tactical-area) 대비 0~1 정규화된 토큰 좌상단 */
   positions:        Record<string, { x: number; y: number }>;
   statuses:         Record<string, EventStatus>;
   floorIds?:        Record<string, string>;  // eventId → floorId (드롭 시점 저장, 구버전 호환 optional)
   firePercentages?: Record<string, number>;  // 이벤트 화재 진행도 (구버전 호환 optional)
+
+  /** 없으면 구버전 px 좌표 → 로드 시 positions 폐기 후 자동 재배치 */
+  posFormat?: PosFormat;
 }
 
 export function saveEventSession(state: EventSessionState): void {
   try {
-    sessionStorage.setItem(KEY_EVENTS, JSON.stringify(state));
+    sessionStorage.setItem(KEY_EVENTS, JSON.stringify({ ...state, posFormat: 'norm' }));
   } catch { /* ignore */ }
 }
 
@@ -214,7 +218,15 @@ export function loadEventSession(): EventSessionState | null {
   try {
     const raw = sessionStorage.getItem(KEY_EVENTS);
     if (!raw) return null;
-    return JSON.parse(raw) as EventSessionState;
+    const parsed = JSON.parse(raw) as EventSessionState;
+
+    // 좌표 형식 마이그레이션 — 구버전 px 값 폐기.
+    // 위치가 비면 EventLayer 가 A면 상단에 자동 재배치하므로 이벤트 자체는 남는다.
+    if (parsed.posFormat !== 'norm') {
+      parsed.positions = {};
+    }
+
+    return parsed;
   } catch {
     return null;
   }

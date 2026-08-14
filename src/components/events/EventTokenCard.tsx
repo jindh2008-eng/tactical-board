@@ -125,9 +125,10 @@ export function EventTokenCard({
     if (!container) return;
     const rect = container.getBoundingClientRect();
 
+    // x, y 는 보드 대비 0~1 정규화 좌표 → 드래그 계산은 px 로 하고 경계에서만 환산
     dragOffsetRef.current = {
-      x: e.clientX - rect.left - x,
-      y: e.clientY - rect.top  - y,
+      x: e.clientX - rect.left - x * rect.width,
+      y: e.clientY - rect.top  - y * rect.height,
     };
     document.body.style.userSelect = 'none';
 
@@ -135,7 +136,7 @@ export function EventTokenCard({
       const r = container!.getBoundingClientRect();
       const newX = Math.max(0, Math.min(r.width  - TOKEN_W, ev.clientX - r.left - dragOffsetRef.current.x));
       const newY = Math.max(0, Math.min(r.height - TOKEN_H, ev.clientY - r.top  - dragOffsetRef.current.y));
-      onMove(id, newX, newY);
+      onMove(id, r.width > 0 ? newX / r.width : 0, r.height > 0 ? newY / r.height : 0);
     }
     function onMouseUp(ev: MouseEvent) {
       document.body.style.userSelect = '';
@@ -199,7 +200,7 @@ export function EventTokenCard({
         ].filter(Boolean).join(' ')}
         data-status={status}
         data-event-type={eventType}
-        style={{ left: x, top: y }}
+        style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
         onMouseDown={handleMouseDown}
         onContextMenu={handleContextMenu}
       >

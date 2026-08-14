@@ -59,14 +59,18 @@ export function EventLayer() {
     const startX   = aCenterX - rowWidth / 2;
     const baseY    = aTop + PAD;
 
+    // 배치 계산은 px 로 하고, 저장은 보드 대비 0~1 정규화 좌표로 한다
+    // → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md Phase 4
     unplaced.forEach((ev, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
       const x = startX + col * (TOKEN_W + GAP);
       const y = baseY + row * (TOKEN_H + GAP);
+      const px = Math.max(0, Math.min(layerRect.width - TOKEN_W, x));
+      const py = Math.max(0, y);
       moveEvent(ev.id,
-        Math.max(0, Math.min(layerRect.width - TOKEN_W, x)),
-        Math.max(0, y),
+        layerRect.width  > 0 ? px / layerRect.width  : 0,
+        layerRect.height > 0 ? py / layerRect.height : 0,
       );
     });
   }, [moveEvent]);

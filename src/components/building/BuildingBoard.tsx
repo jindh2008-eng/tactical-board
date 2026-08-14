@@ -244,7 +244,7 @@ const EVENT_PCT_THRESHOLDS = {
   half:     60,  // 50%→0% 구간
 } as const;
 
-// pos.x, pos.y 는 토큰 좌상단 — 중심점으로 보정해 층 경계 오탐 방지
+// pos.x, pos.y 는 보드 대비 0~1 정규화된 토큰 좌상단 — 중심점으로 보정해 층 경계 오탐 방지
 const EVENT_TOKEN_HALF = 27; // TOKEN_W/H = 54
 
 // 건물 내부 → data-floor-id, A/B/C/D면 → data-zone-key("face-*") 반환
@@ -252,8 +252,8 @@ function getEventLocationId(pos: EventPos): string | null {
   const board = document.getElementById('tactical-area');
   if (!board) return null;
   const rect = board.getBoundingClientRect();
-  const cx = rect.left + pos.x + EVENT_TOKEN_HALF;
-  const cy = rect.top  + pos.y + EVENT_TOKEN_HALF;
+  const cx = rect.left + pos.x * rect.width  + EVENT_TOKEN_HALF;
+  const cy = rect.top  + pos.y * rect.height + EVENT_TOKEN_HALF;
   const elements = document.elementsFromPoint(cx, cy);
   for (const el of elements) {
     let cur: Element | null = el;
