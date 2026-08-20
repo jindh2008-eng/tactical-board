@@ -13,7 +13,17 @@ const FIRE_STATUS_OPTIONS: { value: FireStatus; label: string }[] = [
   { value: 'complete',       label: '완진'     },
 ];
 
+/**
+ * 표시할 블록 — 설정창에서 "건물 · 소방시설" 화면을 탭으로 나눌 때 쓴다.
+ *   structure : 대상명·층수
+ *   fire      : 화점층·확대층
+ *   facility  : 연결송수구·옥내소화전
+ * 값이 없으면 예전처럼 전부 렌더한다.
+ */
+export type BuildingConfigTab = 'structure' | 'fire' | 'facility';
+
 interface Props {
+  tab?:                      BuildingConfigTab;
   config:                    BuildingConfig;
   onChange:                  (next: BuildingConfig) => void;
   fireFloor:                 number;
@@ -31,6 +41,7 @@ interface Props {
 }
 
 export function BuildingConfigPanel({
+  tab,
   config, onChange,
   fireFloor, onFireFloorChange,
   fireStatus, onFireStatusChange,
@@ -81,9 +92,13 @@ export function BuildingConfigPanel({
     onExtraFireFloorsChange(extraFireFloors.filter((_, i) => i !== idx));
   }
 
+  // tab 이 없으면 전부 렌더 — 예전 동작 유지
+  const show = (t: BuildingConfigTab) => tab == null || tab === t;
+
   return (
     <div className="bcf">
       {/* ── 기본 정보 행 ── */}
+      {show('structure') && (
       <div className="bcf__row">
         <label className="bcf__field">
           <span className="bcf__label">대상명</span>
@@ -125,8 +140,10 @@ export function BuildingConfigPanel({
         </label>
 
       </div>
+      )}
 
       {/* ── 화재 설정 ── */}
+      {show('fire') && (
       <div className="bcf__fire-section">
         <span className="bcf__fire-label">화재 설정</span>
 
@@ -202,8 +219,10 @@ export function BuildingConfigPanel({
           </button>
         )}
       </div>
+      )}
 
       {/* ── 연결송수구 — 위치는 1층 좌측 하단 고정이라 방면을 고르지 않는다 ── */}
+      {show('facility') && (
       <div className="bcf__siamese-section">
         <span className="bcf__fire-label">연결송수구</span>
         <div className="bcf__siamese-faces">
@@ -217,8 +236,10 @@ export function BuildingConfigPanel({
           </label>
         </div>
       </div>
+      )}
 
       {/* ── 옥내소화전 ── */}
+      {show('facility') && (
       <div className="bcf__siamese-section">
         <span className="bcf__fire-label">옥내소화전</span>
         <div className="bcf__siamese-faces">
@@ -232,6 +253,7 @@ export function BuildingConfigPanel({
           </label>
         </div>
       </div>
+      )}
     </div>
   );
 }

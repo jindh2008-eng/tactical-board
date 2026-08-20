@@ -1,6 +1,7 @@
 import { useState }              from 'react';
 import { useSettings }           from '../store/settingsStore';
 import { BuildingConfigPanel }   from '../components/building/BuildingConfigPanel';
+import type { BuildingConfigTab } from '../components/building/BuildingConfigPanel';
 import { SettingsLibraryPanel }  from '../components/settings/SettingsLibraryPanel';
 import { HydrantSetupPanel }     from '../components/settings/HydrantSetupPanel';
 import { DispatchSetupPanel }    from '../components/settings/DispatchSetupPanel';
@@ -13,27 +14,73 @@ import { TagPresetPanel }        from '../components/settings/TagPresetPanel';
 import { ScenarioModal }         from '../components/overlays/ScenarioModal';
 import './SettingsPage.css';
 
+/**
+ * 설정 화면 구성 — 항목을 "무엇을 정의하는가"로 묶는다.
+ *
+ *   현장  건물·소방시설 / 현장요소 / 구조대상자
+ *   자원  출동대 / 임무·상태 프리셋 / 상태 메시지
+ *   진행  체크리스트 / 지휘절차
+ *   검토  시나리오 예측
+ *
+ * 설정 파일 관리(저장·불러오기)는 시나리오 내용이 아니라 그 그릇이므로
+ * 사이드바에서 빼고 상단 바에 고정한다 — 어느 화면에서 편집하다가도 저장할 수 있다.
+ *
+ * 통합한 항목
+ *   타이밍 설정 → 출동대 화면의 "행동 시간" 카드
+ *   소화전 설정 → 건물·소방시설 화면의 "소방시설" 탭
+ */
 type SettingsSection =
-  | 'library' | 'building' | 'hydrant' | 'timing' | 'dispatch' | 'victim' | 'event'
-  | 'commandprocedure'
-  | 'unitstatus'
-  | 'tagpreset'
-  | 'checklist'
+  | 'building' | 'event' | 'victim'
+  | 'dispatch' | 'tagpreset' | 'unitstatus'
+  | 'checklist' | 'commandprocedure'
   | 'predict';
 
-const TRAINING_ITEMS: { key: SettingsSection; label: string }[] = [
-  { key: 'library',  label: '설정 관리' },
-  { key: 'building', label: '건물 정보' },
-  { key: 'hydrant',  label: '소화전 설정' },
-  { key: 'timing',   label: '타이밍 설정' },
-  { key: 'dispatch', label: '출동대 설정' },
-  { key: 'victim',   label: '구조대상자 설정' },
-  { key: 'event',    label: '현장요소' },
+interface NavGroup {
+  label: string;
+  items: { key: SettingsSection; label: string }[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: '현장',
+    items: [
+      { key: 'building', label: '건물 · 소방시설' },
+      { key: 'event',    label: '현장요소' },
+      { key: 'victim',   label: '구조대상자' },
+    ],
+  },
+  {
+    label: '자원',
+    items: [
+      { key: 'dispatch',   label: '출동대' },
+      { key: 'tagpreset',  label: '임무 · 상태 프리셋' },
+      { key: 'unitstatus', label: '상태 메시지' },
+    ],
+  },
+  {
+    label: '진행',
+    items: [
+      { key: 'checklist',        label: '체크리스트' },
+      { key: 'commandprocedure', label: '지휘절차' },
+    ],
+  },
+  {
+    label: '검토',
+    items: [
+      { key: 'predict', label: '시나리오 예측' },
+    ],
+  },
+];
+
+const BUILDING_TABS: { key: BuildingConfigTab; label: string }[] = [
+  { key: 'structure', label: '건물 구조' },
+  { key: 'fire',      label: '화재 설정' },
+  { key: 'facility',  label: '소방시설' },
 ];
 
 export function SettingsPage() {
-  const [section,          setSection]          = useState<SettingsSection>('library');
-  const [trainingExpanded, setTrainingExpanded] = useState(true);
+  const [section,     setSection]     = useState<SettingsSection>('building');
+  const [buildingTab, setBuildingTab] = useState<BuildingConfigTab>('structure');
 
   const {
     building,
@@ -50,85 +97,54 @@ export function SettingsPage() {
 
   return (
     <div className="settings-page">
+      {/* ── 설정 파일 바 — 모든 화면에서 항상 보인다 ── */}
+      <div className="settings-page__topbar">
+        <SettingsLibraryPanel />
+      </div>
+
       <div className="settings-page__layout">
         {/* ── 사이드바 ── */}
         <nav className="settings-page__sidebar">
-          {/* 훈련설정 그룹 */}
-          <button
-            className="settings-page__sidebar-group-header"
-            onClick={() => setTrainingExpanded(v => !v)}
-          >
-            <span className="settings-page__sidebar-group-caret">
-              {trainingExpanded ? '▾' : '▸'}
-            </span>
-            훈련설정
-          </button>
-          {trainingExpanded && (
-            <div className="settings-page__sidebar-group-items">
-              {TRAINING_ITEMS.map(item => (
+          {NAV_GROUPS.map(group => (
+            <div key={group.label} className="settings-page__nav-group">
+              <div className="settings-page__nav-group-label">{group.label}</div>
+              {group.items.map(item => (
                 <button
                   key={item.key}
-                  className={`settings-page__sidebar-sub-item${section === item.key ? ' settings-page__sidebar-sub-item--active' : ''}`}
+                  className={`settings-page__nav-item${section === item.key ? ' settings-page__nav-item--active' : ''}`}
                   onClick={() => setSection(item.key)}
                 >
                   {item.label}
                 </button>
               ))}
             </div>
-          )}
-
-          <div className="settings-page__sidebar-divider" />
-
-          <button
-            className={`settings-page__sidebar-top-item${section === 'commandprocedure' ? ' settings-page__sidebar-top-item--active' : ''}`}
-            onClick={() => setSection('commandprocedure')}
-          >
-            지휘절차 관리
-          </button>
-
-          <button
-            className={`settings-page__sidebar-top-item${section === 'unitstatus' ? ' settings-page__sidebar-top-item--active' : ''}`}
-            onClick={() => setSection('unitstatus')}
-          >
-            이벤트 메세지
-          </button>
-
-          <button
-            className={`settings-page__sidebar-top-item${section === 'tagpreset' ? ' settings-page__sidebar-top-item--active' : ''}`}
-            onClick={() => setSection('tagpreset')}
-          >
-            임무/상태 프리셋
-          </button>
-
-          <button
-            className={`settings-page__sidebar-top-item${section === 'checklist' ? ' settings-page__sidebar-top-item--active' : ''}`}
-            onClick={() => setSection('checklist')}
-          >
-            시나리오/체크리스트
-          </button>
-
-          <button
-            className={`settings-page__sidebar-top-item${section === 'predict' ? ' settings-page__sidebar-top-item--active' : ''}`}
-            onClick={() => setSection('predict')}
-          >
-            시나리오 예측
-          </button>
+          ))}
         </nav>
 
         {/* ── 메인 콘텐츠 ── */}
         <div className={`settings-page__main${section === 'predict' ? ' settings-page__main--predict' : ''}`}>
 
-          {section === 'library' && (
-            <section className="settings-page__section">
-              <h3 className="settings-page__section-title">설정 관리</h3>
-              <SettingsLibraryPanel />
-            </section>
-          )}
-
           {section === 'building' && (
             <section className="settings-page__section">
-              <h3 className="settings-page__section-title">건물 정보</h3>
+              <h3 className="settings-page__section-title">건물 · 소방시설</h3>
+              <p className="settings-page__hint">
+                대상 건물의 층수와 화재 상황, 그리고 건물에 딸린 소방시설을 함께 설정합니다.
+              </p>
+
+              <div className="settings-page__tabs">
+                {BUILDING_TABS.map(t => (
+                  <button
+                    key={t.key}
+                    className={`settings-page__tab${buildingTab === t.key ? ' settings-page__tab--active' : ''}`}
+                    onClick={() => setBuildingTab(t.key)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
               <BuildingConfigPanel
+                tab={buildingTab}
                 config={building.config}
                 onChange={updateBuildingConfig}
                 fireFloor={building.fireFloor}
@@ -144,76 +160,17 @@ export function SettingsPage() {
                 hasIndoorHydrant={building.hasIndoorHydrant ?? false}
                 onIndoorHydrantChange={updateIndoorHydrant}
               />
-            </section>
-          )}
 
-          {section === 'hydrant' && (
-            <section className="settings-page__section">
-              <h3 className="settings-page__section-title">소화전 설정</h3>
-              <p className="settings-page__hint">
-                실행 시 초기 배치할 소화전 목록을 사전에 입력합니다.
-              </p>
-              <HydrantSetupPanel />
-            </section>
-          )}
-
-          {section === 'timing' && (
-            <section className="settings-page__section">
-              <h3 className="settings-page__section-title">타이밍 설정</h3>
-              <p className="settings-page__hint">
-                출동대 행동에 적용되는 시간(초)입니다. 최소 1초.
-              </p>
-              <div className="settings-page__timing-row">
-                <label className="settings-page__timing-label">
-                  구조 처리 시간(초)
-                  <input
-                    className="settings-page__timing-input"
-                    type="number"
-                    min={1}
-                    value={timing.rescueTimeSec}
-                    onChange={e => {
-                      const v = Math.max(1, parseInt(e.target.value, 10) || 1);
-                      updateTiming({ rescueTimeSec: v });
-                    }}
-                  />
-                </label>
-                <label className="settings-page__timing-label">
-                  이동 시간(초)
-                  <input
-                    className="settings-page__timing-input"
-                    type="number"
-                    min={1}
-                    value={timing.moveTimeSec}
-                    onChange={e => {
-                      const v = Math.max(1, parseInt(e.target.value, 10) || 1);
-                      updateTiming({ moveTimeSec: v });
-                    }}
-                  />
-                </label>
-              </div>
-            </section>
-          )}
-
-          {section === 'dispatch' && (
-            <section className="settings-page__section">
-              <h3 className="settings-page__section-title">출동대 설정</h3>
-              <p className="settings-page__hint">
-                출동대·차량 수량 및 도착 순서를 설정합니다.
-                펌프·구조차·구급차는 활동대 수량과 자동 연동됩니다.
-              </p>
-              <DispatchSetupPanel />
-            </section>
-          )}
-
-
-          {section === 'victim' && (
-            <section className="settings-page__section">
-              <h3 className="settings-page__section-title">구조대상자 설정</h3>
-              <p className="settings-page__hint">
-                실행 시 초기 배치할 구조대상자 목록을 사전에 입력합니다.
-                층 범위는 건물 정보의 층수 설정을 따릅니다.
-              </p>
-              <VictimSetupPanel />
+              {/* 옥외소화전 — 예전 "소화전 설정" 화면이 여기로 들어왔다 */}
+              {buildingTab === 'facility' && (
+                <div className="settings-page__card">
+                  <div className="settings-page__card-head">
+                    <span className="settings-page__card-title">옥외소화전</span>
+                    <span className="settings-page__card-meta">실행 시 초기 배치</span>
+                  </div>
+                  <HydrantSetupPanel />
+                </div>
+              )}
             </section>
           )}
 
@@ -228,27 +185,68 @@ export function SettingsPage() {
             </section>
           )}
 
-          {section === 'commandprocedure' && (
+          {section === 'victim' && (
             <section className="settings-page__section">
-              <h3 className="settings-page__section-title">지휘절차 관리</h3>
+              <h3 className="settings-page__section-title">구조대상자</h3>
               <p className="settings-page__hint">
-                초급·중급·고급 레벨별 지휘절차를 카테고리 단위로 등록합니다.
-                훈련 중 무플 화면 우측 패널에 선택한 레벨의 항목이 표시됩니다.
+                실행 시 초기 배치할 구조대상자 목록을 사전에 입력합니다.
+                층 범위는 건물 정보의 층수 설정을 따릅니다.
               </p>
-              <CommandProcedurePanel />
+              <VictimSetupPanel />
             </section>
           )}
 
-          {section === 'unitstatus' && (
+          {section === 'dispatch' && (
             <section className="settings-page__section">
-              <h3 className="settings-page__section-title">이벤트 메세지</h3>
-              <UnitStatusPanel />
+              <h3 className="settings-page__section-title">출동대</h3>
+              <p className="settings-page__hint">
+                출동대·차량 수량과 도착 순서, 그리고 출동대 행동에 적용되는 시간을 설정합니다.
+                펌프·구조차·구급차는 활동대 수량과 자동 연동됩니다.
+              </p>
+
+              {/* 행동 시간 — 예전 "타이밍 설정" 화면이 여기로 들어왔다 */}
+              <div className="settings-page__card">
+                <div className="settings-page__card-head">
+                  <span className="settings-page__card-title">행동 시간</span>
+                  <span className="settings-page__card-meta">최소 1초</span>
+                </div>
+                <div className="settings-page__timing-row">
+                  <label className="settings-page__timing-label">
+                    구조 처리 시간(초)
+                    <input
+                      className="settings-page__timing-input"
+                      type="number"
+                      min={1}
+                      value={timing.rescueTimeSec}
+                      onChange={e => {
+                        const v = Math.max(1, parseInt(e.target.value, 10) || 1);
+                        updateTiming({ rescueTimeSec: v });
+                      }}
+                    />
+                  </label>
+                  <label className="settings-page__timing-label">
+                    이동 시간(초)
+                    <input
+                      className="settings-page__timing-input"
+                      type="number"
+                      min={1}
+                      value={timing.moveTimeSec}
+                      onChange={e => {
+                        const v = Math.max(1, parseInt(e.target.value, 10) || 1);
+                        updateTiming({ moveTimeSec: v });
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <DispatchSetupPanel />
             </section>
           )}
 
           {section === 'tagpreset' && (
             <section className="settings-page__section">
-              <h3 className="settings-page__section-title">임무/상태 프리셋</h3>
+              <h3 className="settings-page__section-title">임무 · 상태 프리셋</h3>
               <p className="settings-page__hint">
                 출동대 유형별 임무·상태 태그를 사전에 등록합니다.
                 훈련창에서 출동대를 우클릭하면 여기서 설정한 항목이 표시됩니다.
@@ -257,14 +255,35 @@ export function SettingsPage() {
             </section>
           )}
 
+          {section === 'unitstatus' && (
+            <section className="settings-page__section">
+              <h3 className="settings-page__section-title">상태 메시지</h3>
+              <p className="settings-page__hint">
+                출동대·장비별 상태메시지를 등록합니다. 훈련 중 무전 내용으로 사용됩니다.
+              </p>
+              <UnitStatusPanel />
+            </section>
+          )}
+
           {section === 'checklist' && (
             <section className="settings-page__section">
-              <h3 className="settings-page__section-title">시나리오/체크리스트</h3>
+              <h3 className="settings-page__section-title">체크리스트</h3>
               <p className="settings-page__hint">
                 훈련창 "진행상황 관리"에서 체크할 절차 목록을 작성합니다.
                 섹션 제목을 클릭하면 수정할 수 있습니다.
               </p>
               <ChecklistSetupPanel />
+            </section>
+          )}
+
+          {section === 'commandprocedure' && (
+            <section className="settings-page__section">
+              <h3 className="settings-page__section-title">지휘절차</h3>
+              <p className="settings-page__hint">
+                초급·중급·고급 레벨별 지휘절차를 카테고리 단위로 등록합니다.
+                훈련 중 무플 화면 우측 패널에 선택한 레벨의 항목이 표시됩니다.
+              </p>
+              <CommandProcedurePanel />
             </section>
           )}
 
