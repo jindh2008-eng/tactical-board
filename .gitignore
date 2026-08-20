@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code 워크트리 (로컬 전용)
+.claude/worktrees/
