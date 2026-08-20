@@ -4,6 +4,9 @@ import { useActionMode }  from '../../context/ActionModeContext';
 import { useHydrantState } from '../../context/HydrantStateContext';
 import { useSettings }    from '../../store/settingsStore';
 import { useTokens }      from '../../context/TokenContext';
+import { useWaterConnections } from '../../context/WaterConnectionContext';
+import { useWaterConnectDrag }  from '../../hooks/useWaterConnectDrag';
+import { useDisplayOptions }    from '../../context/DisplayOptionsContext';
 import './HydrantIcon.css';
 
 // ─────────────────────────────────────────────
@@ -26,6 +29,8 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
           setEquipmentMessage, clearEquipmentMessage }                       = useHydrantState();
   const { unitStatusConfig }                                                 = useSettings();
   const { addLog }                                                           = useTokens();
+  const { connections }                                                      = useWaterConnections();
+  const { showWaterSupply }                                                  = useDisplayOptions();
   const statusMessages = unitStatusConfig['hydrant'] ?? [];
   const activeMsg      = getEquipmentMessage(id);
 
@@ -34,6 +39,18 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
 
   const broken   = isBroken(id);
   const isSource = mode.type === 'water-connect' && mode.sourceId === id;
+
+  // 연결·해제 로그·송수 모드에 쓰는 이름 — 설정창 명칭("47호")만으로는 소화전인지
+  // 알기 어려워 접미사를 붙인다("47호 소화전"). 아이콘 자체에 붙는 이름표(hydrant-icon__name)는
+  // 자리가 좁아 그대로 둔다.
+  const logName = `${name} 소화전`;
+
+  // 토출구 2개 — 둘 다 같은 소화전에서 나가므로 최대 연결 수(2)를 공유한다
+  const { drag: outletDrag, full: outletsFull } = useWaterConnectDrag({
+    fromId: id, fromType: 'hydrant', fromName: logName, disabled: broken,
+  });
+  const usedOutlets = connections.filter(c => c.fromId === id).length;
+  const showOutlets = showWaterSupply && !broken;
 
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({
@@ -51,7 +68,7 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
   // ── 송수 연결 모드 진입 ──────────────────────
   function handleWaterConnect() {
     if (broken) return;
-    enterMode({ type: 'water-connect', sourceId: id, sourceType: 'hydrant', sourceName: name });
+    enterMode({ type: 'water-connect', sourceId: id, sourceType: 'hydrant', sourceName: logName });
     setMenuOpen(false);
   }
 
@@ -132,10 +149,28 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
           isSource ? 'hydrant-icon--source' : '',
         ].filter(Boolean).join(' ')}
         data-token-id={id}
+        data-water-type="hydrant"
         onContextMenu={handleContextMenu}
       >
         <span className="hydrant-icon__name">{name}</span>
-        <img src="/소화전.png" className="hydrant-icon__img" alt="소화전" draggable={false} />
+        <div className="hydrant-icon__body">
+          <img src="/소화전.png" className="hydrant-icon__img" alt="소화전" draggable={false} />
+          {/* 좌·우 토출구 — 끌어서 펌프·물탱크에 연결한다 */}
+          {showOutlets && [0, 1].map(i => (
+            <span
+              key={i}
+              className={[
+                'hydrant-outlet',
+                i === 0 ? 'hydrant-outlet--left' : 'hydrant-outlet--right',
+                usedOutlets > i ? 'hydrant-outlet--used' : '',
+                outletsFull     ? 'hydrant-outlet--full' : '',
+              ].filter(Boolean).join(' ')}
+              title={outletsFull ? '토출구 2구를 모두 사용 중입니다' : '끌어서 펌프·물탱크에 송수 연결'}
+              {...outletDrag}
+              onContextMenu={handleContextMenu}
+            />
+          ))}
+        </div>
         <span className="hydrant-icon__dist">{distanceM}m</span>
         {activeMsg && (
           <div className="hydrant-icon__msg equip-status-msg">

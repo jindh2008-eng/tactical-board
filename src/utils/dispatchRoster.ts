@@ -53,8 +53,8 @@ interface RosterEntry {
  * dispatchSetup에서 로스터를 재생성한다.
  * 동일 이름 항목의 ID·도착시간·착대순서는 prevRoster에서 이어받는다.
  *
- * 구급대는 차량을 자동 연동하지 않는다.
- * (진압대 → 펌프, 구조대 → 구조차만 자동 연동)
+ * 진압대만 차량(펌프)을 자동 연동한다.
+ * 구조대·구급대는 연동하지 않는다 — 구조차가 필요하면 차량 항목에서 따로 넣는다.
  */
 export function buildRoster(
   setup: DispatchSetup,
@@ -65,7 +65,7 @@ export function buildRoster(
   // 활동대 정의 — hasVehicle: true 인 경우만 차량 자동 연동
   const activityDefs = [
     { count: setup.units.suppression, unitLabel: '진압', unitType: 'suppression', vehLabel: '펌프',   vehType: 'pump',           hasVehicle: true  },
-    { count: setup.units.rescue,      unitLabel: '구조', unitType: 'rescue',      vehLabel: '구조차', vehType: 'rescue_vehicle', hasVehicle: true  },
+    { count: setup.units.rescue,      unitLabel: '구조', unitType: 'rescue',      vehLabel: '',       vehType: '',              hasVehicle: false },
     { count: setup.units.ems,         unitLabel: '구급', unitType: 'ems',         vehLabel: '',       vehType: '',              hasVehicle: false },
   ] as const;
 
@@ -120,6 +120,7 @@ export function buildRoster(
     { key: 'smokeExhaust' as const, prefix: '배연',    unitType: 'smokeExhaust' },
     { key: 'command'      as const, prefix: '지휘',    unitType: 'command' },
     { key: 'waterTank'    as const, prefix: '물탱크',  unitType: 'water_tank' },
+    { key: 'rescueVehicle' as const, prefix: '구조차', unitType: 'rescue_vehicle' },
   ];
 
   for (const def of vehicleDefs) {

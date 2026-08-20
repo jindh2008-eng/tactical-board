@@ -12,9 +12,6 @@
   position: relative;
 }
 
-.exterior-zone--primary {
-  border-color: #b0a898;
-}
 
 /* ─────────────────────────────────────────────
    콘텐츠 영역
@@ -50,7 +47,6 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  background-color: rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -89,6 +85,9 @@
    방면 레이블 — 워터마크형 배경 표시
    크고 반투명하게 영역 중앙에 배치.
    배경에 깔리는 인식용 글자로 기능.
+   면마다 다른 색이었던 것을 하나의 중성 톤으로 통일
+   (2026-08-18, 화이트보드 통일 작업) — 화면에서는 A/B/C/D 구분이 없어도 되고,
+   프로그래밍상 구분(zoneKey)만 유지하면 된다.
    ─────────────────────────────────────────────*/
 .face-general-zone__label {
   font-weight: 900;
@@ -97,22 +96,21 @@
   user-select: none;
   pointer-events: none;
   font-size: 2.4rem; /* A/B/C/D 전 면 동일 */
+  color: rgba(78, 74, 66, 0.22); /* var(--ctr-border-hard) 톤 */
 }
-
-/* 면별 색상 — 각 면의 특성색을 낮은 불투명도로 */
-.exterior-zone--a .face-general-zone__label { color: rgba(170, 80,  0,   0.28); }
-.exterior-zone--b .face-general-zone__label { color: rgba(20,  90,  160, 0.28); }
-.exterior-zone--c .face-general-zone__label { color: rgba(30,  110, 70,  0.28); }
-.exterior-zone--d .face-general-zone__label { color: rgba(100, 40,  160, 0.28); }
 
 /* ─────────────────────────────────────────────
    연결송수구 아이콘 — 래퍼 + 이미지 + 포트 인디케이터
    ─────────────────────────────────────────────*/
+/* 지상 1층 좌측 하단(지면) 고정. FloorRow 의 층 번호 컬럼을 기준 상자로 쓴다. */
 .siamese-pipe-wrap {
   position:    absolute;
-  width:       44px;
-  height:      44px;
-  z-index:     3;
+  left:        50%;
+  bottom:      calc(1px * var(--ui-scale, 1));
+  transform:   translateX(-50%);
+  width:       calc(38px * var(--ui-scale, 1));
+  height:      calc(38px * var(--ui-scale, 1));
+  z-index:     6;   /* 층 번호 글자 위 */
   user-select: none;
 }
 
@@ -129,13 +127,6 @@
 .siamese-pipe-wrap--target {
   cursor: crosshair;
   filter: brightness(1.4) drop-shadow(0 0 6px rgba(80, 180, 255, 0.9));
-}
-
-/* A면: 상단 경계 — 계단실(110px) 바로 우측 */
-.siamese-pipe-wrap--a {
-  top:       0;
-  left:      115px;
-  transform: translateY(-50%);
 }
 
 /* 연결송수구 활성 상태메시지 오버레이 */
@@ -169,5 +160,307 @@
 .siamese-port--right {
   left: 72%;
   top:  50%;
+}
+
+/* ─────────────────────────────────────────────
+   A면 하단 구역 — 직전대기·RIT(좌) / 임시의료소(우)
+   (2026-08-18) 좌측 운영 패널에서 A면으로 이동.
+
+   화이트보드에 선만 그은 것처럼 보이도록:
+   배경 없음(투명) + 옅은 테두리 1px + 명칭 텍스트만.
+   ─────────────────────────────────────────────*/
+
+/* ── 좌우 여백(gutter) ────────────────────────────────────────
+   박스가 피해야 할 두 장애물의 폭이 서로 다른 속도로 자란다.
+
+   · 소화전(.hydrant-icon) — width:90px 고정. 배율과 무관하게
+     항상 102px 를 먹는다(콘텐츠 패딩 8 + left 4 + 90).
+   · 통제선 버튼 — 2026-08-20 B면 상단으로 옮겨 A면에는 더 이상 없다.
+     식의 --font-scale 항이 그 흔적이다(값을 줄이면 A면 박스가 넓어지므로
+     지금 모양을 유지하려고 그대로 둔다).
+
+   예전에는 고정 100px 이었다. 그래서 배율 0.92 부터 버튼이 인셋을 넘어
+   박스(z-index:6)가 버튼(z-index:4) 글자를 덮었고, 소화전과는 배율과
+   무관하게 2px 씩 겹치고 있었다(2026-08-19 실측).
+   둘 중 큰 쪽을 쓰고 여유를 얹는다. */
+.exterior-zone--a {
+  --a-face-gutter: max(
+    112px,
+    calc(40px * var(--ui-scale, 1) + 92px * var(--font-scale, 1))
+  );
+  /* 두 박스가 가운데서 맞닿지 않도록 각자 물러설 거리 */
+  --a-face-center-gap: calc(10px * var(--ui-scale, 1));
+}
+
+.exterior-zone--a .a-face-zone {
+  position:      absolute;
+  /* 경찰통제선 띠(15px)가 A면 최하단에 깔린다 — 켜져 있든 아니든 자리를 비워
+     토글할 때 박스가 들썩이지 않게 한다 */
+  bottom:        21px;
+  /* 치수는 "설계값이 하한, 큰 화면에서는 글꼴을 따라 커진다".
+     --ui-scale(기하)이 아니라 --font-scale 을 쓰는 이유는 안에 담기는 것이
+     글자·토큰이라서다. 기하 배율로 줄이면 글꼴 하한(0.78) 때문에 내용만 남고
+     상자가 모자란다. 작아지는 쪽은 아래 max-width/max-height 가 맡는다. */
+  height:        max(132px, calc(132px * var(--font-scale, 1)));
+  max-height:    calc(100% - 42px);
+
+  /* 폭은 A면 대비 비율로 잡는다(좌우 동일). 고정 px(495/450)이었을 때는
+     화면이 커질수록 박스만 그대로라 양끝에 붙어 보이고 가운데가 절반 넘게 비었다.
+     비율로 두면 어느 배율에서나 같은 모양이 나온다 — 32% × 2 + 여백이면
+     가운데 자유 공간이 18~20% 남아 A면 라벨·자유 토큰 자리가 유지된다.
+
+     270px 하한을 두는 이유: 태블릿(1200×800 안팎)은 배율이 하한 0.5 에 걸려
+     A면이 720px 남짓밖에 안 되는데 32%면 230px 라 토큰 두 개가 간신히 들어간다.
+     좁은 화면에서는 가운데 여백보다 박스 크기를 택한다.
+     max-width 가 있어 하한을 둬도 두 박스가 가운데서 겹치지는 않는다. */
+  width:         max(32%, 270px);
+  max-width:     calc(50% - var(--a-face-gutter) - var(--a-face-center-gap));
+
+  z-index:       6;
+  display:       flex;
+  flex-direction: row;
+  align-items:   stretch;
+  background:    transparent;
+  border:        1px solid var(--ctr-border-soft);
+  border-radius: 3px;
+  overflow:      hidden;
+  min-width:     0;
+}
+
+/* 좌우 대칭으로 같은 여백을 쓴다. 폭을 키우고 여백을 넓힌 결과
+   가운데 빈 공간이 절반으로 줄어 두 박스가 A면 가운데 쪽으로 모인다
+   (예전에는 A면 폭 1600px 기준 가운데가 460px 넘게 비어 양끝에 붙어 보였다). */
+.exterior-zone--a .a-face-zone--imminent {
+  left: var(--a-face-gutter);
+}
+
+.exterior-zone--a .a-face-zone--medical {
+  right: var(--a-face-gutter);
+  /* 구조대상자·출동대가 함께 쌓이는 데다 구조활동통계 표까지 같은 자리를 쓴다.
+     A면을 넘지 않는 선에서 1.5배로 키운다(132px → 198px). */
+  height:     max(198px, calc(198px * var(--font-scale, 1)));
+  /* 위아래 통제선 띠를 모두 피한다 — 아래 경찰 15px+6, 위 소방 15px+6(경찰과 동일 굵기) */
+  max-height: calc(100% - 42px);
+}
+
+/* 헤더 우측 끝 전환 버튼 */
+.medical-stats-toggle {
+  margin-left:    auto;
+  flex-shrink:    0;
+  padding:        1px 8px;
+  font-family:    inherit;
+  font-size:      0.82rem;
+  font-weight:    700;
+  letter-spacing: 0.02em;
+  white-space:    nowrap;
+  color:          #5b5750;
+  background:     rgba(91, 87, 80, 0.08);
+  border:         1px solid var(--ctr-border-mid);
+  border-radius:  3px;
+  cursor:         pointer;
+  transition:     background 0.12s, color 0.12s;
+}
+
+.medical-stats-toggle:hover {
+  background: rgba(91, 87, 80, 0.16);
+  color:      #3a3730;
+}
+
+
+
+/* 좌우 분할 하위 구역 (직전대기 / RIT) */
+.a-face-zone__sub {
+  display:        flex;
+  flex-direction: column;
+  min-width:      0;
+}
+
+/* 구역 명칭 — 박스 하단 띠.
+   A면 배경 위에 옅은 글자만 두면 잘 안 읽혀서, 바닥에 붙이고 대비를 올린다. */
+.a-face-zone__label--bottom {
+  margin-top:    auto;          /* 본문이 남는 높이를 먹고 명칭은 바닥에 붙는다 */
+  padding:       2px 6px 3px;
+  font-size:     1.05rem;
+  color:         #f0ece2;
+  background:    rgba(56, 52, 46, 0.86);
+  border-top:    1px solid var(--ctr-border-mid);
+  letter-spacing: 0.06em;
+}
+
+/* 구역 명칭 — 헤더 바 없이 텍스트만.
+   크기는 좌측 운영 패널의 패널 제목(.op-panel 내 1.0rem)과 맞춘다. */
+.a-face-zone__label {
+  flex-shrink:    0;
+  padding:        3px 6px 1px;
+  font-size:      1.0rem;
+  font-weight:    700;
+  letter-spacing: 0.03em;
+  color:          var(--ctr-text-dim);
+  text-align:     center;
+  white-space:    nowrap;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+  user-select:    none;
+}
+
+/* 임시의료소 — 명칭 + 설치상태·소장 지정을 한 줄에 (배경 없이) */
+.a-face-zone__header {
+  flex-shrink: 0;
+  display:     flex;
+  align-items: center;
+  gap:         5px;
+  padding:     3px 6px 1px;
+  min-width:   0;
+}
+
+.a-face-zone__header .a-face-zone__label {
+  padding:    0;
+  text-align: left;
+}
+
+/* 토큰이 담기는 본문.
+
+   좌측 여백을 넉넉히 두는 이유 — 임무 뱃지(.token-mission-labels)는
+   토큰 카드 "바깥 왼쪽"에 절대배치(right: 100% + 4px)된다. 토큰이 좌측 정렬이라
+   여백이 없으면 첫 열 토큰의 뱃지가 구역 경계(overflow:hidden)에 잘려 안 보인다.
+
+   상수항 10px 을 더하는 이유 — 뱃지 글자는 --font-scale(하한 0.78)을 따르므로
+   --ui-scale 에 비례해 줄지 않는다. 순수 비례식으로 잡으면 작은 화면에서 모자란다.
+   실측: ui-scale 0.5 에서 뱃지+간격 14.6px 필요 → 이 식은 17px 확보. */
+.a-face-zone__body {
+  flex:          1;
+  min-height:    0;
+  overflow-y:    auto;
+  padding:       2px 5px 4px calc(10px + 14px * var(--ui-scale, 1));
+  display:       flex;
+  flex-wrap:     wrap;
+  align-content: flex-start;
+  gap:           4px;
+}
+
+.a-face-zone__body .token-card-wrapper,
+.a-face-zone__body .victim-card-wrapper {
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────
+   통제선·연결송수구 설치 버튼 — B면 상단 세로 묶음
+   (2026-08-20 A면 좌측 코너에서 이동. 위→아래로
+    소방통제선 · 경찰통제선 · 연결송수구)
+   ─────────────────────────────────────────────*/
+.ctrl-line-toggles {
+  position:       absolute;
+  top:            calc(6px * var(--ui-scale, 1));
+  left:           calc(6px * var(--ui-scale, 1));
+  z-index:        4;   /* 통제선 띠(zIndex:2)·토큰 위에 뜬다 */
+  display:        flex;
+  flex-direction: column;
+  align-items:    flex-start;
+  gap:            calc(4px * var(--ui-scale, 1));
+}
+
+/* 버튼 한 줄 — 담당 출동대가 정해지면 옆에 이름이 붙는다("연결송수구 펌프1호") */
+.ctrl-line-toggle-row {
+  display:     flex;
+  align-items: center;
+  gap:         calc(5px * var(--ui-scale, 1));
+  max-width:   100%;
+}
+
+/* 담당 출동대 이름 — 토큰처럼 보이면 안 되므로 장식 없이 글자만 */
+.ctrl-line-toggle__installer {
+  font-size:      0.98rem;
+  font-weight:    700;
+  white-space:    nowrap;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+  max-width:      calc(120px * var(--ui-scale, 1));
+  pointer-events: none;
+}
+
+.ctrl-line-toggle__installer--fire     { color: #a5251a; }
+.ctrl-line-toggle__installer--police   { color: #6b4b00; }
+.ctrl-line-toggle__installer--siamese  { color: #10527d; }
+
+.ctrl-line-toggle {
+  /* A면 토큰(.face-general-zone .token-card)과 같은 계산식 → 높이가 일치한다.
+     글자를 키운 만큼(1.13→1.22rem) 좌우 여백을 줄여 버튼 크기는 그대로 둔다 */
+  padding:       calc(8px * var(--ui-scale, 1)) calc(8px * var(--ui-scale, 1));
+  font-size:     1.22rem;
+  line-height:   1;
+
+  font-weight:    800;
+  letter-spacing: 0.02em;
+  white-space:    nowrap;
+  text-align:     center;
+  cursor:         pointer;
+  user-select:    none;
+
+  /* 토큰과 구분되는 생김새 — 점선 + 각진 모서리 + 반투명 */
+  border:        1.5px dashed var(--ctr-border-mid);
+  border-radius: 0;
+  background:    rgba(255, 255, 255, 0.72);
+  /* 미설치 — 글자를 흐리게 두어 설치한 버튼이 먼저 눈에 들어오게 한다 */
+  color:         rgba(91, 87, 80, 0.45);
+  box-shadow:    none;
+  transition:    background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.ctrl-line-toggle:hover {
+  background: rgba(255, 255, 255, 0.95);
+  color:      rgba(91, 87, 80, 0.75);
+}
+
+/* 설치 — 색이 진해지고 글자도 한 단계 두꺼워진다 */
+.ctrl-line-toggle--fire-active,
+.ctrl-line-toggle--police-active,
+.ctrl-line-toggle--siamese-active {
+  font-weight: 900;
+}
+
+.ctrl-line-toggle--fire-active,
+.ctrl-line-toggle--fire-active:hover {
+  color:        #a5251a;
+  border-color: #c0392b;
+  background:   rgba(204, 34, 34, 0.16);
+}
+
+.ctrl-line-toggle--police-active,
+.ctrl-line-toggle--police-active:hover {
+  color:        #6b4b00;
+  border-color: #d0a600;
+  background:   rgba(242, 194, 0, 0.28);
+}
+
+/* 연결송수구 — 송수(물)를 뜻하는 청색 계열 */
+.ctrl-line-toggle--siamese-active,
+.ctrl-line-toggle--siamese-active:hover {
+  color:        #10527d;
+  border-color: #1f7bb6;
+  background:   rgba(31, 123, 182, 0.18);
+}
+
+/* ─────────────────────────────────────────────
+   ControlLineToggles 드롭다운 — HydrantIcon.css 의 hi-menu 를 그대로 쓰고
+   방면 그룹 라벨·빈 상태·비활성 항목만 여기서 보탠다.
+   ─────────────────────────────────────────────*/
+.ctrl-line-menu__group-label {
+  padding:        4px 14px 2px;
+  font-size:      0.68rem;
+  font-weight:    700;
+  color:          #7fa8d8;
+  letter-spacing: 0.04em;
+}
+
+.ctrl-line-menu__empty {
+  padding:   10px 14px;
+  font-size: 0.76rem;
+  color:     #7488a0;
+}
+
+/* 연결송수구 포트(2구)가 이미 다 찼을 때 나머지 후보 */
+.ctrl-line-menu__msg-btn--disabled {
+  opacity: 0.38;
+  cursor:  not-allowed;
 }
 

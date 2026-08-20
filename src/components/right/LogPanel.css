@@ -283,3 +283,77 @@
   color:       #6aaa80;
   flex:        1;
 }
+
+/* 훈련 시작·종료 — 모든 경과시간의 기준점이라 눈에 띄게 둔다 */
+.log-panel__entry--training {
+  border-left: 2px solid #8a6a2a;
+  padding-left: 4px;
+}
+
+.log-panel__training-note {
+  font-size:   0.8rem;
+  font-weight: 700;
+  color:       #d8a94a;
+  flex:        1;
+}
+
+/* 출동대 편성 — 초기 출동 · 추가 요청 · 회수 */
+.log-panel__entry--dispatch {
+  border-left: 2px solid #2a4a7a;
+  padding-left: 4px;
+}
+
+.log-panel__dispatch-note {
+  font-size:   0.8rem;
+  font-weight: 600;
+  color:       #6f9ede;
+  flex:        1;
+}
+
+/* 인명검색 — 투입 · 이탈 · 1차 종료 */
+.log-panel__entry--search {
+  border-left: 2px solid #2a6a6a;
+  padding-left: 4px;
+}
+
+.log-panel__search-name {
+  font-size: 0.78rem;
+  color:     #9fd6d6;
+}
+
+.log-panel__search-note {
+  font-size: 0.78rem;
+  color:     #63b3b3;
+  flex:      1;
+}
+
+/* 구조대상자 발견 — 훈련 성과 지표라 가장 눈에 띄게 둔다 */
+.log-panel__entry--found {
+  border-left: 2px solid #8a2a5a;
+  padding-left: 4px;
+}
+
+.log-panel__found-name {
+  font-size:   0.8rem;
+  font-weight: 700;
+  color:       #e879b0;
+}
+
+.log-panel__found-note {
+  font-size: 0.78rem;
+  color:     #c76a97;
+  flex:      1;
+}
+
+/* 임시의료소·자원대기소 — 설치와 소장 지명 */
+.log-panel__entry--post {
+  border-left: 2px solid #2a6a3a;
+  padding-left: 4px;
+}
+
+.log-panel__post-note {
+  font-size:   0.8rem;
+  font-weight: 600;
+  color:       #6fce93;
+  flex:        1;
+}

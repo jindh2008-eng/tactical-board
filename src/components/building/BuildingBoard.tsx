@@ -9,6 +9,7 @@ import { BuildingStateProvider, useBuildingState, type SmokeLevel } from '../../
 import { useFireCommand } from '../../context/FireCommandContext';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
+import { splitEventZoneKey, readEventLocationAtPos } from '../../utils/eventLocation';
 import { useEvents, type EventPos } from '../../context/EventContext';
 import { resolveEventType } from '../../types/events';
 import { useTraining } from '../../context/TrainingContext';
@@ -244,37 +245,23 @@ const EVENT_PCT_THRESHOLDS = {
   half:     60,  // 50%→0% 구간
 } as const;
 
-// pos.x, pos.y 는 보드 대비 0~1 정규화된 토큰 좌상단 — 중심점으로 보정해 층 경계 오탐 방지
-const EVENT_TOKEN_HALF_BASE = 27; // 기준 화면에서의 보정값
-
-// 건물 내부 → data-floor-id, A/B/C/D면 → data-zone-key("face-*") 반환
-function getEventLocationId(pos: EventPos): string | null {
-  const board = document.getElementById('tactical-area');
-  if (!board) return null;
-  const rect = board.getBoundingClientRect();
-
-  // 토큰이 --ui-scale 로 줄어들면 중심 보정값도 함께 줄어야 층 판정이 어긋나지 않는다
-  const uiScale = parseFloat(getComputedStyle(board).getPropertyValue('--ui-scale')) || 1;
-  const half = EVENT_TOKEN_HALF_BASE * uiScale;
-
-  const cx = rect.left + pos.x * rect.width  + half;
-  const cy = rect.top  + pos.y * rect.height + half;
-  const elements = document.elementsFromPoint(cx, cy);
-  for (const el of elements) {
-    let cur: Element | null = el;
-    while (cur) {
-      const fid = cur.getAttribute('data-floor-id');
-      if (fid) return fid;
-      const zk = cur.getAttribute('data-zone-key');
-      if (zk?.startsWith('face-')) return zk;
-      cur = cur.parentElement;
-    }
+/**
+ * 방수 집계용 위치 키('3F' 또는 'face-A').
+ *
+ * 이벤트에 저장된 배치 구역이 있으면 그걸 쓴다 — 화면을 다시 hit-test 하는 것보다
+ * 정확하고, 토큰이 가진 값과 진압 판정이 어긋나지 않는다.
+ * 저장값이 없으면(구버전 세션 등) 좌표로 판정한다.
+ */
+function getEventLocationId(pos: EventPos, zoneKey: string | undefined): string | null {
+  if (zoneKey) {
+    const loc = splitEventZoneKey(zoneKey);
+    return loc.floorId ?? loc.zoneKey;
   }
-  return null;
+  return readEventLocationAtPos(pos)?.zoneKey.replace(/-(center|stair|right|left)$/, '') ?? null;
 }
 
 function EventFireSuppressionEffect() {
-  const { enabledEvents, positions, statuses, setEventStatus, setFirePercentage } = useEvents();
+  const { enabledEvents, positions, statuses, zoneKeys, setEventStatus, setFirePercentage } = useEvents();
   const { tokens }                                                                  = useTokens();
   const { fireSuppressionConfig: cfg }                                              = useSettings();
   const { status: trainingStatus }                                                  = useTraining();
@@ -282,6 +269,7 @@ function EventFireSuppressionEffect() {
   const tokensRef            = useRef(tokens);
   const statusesRef          = useRef(statuses);
   const positionsRef         = useRef(positions);
+  const zoneKeysRef          = useRef(zoneKeys);
   const enabledRef           = useRef(enabledEvents);
   const cfgRef               = useRef(cfg);
   const setStatusRef         = useRef(setEventStatus);
@@ -293,6 +281,7 @@ function EventFireSuppressionEffect() {
   useEffect(() => { tokensRef.current            = tokens;            }, [tokens]);
   useEffect(() => { statusesRef.current          = statuses;          }, [statuses]);
   useEffect(() => { positionsRef.current         = positions;         }, [positions]);
+  useEffect(() => { zoneKeysRef.current          = zoneKeys;          }, [zoneKeys]);
   useEffect(() => { enabledRef.current           = enabledEvents;     }, [enabledEvents]);
   useEffect(() => { cfgRef.current               = cfg;               }, [cfg]);
   useEffect(() => { setStatusRef.current         = setEventStatus;    }, [setEventStatus]);
@@ -347,7 +336,7 @@ function EventFireSuppressionEffect() {
 
         const evPos = pos[ev.id];
         if (!evPos) continue;
-        const locId = getEventLocationId(evPos);
+        const locId = getEventLocationId(evPos, zoneKeysRef.current[ev.id]);
         if (!locId) continue;
         const ptsThisSec = ptsPerLocation[locId];
         if (!ptsThisSec) continue;

@@ -58,7 +58,8 @@
       "Bash(npx eslint *)",
       "Bash(pkill -f \"vite --port 5183\")",
       "Bash(grep -i \"/\\\\|percent\\\\|ratio\")",
-      "Bash(echo \"EXIT_CODE=$?\")"
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(git -C \"D:/claude/tactical-board\" log --oneline -20)"
     ]
   }
 }

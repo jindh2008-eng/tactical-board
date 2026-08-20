@@ -147,7 +147,7 @@ body, #root {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  min-width: 90px;
+  min-width: 150px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 4px;
@@ -159,6 +159,10 @@ body, #root {
 }
 
 .app-menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 8px 14px;
   background: none;
   border: none;
@@ -172,6 +176,55 @@ body, #root {
 
 .app-menu__item:hover {
   background-color: #1a2a3a;
+}
+
+/* ── 네 모드 구분(MASTER_PLAN.md D-4) ────────────────────────────── */
+
+/* 훈련모드 하위 두 항목은 들여쓰기로 묶는다 */
+.app-menu__group {
+  padding: 7px 14px 3px;
+  color: var(--color-text-dim);
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.app-menu__group + .app-menu__item,
+.app-menu__group + .app-menu__item + .app-menu__item {
+  padding-left: 26px;
+}
+
+/* 현재 모드 — 좌측 세로 막대로 표시 */
+.app-menu__item--active {
+  background-color: #16222f;
+  box-shadow: inset 2px 0 0 var(--color-accent);
+  font-weight: 600;
+}
+
+/* 미구현 모드 — 자리만 잡아 둔 항목 */
+.app-menu__item--pending {
+  color: var(--color-text-dim);
+  cursor: default;
+  opacity: 0.55;
+}
+
+.app-menu__item--pending:hover {
+  background: none;
+}
+
+.app-menu__badge {
+  padding: 1px 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.app-menu__divider {
+  height: 1px;
+  margin: 4px 0;
+  background-color: var(--color-border);
 }
 
 .nav-btn {

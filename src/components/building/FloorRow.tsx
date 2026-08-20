@@ -4,6 +4,7 @@ import type { SmokeLevel } from '../../context/BuildingStateContext';
 import { useSettings } from '../../store/settingsStore';
 import { ZoneCell } from './ZoneCell';
 import { IndoorHydrantIcon } from './IndoorHydrantIcon';
+import { SiamesePipeIcon } from './SiamesePipeIcon';
 import './FloorRow.css';
 
 const ACTIVE_FIRE_STATUSES = new Set<FireStatus>(['extension-peak', 'peak', 'seventy', 'half']);
@@ -27,6 +28,9 @@ export function FloorRow({
   const { stairSmokeFloor, smokeConcentration, doorStates, fireStates } = useBuildingState();
   const { building } = useSettings();
   const hasIndoorHydrant = building.hasIndoorHydrant ?? false;
+  // 연결송수구는 지상 1층 좌측 하단(지면)에 고정 표시한다. 방면 선택은 없앴다.
+  const isGroundFloor    = !floor.isBasement && floor.endFloor === 1;
+  const showSiamesePipe  = isGroundFloor && (building.hasSiamesePipe ?? false);
 
   // RF의 endFloor = aboveGroundFloors + 1
   const floorEndNum = floor.id === 'RF'
@@ -62,6 +66,7 @@ export function FloorRow({
       data-floor-label={displayLabel}
     >
       <div className="floor-row__label">
+        {showSiamesePipe && <SiamesePipeIcon />}
         <span
           className={[
             'floor-row__label-text',

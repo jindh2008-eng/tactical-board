@@ -226,7 +226,8 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
   const zoneKey            = `${floorId}-${zone.id}`;
   const zoneTokens         = isDropTarget        ? tokens.filter(t => t.zoneKey === zoneKey)  : [];
   // 건물 내부 구역은 discoveredVictimIds에 있는 구조대상자만 표시 (인명검색 후 발견된 것만)
-  const allZoneVictims     = isVictimDropTarget  ? victims.filter(v => v.zoneKey === zoneKey) : [];
+  // 이송 연결된 구조대상자는 출동대 토큰 우측에 붙어 렌더된다(TokenCard) — 구역 배치에서 제외.
+  const allZoneVictims     = isVictimDropTarget  ? victims.filter(v => v.zoneKey === zoneKey && !v.carriedBy) : [];
 
   // 계단실 구조대상자: 바로보임 외에 출동대 배치층 >= 계단실층이면 표시
   const stairVisible = (() => {

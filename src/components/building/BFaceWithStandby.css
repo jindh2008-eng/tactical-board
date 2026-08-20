@@ -1,32 +1,10 @@
 /* ─────────────────────────────────────────────
    B면 드롭 영역 — 독립 컬럼
    (대기구역은 StandbyColumn.css로 분리됨)
+   통제선·연결송수구 토글 버튼은 B면 상단으로 모음(2026-08-20)
+   → ExteriorZone.css .ctrl-line-toggles / .ctrl-line-toggle 참고
    ─────────────────────────────────────────────*/
 
 .bface-drop-zone {
   flex: 1;
-}
-
-.fire-line-toggle {
-  flex-shrink: 0;
-  width: 100%;
-  padding: 5px 4px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #555;
-  background: rgba(0, 0, 0, 0.06);
-  border: none;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  user-select: none;
-}
-
-.fire-line-toggle:hover {
-  background: rgba(0, 0, 0, 0.11);
-}
-
-.fire-line-toggle--active {
-  color: #c0392b;
-  background: rgba(192, 57, 43, 0.08);
 }

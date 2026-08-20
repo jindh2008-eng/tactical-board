@@ -1,0 +1,245 @@
+/* ─────────────────────────────────────────────
+   추가출동대 박스 + 아래로 펼쳐지는 생성 메뉴
+   ─────────────────────────────────────────────*/
+
+/* 메뉴가 이 상자를 기준으로 "박스 아래"에 걸리도록 위치 기준을 잡는다 */
+.unit-add-panel {
+  position: relative;
+  height:   100%;
+  min-height: 0;
+  display:  flex;
+  flex-direction: column;
+}
+
+.unit-add-panel__box {
+  flex:       1;
+  min-height: 0;
+  display:    flex;
+  flex-direction: column;
+  overflow:   hidden;
+}
+
+.unit-add-panel__header {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+}
+
+.unit-add-panel__btn {
+  margin-left:    auto;
+  flex-shrink:    0;
+  padding:        1px 9px;
+  font-family:    inherit;
+  font-size:      0.88rem;
+  font-weight:    700;
+  letter-spacing: 0.02em;
+  white-space:    nowrap;
+  color:          #5b5750;
+  background:     rgba(91, 87, 80, 0.08);
+  border:         1px solid var(--ctr-border-mid);
+  border-radius:  3px;
+  cursor:         pointer;
+  transition:     background 0.12s, color 0.12s;
+}
+
+.unit-add-panel__btn:hover {
+  background: rgba(91, 87, 80, 0.18);
+  color:      #3a3730;
+}
+
+.unit-add-panel__btn--on {
+  color:        #1f5fa8;
+  border-color: rgba(31, 95, 168, 0.55);
+  background:   rgba(31, 95, 168, 0.14);
+}
+
+/* 만든 출동대가 담기는 자리 — 출동대현황 모드1과 같은 종류별 5컬럼 배열 */
+.unit-add-panel__body {
+  flex:       1;
+  min-height: 0;
+  overflow:   hidden;
+  display:    flex;
+  flex-direction: column;
+  padding:    4px 6px;
+}
+
+.unit-add-panel__placeholder {
+  color:     var(--ctr-border-mid);
+  font-size: 0.9rem;
+}
+
+/* ─────────────────────────────────────────────
+   생성 메뉴 — 박스 아래부터 좌측 패널 끝까지 덮는다.
+   박스 자체는 절대 가리지 않는다(방금 만든 출동대가 바로 보여야 한다).
+   ─────────────────────────────────────────────*/
+/* 배경 흐림 — 추가출동대 박스만 남기고 덮는다 */
+.unit-add-panel__scrim {
+  position:        fixed;
+  z-index:         149;
+  background-color: rgba(0, 0, 0, 0.45);
+  pointer-events:  none;   /* 클릭은 아래로 통과 — 바깥 클릭 닫기가 그대로 동작한다 */
+}
+
+.unit-add-panel__menu {
+  /* body 로 포털된다 — left/top/width/maxHeight 는 박스 위치에서 계산해 인라인으로 준다.
+     좌측 패널 조상이 전부 overflow:hidden 이라 안쪽에 두면 잘린다. */
+  position:   fixed;
+  z-index:    150;
+
+  /* 위에서 아래로 펼쳐지는 연출 — 높이를 건드리지 않아 내용이 흔들리지 않는다 */
+  animation: unit-add-menu-unroll 0.18s ease-out;
+
+  display:        flex;
+  flex-direction: column;
+  overflow:       hidden;
+  background:     var(--ctr-surface);
+  border:         1.5px solid var(--ctr-border-hard);
+  border-top:     none;
+  border-radius:  0 0 4px 4px;
+  box-shadow:     0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.unit-add-panel__menu-header {
+  flex-shrink:    0;
+  display:        flex;
+  align-items:    center;
+  justify-content: space-between;
+  padding:        6px 10px;
+  font-size:      1.0rem;
+  font-weight:    700;
+  letter-spacing: 0.02em;
+  color:          #3a3730;
+  background:     rgba(0, 0, 0, 0.06);
+  border-bottom:  1px solid var(--ctr-border-mid);
+}
+
+.unit-add-panel__menu-close {
+  padding:        1px 8px;
+  font-family:    inherit;
+  font-size:      0.95rem;
+  font-weight:    700;
+  color:          #5b5750;
+  background:     rgba(91, 87, 80, 0.08);
+  border:         1px solid var(--ctr-border-mid);
+  border-radius:  3px;
+  cursor:         pointer;
+}
+
+.unit-add-panel__menu-close:hover {
+  background: rgba(91, 87, 80, 0.18);
+  color:      #3a3730;
+}
+
+.unit-add-panel__menu-body {
+  flex:       0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+@keyframes unit-add-menu-unroll {
+  from { clip-path: inset(0 0 100% 0); opacity: 0.4; }
+  to   { clip-path: inset(0 0 0 0);    opacity: 1;   }
+}
+
+/* ─────────────────────────────────────────────
+   생성 메뉴 내용(UnitStatus)을 좌측 패널 톤·글씨로 맞춘다.
+
+   UnitStatus.css 는 어두운 앱 테마 기준(배경 #0a1018, 글씨 0.68~0.78rem)이라
+   밝은 좌측 패널에 그대로 두면 색이 겉돌고 글씨도 작다. 원본은 건드리지 않고
+   이 메뉴 안에서만 덮는다 — 다른 화면에서 재사용될 여지를 남긴다.
+   ─────────────────────────────────────────────*/
+.unit-add-panel__menu .unit-creator {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.unit-add-panel__menu .unit-creator__body {
+  gap:     10px;
+  padding: 10px 12px 14px;
+}
+
+.unit-add-panel__menu .creator-group {
+  gap:     6px;
+  padding: 8px 10px;
+}
+
+.unit-add-panel__menu .creator-group--activity {
+  background: rgba(176, 48, 48, 0.07);
+  border-color: rgba(176, 48, 48, 0.30);
+}
+
+.unit-add-panel__menu .creator-group--vehicle {
+  background: rgba(122, 85, 0, 0.07);
+  border-color: rgba(122, 85, 0, 0.32);
+}
+
+.unit-add-panel__menu .creator-group--agency {
+  background: rgba(106, 70, 160, 0.07);
+  border-color: rgba(106, 70, 160, 0.30);
+}
+
+/* 그룹 제목 — 좌측 패널 본문과 같은 눈높이 */
+.unit-add-panel__menu .creator-group__label {
+  font-size: 0.92rem;
+  padding-bottom: 3px;
+}
+
+.unit-add-panel__menu .creator-group__label--activity { color: #b03030; border-color: rgba(176, 48, 48, 0.35); }
+.unit-add-panel__menu .creator-group__label--vehicle  { color: #6f4e00; border-color: rgba(122, 85, 0, 0.35); }
+.unit-add-panel__menu .creator-group__label--agency   { color: #6a46a0; border-color: rgba(106, 70, 160, 0.35); }
+
+.unit-add-panel__menu .creator-group__buttons { gap: 6px; }
+
+/* 생성 버튼 — 1.0rem (좌측 패널 기준) */
+.unit-add-panel__menu .creator-btn {
+  font-size:   1.0rem;
+  font-weight: 700;
+  padding:     5px 12px;
+}
+
+.unit-add-panel__menu .creator-btn--red {
+  color: #b03030; background-color: rgba(176, 48, 48, 0.10); border-color: rgba(176, 48, 48, 0.40);
+}
+.unit-add-panel__menu .creator-btn--red:hover {
+  background-color: rgba(176, 48, 48, 0.20); border-color: #b03030;
+}
+
+.unit-add-panel__menu .creator-btn--yellow {
+  color: #6f4e00; background-color: rgba(122, 85, 0, 0.10); border-color: rgba(122, 85, 0, 0.40);
+}
+.unit-add-panel__menu .creator-btn--yellow:hover {
+  background-color: rgba(122, 85, 0, 0.20); border-color: #6f4e00;
+}
+
+.unit-add-panel__menu .creator-btn--green {
+  color: #14572f; background-color: rgba(20, 87, 47, 0.10); border-color: rgba(20, 87, 47, 0.40);
+}
+.unit-add-panel__menu .creator-btn--green:hover {
+  background-color: rgba(20, 87, 47, 0.20); border-color: #14572f;
+}
+
+.unit-add-panel__menu .creator-btn--vehicle {
+  color: #1f5fa8; background-color: rgba(31, 95, 168, 0.10); border-color: rgba(31, 95, 168, 0.40);
+}
+.unit-add-panel__menu .creator-btn--vehicle:hover {
+  background-color: rgba(31, 95, 168, 0.20); border-color: #1f5fa8;
+}
+
+.unit-add-panel__menu .creator-btn--agency {
+  color: #6a46a0; background-color: rgba(106, 70, 160, 0.10); border-color: rgba(106, 70, 160, 0.40);
+}
+.unit-add-panel__menu .creator-btn--agency:hover {
+  background-color: rgba(106, 70, 160, 0.20); border-color: #6a46a0;
+}
+
+/* 직접입력 */
+.unit-add-panel__menu .creator-custom-input {
+  font-size:        1.0rem;
+  padding:          5px 9px;
+  background-color: #ffffff;
+  color:            #3a3730;
+  border-color:     var(--ctr-border-mid);
+}
+
+.unit-add-panel__menu .creator-custom-input::placeholder { color: var(--ctr-border-mid); }
+.unit-add-panel__menu .creator-custom-input:focus        { border-color: #1f5fa8; }

@@ -8,7 +8,8 @@ export function VictimPanel() {
   const { victims, moveVictim } = useVictims();
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const poolVictims = victims.filter(v => v.zoneKey === null);
+  // 이송 연결된 구조대상자는 출동대 토큰 우측에 붙어 렌더된다(TokenCard) — 구역 배치에서 제외.
+  const poolVictims = victims.filter(v => v.zoneKey === null && !v.carriedBy);
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     // victimId 드롭만 허용
@@ -44,6 +45,7 @@ export function VictimPanel() {
           'victim-panel__body',
           isDragOver ? 'drop-target--active' : '',
         ].filter(Boolean).join(' ')}
+        data-touch-drop-target="true"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}

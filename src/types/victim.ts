@@ -21,6 +21,40 @@ export const VICTIM_AGE_GROUPS: VictimAgeGroup[] = [
 export const VICTIM_CONDITIONS: VictimCondition[] = ['경상', '중상', '사망'];
 
 // ─────────────────────────────────────────────
+// 중증도 분류(트리아지)
+//
+// 현장에서 파악한 증상(경상/중상/사망)과 별개로, 임시의료소에서는
+// 환자를 4단계로 다시 분류한다. 진입 시 1회 배정되며 이후 바뀌지 않는다.
+//
+//   지연   — 병원에 이송해도 가망이 없는 사망추정 환자
+//   긴급   — 즉시 처치·이송이 필요한 환자
+//   응급   — 처치는 필요하나 이송을 미룰 수 있는 환자
+//   비응급 — 경미해 후순위로 둘 수 있는 환자
+// ─────────────────────────────────────────────
+
+export type VictimTriage = '긴급' | '응급' | '비응급' | '지연';
+
+/** 통계 표시 순서 — 지연 → 긴급 → 응급 → 비응급 */
+export const VICTIM_TRIAGES: VictimTriage[] = ['지연', '긴급', '응급', '비응급'];
+
+/**
+ * 증상 → 중증도 후보 2단계.
+ * 임시의료소에서 재평가하는 절차라 각 증상이 인접한 두 단계 중 하나로 갈린다.
+ * (사망추정이 소생 가능으로 판정되면 긴급, 경상이 안정적이면 비응급 …)
+ */
+const TRIAGE_CANDIDATES: Record<VictimCondition, readonly [VictimTriage, VictimTriage]> = {
+  '사망': ['지연', '긴급'],
+  '중상': ['긴급', '응급'],
+  '경상': ['응급', '비응급'],
+};
+
+/** 증상에 따라 중증도를 무작위 배정. 임시의료소 진입 시 1회만 호출된다. */
+export function classifyTriage(condition: VictimCondition): VictimTriage {
+  const pair = TRIAGE_CANDIDATES[condition];
+  return pair[Math.random() < 0.5 ? 0 : 1];
+}
+
+// ─────────────────────────────────────────────
 // 구조대상자 토큰
 // ─────────────────────────────────────────────
 
@@ -39,6 +73,15 @@ export interface VictimToken {
   subLocation:  string;
   /** 구조위치 스냅샷 — 임시의료소 진입 시 1회 기록. 통계 기준. */
   rescueLocation?: string;
+  /** 중증도 분류 스냅샷 — 임시의료소 진입 시 1회 배정. 구조활동통계 기준. */
+  triage?:         VictimTriage;
+  /**
+   * 이송 중인 출동대 토큰 ID.
+   * 구조대상자를 출동대 위에 드롭하면 연결되고, 이후 그 출동대가 구역을 옮기면
+   * 따라 움직인다. 임시의료소 도착 시 자동 구조 처리되며 해제되고,
+   * 구조대상자를 다른 곳으로 직접 드래그해도 해제된다.
+   */
+  carriedBy?:      string;
   /** 최초 배치 위치 표시 스냅샷 — 이동 후에도 유지. 카드 위치 표시 기준. */
   originDisplayBottom?: string;
   zoneKey:      string | null;

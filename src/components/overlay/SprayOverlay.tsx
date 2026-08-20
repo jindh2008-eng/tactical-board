@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import type { SprayState } from '../../types';
 import { useTokens }         from '../../context/TokenContext';
@@ -92,8 +92,10 @@ export function SprayOverlay() {
 }
 
 function SprayOverlayInner() {
-  const { tokens } = useTokens();
+  const { tokens, setSprayState } = useTokens();
   const svgRef     = useRef<SVGSVGElement>(null);
+  // 방수선 클릭 → 중단 팝업. 송수 해제(WaterConnectionOverlay)와 같은 조작 문법이다.
+  const [popup, setPopup] = useState<{ tokenId: string; x: number; y: number } | null>(null);
   const tokensRef  = useRef(tokens);
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);
 
@@ -132,12 +134,16 @@ function SprayOverlayInner() {
           hide(`ss-${token.id}-0`);
           hide(`ss-${token.id}-1`);
           hide(`ss-${token.id}-2`);
+          hide(`sh-${token.id}`);
           continue;
         }
 
-        const tokenRect = el.getBoundingClientRect();
-        const ox = tokenRect.left + tokenRect.width  / 2;
-        const oy = tokenRect.top  + tokenRect.height / 2;
+        // 물이 나오는 자리에서 선이 시작해야 자연스럽다 — 관창 핸들이 있으면
+        // 그 중심을, 없으면(대기 구역 등 핸들이 숨은 경우) 토큰 중심을 쓴다.
+        const originEl  = el.querySelector('.nozzle-handle') ?? el;
+        const originRect = originEl.getBoundingClientRect();
+        const ox = originRect.left + originRect.width  / 2;
+        const oy = originRect.top  + originRect.height / 2;
         const tx = (boardRect?.left ?? 0) + token.sprayTarget.x * (boardRect?.width  ?? 1);
         const ty = (boardRect?.top  ?? 0) + token.sprayTarget.y * (boardRect?.height ?? 1);
 
@@ -164,6 +170,11 @@ function SprayOverlayInner() {
           const streamEl = svg.querySelector(`#ss-${token.id}-${i}`) as SVGPathElement | null;
           if (streamEl) streamEl.setAttribute('d', buildStreamPath(ox, oy, tx, ty, off, maxHalfR, 0.92));
         });
+
+        // 클릭 판정용 굵은 투명 선 — 가운데 줄기에만 둔다(부채꼴 전체를 덮으면
+        // 밑에 있는 토큰·구역 클릭을 가린다)
+        const hitEl = svg.querySelector(`#sh-${token.id}`) as SVGPathElement | null;
+        if (hitEl) hitEl.setAttribute('d', buildStreamPath(ox, oy, tx, ty, 0, maxHalfR, 0.92));
         // 사용 안 하는 스트림 숨김
         for (let i = offsets.length; i < 3; i++) {
           const streamEl = svg.querySelector(`#ss-${token.id}-${i}`) as SVGPathElement | null;
@@ -178,9 +189,10 @@ function SprayOverlayInner() {
     return () => cancelAnimationFrame(rafId);
   }, [activeTokens.length]);
 
-  if (activeTokens.length === 0) return null;
+  if (activeTokens.length === 0 && popup === null) return null;
 
   return ReactDOM.createPortal(
+    <>
     <svg ref={svgRef} className="spray-svg" aria-hidden="true">
       {activeTokens.map(token => {
         if (!token.sprayState) return null;
@@ -206,10 +218,36 @@ function SprayOverlayInner() {
                 ].filter(Boolean).join(' ')}
               />
             ))}
+            {/* 클릭 판정선 — 눌러서 방수 중단 */}
+            <path
+              id={`sh-${token.id}`}
+              d=""
+              className="spray-hit"
+              onClick={e => { e.stopPropagation(); setPopup({ tokenId: token.id, x: e.clientX, y: e.clientY }); }}
+            />
           </g>
         );
       })}
-    </svg>,
+    </svg>
+
+    {popup && (
+      <>
+        <div className="spray-popup-backdrop" onMouseDown={() => setPopup(null)} />
+        <div className="spray-popup" style={{ left: popup.x, top: popup.y }}>
+          <button
+            className="spray-popup__btn"
+            onMouseDown={e => {
+              e.stopPropagation();
+              setSprayState(popup.tokenId, null);
+              setPopup(null);
+            }}
+          >
+            방수 중단
+          </button>
+        </div>
+      </>
+    )}
+    </>,
     document.body,
   );
 }

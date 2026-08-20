@@ -1,0 +1,67 @@
+/* ─────────────────────────────────────────────
+   통제선 띠 — 소방(빨강) / 경찰(노랑)
+   A면 상단·하단에 각각 깔린다.
+   ─────────────────────────────────────────────*/
+.control-line {
+  display:        flex;
+  align-items:    center;
+  gap:            18px;
+  padding:        0 8px;
+  overflow:       hidden;
+  flex-shrink:    0;
+  pointer-events: none;
+  user-select:    none;
+  border-top:     1px solid rgba(0, 0, 0, 0.45);
+  border-bottom:  1px solid rgba(0, 0, 0, 0.45);
+}
+
+.control-line__text {
+  flex-shrink:    0;
+  font-size:      0.72rem;
+  font-weight:    900;
+  letter-spacing: 0.12em;
+  white-space:    nowrap;
+}
+
+/* 소방 — 크림 바탕에 적색 조각이 띄엄띄엄.
+   단색 고채도 적색을 전폭으로 깔면 화점(빨강)보다 통제선이 더 튀고,
+   사선 줄무늬는 어지러웠다. 적색은 글자가 얹히는 조각에만 남기고
+   사이는 바탕을 비워 고채도 면적을 크게 줄인다. */
+.control-line--fire {
+  background-color: #efe9dd;
+  /* 조각 사이 간격 — 좁힐수록 적색 비율이 올라간다 (48px ≈ 66%, 20px ≈ 80%대) */
+  gap: 20px;
+  border-color: rgba(0, 0, 0, 0.28);
+}
+
+.control-line--fire .control-line__text {
+  /* 띠 높이(15px, 경찰과 동일) 안에 들어오도록 세로 여백을 최소로 */
+  padding:       1px 8px;
+  line-height:   1;
+  border-radius: 2px;
+  background:    #c05a52;
+  color:         #ffffff;
+  font-weight:   700;
+  font-size:     0.64rem;
+}
+
+/* 끌어서 옮기는 띠(소방) — 기본 .control-line 의 pointer-events:none 을 되돌린다.
+   touch-action:none 이 있어야 태블릿에서 스크롤로 먹히지 않고 드래그가 잡힌다. */
+.control-line--draggable {
+  pointer-events: auto;
+  touch-action:   none;
+  cursor:         ns-resize;
+}
+
+.control-line--draggable:hover {
+  /* 끌 수 있다는 표시 — 위아래 경계만 또렷해진다 */
+  border-color: rgba(0, 0, 0, 0.6);
+}
+
+/* 경찰 — 황색 띠에 검은 글자 */
+.control-line--police {
+  background-color: #f2c200;
+}
+.control-line--police .control-line__text {
+  color: #1a1a1a;
+}

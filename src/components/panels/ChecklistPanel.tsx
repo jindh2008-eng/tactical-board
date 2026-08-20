@@ -56,16 +56,19 @@ export function ChecklistPanel() {
   }
 
   function toggleItem(itemId: string, itemText: string) {
+    // addLog는 상태 업데이터 **밖**에서 한 번만 호출한다.
+    // 업데이터 콜백 안에서 부수효과를 실행하면 StrictMode가 콜백을 이중 호출해 로그가 2건 쌓인다.
+    // (MASTER_PLAN D-5에서 CommandProcedureTrainingBox의 같은 버그를 잡으며 남겨 둔 항목)
+    const willCheck = !checked.has(itemId);
     setChecked(prev => {
       const next = new Set(prev);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-      } else {
-        next.add(itemId);
-        addLog({ logType: 'checklist', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '', note: itemText });
-      }
+      if (next.has(itemId)) next.delete(itemId);
+      else                  next.add(itemId);
       return next;
     });
+    if (willCheck) {
+      addLog({ logType: 'checklist', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '', note: itemText });
+    }
   }
 
   function toggleArrivalItem(itemId: string, order: number, itemText: string) {

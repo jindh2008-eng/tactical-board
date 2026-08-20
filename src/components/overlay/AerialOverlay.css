@@ -85,6 +85,16 @@
 
 /* ── 방수 팬 (고가차/굴절차 방수 활성 시) ───── */
 
+/* 방수선 클릭 판정 — 굵은 투명 스트로크만 이벤트를 받는다.
+   부채꼴 전체를 덮으면 밑에 있는 토큰·구역 클릭을 가린다. */
+.aerial-fan-hit {
+  stroke:         transparent;
+  stroke-width:   16;
+  fill:           none;
+  cursor:         pointer;
+  pointer-events: stroke;
+}
+
 .aerial-fan {
   fill:   rgba(80, 170, 255, 0.45);
   filter: drop-shadow(0 0 5px rgba(80, 170, 255, 0.5));

@@ -21,22 +21,32 @@ const LABEL_COUNTER_DEFS = [
   { baseKey: '물탱크', regex: /^물탱크(\d+)$/ },
 ] as const;
 
-/** roster unitType → TokenColor */
+/**
+ * roster unitType → TokenColor
+ *
+ * 훈련창 "출동대 추가"(components/left/UnitStatus.tsx)의 수동 생성과 반드시 같아야 한다.
+ * 유관기관(agency)·직접입력(general)이 default 로 빠져 'vehicle' 색이 되던 것을
+ * 수동 생성과 동일하게 맞췄다(2026-08-18).
+ */
 export function rosterItemColor(unitType: string): TokenColor {
   switch (unitType) {
     case 'suppression': return 'red';
     case 'rescue':      return 'yellow';
     case 'ems':         return 'green';
+    case 'agency':                      // 유관기관
+    case 'general':     return 'agency'; // 직접입력
     default:            return 'vehicle';
   }
 }
 
-/** roster unitType → TokenType */
+/** roster unitType → TokenType (위와 동일하게 수동 생성 기준을 따른다) */
 export function rosterItemTokenType(unitType: string): TokenType {
   switch (unitType) {
     case 'suppression':
     case 'rescue':
     case 'ems':         return 'activity';
+    case 'agency':      return 'agency';
+    case 'general':     return 'custom';
     default:            return 'vehicle';
   }
 }

@@ -1,18 +1,32 @@
 import type { ReactNode } from 'react';
 import { useVictims } from '../../context/VictimContext';
-import type { VictimToken, VictimCondition } from '../../types/victim';
+import type { VictimToken, VictimTriage } from '../../types/victim';
 import { zoneKeyToLabel } from '../../utils/victimUtils';
 import './RescueStats.css';
 
 // ─────────────────────────────────────────────
 // 구조활동통계 — 임시의료소 내 구조대상자 요약
-// 구역(층/방면) × 증상 교차표로 표시.
+// 구역(층/방면) × 중증도 분류 교차표로 표시.
+//
+// 임시의료소에 들어온 환자는 진입 시 중증도(긴급/응급/비응급/지연)가 배정되므로
+// 이 표의 열은 현장 증상(경상/중상/사망)이 아니라 중증도 분류를 쓴다.
+// → VictimContext.moveVictim, types/victim.ts classifyTriage
 //
 // props.victims 미지정 시 context에서 자동 필터링 (medical-post).
 // ─────────────────────────────────────────────
 
-// 열 순서 — 존재하는 증상만 이 순서대로 표시
-const CONDITION_ORDER: VictimCondition[] = ['중상', '경상', '사망'];
+// 중증도 표준 색(긴급=적/응급=황/비응급=녹/지연=흑)을 열 제목에만 옅게 입힌다.
+// 한글 라벨은 CSS 클래스명에 쓸 수 없어 영문 키로 변환한다.
+/** 표 컬럼 표시 순서 — 중증도가 높은 쪽부터.
+ *  (types/victim 의 VICTIM_TRIAGES 는 통계 집계용 순서라 '지연'이 앞에 온다) */
+const TRIAGE_COLUMN_ORDER: VictimTriage[] = ['긴급', '응급', '비응급', '지연'];
+
+const TRIAGE_CLASS: Record<VictimTriage, string> = {
+  '긴급':   'immediate',
+  '응급':   'delayed',
+  '비응급': 'minor',
+  '지연':   'expectant',
+};
 
 /** 그룹 토큰은 groupCount 실인원으로, 개별은 1명으로 계산 */
 function tokenCount(v: VictimToken): number {
@@ -55,30 +69,29 @@ export function RescueStats({ victims: propVictims, extraHeaderAction }: Props) 
 
   const total = victims.reduce((sum, v) => sum + tokenCount(v), 0);
 
-  // 행(위치) × 열(증상) 교차 집계
-  const table = new Map<string, Map<VictimCondition, number>>();
-  const colTotals = new Map<VictimCondition, number>();
+  // 행(위치) × 열(중증도 분류) 교차 집계
+  const table = new Map<string, Map<VictimTriage, number>>();
+  const colTotals = new Map<VictimTriage, number>();
   for (const v of victims) {
-    if (!v.condition) continue; // 증상 미지정 — 교차표에서 제외(기존 동작과 동일)
+    if (!v.triage) continue; // 분류 미배정(증상 없는 '기타' 등) — 교차표에서 제외
     const rawLocation = v.rescueLocation || zoneKeyToLabel(v.zoneKey) || '위치미상';
     const rowLabel     = rowLabelFromLocation(rawLocation);
-    const cond          = v.condition;
+    const tri          = v.triage;
     const n              = tokenCount(v);
 
     if (!table.has(rowLabel)) table.set(rowLabel, new Map());
     const row = table.get(rowLabel)!;
-    row.set(cond, (row.get(cond) ?? 0) + n);
-    colTotals.set(cond, (colTotals.get(cond) ?? 0) + n);
+    row.set(tri, (row.get(tri) ?? 0) + n);
+    colTotals.set(tri, (colTotals.get(tri) ?? 0) + n);
   }
 
-  const columns = CONDITION_ORDER.filter(c => (colTotals.get(c) ?? 0) > 0);
+  const columns = TRIAGE_COLUMN_ORDER.filter(c => (colTotals.get(c) ?? 0) > 0);
   const rows = [...table.keys()].sort((a, b) => rowSortKey(a) - rowSortKey(b));
 
   return (
     <div className="rescue-stats">
       <div className="rescue-stats__header">
         <span className="rescue-stats__title">구조활동통계</span>
-        <span className="rescue-stats__total">{total}명</span>
         {extraHeaderAction}
       </div>
 
@@ -90,36 +103,35 @@ export function RescueStats({ victims: propVictims, extraHeaderAction }: Props) 
             <thead>
               <tr>
                 <th className="rescue-stats__th rescue-stats__th--loc">층구분</th>
-                {columns.map(c => (
-                  <th key={c} className="rescue-stats__th">{c}</th>
-                ))}
                 <th className="rescue-stats__th">합계</th>
+                {columns.map(c => (
+                  <th key={c} className={`rescue-stats__th rescue-stats__th--triage-${TRIAGE_CLASS[c]}`}>{c}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
+              {/* 총계를 맨 위에 — 먼저 전체를 읽고 아래에서 세부를 확인한다 */}
+              <tr className="rescue-stats__row--summary">
+                <td className="rescue-stats__td rescue-stats__td--loc rescue-stats__td--total">총계</td>
+                <td className="rescue-stats__td rescue-stats__td--total">{total}명</td>
+                {columns.map(c => (
+                  <td key={c} className="rescue-stats__td rescue-stats__td--total">{colTotals.get(c) ?? 0}</td>
+                ))}
+              </tr>
               {rows.map(rowLabel => {
                 const row      = table.get(rowLabel)!;
                 const rowTotal = columns.reduce((sum, c) => sum + (row.get(c) ?? 0), 0);
                 return (
                   <tr key={rowLabel}>
                     <td className="rescue-stats__td rescue-stats__td--loc">{rowLabel}</td>
+                    <td className="rescue-stats__td rescue-stats__td--total">{rowTotal}</td>
                     {columns.map(c => (
                       <td key={c} className="rescue-stats__td">{row.get(c) ?? 0}</td>
                     ))}
-                    <td className="rescue-stats__td rescue-stats__td--total">{rowTotal}</td>
                   </tr>
                 );
               })}
             </tbody>
-            <tfoot>
-              <tr>
-                <td className="rescue-stats__td rescue-stats__td--loc rescue-stats__td--total">총계</td>
-                {columns.map(c => (
-                  <td key={c} className="rescue-stats__td rescue-stats__td--total">{colTotals.get(c) ?? 0}</td>
-                ))}
-                <td className="rescue-stats__td rescue-stats__td--total">{total}명</td>
-              </tr>
-            </tfoot>
           </table>
         )}
       </div>

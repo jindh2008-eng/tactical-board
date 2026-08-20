@@ -1,42 +1,10 @@
 import type { LogEntry, LogType } from '../types';
-
-// ── 구역 키 → 한글 레이블 (LogPanel과 동일) ──────────────────────────────
-
-const STATIC_LABELS: Record<string, string> = {
-  pool:               '대기(풀)',
-  'medical-post':     '임시의료소',
-  'standby-resource': '자원대기소',
-  'standby-standby1': '대기1단계',
-  'standby-imminent': '직전대기',
-  'face-A':           'A면',
-  'face-B':           'B면',
-  'face-C':           'C면',
-  'face-D':           'D면',
-};
-
-const ZONE_NAMES: Record<string, string> = {
-  left:   '단위',
-  center: '내부',
-  right:  '화재',
-  stair:  '계단실',
-};
-
-function zoneLabel(zoneId: string): string {
-  if (STATIC_LABELS[zoneId]) return STATIC_LABELS[zoneId];
-  const dashIdx = zoneId.lastIndexOf('-');
-  if (dashIdx > 0) {
-    const floor = zoneId.slice(0, dashIdx);
-    const zone  = zoneId.slice(dashIdx + 1);
-    if (ZONE_NAMES[zone]) return `${floor} ${ZONE_NAMES[zone]}`;
-  }
-  return zoneId;
-}
+import { zoneLabel } from './logLabels';
 
 // ── 로그 유형 → 한글 ─────────────────────────────────────────────────────
 
 const LOG_TYPE_LABELS: Record<LogType, string> = {
   'move':        '이동',
-  'assignment':  '부서',
   'rescue':      '구조',
   'fire-status': '화재',
   'status-tag':  '상태',
@@ -45,6 +13,11 @@ const LOG_TYPE_LABELS: Record<LogType, string> = {
   'smoke':        '연기',
   'event-status': '이벤트',
   'checklist':    '체크리스트',
+  'training':     '훈련',
+  'dispatch':     '편성',
+  'search':       '인명검색',
+  'victim-found': '발견',
+  'post':         '거점',
 };
 
 // ── 로그 내용 → 한 줄 텍스트 ─────────────────────────────────────────────
@@ -59,8 +32,16 @@ function entryContent(entry: LogEntry): string {
   if (logType === 'door')         return `${tokenName} ${note ?? ''}`.trim();
   if (logType === 'smoke')        return `${tokenName} ${note ?? ''}`.trim();
   if (logType === 'event-status') return `${tokenName}, ${note ?? ''}`.trim();
+  if (logType === 'training')     return note ?? '';
+  if (logType === 'dispatch')     return note ?? '';
+  if (logType === 'search')       return note ?? '';
+  if (logType === 'victim-found') return note ?? '';
+  if (logType === 'post')         return note ?? '';
+  // 체크리스트·지휘절차는 토큰도 구역도 없다 — 아래 이동 경로 형식으로 떨어지면
+  // " →  (항목명)" 처럼 빈 화살표가 찍힌다.
+  if (logType === 'checklist')    return note ?? '';
 
-  // move / assignment
+  // move
   const route = `${tokenName} ${zoneLabel(fromZoneId)} → ${zoneLabel(toZoneId)}`;
   return note ? `${route} (${note})` : route;
 }

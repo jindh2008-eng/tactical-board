@@ -43,6 +43,8 @@ npx tsc -b --force   # 타입체크만 (빠른 확인용)
 
 두 저장소는 **`훈련 세팅` 버튼**에서만 만난다. 이 버튼이 `sessionStorage`를 비우고 설정창 값을 훈련창에 적용한다.
 
+**모드 구분은 라우트보다 넓다.** 저장소는 위 이원 구조가 맞지만, 화면은 네 모드로 나눈다 — 설정모드(`/settings`) · 훈련모드(무플)(`/play`) · 훈련모드(지휘)(미구현) · 분석(창)(`/play` 내부 모달). **현재 작업 범위는 훈련모드(무플) 하나다.** 근거와 경계는 [MASTER_PLAN.md](docs/MASTER_PLAN.md) D-4 참고.
+
 - `src/utils/settingsStorage.ts` — localStorage 단일 창구. `SettingsExport` 인터페이스가 전체 설정 번들 형식이다.
 - `src/utils/runtimeSession.ts` — sessionStorage 단일 창구. `tactical-board.runtime.*` 키 11종을 여기서만 읽고 쓴다. 새 런타임 상태를 영속화할 때는 반드시 여기에 `save*`/`load*` 쌍을 추가한다.
 
@@ -91,10 +93,12 @@ Context 경계를 넘어 동작을 호출해야 할 때 이 패턴을 쓴다(`Fi
 
 | 문서 | 내용 |
 |---|---|
-| [PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | 프로그램 목적·화면 구성 |
-| [DATA_FLOW.md](docs/DATA_FLOW.md) | 저장소 구조, 각 기능의 데이터 흐름, Provider 순서 |
-| [RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md](docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md) | 반응형 전환 — §0에 Phase별 진행 현황과 실측값 |
-| [DUAL_SCREEN_SYNC_PLAN.md](docs/DUAL_SCREEN_SYNC_PLAN.md) | 지휘교수/무전플레이어 화면 분리 — §7.0에 3단계 로드맵 |
+| **[MASTER_PLAN.md](docs/MASTER_PLAN.md)** ★ | **작업 순서의 단일 출처.** 확정된 결정(§1), 코드로 검증한 진행 상태(§2), W-0~W-5 작업 순서(§4), 향후 단계(§7). 다른 문서와 우선순위가 어긋나면 이 문서를 따른다 |
+| **[DEFERRED_PROPAGATION.md](docs/DEFERRED_PROPAGATION.md)** ★ | **파급 기록부.** 현재 범위는 훈련모드(무플) 하나뿐이다. 작업 중 설정모드·지휘모드·분석창 수정이 필요해지면 **고치지 말고 여기 §3에 적는다** |
+| [PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | 프로그램 목적·화면 구성 (⚠ 2026-05-06 기준, 낙후) |
+| [DATA_FLOW.md](docs/DATA_FLOW.md) | 저장소 구조, 각 기능의 데이터 흐름, Provider 순서 (⚠ 2026-05-06 기준, 낙후) |
+| [RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md](docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md) | 반응형 **설계 근거·실측 기록** — §0 실측값, §3 설계, §6 검증기준 |
+| [DUAL_SCREEN_SYNC_PLAN.md](docs/DUAL_SCREEN_SYNC_PLAN.md) | 화면 분리 **설계 근거** — §4.1 권한모델, §5 프로토콜, §5.6 무상태 미러 |
 | [DUAL_SCREEN_PARALLEL_WORKPLAN.md](docs/DUAL_SCREEN_PARALLEL_WORKPLAN.md) | 화면 분리를 다중 에이전트로 나눌 때의 파일 소유권 |
 
 ## 브라우저 검증 시 주의

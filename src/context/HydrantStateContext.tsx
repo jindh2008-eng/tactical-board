@@ -1,5 +1,5 @@
 import {
-  createContext, useContext, useState, useCallback, useEffect, type ReactNode,
+  createContext, useContext, useRef, useState, useCallback, useEffect, type ReactNode,
 } from 'react';
 import { saveHydrantSession, loadHydrantSession, saveEquipMsgSession, loadEquipMsgSession } from '../utils/runtimeSession';
 import { useTokens } from './TokenContext';
@@ -53,21 +53,26 @@ export function HydrantStateProvider({ children }: { children: ReactNode }) {
     [brokenHydrants],
   );
 
+  const brokenRef = useRef(brokenHydrants);
+  useEffect(() => { brokenRef.current = brokenHydrants; }, [brokenHydrants]);
+
   const toggleBroken = useCallback((id: string) => {
+    // addLog는 상태 업데이터 **밖**에서 — 안에서 부르면 StrictMode가 콜백을 이중 호출해
+    // 로그가 두 번 쌓인다(EVENT_LOG_PLAN L-8).
+    const nowBroken = !brokenRef.current.has(id);
     setBrokenHydrants(prev => {
       const next = new Set(prev);
-      const nowBroken = !next.has(id);
       if (nowBroken) next.add(id);
       else           next.delete(id);
-      addLog({
-        logType:    'status-tag',
-        tokenId:    id,
-        tokenName:  id,
-        fromZoneId: '',
-        toZoneId:   '',
-        note:       nowBroken ? `소화전 고장: ${id}` : `소화전 복구: ${id}`,
-      });
       return next;
+    });
+    addLog({
+      logType:    'status-tag',
+      tokenId:    id,
+      tokenName:  id,
+      fromZoneId: '',
+      toZoneId:   '',
+      note:       nowBroken ? `소화전 고장: ${id}` : `소화전 복구: ${id}`,
     });
   }, [addLog]);
 
@@ -78,7 +83,15 @@ export function HydrantStateProvider({ children }: { children: ReactNode }) {
 
   const setEquipmentMessage = useCallback((id: string, msg: string) => {
     setEquipmentMessages(prev => ({ ...prev, [id]: msg }));
-  }, []);
+    addLog({
+      logType:    'status-tag',
+      tokenId:    id,
+      tokenName:  id,
+      fromZoneId: '', toZoneId: '',
+      note:       `설비 상태: ${msg}`,
+      payload:    { kind: 'equipment-message', equipmentId: id, message: msg },
+    });
+  }, [addLog]);
 
   const clearEquipmentMessage = useCallback((id: string) => {
     setEquipmentMessages(prev => {
@@ -86,7 +99,15 @@ export function HydrantStateProvider({ children }: { children: ReactNode }) {
       delete next[id];
       return next;
     });
-  }, []);
+    addLog({
+      logType:    'status-tag',
+      tokenId:    id,
+      tokenName:  id,
+      fromZoneId: '', toZoneId: '',
+      note:       '설비 상태 해제',
+      payload:    { kind: 'equipment-message', equipmentId: id, message: null },
+    });
+  }, [addLog]);
 
   return (
     <HydrantStateContext.Provider value={{

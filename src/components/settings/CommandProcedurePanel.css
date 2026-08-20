@@ -4,6 +4,34 @@
   gap: 16px;
 }
 
+/* ── 훈련 중 표시할 레벨 (편집 탭과 별개) ────── */
+
+.cp-panel__active-level {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background-color: var(--color-header-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.cp-panel__active-level-label {
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.cp-panel__active-level-select {
+  font-size: 0.82rem;
+  padding: 3px 8px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
 /* ── 레벨 탭 ────────────────────────────────── */
 
 .cp-panel__level-tabs {

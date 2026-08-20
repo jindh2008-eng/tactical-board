@@ -54,6 +54,7 @@ function StandbyBox({ label, zoneKey, colorMod }: BoxDef) {
           'sbc-box__body',
           isDragOver ? 'drop-target--active' : '',
         ].filter(Boolean).join(' ')}
+        data-zone-key={zoneKey}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}

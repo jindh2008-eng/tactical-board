@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-import type { VictimToken, CreateVictimInput, VictimCondition } from '../types/victim';
+import type { VictimToken, CreateVictimInput, VictimCondition, VictimTriage } from '../types/victim';
+import { classifyTriage } from '../types/victim';
 import type { VictimSetupItem } from '../types/settings';
-import type { BuildingConfig, Pos } from '../types';
+import type { BuildingConfig, Pos, SearchPhase } from '../types';
 import {
   buildVictim, randomVictim,
   buildVictimDisplayLine, zoneKeyToFullLabel,
@@ -12,6 +13,7 @@ import {
   computeVictimOffsets,
 } from '../utils/victimPlacement';
 import { buildValidVictimZoneKeys } from '../data/buildingData';
+import { floorIdLabel, zoneLabel } from '../utils/logLabels';
 import {
   saveVictimSession, loadVictimSession,
   saveVictimSearchSession, loadVictimSearchSession,
@@ -40,7 +42,14 @@ interface VictimContextValue {
   searchScores:        Record<string, number>;
   createVictim:        (input: CreateVictimInput) => void;
   createRandom:        (subLocation: string) => void;
-  moveVictim:          (victimId: string, toZoneKey: string | null, pos?: VictimPos) => void;
+  /**
+   * 구조대상자 이동.
+   * opts.keepCarrier — 연결(carriedBy)을 유지한 채 옮긴다. 연결된 출동대를 따라
+   * 움직이는 내부 호출에서만 쓴다. 사용자가 직접 옮기면(기본값) 연결이 끊긴다.
+   */
+  moveVictim:          (victimId: string, toZoneKey: string | null, pos?: VictimPos, opts?: { keepCarrier?: boolean }) => void;
+  /** 구조대상자를 출동대에 연결(이송 시작). 같은 구역으로 옮기며 붙인다. */
+  attachVictimToUnit:  (victimId: string, tokenId: string) => void;
   updateVictim:        (victimId: string, update: VictimUpdate) => void;
   /** 유닛을 해당 층 인명검색에 추가. 이미 다른 층 검색 중이면 먼저 제거 후 추가. */
   addUnitToSearch:     (tokenId: string, floorId: string, primaryInitial: number, secondaryInitial: number, decrementRate: number, startInSecondary: boolean) => void;
@@ -127,7 +136,7 @@ export function VictimProvider({
   buildingConfig?:     BuildingConfig;
   fireFloor?:          number;
 }) {
-  const { addLog, tokens } = useTokens();
+  const { addLog, tokens, rescueUnit } = useTokens();
 
   const validZoneKeysRef = useRef<Set<string>>(
     buildingConfig !== undefined
@@ -136,13 +145,24 @@ export function VictimProvider({
   );
 
   function sanitizeVictim(v: VictimToken): VictimToken {
-    if (!buildingConfig) return v;
-    if (v.zoneKey === null) return v;
-    if (validZoneKeysRef.current.has(v.zoneKey)) return v;
-    return { ...v, zoneKey: null };
+    // 중증도 분류 도입 이전 세션 복원분 — 이미 임시의료소에 있는데 분류가 없으면
+    // 여기서 채운다. 없으면 구조활동통계에서 통째로 빠져 빈 표로 보인다.
+    const withTriage: VictimToken =
+      v.zoneKey === 'medical-post' && !v.triage && v.condition
+        ? { ...v, triage: classifyTriage(v.condition) }
+        : v;
+
+    if (!buildingConfig) return withTriage;
+    if (withTriage.zoneKey === null) return withTriage;
+    if (validZoneKeysRef.current.has(withTriage.zoneKey)) return withTriage;
+    return { ...withTriage, zoneKey: null };
   }
 
   const victimsRef = useRef<VictimToken[]>([]);
+
+  // 로그에 출동대 이름을 넣을 때 쓴다 — useCallback 안에서 최신 목록이 필요하다
+  const tokensRef = useRef(tokens);
+  useEffect(() => { tokensRef.current = tokens; }, [tokens]);
 
   // ── 구조대상자 상태 ───────────────────────────────────────────────
   const [victims, setVictims] = useState<VictimToken[]>(() => {
@@ -262,22 +282,44 @@ export function VictimProvider({
   }, [discoveredVictimIds, activeSearches]);
 
   // ── 토큰 이동 감지 → 다른 층으로 이동 시 자동 검색 중단 ──────────
+  // 다음 상태와 로그를 **업데이터 밖에서** 계산한다. 업데이터 콜백 안에서 addLog를
+  // 호출하면 StrictMode가 콜백을 이중 호출해 로그가 두 번 쌓인다(EVENT_LOG_PLAN L-8).
   useEffect(() => {
-    setActiveSearches(prev => {
-      let changed = false;
-      const next: Record<string, FloorSearchRecord> = {};
-      for (const [floorId, rec] of Object.entries(prev)) {
-        const stillHere = rec.units.filter(u => {
-          const token = tokens.find(t => t.id === u.tokenId);
-          if (!token?.zoneKey || token.zoneKey.startsWith('face-')) return false;
-          return token.zoneKey.split('-')[0] === floorId;
-        });
-        if (stillHere.length !== rec.units.length) changed = true;
-        next[floorId] = { ...rec, units: stillHere };
+    const prev = activeSearchesRef.current;
+    let changed = false;
+    const next: Record<string, FloorSearchRecord> = {};
+    const dropped: Array<{ floorId: string; tokenId: string }> = [];
+
+    for (const [floorId, rec] of Object.entries(prev)) {
+      const stillHere = rec.units.filter(u => {
+        const token = tokens.find(t => t.id === u.tokenId);
+        if (!token?.zoneKey || token.zoneKey.startsWith('face-')) return false;
+        return token.zoneKey.split('-')[0] === floorId;
+      });
+      if (stillHere.length !== rec.units.length) {
+        changed = true;
+        for (const u of rec.units) {
+          if (!stillHere.some(k => k.tokenId === u.tokenId)) dropped.push({ floorId, tokenId: u.tokenId });
+        }
       }
-      return changed ? next : prev;
-    });
-  }, [tokens]);
+      next[floorId] = { ...rec, units: stillHere };
+    }
+    if (!changed) return;
+
+    setActiveSearches(next);
+
+    // 의도한 철수인지 실수인지 사후에 가리려면 '언제 빠졌는가'가 남아야 한다
+    for (const { floorId, tokenId } of dropped) {
+      const label = tokens.find(t => t.id === tokenId)?.label ?? tokenId;
+      addLog({
+        logSource: 'system',
+        logType:   'search',
+        tokenId, tokenName: label, fromZoneId: floorId, toZoneId: '',
+        note:      `${floorIdLabel(floorId)} 인명검색 이탈 (층 이동)`,
+        payload:   { kind: 'search-stop', floorId, tokenId, tokenLabel: label, reason: 'moved-away' },
+      });
+    }
+  }, [tokens, addLog]);
 
   // ── 계단실 피해자: 출동대 배치층 >= 계단실층 → discoveredVictimIds에 영구 등록 ──
   useEffect(() => {
@@ -305,7 +347,20 @@ export function VictimProvider({
       for (const id of toDiscover) next.add(id);
       return next;
     });
-  }, [tokens]);
+    for (const id of toDiscover) {
+      const v = victimsRef.current.find(x => x.id === id);
+      if (!v) continue;
+      addLog({
+        logSource: 'system',
+        logType:   'victim-found',
+        tokenId:   id,
+        tokenName: victimDisplayName(v),
+        fromZoneId: v.zoneKey ?? '', toZoneId: '',
+        note:      `${zoneLabel(v.zoneKey ?? '')} 구조대상자 발견 (계단실)`,
+        payload:   { kind: 'victim-found', victimId: id, victimLabel: victimDisplayName(v), zoneKey: v.zoneKey ?? null, via: 'stair' },
+      });
+    }
+  }, [tokens, addLog]);
 
   // ── 인명검색 점수 tick (1초마다) ──────────────────────────────────
   useEffect(() => {
@@ -385,6 +440,20 @@ export function VictimProvider({
           for (const id of newlyDiscovered) next.add(id);
           return next;
         });
+        // 훈련 성과의 핵심 지표 — "몇 분에 몇 명을 찾았는가"
+        for (const id of newlyDiscovered) {
+          const v = victimsRef.current.find(x => x.id === id);
+          if (!v) continue;
+          addLog({
+            logSource: 'system',
+            logType:   'victim-found',
+            tokenId:   id,
+            tokenName: victimDisplayName(v),
+            fromZoneId: v.zoneKey ?? '', toZoneId: '',
+            note:      `${zoneLabel(v.zoneKey ?? '')} 구조대상자 발견 (인명검색)`,
+            payload:   { kind: 'victim-found', victimId: id, victimLabel: victimDisplayName(v), zoneKey: v.zoneKey ?? null, via: 'search' },
+          });
+        }
       }
 
       setActiveSearches(updatedSearches);
@@ -392,7 +461,7 @@ export function VictimProvider({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [addLog]);
 
   // ── 구조대상자 생성 ───────────────────────────────────────────────
   const createVictim = useCallback((input: CreateVictimInput) => {
@@ -408,6 +477,7 @@ export function VictimProvider({
     victimId:  string,
     toZoneKey: string | null,
     pos?:      VictimPos,
+    opts?:     { keepCarrier?: boolean },
   ) => {
     if (toZoneKey !== null) {
       const v = victimsRef.current.find(vic => vic.id === victimId);
@@ -436,6 +506,14 @@ export function VictimProvider({
             })()
           : v.rescueLocation;
 
+      // 중증도 분류 — 임시의료소 진입 시 1회만 배정하고 이후 유지한다.
+      // (구역을 나갔다 다시 들어와도 재분류하지 않는다 — 진입 시점의 판정이라)
+      // custom 종류는 condition 이 없어 분류 대상이 아니다.
+      const triage: VictimTriage | undefined =
+        toZoneKey === 'medical-post' && !v.triage && v.condition
+          ? classifyTriage(v.condition)
+          : v.triage;
+
       const isSpecialZone =
         toZoneKey === null ||
         toZoneKey === 'medical-post' ||
@@ -444,7 +522,11 @@ export function VictimProvider({
         v.originDisplayBottom ??
         (isSpecialZone ? undefined : buildVictimDisplayLine({ ...v, zoneKey: toZoneKey }));
 
-      return { ...v, zoneKey: toZoneKey, rescueLocation, originDisplayBottom };
+      // 사용자가 직접 옮기면 이송 연결이 끊긴다(연결 해제 수단).
+      // 연결된 출동대를 따라가는 이동만 keepCarrier 로 연결을 유지한다.
+      const carriedBy = opts?.keepCarrier ? v.carriedBy : undefined;
+
+      return { ...v, zoneKey: toZoneKey, rescueLocation, triage, carriedBy, originDisplayBottom };
     }));
 
     setVictimPositions(prev => {
@@ -456,6 +538,67 @@ export function VictimProvider({
       return { ...prev, [victimId]: pos };
     });
   }, [addLog]);
+
+  // ── 이송 연결 (구조대상자 → 출동대) ───────────────────────────────
+  const attachVictimToUnit = useCallback((victimId: string, tokenId: string) => {
+    const token  = tokens.find(t => t.id === tokenId);
+    const victim = victimsRef.current.find(v => v.id === victimId);
+    if (!token || !victim) return;
+
+    addLog({
+      logType:    'move',
+      tokenId:    victimId,
+      tokenName:  victimDisplayName(victim),
+      fromZoneId: victim.zoneKey ?? 'pool',
+      toZoneId:   token.zoneKey ?? 'pool',
+      note:       `${token.label} 이송 연결`,
+    });
+
+    // 출동대와 같은 구역으로 옮기고 연결한다. 위치는 출동대 옆에 두기 위해
+    // 좌표를 지우고 흐름 배치에 맡긴다(구역 좌표계가 서로 달라 그대로 쓰면 어긋남).
+    setVictims(prev => prev.map(v =>
+      v.id === victimId
+        ? { ...v, zoneKey: token.zoneKey, carriedBy: tokenId }
+        : v
+    ));
+    setVictimPositions(prev => {
+      const next = { ...prev };
+      delete next[victimId];
+      return next;
+    });
+  }, [tokens, addLog]);
+
+  // ── 연결된 구조대상자 동반 이동 ───────────────────────────────────
+  //
+  // TokenContext 는 VictimContext 를 알 수 없다(Provider 가 바깥에 있음).
+  // 그래서 "출동대가 움직이면 따라간다"를 여기서 토큰 변화를 관찰해 처리한다.
+  // 임시의료소에 도착하면 자동으로 구조 처리하고 연결을 끊는다.
+  const prevTokenZonesRef = useRef<Map<string, string | null> | null>(null);
+  useEffect(() => {
+    const nextZones = new Map(tokens.map(t => [t.id, t.zoneKey]));
+    const prevZones = prevTokenZonesRef.current;
+    prevTokenZonesRef.current = nextZones;
+    if (prevZones === null) return; // 최초 마운트 — 기준만 잡고 끝
+
+    for (const [tokenId, zoneKey] of nextZones) {
+      if (!prevZones.has(tokenId)) continue;      // 새로 생긴 토큰
+      if (prevZones.get(tokenId) === zoneKey) continue; // 구역 그대로
+
+      const carried = victimsRef.current.filter(v => v.carriedBy === tokenId);
+      if (carried.length === 0) continue;
+
+      if (zoneKey === 'medical-post') {
+        // 도착 — 연결된 전원을 구조 처리한다. rescueUnit 은 출동대에 구조중 배지와
+        // rescue 로그(누가 구조했는지)를 남기고 처치 카운트다운을 시작한다.
+        const token = tokens.find(t => t.id === tokenId);
+        const names = carried.map(victimDisplayName).join(', ');
+        if (token) rescueUnit(tokenId, names);
+        for (const v of carried) moveVictim(v.id, 'medical-post');  // keepCarrier 없음 → 연결 해제
+      } else {
+        for (const v of carried) moveVictim(v.id, zoneKey, undefined, { keepCarrier: true });
+      }
+    }
+  }, [tokens, moveVictim, rescueUnit]);
 
   // ── 상태·세부위치·라벨 변경 ──────────────────────────────────────
   const updateVictim = useCallback((victimId: string, update: VictimUpdate) => {
@@ -549,10 +692,24 @@ export function VictimProvider({
       ...prev,
       [tokenId]: initialDisplay,
     }));
-  }, []);
+
+    // 어느 층에 누구를 언제 투입했는가 — SOP 평가 대상
+    const phase: SearchPhase = (startInSecondary || isFrozenJoin) ? 'secondary' : 'primary';
+    const label = tokensRef.current.find(t => t.id === tokenId)?.label ?? tokenId;
+    addLog({
+      logType:    'search',
+      tokenId, tokenName: label, fromZoneId: '', toZoneId: floorId,
+      note:       `${floorIdLabel(floorId)} 인명검색 투입 (${phase === 'secondary' ? '2차' : '1차'})`,
+      payload:    { kind: 'search-start', floorId, tokenId, tokenLabel: label, phase },
+    });
+  }, [addLog]);
 
   // ── 유닛 제거 (점수 유지) ─────────────────────────────────────────
   const removeUnitFromSearch = useCallback((tokenId: string) => {
+    // 어느 층에서 빠졌는지는 상태를 고치기 전에 읽어야 한다
+    const fromFloorId = Object.entries(activeSearchesRef.current)
+      .find(([, rec]) => rec.units.some(u => u.tokenId === tokenId))?.[0];
+
     setActiveSearches(prev => {
       const next: Record<string, FloorSearchRecord> = {};
       for (const [fid, rec] of Object.entries(prev)) {
@@ -565,20 +722,51 @@ export function VictimProvider({
       delete next[tokenId];
       return next;
     });
-  }, []);
+
+    if (fromFloorId) {
+      const label = tokensRef.current.find(t => t.id === tokenId)?.label ?? tokenId;
+      addLog({
+        logType:   'search',
+        tokenId, tokenName: label, fromZoneId: fromFloorId, toZoneId: '',
+        note:      `${floorIdLabel(fromFloorId)} 인명검색 해제`,
+        payload:   { kind: 'search-stop', floorId: fromFloorId, tokenId, tokenLabel: label, reason: 'manual' },
+      });
+    }
+  }, [addLog]);
 
   // ── 직접 발견 상태 변경 (체크리스트 등) ────────────────────────────
   const setVictimDiscovered = useCallback((victimTokenId: string, visible: boolean) => {
+    const wasDiscovered = discoveredVictimIdsRef.current.has(victimTokenId);
     setDiscoveredVictimIds(prev => {
       const next = new Set(prev);
       if (visible) next.add(victimTokenId);
       else next.delete(victimTokenId);
       return next;
     });
-  }, []);
+    // 발견 해제는 기록하지 않는다 — 되돌리기(오조작 정정)이지 훈련 사건이 아니다
+    if (visible && !wasDiscovered) {
+      const v = victimsRef.current.find(x => x.id === victimTokenId);
+      if (v) {
+        addLog({
+          logType:    'victim-found',
+          tokenId:    victimTokenId,
+          tokenName:  victimDisplayName(v),
+          fromZoneId: v.zoneKey ?? '', toZoneId: '',
+          note:       `${zoneLabel(v.zoneKey ?? '')} 구조대상자 발견 (진행상황관리)`,
+          payload:    { kind: 'victim-found', victimId: victimTokenId, victimLabel: victimDisplayName(v), zoneKey: v.zoneKey ?? null, via: 'checklist' },
+        });
+      }
+    }
+  }, [addLog]);
 
   // ── 초진 도달 시 해당 층 인명검색 중단 (1차 점수 유지, 유닛 제거) ──
   const transitionToSecondarySearch = useCallback((floorIds: string[]) => {
+    // 로그용 집계는 상태를 고치기 전에 — 업데이터 안에서 계산하면 StrictMode에 두 번 돈다
+    const frozen = floorIds
+      .map(floorId => ({ floorId, rec: activeSearchesRef.current[floorId] }))
+      .filter(({ rec }) => rec && !rec.primaryFrozen)
+      .map(({ floorId, rec }) => ({ floorId, tokenIds: rec!.units.map(u => u.tokenId) }));
+
     const removedTokenIds: string[] = [];
     setActiveSearches(prev => {
       const next = { ...prev };
@@ -601,13 +789,26 @@ export function VictimProvider({
         return next;
       });
     }
-  }, []);
+
+    for (const { floorId, tokenIds } of frozen) {
+      const names = tokenIds
+        .map(id => tokensRef.current.find(t => t.id === id)?.label ?? id)
+        .join(', ');
+      addLog({
+        logSource: 'system',
+        logType:   'search',
+        tokenId: '', tokenName: '', fromZoneId: floorId, toZoneId: '',
+        note:      `${floorIdLabel(floorId)} 초진 도달 → 1차 인명검색 종료${names ? ` (${names})` : ''}`,
+        payload:   { kind: 'search-primary-frozen', floorId, tokenIds },
+      });
+    }
+  }, [addLog]);
 
   return (
     <VictimContext.Provider value={{
       victims, victimPositions,
       discoveredVictimIds, activeSearches, searchScores,
-      createVictim, createRandom, moveVictim, updateVictim,
+      createVictim, createRandom, moveVictim, updateVictim, attachVictimToUnit,
       addUnitToSearch, removeUnitFromSearch, transitionToSecondarySearch,
       setVictimDiscovered,
     }}>

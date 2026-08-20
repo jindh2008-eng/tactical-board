@@ -4,6 +4,7 @@ import {
 import { useTokens } from './TokenContext';
 import { generateId } from '../utils/settingsStorage';
 import { saveWaterConnSession, loadWaterConnSession } from '../utils/runtimeSession';
+import { hasWaterSupply } from '../utils/waterSupply';
 
 // ─────────────────────────────────────────────
 // 송수 연결 타입
@@ -16,6 +17,15 @@ export interface WaterConnection {
   fromType: string;
   toType:   string;
   status:   'active';
+  /**
+   * 연결 시점의 표시 이름. 소화전·연결송수구처럼 UnitToken 이 아닌 설비는
+   * tokens 배열에서 찾을 수 없어, 해제 로그에서 이름 대신 raw id 가 노출되던 문제가 있었다
+   * (예: "1779762925172 → 펌프1호 해제"). 연결 시점에 이름을 박아 두면 해제할 때도
+   * 다시 조회할 필요가 없다. optional 인 이유: 이 필드가 생기기 전 세션에서 복원된
+   * 연결은 값이 없을 수 있다 — 그때는 기존처럼 tokens 조회로 대체한다(removeConnection 참고).
+   */
+  fromName?: string;
+  toName?:   string;
 }
 
 // ─────────────────────────────────────────────
@@ -37,6 +47,8 @@ const WaterConnectionContext = createContext<WaterConnectionContextValue | null>
 const STANDBY_ZONES  = new Set(['standby-standby1', 'standby-imminent']);
 const AERIAL_TYPES   = new Set(['aerial', 'ladder']);
 const WATER_SOURCES  = new Set(['pump', 'water_tank']);
+/** 관창 방수 차종 — 급수가 끊기면 방수도 멈춘다 */
+const SPRAY_UNIT_TYPES = new Set(['suppression', 'rescue']);
 
 export function useWaterConnections(): WaterConnectionContextValue {
   const ctx = useContext(WaterConnectionContext);
@@ -93,7 +105,10 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
       note:       `${fromName} → ${toName}`,
     });
 
-    setConnections(prev => [...prev, { id: `wc-${generateId()}`, fromId, toId, fromType, toType, status: 'active' }]);
+    setConnections(prev => [
+      ...prev,
+      { id: `wc-${generateId()}`, fromId, toId, fromType, toType, status: 'active', fromName, toName },
+    ]);
   }, [addLog]);
 
   // removeConnRef를 먼저 선언하여 아래 useEffect에서 사용 가능하게 함
@@ -102,8 +117,10 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
     if (conn) {
       const fromToken = tokensRef.current.find(t => t.id === conn.fromId);
       const toToken   = tokensRef.current.find(t => t.id === conn.toId);
-      const fromName  = fromToken?.label ?? conn.fromId;
-      const toName    = toToken?.label   ?? conn.toId;
+      // 연결 시점에 저장해 둔 이름을 우선 쓴다 — 소화전·연결송수구처럼 tokens 에 없는
+      // 설비는 이게 없으면 raw id 가 노출된다. 이 필드가 없는(구버전 세션) 연결만 대체한다.
+      const fromName  = conn.fromName ?? fromToken?.label ?? conn.fromId;
+      const toName    = conn.toName   ?? toToken?.label   ?? conn.toId;
       addLog({
         logType:    'water-relay',
         tokenId:    conn.fromId,
@@ -113,9 +130,16 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
         toZoneId:   conn.toId,
         note:       `${fromName} → ${toName} 해제`,
       });
-      // 고가차/굴절차 연결 해제 시 방수 자동 중단
-      if (AERIAL_TYPES.has(conn.toType) && toToken?.aerialSprayTarget != null) {
-        setAerialSprayTarget(conn.toId, null);
+      // 급수가 완전히 끊기면 방수도 멈춘다. 남은 연결이 있으면 유지한다
+      // (한 대에 펌프 두 대가 물릴 수 있어 마지막 하나가 빠질 때만 중단해야 한다).
+      const remaining = connectionsRef.current.filter(c => c.id !== id);
+      if (toToken && !hasWaterSupply(remaining, conn.toId, toToken.unitType)) {
+        if (AERIAL_TYPES.has(conn.toType) && toToken.aerialSprayTarget != null) {
+          setAerialSprayTarget(conn.toId, null);
+        }
+        if (SPRAY_UNIT_TYPES.has(conn.toType) && toToken.sprayState != null) {
+          setSprayState(conn.toId, null);
+        }
       }
     }
     setConnections(prev => prev.filter(c => c.id !== id));

@@ -1,6 +1,7 @@
 import {
   createContext, useContext, useState, type Dispatch, type SetStateAction, type ReactNode,
 } from 'react';
+import { loadPostsSession } from '../utils/runtimeSession';
 
 // ─────────────────────────────────────────────
 // 자원대기소 운영(지정) 여부 — 출동대현황의 더블클릭 이동 로직이
@@ -15,7 +16,8 @@ interface ResourceStatusContextValue {
 const ResourceStatusContext = createContext<ResourceStatusContextValue | null>(null);
 
 export function ResourceStatusProvider({ children }: { children: ReactNode }) {
-  const [resourceAssigned, setResourceAssigned] = useState(false);
+  // 저장은 MedicalPostProvider가 한 키에 묶어서 한다(같은 성격의 상태라 파일을 나누지 않았다)
+  const [resourceAssigned, setResourceAssigned] = useState(() => loadPostsSession()?.resourceAssigned ?? false);
 
   return (
     <ResourceStatusContext.Provider value={{ resourceAssigned, setResourceAssigned }}>

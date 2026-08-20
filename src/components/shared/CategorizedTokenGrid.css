@@ -38,6 +38,6 @@
 
 .ctg__placeholder {
   font-size: 0.66rem;
-  color: var(--color-text-dim);
+  color: var(--ctr-border-mid); /* 이 컴포넌트는 현재 모두 밝은 보드 패널 안에서만 쓰인다 */
   padding-top: 4px;
 }

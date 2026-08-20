@@ -1,4 +1,4 @@
-import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig, AerialSuppressionConfig, ChecklistConfig, CommandProcedureConfigs, UnitStatusConfig, UnitTagPresetConfig } from '../types/settings';
+import type { BuildingSettings, TimingSettings, DispatchSetup, VictimSetupItem, DispatchRosterItem, ArrivalMode, HydrantSetupItem, FireSuppressionConfig, AerialSuppressionConfig, ChecklistConfig, CommandProcedureConfigs, CommandProcedureLevel, UnitStatusConfig, UnitTagPresetConfig } from '../types/settings';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP } from '../types/settings';
 import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../types/presets';
 import type { EventSetupItem } from '../types/events';
@@ -129,6 +129,17 @@ const EMPTY_WORKING: WorkingPresets = {
   eventSetup:         [],
 };
 
+/**
+ * 연결송수구 표시 여부. 구버전(`siamesePipeFaces: Face[]`)은 면이 하나라도
+ * 선택돼 있었으면 표시로 본다.
+ */
+export function resolveHasSiamesePipe(
+  building?: { hasSiamesePipe?: boolean; siamesePipeFaces?: unknown[] } | null,
+): boolean {
+  if (building?.hasSiamesePipe !== undefined) return building.hasSiamesePipe;
+  return (building?.siamesePipeFaces?.length ?? 0) > 0;
+}
+
 export function loadWorkingPresets(): WorkingPresets {
   try {
     const raw = localStorage.getItem(WORKING_PRESETS_KEY);
@@ -151,11 +162,11 @@ export function loadWorkingPresets(): WorkingPresets {
         : (v.floor != null && !isNaN(Number(v.floor))) ? Number(v.floor) : null,
       immediatelyVisible: v.immediatelyVisible ?? false,
     }));
-    // 구버전 dispatchSetup에 waterTank 필드가 없을 수 있으므로 기본값으로 보정
+    // 구버전 dispatchSetup에 waterTank·rescueVehicle 필드가 없을 수 있으므로 기본값으로 보정
     const rawSetup = parsed.dispatchSetup ?? DEFAULT_DISPATCH_SETUP;
     const dispatchSetup: typeof rawSetup = {
       ...rawSetup,
-      vehicles: { waterTank: 0, ...rawSetup.vehicles },
+      vehicles: { waterTank: 0, rescueVehicle: 0, ...rawSetup.vehicles },
     };
     return {
       sharedBadgePresets: parsed.sharedBadgePresets ?? [],
@@ -240,6 +251,20 @@ export function saveUnitTagPresetConfig(cfg: UnitTagPresetConfig): void {
   localStorage.setItem(TAG_PRESET_KEY, JSON.stringify(cfg));
 }
 
+/**
+ * 훈련 중 표시할 지휘절차 레벨 — 시나리오(설정 세트)에 속하지 않는 전역값.
+ * commandProcedureConfigs 와 마찬가지로 메인 설정 불러오기·초기화에 영향받지 않는다.
+ */
+const ACTIVE_COMMAND_PROCEDURE_LEVEL_KEY = 'tacticalBoardActiveCommandProcedureLevel';
+
+export function loadActiveCommandProcedureLevel(): CommandProcedureLevel {
+  const raw = localStorage.getItem(ACTIVE_COMMAND_PROCEDURE_LEVEL_KEY);
+  return raw === 'beginner' || raw === 'intermediate' || raw === 'advanced' ? raw : 'beginner';
+}
+export function saveActiveCommandProcedureLevel(level: CommandProcedureLevel): void {
+  localStorage.setItem(ACTIVE_COMMAND_PROCEDURE_LEVEL_KEY, level);
+}
+
 // ─────────────────────────────────────────────
 // 내보내기 / 불러오기
 // ─────────────────────────────────────────────
@@ -250,6 +275,7 @@ export interface SettingsExport {
   settingsList: SettingsSet[];
   workingPresets: WorkingPresets;
   commandProcedureConfigs?: CommandProcedureConfigs;
+  activeCommandProcedureLevel?: CommandProcedureLevel;
   unitStatusConfig?: UnitStatusConfig;
   unitTagPresetConfig?: UnitTagPresetConfig;
 }
@@ -261,6 +287,7 @@ export function exportSettings(): void {
     settingsList: loadSettingsList(),
     workingPresets: loadWorkingPresets(),
     commandProcedureConfigs: loadCommandProcedureConfigs(),
+    activeCommandProcedureLevel: loadActiveCommandProcedureLevel(),
     unitStatusConfig: loadUnitStatusConfig(),
     unitTagPresetConfig: loadUnitTagPresetConfig(),
   };
@@ -290,6 +317,8 @@ export function importSettings(file: File): Promise<void> {
         localStorage.setItem(WORKING_PRESETS_KEY, JSON.stringify(data.workingPresets));
         if (data.commandProcedureConfigs)
           localStorage.setItem(COMMAND_PROCEDURE_KEY, JSON.stringify(data.commandProcedureConfigs));
+        if (data.activeCommandProcedureLevel)
+          localStorage.setItem(ACTIVE_COMMAND_PROCEDURE_LEVEL_KEY, data.activeCommandProcedureLevel);
         if (data.unitStatusConfig)
           localStorage.setItem(UNIT_STATUS_KEY, JSON.stringify(data.unitStatusConfig));
         if (data.unitTagPresetConfig)

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { TokenColor } from '../../types';
 import { useTokens } from '../../context/TokenContext';
+import { generateId } from '../../utils/settingsStorage';
 import './UnitStatus.css';
 
 // ─── 활동대 ──────────────────────────────────────────
@@ -46,8 +47,16 @@ export function UnitStatus() {
   const [customText, setCustomText] = useState('');
 
   // 활동대: "진압대" → "진압1"
+  //
+  // 진압대는 펌프를 함께 만든다 — 설정모드 로스터(buildRoster)의 자동 연동과 같은 규칙이다.
+  // 구조대·구급대는 차량을 붙이지 않는다.
   function makeActivity({ name, color, unitType }: ActivityItem) {
-    createToken(name, 'activity', color, n => `${name.slice(0, -1)}${n}`, unitType);
+    // 진압대와 펌프는 한 짝 — 같은 그룹 ID 를 줘서 하나를 지우면 함께 지워지게 한다
+    const pairId = unitType === 'suppression' ? `pair-${generateId()}` : undefined;
+    createToken(name, 'activity', color, n => `${name.slice(0, -1)}${n}`, unitType, pairId);
+    if (pairId) {
+      createToken('펌프', 'vehicle', 'vehicle', n => `펌프${n}`, 'pump', pairId);
+    }
   }
 
   // 차량: "펌프" → "펌프1"

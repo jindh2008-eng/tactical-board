@@ -41,13 +41,6 @@
 .zone-cell--right {
   flex: 0 0 88px;
   background-color: var(--ctr-surface);
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent          0px,
-    transparent          16px,
-    rgba(0, 0, 0, 0.04)  16px,
-    rgba(0, 0, 0, 0.04)  17px
-  );
 }
 
 .zone-cell--right:hover {
@@ -61,13 +54,6 @@
 .zone-cell--center {
   flex: 1;
   background-color: var(--ctr-surface);
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent          0px,
-    transparent          16px,
-    rgba(0, 0, 0, 0.04)  16px,
-    rgba(0, 0, 0, 0.04)  17px
-  );
 }
 
 .zone-cell--center:hover {

@@ -4,6 +4,9 @@ import type { UnitToken } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
+import { useDisplayOptions } from '../../context/DisplayOptionsContext';
+import { sprayBlockReason, sprayBlockMessage } from '../../utils/waterSupply';
+import { useWaterLevel } from '../../context/WaterLevelContext';
 import { useSettings } from '../../store/settingsStore';
 import { useVictims } from '../../context/VictimContext';
 import { useOptionalBuildingState, computeStairSmokeLevel } from '../../context/BuildingStateContext';
@@ -71,7 +74,9 @@ const GAP = 6;
 export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const { toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialSprayTarget } = useTokens();
   const { enterMode }           = useActionMode();
-  useWaterConnections();
+  const { connections }         = useWaterConnections();
+  const { showWaterSupply }     = useDisplayOptions();
+  const waterLevel              = useWaterLevel();
   const { unitTagPresetConfig, unitStatusConfig } = useSettings();
   const { activeSearches, searchScores, addUnitToSearch, removeUnitFromSearch } = useVictims();
   const buildingState      = useOptionalBuildingState();
@@ -207,7 +212,19 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
     onClose();
   }
 
+  /** 송수 사용 훈련이면 급수 연결과 잔량을 확인한다. 막히면 안내하고 true 반환 */
+  function blockedBySupply(): boolean {
+    const reason = sprayBlockReason(
+      showWaterSupply, connections, token.id, token.unitType, waterLevel?.emptyVehicleIds,
+    );
+    if (reason === null) return false;
+    alert(sprayBlockMessage(reason, token.unitType));
+    onClose();
+    return true;
+  }
+
   function handleSprayStart() {
+    if (blockedBySupply()) return;
     enterMode({ type: 'spray-target', sourceId: token.id, sourceZoneKey: token.zoneKey });
     onClose();
   }
@@ -218,6 +235,7 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   }
 
   function handleMonitorStart() {
+    if (blockedBySupply()) return;   // 방수포는 자기 수량이 0이면 못 쏜다
     enterMode({ type: 'aerial-spray-target', sourceId: token.id });
     onClose();
   }
@@ -346,7 +364,7 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
                 className={['usbm2__popup-btn usbm2__popup-btn--msg', isActive ? 'usbm2__popup-btn--msg-active' : ''].filter(Boolean).join(' ')}
                 onMouseDown={e => {
                   e.stopPropagation();
-                  setCustomNote(token.id, isActive ? '' : msg);
+                  setCustomNote(token.id, isActive ? '' : msg, 'preset');
                   onClose();
                 }}
               >

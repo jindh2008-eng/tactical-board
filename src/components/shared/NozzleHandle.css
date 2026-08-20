@@ -1,0 +1,86 @@
+/* ─────────────────────────────────────────────
+   관창 핸들 — 토큰 우측 상단 모서리에 걸친다.
+   상태메세지·배지는 토큰 위 중앙, 이송 구조대상자는 우측 중앙이라
+   세 곳 모두와 자리가 겹치지 않는다.
+   ─────────────────────────────────────────────*/
+
+.nozzle-handle {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  transform: translate(-42%, -58%);
+  z-index: 7;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width:  calc(22px * var(--ui-scale, 1));
+  height: calc(16px * var(--ui-scale, 1));
+  padding: 0 calc(2px * var(--ui-scale, 1));
+
+  border: 1px solid #2255aa;
+  border-radius: calc(4px * var(--ui-scale, 1));
+  background: #0d2a52;
+  cursor: grab;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.12s, background 0.12s, opacity 0.12s;
+}
+
+/* 방수포(펌프·물탱크)는 우측에 수량 게이지가 붙어 있다.
+   핸들 오른쪽 끝을 토큰 오른쪽 모서리에 맞춰 게이지와 겹치지 않게 한다. */
+.nozzle-handle--monitor {
+  transform: translate(-100%, -55%);
+}
+
+.nozzle-handle:active { cursor: grabbing; }
+
+.nozzle-handle svg {
+  width: 100%;
+  height: 100%;
+  fill: #88bbff;
+}
+
+.nozzle-handle__jet {
+  fill: none;
+  stroke: #66ccff;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+/* 방수 중 — 파랗게 활성 표시. 클릭하면 중단된다는 신호다 */
+.nozzle-handle--active {
+  border-color: #66ccff;
+  background: #1a5da8;
+  box-shadow: 0 0 calc(8px * var(--ui-scale, 1)) rgba(102, 204, 255, 0.65);
+}
+
+.nozzle-handle--active svg { fill: #ffffff; }
+
+.nozzle-handle--active .nozzle-handle__jet {
+  stroke: #ffffff;
+  animation: nozzle-jet-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes nozzle-jet-pulse {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+
+/* 송수 연결이 없어 방수 불가 */
+.nozzle-handle--blocked {
+  opacity: 0.4;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+/* 막힌 상태에서 조작을 시도했을 때 잠깐 빨갛게 */
+.nozzle-handle--blocked-flash {
+  opacity: 1;
+  filter: none;
+  border-color: #ff6666;
+  background: rgba(70, 16, 16, 0.95);
+}
+
+.nozzle-handle--blocked-flash svg { fill: #ffaaaa; }
+.nozzle-handle--blocked-flash .nozzle-handle__jet { stroke: #ff6666; }

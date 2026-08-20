@@ -308,10 +308,11 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
     const newlyBroken = [...effectiveBrokenIds].filter(id => !prevIds.has(id));
     if (newlyBroken.length === 0) return;
 
-    // 진압대: 수원 고장·소진 시 방수 즉시 중단
+    // 진압대·구조대: 수원 고장·소진 시 방수 즉시 중단
     for (const brokenId of newlyBroken) {
       for (const conn of connectionsRef.current) {
-        if (conn.fromId !== brokenId || conn.toType !== 'suppression') continue;
+        if (conn.fromId !== brokenId) continue;
+        if (conn.toType !== 'suppression' && conn.toType !== 'rescue') continue;
         const toToken = tokensRef.current.find(t => t.id === conn.toId);
         if (toToken?.sprayState != null) setSprayStateRef.current(conn.toId, null);
       }

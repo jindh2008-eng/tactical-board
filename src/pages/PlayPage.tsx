@@ -5,6 +5,7 @@ import { useUIOverlay }       from '../context/UIOverlayContext';
 import { useNavSlot }         from '../context/NavSlotContext';
 import { DisplayOptionsContext } from '../context/DisplayOptionsContext';
 import { useTokens, TokenProvider } from '../context/TokenContext';
+import { LogProvider, useLog }  from '../context/LogContext';
 import { VictimProvider }     from '../context/VictimContext';
 import { EventProvider }      from '../context/EventContext';
 import { ActionModeProvider, useActionMode } from '../context/ActionModeContext';
@@ -22,18 +23,67 @@ import { DrawingProvider }         from '../context/DrawingContext';
 import { SprayOverlay }            from '../components/overlay/SprayOverlay';
 import { AerialOverlay }          from '../components/overlay/AerialOverlay';
 import { UnitStatusPanel as UnitInfoPanel } from '../components/left/UnitStatusPanel';
+import { UnitAddPanel }       from '../components/left/UnitAddPanel';
+import { ArrivedGroupRow }    from '../components/shared/ArrivedGroupRow';
+import { splitArrivalGroup }  from '../utils/arrivalGroup';
 import { CategorizedTokenGrid } from '../components/shared/CategorizedTokenGrid';
 import { TacticalArea }       from '../components/building/TacticalArea';
-import { MedicalPostBox, BottomStandbyBoxes } from '../components/building/StandbyColumn';
-import { RescueStats }        from '../components/building/RescueStats';
+import { BottomStandbyBoxes } from '../components/building/StandbyColumn';
 import { WaterConnectionOverlay } from '../components/overlay/WaterConnectionOverlay';
-import { UnitAddDrawer }      from '../components/overlays/UnitAddDrawer';
 import { AnalysisModal }      from '../components/overlays/AnalysisModal';
+import { RescueStatsModal }   from '../components/overlays/RescueStatsModal';
 import { DragDiagnosticsPanel } from '../components/dev/DragDiagnosticsPanel';
 import { logDragEvent } from '../utils/dragDiagnostics';
+import {
+  resolveAerialDeployFloor, maxDeployHeight, overHeightMessage,
+} from '../utils/aerialDeploy';
+import { resolveSprayTarget } from '../utils/sprayTarget';
 import { LogDrawer }          from '../components/overlays/LogDrawer';
-import { ChecklistPanel }     from '../components/panels/ChecklistPanel';
+import { LogPanel }           from '../components/right/LogPanel';
+import { CommandProcedureTrainingBox } from '../components/right/CommandProcedureTrainingBox';
 import './PlayPage.css';
+
+
+// ─────────────────────────────────────────────
+// 훈련 시작·종료 → 이벤트 로그 브릿지
+//
+// `TrainingProvider`는 App 최상위(LogProvider 바깥)라 `TrainingContext` 안에서는
+// `useLog()`를 쓸 수 없다. `EventLayer`가 이벤트 상태 로그를 대신 처리하는 것과 같은 이유다.
+// 훈련 시작·종료는 **모든 경과시간(MM:SS)의 기준점**이라 로그에 반드시 남아야 한다.
+// docs/EVENT_LOG_PLAN.md N-1
+// ─────────────────────────────────────────────
+
+function TrainingLogBridge() {
+  const { status } = useTraining();
+  const { addLog } = useLog();
+
+  // 마운트 시점 상태를 기준으로 잡는다 — 새로고침으로 'running'이 복원돼도 다시 기록하지 않는다
+  const prevStatusRef = useRef(status);
+
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    if (prev === status) return;
+    prevStatusRef.current = status;
+
+    if (prev === 'idle' && status === 'running') {
+      addLog({
+        logSource: 'system', logType: 'training',
+        tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '',
+        note: '훈련 시작',
+        payload: { kind: 'training', phase: 'start' },
+      });
+    } else if (status === 'ended') {
+      addLog({
+        logSource: 'system', logType: 'training',
+        tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '',
+        note: '훈련 종료',
+        payload: { kind: 'training', phase: 'end' },
+      });
+    }
+  }, [status, addLog]);
+
+  return null;
+}
 
 
 // ─────────────────────────────────────────────
@@ -82,44 +132,6 @@ function ActionModeBanner() {
 // spray-target 모드 중 전체 화면에 클릭 영역을 제공
 // ─────────────────────────────────────────────
 
-// 클릭 좌표에서 data-floor-id, data-zone-key 탐색
-function getPointInfo(cx: number, cy: number): { floorId?: string; zoneKey?: string } {
-  const elements = document.elementsFromPoint(cx, cy);
-  let floorId: string | undefined;
-  let zoneKey: string | undefined;
-  for (const el of elements) {
-    let cur: Element | null = el;
-    while (cur) {
-      if (!floorId) { const v = cur.getAttribute('data-floor-id'); if (v) floorId = v; }
-      if (!zoneKey) { const v = cur.getAttribute('data-zone-key');  if (v) zoneKey  = v; }
-      if (floorId && zoneKey) break;
-      cur = cur.parentElement;
-    }
-    if (floorId && zoneKey) break;
-  }
-  return { floorId, zoneKey };
-}
-
-// 층 zone key (e.g. "3F-center") 에서 floor ID (e.g. "3F") 추출
-function floorIdFromZoneKey(zoneKey: string): string | null {
-  const m = zoneKey.match(/^(.+)-(center|right|stair)$/);
-  return m ? m[1] : null;
-}
-
-// 클릭 위치가 토큰의 구역(층 또는 방면)과 일치하는지 검증
-function isValidSprayZone(cx: number, cy: number, sourceZoneKey: string | null): boolean {
-  if (!sourceZoneKey) return false;
-  const { floorId, zoneKey } = getPointInfo(cx, cy);
-
-  if (sourceZoneKey.startsWith('face-')) {
-    // 방면 구역: 같은 방면이거나 건물 내부(층 구역) 허용
-    return zoneKey === sourceZoneKey || floorId != null;
-  }
-  // 층 구역: floor ID 비교
-  const srcFloorId = floorIdFromZoneKey(sourceZoneKey);
-  return srcFloorId !== null && floorId === srcFloorId;
-}
-
 function SprayTargetOverlay() {
   const { mode, clearMode } = useActionMode();
   const { setSprayState }   = useTokens();
@@ -137,10 +149,10 @@ function SprayTargetOverlay() {
   const sprayMode = mode;
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
-    const { floorId, zoneKey } = getPointInfo(e.clientX, e.clientY);
+    const target = resolveSprayTarget(e.clientX, e.clientY);
 
-    // 토큰이 있는 구역 외 클릭 — 모드는 유지(재시도 가능), 사용자에게 피드백만 표시
-    if (!isValidSprayZone(e.clientX, e.clientY, sprayMode.sourceZoneKey)) {
+    // 전술상황판 밖 클릭 — 모드는 유지(재시도 가능), 사용자에게 피드백만 표시
+    if (!target || !sprayMode.sourceZoneKey) {
       logDragEvent('SprayTargetOverlay invalid click', `sourceZone=${sprayMode.sourceZoneKey ?? 'null'}`);
       if (invalidTimerRef.current) clearTimeout(invalidTimerRef.current);
       setInvalidClickAt({ x: e.clientX, y: e.clientY });
@@ -148,21 +160,8 @@ function SprayTargetOverlay() {
       return;
     }
 
-    const board = document.getElementById('tactical-area');
-    const rect  = board?.getBoundingClientRect();
-    if (!rect) return;
-
-    // 내부 층이면 floorId, 방면이면 zoneKey(face-X)를 방수 지점에 저장
-    const resolvedFloorId = sprayMode.sourceZoneKey?.startsWith('face-')
-      ? (floorId ?? zoneKey)
-      : floorId;
-
-    setSprayState(sprayMode.sourceId, '100%', {
-      x: (e.clientX - rect.left) / rect.width,
-      y: (e.clientY - rect.top)  / rect.height,
-      floorId: resolvedFloorId,
-    });
-    logDragEvent('SprayTargetOverlay resolved', `sourceId=${sprayMode.sourceId} floorId=${resolvedFloorId ?? 'null'}`);
+    setSprayState(sprayMode.sourceId, '100%', target);
+    logDragEvent('SprayTargetOverlay resolved', `sourceId=${sprayMode.sourceId} floorId=${target.floorId ?? 'null'}`);
     clearMode();
   }
 
@@ -189,9 +188,6 @@ function SprayTargetOverlay() {
 // aerial-floor-select 모드 중 임의 지점 클릭 → 층 정보 자동 감지
 // ─────────────────────────────────────────────
 
-const AERIAL_MAX_HEIGHT  = 15;
-const LADDER_MAX_HEIGHT  = 7;
-
 function AerialTargetOverlay() {
   const { mode, clearMode }               = useActionMode();
   const { setStatusTag, setAerialTarget } = useTokens();
@@ -200,31 +196,15 @@ function AerialTargetOverlay() {
   const aerialMode = mode;
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
-    // 클릭 지점에서 floor-row 탐색
-    const elements = document.elementsFromPoint(e.clientX, e.clientY);
-    let floorEl: Element | null = null;
-    for (const el of elements) {
-      let cur: Element | null = el;
-      while (cur) {
-        if (cur.getAttribute('data-floor-id')) { floorEl = cur; break; }
-        cur = cur.parentElement;
-      }
-      if (floorEl) break;
-    }
-    if (!floorEl) return;
-
-    // 지하층 제외
-    if (floorEl.classList.contains('floor-row--basement')) return;
-
-    const floorId      = floorEl.getAttribute('data-floor-id')!;
-    const floorHeight  = Number(floorEl.getAttribute('data-floor-height') ?? 0);
-    const displayLabel = floorEl.getAttribute('data-floor-label') ?? floorId;
+    // 건물 내부는 클릭한 층 행, B·D면은 같은 높이의 층 행으로 환산한다.
+    // (지하층·A/C면·판 밖은 null → 전개하지 않음)
+    const target = resolveAerialDeployFloor(e.clientX, e.clientY);
+    if (!target) return;
+    const { floorId, floorHeight, displayLabel } = target;
 
     // 높이 제한 검증
-    const maxHeight   = aerialMode.unitType === 'ladder' ? LADDER_MAX_HEIGHT : AERIAL_MAX_HEIGHT;
-    const vehicleName = aerialMode.unitType === 'ladder' ? '굴절차' : '고가차';
-    if (floorHeight > maxHeight) {
-      alert(`${vehicleName}는 ${maxHeight}층 높이까지만 전개 가능합니다.`);
+    if (floorHeight > maxDeployHeight(aerialMode.unitType)) {
+      alert(overHeightMessage(aerialMode.unitType));
       return;
     }
 
@@ -312,12 +292,35 @@ function AerialSprayTargetOverlay() {
 // ─────────────────────────────────────────────
 
 function ResourcePanel() {
-  const { tokens, moveToken }                        = useTokens();
+  const { tokens, moveToken, addLog }                = useTokens();
   const { stagingAreaChief, updateStagingAreaChief } = useSettings();
   const { resourceAssigned, setResourceAssigned }    = useResourceStatus();
 
+  // 자원대기소 운영 지정과 소장 지명 — 지휘관 결정이라 시각이 남아야 한다 (EVENT_LOG_PLAN N-14)
+  function toggleAssigned() {
+    const next = !resourceAssigned;
+    setResourceAssigned(next);
+    addLog({
+      logType: 'post', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '',
+      note:    next ? '자원대기소 운영 지정' : '자원대기소 운영 해제',
+      payload: { kind: 'post-install', post: 'resource', installed: next },
+    });
+  }
+
+  function changeChief(name: string) {
+    if (name === stagingAreaChief) return;
+    updateStagingAreaChief(name);
+    addLog({
+      logType: 'post', tokenId: '', tokenName: name, fromZoneId: '', toZoneId: '',
+      note:    name ? `자원대기소장 지명: ${name}` : '자원대기소장 해제',
+      payload: { kind: 'post-chief', post: 'resource', chiefTokenId: null, chiefLabel: name || null },
+    });
+  }
+
   const zoneKey    = 'standby-resource';
   const zoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
+  // 맨 윗줄은 "도착대" — 방금 들어온 한 무리
+  const { arrived, rest } = splitArrivalGroup(zoneTokens);
 
   function onDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -336,14 +339,14 @@ function ResourcePanel() {
         <span className="resource-panel__title">자원대기소</span>
         <button
           className={`resource-status-btn resource-status-btn--${resourceAssigned ? 'on' : 'off'}`}
-          onClick={() => setResourceAssigned(v => !v)}
+          onClick={toggleAssigned}
         >
           {resourceAssigned ? '지정' : '미지정'}
         </button>
         <select
           className="resource-panel__chief-select"
           value={stagingAreaChief}
-          onChange={e => updateStagingAreaChief(e.target.value)}
+          onChange={e => changeChief(e.target.value)}
         >
           <option value="">소장 미지정</option>
           {zoneTokens.map(t => (
@@ -353,17 +356,27 @@ function ResourcePanel() {
       </div>
       <div
         className="resource-panel__body"
+        data-zone-key={zoneKey}
         onDragOver={onDragOver}
         onDrop={onDrop}
       >
         {zoneTokens.length === 0 ? (
           <span className="resource-panel__placeholder">―</span>
         ) : (
-          <CategorizedTokenGrid
-            tokens={zoneTokens}
-            hideQuantity
+          <>
+          <ArrivedGroupRow
+            tokens={arrived}
             onTokenDoubleClick={id => moveToken(id, 'standby-standby1')}
           />
+          {rest.length > 0 && (
+            <div className="resource-panel__rest">
+              <CategorizedTokenGrid
+                tokens={rest}
+                onTokenDoubleClick={id => moveToken(id, 'standby-standby1')}
+              />
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>
@@ -371,45 +384,36 @@ function ResourcePanel() {
 }
 
 // ─────────────────────────────────────────────
-// 임시의료소 ⇄ 구조활동통계 — 같은 슬롯에서 헤더 버튼으로 전환
+// 운영 패널 — 추가출동대 → 출동대현황 → 자원대기소 → 대기1단계 → 이벤트 로그
+// 화면 좌측 고정 열. 원래 우측에 있었으나 지휘절차 훈련 패널에 자리를 내주고
+// 좌측으로 옮겼다 — 무전 플레이어 모드 UI 개편(2026-08-18).
+//
+// 임시의료소·직전대기·RIT는 현장에 실재하는 공간이라 A면으로 옮겼다(2026-08-18).
+// 그 결과 임시의료소 ⇄ 구조활동통계 토글이 상대를 잃어, 통계표만 단독으로 남긴다
+// (통계는 장소가 아니라 표라서 상황판보다 패널에 맞다).
+//
+// 이벤트 로그는 원래 상단 nav 버튼 → LogDrawer(오버레이)로만 볼 수 있었는데,
+// 항상 보이게 좌측 패널 맨 아래 다섯 번째 칸으로 추가했다(2026-08-20).
+// nav 버튼·LogDrawer 는 그대로 둔다 — 좁은 화면에서 패널이 눌려도 로그를 볼 길이 남는다.
 // ─────────────────────────────────────────────
 
-function MedicalOrRescueSection() {
-  const [showStats, setShowStats] = useState(false);
-
-  const toggleBtn = (
-    <button
-      className="right-fixed-panel__view-toggle"
-      onClick={() => setShowStats(v => !v)}
-      title={showStats ? '임시의료소 보기' : '구조활동통계 보기'}
-    >
-      {showStats ? '◀ 임시의료소' : '구조활동통계 ▶'}
-    </button>
-  );
-
-  return showStats
-    ? <RescueStats extraHeaderAction={toggleBtn} />
-    : <MedicalPostBox extraHeaderAction={toggleBtn} />;
-}
-
-// ─────────────────────────────────────────────
-// 우측 고정 패널 — 임시의료소/구조활동통계 → 대기1단계 → 자원대기소 → 출동대현황
-// ─────────────────────────────────────────────
-
-function RightFixedPanel() {
+function OperationPanel() {
   return (
-    <div className="right-fixed-panel">
-      <div className="right-fixed-panel__section right-fixed-panel__section--medical">
-        <MedicalOrRescueSection />
+    <div className="op-panel">
+      <div className="op-panel__section op-panel__section--unit-add">
+        <UnitAddPanel />
       </div>
-      <div className="right-fixed-panel__section right-fixed-panel__section--standby1">
-        <BottomStandbyBoxes />
+      <div className="op-panel__section op-panel__section--unit">
+        <UnitInfoPanel />
       </div>
-      <div className="right-fixed-panel__section right-fixed-panel__section--resource">
+      <div className="op-panel__section op-panel__section--resource">
         <ResourcePanel />
       </div>
-      <div className="right-fixed-panel__section right-fixed-panel__section--unit">
-        <UnitInfoPanel />
+      <div className="op-panel__section op-panel__section--standby1">
+        <BottomStandbyBoxes />
+      </div>
+      <div className="op-panel__section op-panel__section--log">
+        <LogPanel collapsed={false} onToggle={() => {}} />
       </div>
     </div>
   );
@@ -419,63 +423,46 @@ function RightFixedPanel() {
 // nav 옵션 드롭다운
 // ─────────────────────────────────────────────
 
-type OptionKey = 'waterConn' | 'spray' | 'waterLevel' | 'victims' | 'checklist';
+type OptionKey = 'waterSupply' | 'spray' | 'controlLine' | 'victims';
 
 interface NavOptionsMenuProps {
-  showWaterConn:   boolean;
+  showWaterSupply: boolean;
   showSpray:       boolean;
-  showWaterLevel:  boolean;
+  showControlLine: boolean;
   showAllVictims:  boolean;
-  showChecklist:   boolean;
   onToggle:        (key: OptionKey) => void;
 }
 
-function NavOptionsMenu({ showWaterConn, showSpray, showWaterLevel, showAllVictims, showChecklist, onToggle }: NavOptionsMenuProps) {
+function NavOptionsMenu({ showWaterSupply, showSpray, showControlLine, showAllVictims, onToggle }: NavOptionsMenuProps) {
   return (
     <div className="nav-options">
       <span className="nav-options__label">표시옵션</span>
       <label className="nav-options__item">
-        <input type="checkbox" checked={showWaterConn} onChange={() => onToggle('waterConn')} />
-        송수 연결선
+        <input type="checkbox" checked={showWaterSupply} onChange={() => onToggle('waterSupply')} />
+        송수·수량
       </label>
       <label className="nav-options__item">
         <input type="checkbox" checked={showSpray} onChange={() => onToggle('spray')} />
         방수 표시
       </label>
       <label className="nav-options__item">
-        <input type="checkbox" checked={showWaterLevel} onChange={() => onToggle('waterLevel')} />
-        수량표시
+        <input type="checkbox" checked={showControlLine} onChange={() => onToggle('controlLine')} />
+        통제선
       </label>
       <label className="nav-options__item">
         <input type="checkbox" checked={showAllVictims} onChange={() => onToggle('victims')} />
         구조대상자
-      </label>
-      {/* 진행상황 관리는 지휘교수 화면으로 분리 예정이라 무플 화면에서는 기본 숨김.
-          태블릿 도입 전이나 서버 장애 시 여기서 다시 켤 수 있다. */}
-      <label className="nav-options__item">
-        <input type="checkbox" checked={showChecklist} onChange={() => onToggle('checklist')} />
-        진행상황 관리
       </label>
     </div>
   );
 }
 
 // ─────────────────────────────────────────────
-// 진행상황 관리 표시 여부 — 표시옵션에 저장
-//
-// 이 패널은 지휘교수 태블릿으로 분리될 예정이라 무플 화면에서는 기본 숨김이다.
-// 폭은 더 이상 드래그로 조절하지 않고 레이아웃 그리드가 정한다.
-// → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md §3.5
-// ─────────────────────────────────────────────
-
-const CHECKLIST_SHOW_KEY = 'tacticalBoardShowChecklistPanel';
-
-function loadShowChecklist(): boolean {
-  return localStorage.getItem(CHECKLIST_SHOW_KEY) === '1';
-}
-
-// ─────────────────────────────────────────────
 // PlayPage
+//
+// 진행상황 관리(ChecklistPanel)는 무플 화면에 표시하지 않는다.
+// 지휘절차 항목은 우측 CommandProcedureTrainingBox 로 대체됐다
+// (무플 UI 개편, 2026-08-18 — docs/DEFERRED_PROPAGATION.md P-2·P-7 참고).
 // ─────────────────────────────────────────────
 
 export function PlayPage() {
@@ -483,21 +470,16 @@ export function PlayPage() {
   const { runKey, status, elapsed, loadSettings, start, stop }         = useTraining();
   const { openOverlay }                                                 = useUIOverlay();
 
-  const [showWaterConn,   setShowWaterConn]   = useState(true);
+  const [showWaterSupply, setShowWaterSupply] = useState(true);
   const [showSpray,       setShowSpray]       = useState(true);
-  const [showWaterLevel,  setShowWaterLevel]  = useState(true);
+  const [showControlLine, setShowControlLine] = useState(true);
   const [showAllVictims,  setShowAllVictims]  = useState(false);
-  const [showChecklist,   setShowChecklist]   = useState(loadShowChecklist);
 
   function handleOptionToggle(key: OptionKey) {
-    if (key === 'waterConn')       setShowWaterConn(v => !v);
-    else if (key === 'spray')      setShowSpray(v => !v);
-    else if (key === 'waterLevel') setShowWaterLevel(v => !v);
-    else if (key === 'victims')    setShowAllVictims(v => !v);
-    else setShowChecklist(v => {
-      localStorage.setItem(CHECKLIST_SHOW_KEY, v ? '0' : '1');
-      return !v;
-    });
+    if (key === 'waterSupply')      setShowWaterSupply(v => !v);
+    else if (key === 'spray')       setShowSpray(v => !v);
+    else if (key === 'controlLine') setShowControlLine(v => !v);
+    else if (key === 'victims')     setShowAllVictims(v => !v);
   }
 
   const elapsedRef = useRef(elapsed);
@@ -515,18 +497,14 @@ export function PlayPage() {
     <div className="play-nav-slot">
       {/* 좌 */}
       <div className="play-nav__left">
-        <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('unit-add')}>
-          출동대 추가
-        </button>
         <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('log')}>
           이벤트 로그
         </button>
         <NavOptionsMenu
-          showWaterConn={showWaterConn}
+          showWaterSupply={showWaterSupply}
           showSpray={showSpray}
-          showWaterLevel={showWaterLevel}
+          showControlLine={showControlLine}
           showAllVictims={showAllVictims}
-          showChecklist={showChecklist}
           onToggle={handleOptionToggle}
         />
         <div className="play-nav__divider" />
@@ -568,7 +546,14 @@ export function PlayPage() {
   return (
     <div className="play-page" ref={playPageRef} onContextMenu={e => e.preventDefault()}>
       <FireLineProvider>
-      <DisplayOptionsContext.Provider value={{ showWaterConn, showSpray, showWaterLevel, showAllVictims }}>
+      <DisplayOptionsContext.Provider value={{ showWaterSupply, showSpray, showControlLine, showAllVictims }}>
+      {/* LogProvider는 runKey Provider 중 가장 바깥이다 — 안쪽 어디서든 useLog()를 쓸 수 있게 한다.
+          훈련 시작 전에는 undefined를 넘겨 로그가 00:00으로 뭉치지 않게 한다(EVENT_LOG_PLAN E-2). */}
+      <LogProvider
+        key={runKey}
+        getElapsed={() => (status === 'idle' ? undefined : elapsed)}
+      >
+      <TrainingLogBridge />
       <EventProvider key={runKey}>
       <ChecklistProgressProvider key={runKey}>
       <ResourceStatusProvider key={runKey}>
@@ -579,7 +564,6 @@ export function PlayPage() {
         initialRoster={dispatchRoster}
         started={started}
         arrivalMode={arrivalMode}
-        getElapsed={() => elapsedRef.current}
       >
         <VictimProvider
           key={runKey}
@@ -595,15 +579,9 @@ export function PlayPage() {
           <ChecklistCommandProvider>
           <WaterLevelProvider>
           <HydrantStateProvider>
-            <div className={`play-layout${showChecklist ? ' play-layout--with-checklist' : ''}`}>
-              {/* ── 진행상황 관리 패널 — 기본 숨김, 표시옵션으로 노출 ── */}
-              {showChecklist && (
-                <div className="right-panel">
-                  <div className="right-panel__panel">
-                    <ChecklistPanel />
-                  </div>
-                </div>
-              )}
+            <div className="play-layout">
+              {/* ── 좌측 운영 패널 — 임시의료소/구조활동통계 → 출동대현황 → 자원대기소 → 대기1단계 ── */}
+              <OperationPanel />
 
               {/* ── 전술상황판 ── */}
               <div className="tactical-board-wrap">
@@ -617,13 +595,17 @@ export function PlayPage() {
                 </div>
               </div>
 
-              {/* ── 우측 운영 패널 — 임시의료소/구조활동통계 → 대기1단계 → 자원대기소 → 출동대현황 ── */}
-              <RightFixedPanel />
+              {/* ── 우측 지휘절차 훈련 패널 — 진행상황관리 대신 표시 ── */}
+              <div className="procedure-panel">
+                <div className="procedure-panel__box">
+                  <CommandProcedureTrainingBox />
+                </div>
+              </div>
 
               {/* ── 오버레이 (Drawer / Modal) ── */}
-              <UnitAddDrawer />
-              <LogDrawer />
+                      <LogDrawer />
               <AnalysisModal />
+              <RescueStatsModal />
 
               {/* ── ActionMode 배너 (모드 활성 시만 표시) ── */}
               <ActionModeBanner />
@@ -660,6 +642,7 @@ export function PlayPage() {
       </ResourceStatusProvider>
       </ChecklistProgressProvider>
       </EventProvider>
+      </LogProvider>
       </DisplayOptionsContext.Provider>
       </FireLineProvider>
     </div>

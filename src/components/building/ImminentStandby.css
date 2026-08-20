@@ -1,92 +1,16 @@
 /* ─────────────────────────────────────────────
-   직전대기 독립 드롭존
-   A면(ExteriorZone) 내부 좌측 하단에 고정 크기 코너로 배치.
-   높이는 C면 행 높이(140px)와 동일하게 고정.
+   직전대기·RIT — A면 좌측 하단 구역
+
+   공통 스타일(위치·테두리·라벨·본문)은 ExteriorZone.css 의 .a-face-zone 이
+   담당한다. 여기에는 이 구역에만 있는 좌우 분할 비율만 둔다.
    ─────────────────────────────────────────────*/
 
-.imminent-standby {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  background-color: var(--ctr-bg);
-  border: 1.5px solid #c09090;
-  border-radius: 3px;
-  overflow: hidden;
-  min-width: 0;
+/* 좌측 3.5 : 우측 1 */
+.a-face-zone__sub--imminent {
+  flex: 3.5;
+  border-right: 1px solid var(--ctr-border-soft);
 }
 
-/* left: 26.71% — TacticalArea.css의 col1:col2:col3 = 1:1.744:1 비율에서
-   col1(B면) 폭 = 1/3.744 ≈ 26.71%. A면이 같은 그리드 폭을 전체 폭으로
-   쓰므로 이 비율로 좌측 정렬하면 정확히 건물(col2) 시작 지점과 맞음.
-
-   width: 330px가 기본값이지만 max-width로 A면 우측 끝을 절대 넘지
-   않도록 캡을 씌움 — 좌측 진행상황관리 패널을 넓게 드래그해서 A면이
-   좁아지는 경우, 고정폭이면 박스가 A면 밖으로 넘쳐 overflow:hidden에
-   잘려 토큰이 안 보이는 문제가 있었음(실측 재현).
-
-   box-shadow 제거 — 박스가 떠 보이던 원인. 윤곽선(solid border)만으로 구분. */
-.exterior-zone--a .imminent-standby {
-  position: absolute;
-  left: 26.71%;
-  bottom: 6px;
-  width: 330px;
-  max-width: calc(100% - 26.71% - 6px);
-  height: 140px;
-  z-index: 6;
-}
-
-/* 좌측 2/3: 직전대기, 우측 1/3: RIT */
-.imminent-standby__sub {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.imminent-standby__sub--imminent {
-  flex: 2;
-  border-right: 1.5px solid #c09090;
-}
-
-.imminent-standby__sub--rit {
+.a-face-zone__sub--rit {
   flex: 1;
-}
-
-.imminent-standby__header {
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: #784040;
-  padding: 5px 10px;
-  text-align: center;
-  background: rgba(200, 150, 150, 0.18);
-  border-bottom: 1px solid #c09090;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.imminent-standby__body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 5px 7px;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 4px;
-}
-
-.imminent-standby__placeholder {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.68rem;
-  color: var(--ctr-border-mid);
-  padding-top: 6px;
-}
-
-/* 토큰/victim flow 배치 */
-.imminent-standby__body .token-card-wrapper,
-.imminent-standby__body .victim-card-wrapper {
-  flex-shrink: 0;
 }

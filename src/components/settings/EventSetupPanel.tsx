@@ -120,7 +120,7 @@ export function EventSetupPanel() {
 
       {/* ── 등록된 이벤트 목록 ── */}
       {eventSetup.length === 0 ? (
-        <div className="esp__empty">등록된 이벤트가 없습니다.</div>
+        <div className="esp__empty">등록된 현장요소가 없습니다.</div>
       ) : (
         <div className="esp__list">
           {/* 헤더 */}

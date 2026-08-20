@@ -1,0 +1,66 @@
+/* ─────────────────────────────────────────────
+   사다리·바스켓 전개 핸들 — 토큰 우측 중앙.
+   관창(우측 상단)·이송 구조대상자(우측 중앙)와는 차종이 달라 겹치지 않는다.
+   ─────────────────────────────────────────────*/
+
+.ladder-handle {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: calc(4px * var(--ui-scale, 1));
+  z-index: 7;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width:  calc(20px * var(--ui-scale, 1));
+  height: calc(20px * var(--ui-scale, 1));
+
+  border: 1px solid #aa7700;
+  border-radius: calc(4px * var(--ui-scale, 1));
+  background: #2a1e00;
+  cursor: grab;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.ladder-handle:active { cursor: grabbing; }
+
+.ladder-handle:hover {
+  border-color: #ffcc44;
+  box-shadow: 0 0 calc(7px * var(--ui-scale, 1)) rgba(255, 204, 68, 0.6);
+}
+
+.ladder-handle svg {
+  width:  100%;
+  height: 100%;
+  fill:   none;
+}
+
+.ladder-handle__rail,
+.ladder-handle__rung {
+  stroke: #ffcc44;
+  stroke-linecap: round;
+}
+
+.ladder-handle__rail { stroke-width: 1.5; }
+.ladder-handle__rung { stroke-width: 1.1; }
+
+/* 굴절차 — 주황 계열로 구분 */
+.ladder-handle--boom { border-color: #aa5500; }
+.ladder-handle--boom:hover {
+  border-color: #ff9944;
+  box-shadow: 0 0 calc(7px * var(--ui-scale, 1)) rgba(255, 153, 68, 0.6);
+}
+
+.ladder-handle__boom {
+  stroke: #ff9944;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ladder-handle__joint  { fill: #ff9944; }
+.ladder-handle__basket { fill: #ffcc88; }

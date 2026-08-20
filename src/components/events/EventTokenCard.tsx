@@ -4,6 +4,8 @@ import type { EventType, EventStatus } from '../../types/events';
 import { EVENT_TYPE_STATUSES } from '../../types/events';
 import type { FireStatus } from '../../types';
 import { FireEventIcon, FlameIcon, EVENT_STATUS_TO_FIRE, gasElectricFireStage } from '../shared/FlameIcon';
+import { readEventLocationAtPoint } from '../../utils/eventLocation';
+import { zoneLabel } from '../../utils/logLabels';
 import './EventTokenCard.css';
 
 // ─────────────────────────────────────────────
@@ -90,34 +92,26 @@ interface Props {
   y:               number;
   onMove:          (id: string, x: number, y: number) => void;
   onStatusChange:  (id: string, status: EventStatus) => void;
-  onDrop?:         (id: string, floorId: string | null) => void;
-}
-
-function readFloorIdAtPoint(cx: number, cy: number): string | null {
-  let faceKey: string | null = null;
-  for (const el of document.elementsFromPoint(cx, cy)) {
-    let cur: Element | null = el;
-    while (cur) {
-      const fid = cur.getAttribute('data-floor-id');
-      if (fid) return fid;
-      if (!faceKey) {
-        const zk = cur.getAttribute('data-zone-key');
-        if (zk?.startsWith('face-')) faceKey = zk;
-      }
-      cur = cur.parentElement;
-    }
-  }
-  return faceKey;
+  /** 현재 배치 구역('face-A' · '3F-center' …). 보드 밖이면 null */
+  zoneKey:         string | null;
+  /** 드롭 지점의 배치 구역. 보드 밖이면 null */
+  onDrop?:         (id: string, zoneKey: string | null) => void;
 }
 
 export function EventTokenCard({
-  id, label, icon, eventType, status, firePercentage, x, y, onMove, onStatusChange, onDrop,
+  id, label, icon, eventType, status, firePercentage, x, y, zoneKey, onMove, onStatusChange, onDrop,
 }: Props) {
   const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const touchPrimaryRef = useRef(false);
   const [radialCenter, setRadialCenter] = useState<{ x: number; y: number } | null>(null);
 
   // ── 드래그 ────────────────────────────────────
-  function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.button !== 0) {
+      touchPrimaryRef.current = false;
+      return;
+    }
+    touchPrimaryRef.current = e.pointerType !== 'mouse';
     e.preventDefault();
     e.stopPropagation();
 
@@ -137,25 +131,33 @@ export function EventTokenCard({
     };
     document.body.style.userSelect = 'none';
 
-    function onMouseMove(ev: MouseEvent) {
+    const pointerId = e.pointerId;
+
+    function onPointerMove(ev: PointerEvent) {
+      if (ev.pointerId !== pointerId) return;
       const r = container!.getBoundingClientRect();
       const newX = Math.max(0, Math.min(r.width  - tw, ev.clientX - r.left - dragOffsetRef.current.x));
       const newY = Math.max(0, Math.min(r.height - th, ev.clientY - r.top  - dragOffsetRef.current.y));
       onMove(id, r.width > 0 ? newX / r.width : 0, r.height > 0 ? newY / r.height : 0);
     }
-    function onMouseUp(ev: MouseEvent) {
+    function onPointerUp(ev: PointerEvent) {
+      if (ev.pointerId !== pointerId) return;
       document.body.style.userSelect = '';
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup',   onMouseUp);
-      onDrop?.(id, readFloorIdAtPoint(ev.clientX, ev.clientY));
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup',   onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+      onDrop?.(id, readEventLocationAtPoint(ev.clientX, ev.clientY)?.zoneKey ?? null);
+      window.setTimeout(() => { touchPrimaryRef.current = false; }, 0);
     }
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup',   onMouseUp);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup',   onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
   }
 
   function handleContextMenu(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    if (touchPrimaryRef.current) return;
     const r = e.currentTarget.getBoundingClientRect();
     setRadialCenter({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
   }
@@ -196,6 +198,9 @@ export function EventTokenCard({
   // ── 상태별 CSS 클래스 ─────────────────────────
   const statusClass = status !== '-' ? `event-token--s-${status.replace('%', 'pct')}` : '';
 
+  // data-event-zone: 자기 배치 구역을 스스로 갖는다 — 방수 대상 판정·로그가 이 값을 쓴다.
+  // `data-zone-key`라는 이름을 쓰지 않는 이유: 그 이름은 드롭 존 선택자라
+  // 여기에 붙이면 이벤트 토큰이 출동대 드롭 대상으로 잡힌다.
   return (
     <>
       <div
@@ -207,8 +212,11 @@ export function EventTokenCard({
         ].filter(Boolean).join(' ')}
         data-status={status}
         data-event-type={eventType}
+        data-event-id={id}
+        data-event-zone={zoneKey ?? undefined}
+        title={zoneKey ? `${label} — ${zoneLabel(zoneKey)}` : label}
         style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
-        onMouseDown={handleMouseDown}
+        onPointerDown={handlePointerDown}
         onContextMenu={handleContextMenu}
       >
         {/* 카드 박스 — 이미지가 꽉 채움 */}

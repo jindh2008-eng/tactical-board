@@ -1,6 +1,8 @@
 import {
-  createContext, useContext, useState, type Dispatch, type SetStateAction, type ReactNode,
+  createContext, useContext, useState, useEffect, type Dispatch, type SetStateAction, type ReactNode,
 } from 'react';
+import { savePostsSession, loadPostsSession } from '../utils/runtimeSession';
+import { useResourceStatus } from './ResourceStatusContext';
 
 // ─────────────────────────────────────────────
 // 임시의료소 설치 여부 + 담당 출동대(토큰 ID) — 컴포넌트 로컬 상태였던 것을
@@ -18,8 +20,19 @@ interface MedicalPostContextValue {
 const MedicalPostContext = createContext<MedicalPostContextValue | null>(null);
 
 export function MedicalPostProvider({ children }: { children: ReactNode }) {
-  const [isInstalled, setIsInstalled]         = useState(false);
-  const [assignedTokenId, setAssignedTokenId] = useState<string | null>(null);
+  // 새로고침에도 유지된다 — 설치 시각·소장 지명이 평가 대상이라 로그와 상태가 어긋나면 안 된다
+  const [isInstalled, setIsInstalled]         = useState(() => loadPostsSession()?.medicalInstalled ?? false);
+  const [assignedTokenId, setAssignedTokenId] = useState<string | null>(() => loadPostsSession()?.medicalChiefTokenId ?? null);
+
+  // 자원대기소와 한 키에 함께 담는다 — 둘 다 '현장에 무엇을 세웠는가'라는 같은 성격이다
+  const { resourceAssigned } = useResourceStatus();
+  useEffect(() => {
+    savePostsSession({
+      medicalInstalled:    isInstalled,
+      medicalChiefTokenId: assignedTokenId,
+      resourceAssigned,
+    });
+  }, [isInstalled, assignedTokenId, resourceAssigned]);
 
   return (
     <MedicalPostContext.Provider value={{ isInstalled, setIsInstalled, assignedTokenId, setAssignedTokenId }}>

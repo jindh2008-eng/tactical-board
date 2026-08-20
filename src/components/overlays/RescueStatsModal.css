@@ -1,0 +1,74 @@
+/* ─────────────────────────────────────────────
+   구조활동통계 팝업 — 훈련 화면 가운데
+
+   글씨 크기는 좌우 패널 기준으로 맞춘다. 원래 RescueStats 는 A면·좌측 패널의
+   좁은 슬롯에 들어가느라 0.68~0.92rem 까지 줄여 놨는데, 팝업은 자리가 넉넉해
+   지휘절차 패널(본문 1.12rem)과 같은 눈높이로 올린다.
+   ─────────────────────────────────────────────*/
+
+/* 어두운 앱 모달(--color-surface)이 아니라 화이트보드 톤으로 맞춘다 */
+.rescue-stats-modal {
+  position:      relative;
+  width:         clamp(420px, 46%, 760px);
+  max-height:    78vh;
+  display:       flex;
+  flex-direction: column;
+  overflow:      hidden;
+  background:    var(--ctr-surface);
+  border:        1.5px solid var(--ctr-border-hard);
+  border-radius: 5px;
+  box-shadow:    0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.rescue-stats-modal .rescue-stats {
+  flex:          1;
+  min-height:    0;
+  border:        none;
+  border-radius: 0;
+  background:    transparent;
+}
+
+.rescue-stats-modal .rescue-stats__body {
+  overflow-y: auto;
+  padding:    12px 16px 16px;
+  gap:        8px;
+}
+
+/* ── 좌우 패널 기준으로 글씨 확대 ── */
+.rescue-stats-modal .rescue-stats__header {
+  padding: 8px 14px;
+}
+
+.rescue-stats-modal .rescue-stats__title { font-size: 1.15rem; }
+.rescue-stats-modal .rescue-stats__total { font-size: 1.05rem; }
+.rescue-stats-modal .rescue-stats__empty { font-size: 1.0rem; padding: 18px 0; }
+.rescue-stats-modal .rescue-stats__table { font-size: 1.05rem; }
+
+.rescue-stats-modal .rescue-stats__th,
+.rescue-stats-modal .rescue-stats__td {
+  padding: 7px 10px;
+}
+
+/* ── 닫기 ── */
+.rescue-stats-modal__close {
+  position:      absolute;
+  top:           7px;
+  right:         10px;
+  z-index:       1;
+  padding:       2px 9px;
+  font-family:   inherit;
+  font-size:     0.95rem;
+  font-weight:   700;
+  line-height:   1.3;
+  color:         #5b5750;
+  background:    rgba(91, 87, 80, 0.08);
+  border:        1px solid var(--ctr-border-mid);
+  border-radius: 3px;
+  cursor:        pointer;
+  transition:    background 0.12s, color 0.12s;
+}
+
+.rescue-stats-modal__close:hover {
+  background: rgba(91, 87, 80, 0.18);
+  color:      #3a3730;
+}

@@ -1,0 +1,39 @@
+/* ─────────────────────────────────────────────
+   도착대 — 구역 맨 윗줄, 방금 들어온 한 무리
+   ─────────────────────────────────────────────*/
+.arrived-row {
+  flex-shrink:   0;
+  display:       flex;
+  align-items:   flex-start;
+  gap:           6px;
+  padding:       5px 8px 6px;
+  border-bottom: 1.5px solid var(--ctr-border-mid);
+  background:    rgba(31, 95, 168, 0.07);
+}
+
+.arrived-row__label {
+  flex-shrink:    0;
+  padding-top:    7px;
+  font-size:      0.82rem;
+  font-weight:    700;
+  letter-spacing: 0.02em;
+  color:          #1f5fa8;
+  white-space:    nowrap;
+}
+
+.arrived-row__body {
+  flex:      1;
+  min-width: 0;
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       5px 6px;
+}
+
+/* 컬럼에 눌리지 않는 자리라 기본 토큰 크기를 쓴다 */
+.arrived-row__body .token-card {
+  min-width:     60px;
+  height:        32px;
+  padding:       0 12px;
+  border-radius: 8px;
+  font-size:     14px;
+}

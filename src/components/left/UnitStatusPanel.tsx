@@ -1,12 +1,18 @@
 import { useState, useMemo, useEffect } from 'react';
+import type { UnitToken } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
 import { useResourceStatus } from '../../context/ResourceStatusContext';
-import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
+import { PoolTokenGrid } from '../shared/PoolTokenGrid';
+import { isMountedPump } from '../../utils/unitPairing';
+import { TokenCard } from '../shared/TokenCard';
 import './UnitStatusPanel.css';
 
 const ZONE_STANDBY1 = 'standby-standby1';
 const ZONE_RESOURCE = 'standby-resource';
+
+/** 로스터에 없는 출동대(직접 추가분)를 모으는 가상 착대 순번 — 항상 맨 뒤 */
+const UNLISTED_ORDER = 999;
 
 /**
  * 착대모드 unitType 우선순위
@@ -30,6 +36,8 @@ export function UnitStatusPanel() {
   const { resourceAssigned }        = useResourceStatus();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected]     = useState<Set<string>>(new Set());
+  // 나열 방식 — 모드1: 종류별 컬럼(기존) / 모드2: 설정한 착대 순서
+  const [listMode, setListMode]     = useState<'category' | 'arrival'>('category');
 
   // ── pool 토큰 ────────────────────────────────
   const poolTokens = tokens.filter(t => t.zoneKey === null);
@@ -71,19 +79,6 @@ export function UnitStatusPanel() {
     [dispatchRoster],
   );
 
-  // ── 착대모드: 활동대 tokenId → 연동 차량 tokenId[] 매핑 ──
-  // linkedTo 는 활동대의 roster.id 를 가리킴
-  const linkedVehicleMap = useMemo(() => {
-    const map = new Map<string, string[]>(); // activityTokenId → vehicleTokenId[]
-    for (const item of dispatchRoster) {
-      if (!item.linkedTo) continue;
-      const activityTokenId = `roster-${item.linkedTo}`;
-      const vehicleTokenId  = `roster-${item.id}`;
-      map.set(activityTokenId, [...(map.get(activityTokenId) ?? []), vehicleTokenId]);
-    }
-    return map;
-  }, [dispatchRoster]);
-
   // ── 정렬된 pool 토큰 ─────────────────────────
   const sortedPoolTokens = useMemo(() => {
     if (arrivalMode === 'time') {
@@ -103,21 +98,48 @@ export function UnitStatusPanel() {
     });
   }, [poolTokens, arrivalMode, arrivalCountdowns, orderMap]);
 
-  // ── 더블클릭 이동: 활동대 + 연동 차량 동시 이동 ───
-  // 자원대기소가 "지정"(운영) 상태면 자원대기소로, 아니면 대기1단계로 바로 이동
+  // ── 모드2: 설정창에 지정한 착대 순서 ─────────
+  // 시간모드/착대모드(arrivalMode)와 무관하게 로스터의 arrivalOrder 를 그대로 쓴다.
+  // 착대 순번 하나가 열 하나가 된다. 로스터에 없는 출동대(직접 추가분)는 맨 뒤 열로.
+  const arrivalColumns = useMemo(() => {
+    const groups = new Map<number, UnitToken[]>();
+    // 모드1(PoolTokenGrid)과 같은 규칙 — 동승 중인 펌프는 진압대 하나로 다룬다
+    for (const t of poolTokens.filter(t => !isMountedPump(t, poolTokens, dispatchRoster))) {
+      const order = orderMap.get(t.id) ?? UNLISTED_ORDER;
+      groups.set(order, [...(groups.get(order) ?? []), t]);
+    }
+    return [...groups.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([order, items]) => ({
+        order,
+        label: order === UNLISTED_ORDER ? '추가' : `${order}차`,
+        items: items.sort((a, b) => {
+          const pa = typePriority(a.unitType), pb = typePriority(b.unitType);
+          if (pa !== pb) return pa - pb;
+          return a.label.localeCompare(b.label, 'ko');
+        }),
+      }));
+  }, [poolTokens, orderMap, dispatchRoster]);
+
+  // ── 더블클릭 이동 ────────────────────────────
+  // 자원대기소가 "지정"(운영) 상태면 자원대기소로, 아니면 대기1단계로 바로 이동.
+  // 동승 중인 펌프를 함께 내보내는 일은 TokenContext.moveToken 이 맡는다 —
+  // 여기서 또 옮기면 로스터 짝만 처리돼 훈련 중 만든 짝과 규칙이 갈린다.
   function handleButtonMove(tokenId: string, zoneKey: string) {
     moveToken(tokenId, zoneKey);
-
-    // 연동 차량이 아직 pool 에 있으면 함께 이동
-    const linked = linkedVehicleMap.get(tokenId) ?? [];
-    for (const linkedId of linked) {
-      const linkedToken = tokens.find(t => t.id === linkedId && t.zoneKey === null);
-      if (linkedToken) moveToken(linkedToken.id, zoneKey);
-    }
   }
 
   function handleTokenDoubleClick(tokenId: string) {
     handleButtonMove(tokenId, resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1);
+  }
+
+  // 착대 라벨 더블클릭 — 그 차수 전체를 한꺼번에 도착시킨다.
+  // 같은 순간에 옮기므로 도착지에서 하나의 "도착대"로 묶인다(utils/arrivalGroup).
+  const canDispatchByOrder = arrivalMode === 'order';
+
+  function handleOrderDoubleClick(items: UnitToken[]) {
+    const target = resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1;
+    for (const t of items) moveToken(t.id, target);
   }
 
   // ── 드롭 핸들러 ──────────────────────────────
@@ -136,6 +158,18 @@ export function UnitStatusPanel() {
     <div className="panel unit-status-panel">
       <div className="panel__header usp__header">
         <span>출동대현황</span>
+        <div className="usp__mode">
+          {(['category', 'arrival'] as const).map((m, i) => (
+            <button
+              key={m}
+              className={`usp__mode-btn${listMode === m ? ' usp__mode-btn--on' : ''}`}
+              onClick={() => setListMode(m)}
+              title={m === 'category' ? '종류별로 나열' : '설정한 착대 순서로 나열'}
+            >
+              모드{i + 1}
+            </button>
+          ))}
+        </div>
         {poolTokens.length > 0 && (
           <div className="usp__header-actions">
             {selectMode ? (
@@ -162,20 +196,55 @@ export function UnitStatusPanel() {
       </div>
       <div
         className="unit-status-panel__body"
+        data-touch-drop-target="true"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {sortedPoolTokens.length === 0 ? (
+        {poolTokens.length === 0 ? (
           <span className="unit-status-panel__placeholder">―</span>
-        ) : (
-          <CategorizedTokenGrid
+        ) : listMode === 'category' ? (
+          <PoolTokenGrid
             tokens={sortedPoolTokens}
-            hideQuantity
             selectMode={selectMode}
             selected={selected}
             onToggleSelect={toggleSelect}
             onTokenDoubleClick={handleTokenDoubleClick}
           />
+        ) : (
+          /* 모드2 — 착대 순번마다 한 줄. 라벨 더블클릭이면 그 차수 전체가 출동한다 */
+          <div className="usp-arrival-list">
+            {arrivalColumns.map(col => (
+              <div key={col.order} className="usp-arrival-list__row">
+                <div
+                  className={`usp-arrival-list__label${canDispatchByOrder && col.order !== UNLISTED_ORDER ? ' usp-arrival-list__label--dispatch' : ''}`}
+                  onDoubleClick={
+                    canDispatchByOrder && col.order !== UNLISTED_ORDER
+                      ? () => handleOrderDoubleClick(col.items)
+                      : undefined
+                  }
+                  title={
+                    canDispatchByOrder && col.order !== UNLISTED_ORDER
+                      ? `더블클릭 — ${col.label} 전체 도착`
+                      : undefined
+                  }
+                >
+                  {col.label}
+                </div>
+                <div className="usp-arrival-list__body">
+                  {col.items.map(token => (
+                    <TokenCard
+                      key={token.id}
+                      token={token}
+                      selectMode={selectMode}
+                      selected={selected.has(token.id)}
+                      onToggleSelect={() => toggleSelect(token.id)}
+                      onDoubleClick={() => handleTokenDoubleClick(token.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

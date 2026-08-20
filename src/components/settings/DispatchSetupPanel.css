@@ -416,3 +416,70 @@
   color: #ff6666;
   background: rgba(255, 80, 80, 0.1);
 }
+
+/* ─────────────────────────────────────────────
+   훈련모드 `출동대 생성` 메뉴와 통일 (2026-08-19)
+
+   훈련 중 쓰는 생성 메뉴(UnitStatus)와 같은 색 박스·칩 배열로 맞춘다.
+   설정창은 "지금 만든다"가 아니라 "몇 대인지 정한다"라서 버튼 하나로 끝낼 수 없고,
+   칩 안에 −/수량/+ 를 둔다. 설정창은 어두운 앱 테마라 색은 그쪽 톤을 쓴다.
+   ─────────────────────────────────────────────*/
+
+.dsp__group--activity { border-color: rgba(255, 80, 80, 0.30); }
+.dsp__group--vehicle  { border-color: rgba(255, 180, 0, 0.30); }
+.dsp__group--agency   { border-color: rgba(150, 100, 255, 0.30); }
+
+.dsp__group-title--activity { color: #f08080; border-bottom-color: rgba(255, 80, 80, 0.28); }
+.dsp__group-title--vehicle  { color: #e0aa44; border-bottom-color: rgba(255, 180, 0, 0.28); }
+.dsp__group-title--agency   { color: #b088ee; border-bottom-color: rgba(150, 100, 255, 0.28); }
+
+/* 칩들을 가로로 흘려 담는다 — 훈련모드 버튼 배열과 같은 리듬 */
+.dsp__chips {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       8px;
+}
+
+.dsp__chip {
+  display:       flex;
+  flex-direction: column;
+  gap:           5px;
+  padding:       7px 10px 8px;
+  border-radius: 5px;
+  border:        1px solid var(--color-border);
+  background:    var(--color-bg);
+  transition:    border-color 0.12s, background 0.12s;
+}
+
+.dsp__chip-label {
+  display:     flex;
+  align-items: baseline;
+  gap:         6px;
+  font-size:   0.92rem;
+  font-weight: 700;
+  color:       var(--color-text);
+  white-space: nowrap;
+}
+
+/* 자동 연동 안내 (예: "+ 펌프 2") */
+.dsp__chip-suffix {
+  font-size:   0.76rem;
+  font-weight: 600;
+  color:       #e0aa44;
+}
+
+.dsp__chip--activity { border-color: rgba(255, 80, 80, 0.28); }
+.dsp__chip--vehicle  { border-color: rgba(255, 180, 0, 0.28); }
+
+/* 수량이 0보다 크면 담겼다는 표시 */
+.dsp__chip--activity.dsp__chip--on {
+  background:   rgba(255, 80, 80, 0.09);
+  border-color: rgba(255, 80, 80, 0.55);
+}
+
+.dsp__chip--vehicle.dsp__chip--on {
+  background:   rgba(255, 180, 0, 0.09);
+  border-color: rgba(255, 180, 0, 0.55);
+}
+
+.dsp__chip .dsp__stepper { justify-content: center; }

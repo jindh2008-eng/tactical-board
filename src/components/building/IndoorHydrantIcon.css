@@ -2,6 +2,18 @@
    옥내소화전 아이콘 — 각 층 계단실 우측 부착
    ─────────────────────────────────────────────*/
 
+/* 송수 연결 손잡이로 쓸 수 있는 상태 */
+.indoor-hydrant-icon--draggable {
+  cursor:       grab;
+  touch-action: none;
+}
+
+.indoor-hydrant-icon--draggable:active { cursor: grabbing; }
+
+.indoor-hydrant-icon--draggable:hover {
+  filter: drop-shadow(0 0 5px rgba(102, 204, 255, 0.85));
+}
+
 .indoor-hydrant-icon {
   position:       absolute;
   left:           116px;        /* 계단실(110px) 우측에서 살짝 이격 */

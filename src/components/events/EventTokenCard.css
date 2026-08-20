@@ -3,6 +3,7 @@
    ─────────────────────────────────────────────*/
 
 .event-token {
+  touch-action: none;
   position:       absolute;
   display:        flex;
   flex-direction: column;

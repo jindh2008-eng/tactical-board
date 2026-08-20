@@ -45,8 +45,13 @@ export type PosFormat = 'norm';
 
 export interface TokenSessionState {
   tokens:     UnitToken[];
-  logs:       LogEntry[];
   positions:  Record<string, Pos>;
+
+  /**
+   * @deprecated 로그는 `tactical-board.runtime.logs`로 분리됐다(EVENT_LOG_PLAN E-1).
+   * 구버전 저장분을 읽을 때만 존재한다 — 새로 저장하지 않는다.
+   */
+  logs?:      LogEntry[];
 
   /** 없으면 구버전 px 좌표 → 로드 시 positions 폐기 */
   posFormat?: PosFormat;
@@ -201,7 +206,13 @@ export interface EventSessionState {
   /** 보드(.tactical-area) 대비 0~1 정규화된 토큰 좌상단 */
   positions:        Record<string, { x: number; y: number }>;
   statuses:         Record<string, EventStatus>;
-  floorIds?:        Record<string, string>;  // eventId → floorId (드롭 시점 저장, 구버전 호환 optional)
+  /**
+   * eventId → 배치 구역 키('face-A' · '3F-center' …).
+   * 이벤트 토큰이 "A면인지 3층 내부인지"를 직접 갖게 하는 값이다(EVENT_LOG_PLAN X-5).
+   */
+  zoneKeys?:        Record<string, string>;
+  /** @deprecated zoneKeys로 대체됨. 구버전 저장분 이관용 — 층 id 또는 면 키가 섞여 있다 */
+  floorIds?:        Record<string, string>;
   firePercentages?: Record<string, number>;  // 이벤트 화재 진행도 (구버전 호환 optional)
 
   /** 없으면 구버전 px 좌표 → 로드 시 positions 폐기 후 자동 재배치 */
@@ -451,12 +462,93 @@ export function loadChecklistSession(): ChecklistSessionState | null {
 }
 
 // ─────────────────────────────────────────────
+// 이벤트 로그 세션 저장 / 복원
+//
+// 로그는 원래 KEY_TOKENS(출동대 세션)에 얹혀 있었다. 세 가지 문제가 있었다.
+//  1) 복원 조건이 `tokens.length > 0` 이라 출동대가 하나도 없으면 로그가 통째로 버려졌다.
+//  2) 토큰·좌표가 바뀔 때마다 로그 배열 전체가 다시 직렬화됐다.
+//  3) 로그가 커져 용량을 넘기면 출동대·좌표 저장까지 조용히 함께 실패했다.
+// → 독립 키로 분리한다. docs/EVENT_LOG_PLAN.md L-2 / E-1
+// ─────────────────────────────────────────────
+
+const KEY_LOGS = 'tactical-board.runtime.logs';
+
+export interface LogSessionState {
+  logs: LogEntry[];
+}
+
+export function saveLogSession(state: LogSessionState): void {
+  try {
+    sessionStorage.setItem(KEY_LOGS, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+export function loadLogSession(): LogEntry[] | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_LOGS);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as LogSessionState;
+    if (!Array.isArray(parsed.logs)) return null;
+    return parsed.logs;
+  } catch { return null; }
+}
+
+/**
+ * 구버전 저장분 이관 — 출동대 세션 안에 있던 로그를 1회만 꺼내 온다.
+ * 새 키가 이미 있으면 호출하지 않는다(소비처에서 판정).
+ * 이관 후 출동대 세션의 `logs`는 다음 저장 때 자연히 사라진다(saveTokenSession이 더 이상 넣지 않음).
+ */
+export function migrateLogsFromTokenSession(): LogEntry[] | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_TOKENS);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { logs?: unknown };
+    if (!Array.isArray(parsed.logs) || parsed.logs.length === 0) return null;
+    return parsed.logs as LogEntry[];
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
+// 임시의료소 · 자원대기소 상태
+//
+// 종전에는 두 Context가 useState뿐이라 새로고침하면 사라졌다. 설치 시각·소장 지명은
+// 지휘관의 명시적 결정이고 평가 대상이라, 로그만 남기고 상태가 날아가면 둘이 어긋난다.
+// docs/EVENT_LOG_PLAN.md L-14 / N-13 · N-14
+// ─────────────────────────────────────────────
+
+const KEY_POSTS = 'tactical-board.runtime.posts';
+
+export interface PostsSessionState {
+  medicalInstalled:    boolean;
+  medicalChiefTokenId: string | null;
+  resourceAssigned:    boolean;
+}
+
+export function savePostsSession(state: PostsSessionState): void {
+  try {
+    sessionStorage.setItem(KEY_POSTS, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+export function loadPostsSession(): PostsSessionState | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_POSTS);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PostsSessionState;
+    if (typeof parsed.medicalInstalled !== 'boolean') return null;
+    return parsed;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
 // 전체 초기화 (새 훈련 시작 시 호출)
 // ─────────────────────────────────────────────
 
 export function clearRuntimeSession(): void {
   try {
     sessionStorage.removeItem(KEY_TOKENS);
+    sessionStorage.removeItem(KEY_LOGS);
+    sessionStorage.removeItem(KEY_POSTS);
     sessionStorage.removeItem(KEY_VICTIMS);
     sessionStorage.removeItem(KEY_TRAINING);
     sessionStorage.removeItem(KEY_EVENTS);

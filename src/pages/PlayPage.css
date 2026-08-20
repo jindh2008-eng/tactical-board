@@ -8,17 +8,22 @@
 }
 
 /* ─────────────────────────────────────────────
-   메인 레이아웃 컨테이너 — 2열 그리드 [전술상황판 | 우측 운영 패널]
-   진행상황 관리를 켜면 좌측에 열이 하나 더 붙는다.
+   메인 레이아웃 컨테이너 — 3열 그리드
+   [좌측 운영 패널 | 전술상황판 | 우측 지휘절차 훈련 패널]
+
+   진행상황관리(ChecklistPanel)는 무플 화면에서 표시하지 않는다.
+   좌측 운영 패널(임시의료소·출동대현황·자원대기소·대기1단계)은
+   원래 우측에 있었으나, 지휘절차 훈련 패널에 자리를 내주고 좌측으로 옮겼다.
+   → 무전 플레이어 모드 UI 개편 (2026-08-18)
 
    기준 화면: 2560×1440 CSS px (물리 3840×2160 / Windows 150% 배율).
    3840 은 물리 픽셀이라 CSS 기준으로 쓰면 안 된다.
-   우측 패널 550px 은 기준 폭의 약 21.5%.
+   운영 패널 550px 은 기준 폭의 약 21.5%.
    → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md §3.1, Phase 1
    ─────────────────────────────────────────────*/
 .play-layout {
-  --op-panel-w:   clamp(300px, 21.5%, 620px);
-  --checklist-w:  clamp(200px, 12%, 340px);
+  --op-panel-w:        clamp(300px, 21.5%, 620px);
+  --procedure-panel-w: clamp(200px, 12%, 340px);
 
   position:         relative;
   width:            100%;
@@ -27,21 +32,17 @@
   background-color: var(--color-bg);
 
   display:               grid;
-  grid-template-columns: 1fr var(--op-panel-w);
+  grid-template-columns: var(--op-panel-w) 1fr var(--procedure-panel-w);
   /* 명시적 행 높이 — 암묵 행(auto)에 height:100% 자식을 두면 높이가 0으로 무너진다 */
   grid-template-rows:    minmax(0, 1fr);
   align-items:           stretch;
 }
 
-.play-layout--with-checklist {
-  grid-template-columns: var(--checklist-w) 1fr var(--op-panel-w);
-}
-
 /* ─────────────────────────────────────────────
-   우측 운영 패널 — 임시의료소/구조활동통계 → 대기1단계 →
-   자원대기소 → 출동대현황. 그리드 마지막 열을 차지한다.
+   좌측 운영 패널 — 임시의료소/구조활동통계 → 출동대현황 →
+   자원대기소 → 대기1단계. 그리드 첫 열을 차지한다.
    ─────────────────────────────────────────────*/
-.right-fixed-panel {
+.op-panel {
   /* 그리드 열 하나를 차지한다 (폭은 .play-layout 의 --op-panel-w 가 결정) */
   min-width: 0;
   height: 100%;
@@ -50,89 +51,125 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--color-surface);
-  border-left: 1.5px solid var(--color-border);
+  background-color: var(--ctr-bg);
+  border-right: 1.5px solid var(--ctr-border-hard);
   box-sizing: border-box;
 }
 
-/* 임시의료소/대기1단계 — 원래 밝은 보드 배경(--ctr-bg)용으로 설계된
-   컴포넌트라 어두운 패널 배경에서는 글자가 잘 안 보임 → 원래 배경 유지 */
-.right-fixed-panel__section--medical,
-.right-fixed-panel__section--standby1 {
-  background-color: var(--ctr-bg);
-}
-
-/* 패널 제목 — 좌측 진행상황관리(.checklist-panel__title)와 동일 크기 */
-.right-fixed-panel .standby-box__title,
-.right-fixed-panel .rescue-stats__title,
-.right-fixed-panel .resource-panel__title,
-.right-fixed-panel .panel__header {
+/* 패널 제목 — 우측 지휘절차 훈련 패널(.checklist-panel__title)과 동일 크기 */
+.op-panel .standby-box__title,
+.op-panel .rescue-stats__title,
+.op-panel .resource-panel__title,
+.op-panel .panel__header {
   font-size: 1.0rem;
 }
 
-.right-fixed-panel__section {
+.op-panel__section {
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.right-fixed-panel__section > * {
+.op-panel__section > * {
   flex: 1;
   min-height: 0;
 }
 
-.right-fixed-panel__section + .right-fixed-panel__section {
-  border-top: 1.5px solid var(--color-border);
+.op-panel__section + .op-panel__section {
+  border-top: 1.5px solid var(--ctr-border-mid);
 }
-
-/* 섹션별 높이 비율 — 임시의료소 절반 축소, 그만큼 대기1단계로 이전 */
-.right-fixed-panel__section--medical  { flex: 1.1; }
-.right-fixed-panel__section--standby1 { flex: 2.1; }
-.right-fixed-panel__section--resource { flex: 1.4; }
-.right-fixed-panel__section--unit     { flex: 3;   }
-
-/* 임시의료소 ⇄ 구조활동통계 전환 버튼 */
-.right-fixed-panel__view-toggle {
-  font-size:      0.66rem;
-  font-weight:    700;
-  padding:        2px 7px;
-  border-radius:  3px;
-  border:         1px solid currentColor;
-  background:     transparent;
-  color:          inherit;
-  cursor:         pointer;
-  white-space:    nowrap;
-  flex-shrink:    0;
-  opacity:        0.85;
-  transition:     opacity 0.12s;
-  margin-left:    auto;
-}
-
-.right-fixed-panel__view-toggle:hover {
-  opacity: 1;
-}
-
 
 /* ─────────────────────────────────────────────
-   좌측 열 — 진행상황 관리 (전체 높이)
-   기본 숨김. 표시옵션에서 켜면 그리드 첫 열로 붙는다.
-   지휘교수 태블릿 도입 후에는 사실상 쓰지 않는 폴백 경로.
+   화이트보드 통일(2026-08-18) — 출동대현황·자원대기소는 어두운 앱 테마
+   (.panel/.resource-panel) 를 그대로 쓰고 있어 여기서만 밝은 보드 톤으로 덮어쓴다.
+   전역 .panel/.panel__header 자체는 설정창 등에서도 쓰이므로 건드리지 않는다.
    ─────────────────────────────────────────────*/
-.right-panel {
-  min-width: 0;
-  height: 100%;
-  z-index: 20;
+.op-panel .panel {
+  border: none;
+  border-radius: 0;
+  background-color: var(--ctr-surface);
+}
+
+.op-panel .panel__header {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-bottom-color: var(--ctr-border-soft);
+  color: #2e6660; /* 출동대현황 식별용 옅은 청록 — 임시의료소/대기1단계 헤더색과 같은 성격 */
+  text-transform: none;
+  letter-spacing: 0.03em;
+}
+
+.op-panel .resource-panel {
+  background-color: var(--ctr-surface);
   box-sizing: border-box;
 }
 
-.right-panel__panel {
+.op-panel .resource-panel__header {
+  border-bottom-color: var(--ctr-border-soft);
+}
+
+.op-panel .resource-panel__title {
+  color: #7a5e28; /* 자원대기소 식별용 — 기존 standby-box--resource 헤더색 재사용 */
+}
+
+.op-panel .resource-panel__chief-select {
+  color: var(--ctr-border-mid);
+  border-color: var(--ctr-border-soft);
+}
+
+.op-panel .resource-panel__placeholder {
+  color: var(--ctr-border-mid);
+}
+
+/* 이벤트 로그는 위 화이트보드 통일에서 빼준다 — 상단 nav 의 LogDrawer 와 같은
+   원래 색(검정 배경 + 밝은 글자)을 그대로 쓴다. 로그 항목 색이 그 배경을 전제로
+   골라져 있어(예: 옅은 빨강·하늘색) 밝은 배경에 얹으면 대비가 안 맞는다.
+   .op-panel .panel 보다 구체적인 선택자로 덮어써야 순서와 무관하게 이긴다. */
+.op-panel .op-panel__section--log .log-panel {
+  border: 1.5px solid #1a3a3a;
+  border-radius: 3px;
+  background-color: #080e0e;
+}
+
+.op-panel .op-panel__section--log .panel__header {
+  background-color: var(--color-header-bg);
+  border-bottom-color: var(--color-border);
+  color: var(--color-text-dim);
+}
+
+/* 로그 본문 글자는 제목(1.0rem, 위 .op-panel .panel__header 규칙)보다 약간 작게 —
+   LogPanel.css 의 항목별 글자 크기(0.68~0.80rem)를 그대로 따른다. */
+
+/* 섹션별 높이 — 추가출동대·출동대현황·자원대기소·대기1단계·이벤트 로그
+   다섯 칸 모두 동일 비율로 나눈다(2026-08-20 이벤트 로그 추가하며 균등화). */
+.op-panel__section--unit-add { flex: 1; }
+.op-panel__section--unit     { flex: 1; }
+.op-panel__section--resource { flex: 1; }
+.op-panel__section--standby1 { flex: 1; }
+.op-panel__section--log      { flex: 1; }
+
+
+/* ─────────────────────────────────────────────
+   우측 열 — 지휘절차 훈련 패널 (전체 높이, 항상 표시)
+   진행상황관리가 있던 자리를 대신한다.
+   → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md §3.5 의 후속 결정
+   ─────────────────────────────────────────────*/
+.procedure-panel {
+  min-width: 0;
+  height: 100%;
+  z-index: 15;
+  box-sizing: border-box;
+}
+
+.procedure-panel__box {
   width: 100%;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: var(--color-surface);
-  border-right: 1.5px solid var(--color-border);
+  /* 페이지(--ctr-bg)보다 한 단계 밝은 면 — 패널이 카드로 떠 보이고
+     그 위 모든 요소의 대비가 함께 올라간다 */
+  background-color: var(--ctr-surface);
+  border-left: 1.5px solid var(--ctr-border-hard);
 }
 
 /* ─────────────────────────────────────────────
@@ -201,12 +238,22 @@
   margin-left: auto;
 }
 
+/* 도착대 줄 + 아래 목록 — 세로로 나눠 담는다 */
+.resource-panel__rest {
+  flex:       1;
+  min-height: 0;
+  overflow:   hidden;
+  padding:    4px;
+}
+
 .resource-panel__body {
+  /* 도착대 줄(고정) + 아래 목록(스크롤) */
   flex: 1;
+  min-height: 36px;
   display: flex;
   flex-direction: column;
-  min-height: 36px;
-  padding: 4px;
+  overflow: hidden;
+  padding: 0;
   transition: background-color 0.1s;
 }
 

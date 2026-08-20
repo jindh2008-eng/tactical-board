@@ -28,7 +28,7 @@ const TRAINING_ITEMS: { key: SettingsSection; label: string }[] = [
   { key: 'timing',   label: '타이밍 설정' },
   { key: 'dispatch', label: '출동대 설정' },
   { key: 'victim',   label: '구조대상자 설정' },
-  { key: 'event',    label: '돌발상황' },
+  { key: 'event',    label: '현장요소' },
 ];
 
 export function SettingsPage() {
@@ -44,7 +44,7 @@ export function SettingsPage() {
     timing,
     updateTiming,
     updateExtraFireFloors,
-    updateSiamesePipeFaces,
+    updateSiamesePipe,
     updateIndoorHydrant,
   } = useSettings();
 
@@ -139,8 +139,8 @@ export function SettingsPage() {
                 onTargetNameChange={updateTargetName}
                 extraFireFloors={building.extraFireFloors ?? []}
                 onExtraFireFloorsChange={updateExtraFireFloors}
-                siamesePipeFaces={building.siamesePipeFaces ?? []}
-                onSiamesePipeFacesChange={updateSiamesePipeFaces}
+                hasSiamesePipe={building.hasSiamesePipe ?? false}
+                onSiamesePipeChange={updateSiamesePipe}
                 hasIndoorHydrant={building.hasIndoorHydrant ?? false}
                 onIndoorHydrantChange={updateIndoorHydrant}
               />
@@ -219,10 +219,10 @@ export function SettingsPage() {
 
           {section === 'event' && (
             <section className="settings-page__section">
-              <h3 className="settings-page__section-title">돌발상황</h3>
+              <h3 className="settings-page__section-title">현장요소</h3>
               <p className="settings-page__hint">
-                실행창에 표시할 돌발상황 이벤트를 등록합니다. 체크된 항목만 실행창에 표시되며,
-                클릭으로 상태(화재·초진·완진·폭발)를 전환할 수 있습니다.
+                시나리오에 배치할 현장요소(가스통·탱크로리·전신주 등)를 등록합니다.
+                체크된 항목만 실행창에 표시되며, 우클릭으로 상태(화재·초진·완진·폭발)를 전환할 수 있습니다.
               </p>
               <EventSetupPanel />
             </section>
@@ -233,7 +233,7 @@ export function SettingsPage() {
               <h3 className="settings-page__section-title">지휘절차 관리</h3>
               <p className="settings-page__hint">
                 초급·중급·고급 레벨별 지휘절차를 카테고리 단위로 등록합니다.
-                훈련창 체크리스트에서 활용됩니다.
+                훈련 중 무플 화면 우측 패널에 선택한 레벨의 항목이 표시됩니다.
               </p>
               <CommandProcedurePanel />
             </section>

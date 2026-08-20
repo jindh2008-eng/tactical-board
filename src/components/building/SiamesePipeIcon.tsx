@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { Face } from '../../types';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useActionMode }       from '../../context/ActionModeContext';
 import { useHydrantState }     from '../../context/HydrantStateContext';
@@ -11,9 +10,7 @@ import './ExteriorZone.css';
 
 const WATER_SOURCES = new Set(['pump', 'water_tank']);
 
-interface Props { face: Face; }
-
-export function SiamesePipeIcon({ face }: Props) {
+export function SiamesePipeIcon() {
   const { connections, addConnection }                             = useWaterConnections();
   const { mode, clearMode }                                        = useActionMode();
   const { getEquipmentMessage, setEquipmentMessage,
@@ -24,15 +21,14 @@ export function SiamesePipeIcon({ face }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const menuRef    = useRef<HTMLDivElement>(null);
 
-  const siameseId      = `siamese-pipe-${face}`;
-  const siameseLabel   = `연결송수구(${face}면)`;
+  const siameseId      = 'siamese-pipe';
+  const siameseLabel   = '연결송수구';
   const statusMessages = unitStatusConfig['siamese_pipe'] ?? [];
   const activeMsg      = getEquipmentMessage(siameseId);
 
-  const faceConns = connections.filter(
+  const connCount = connections.filter(
     c => c.toId === siameseId && c.toType === 'siamese_pipe',
-  );
-  const connCount = faceConns.length;
+  ).length;
 
   const isTarget =
     mode.type === 'water-connect' &&
@@ -126,7 +122,12 @@ export function SiamesePipeIcon({ face }: Props) {
   // 렌더
   // ─────────────────────────────────────────────
 
-  const canInteract = isTarget || (mode.type === null && statusMessages.length > 0);
+  // 그림 그리기 중에는 포인터를 통과시켜야 선이 끊기지 않는다.
+  // 그 외에는 상태메시지 유무와 무관하게 항상 히트 판정을 받아야 한다 —
+  // 연결송수구는 송수 드래그의 드롭 대상이고, document.elementsFromPoint 는
+  // pointer-events:none 요소를 아예 돌려주지 않아 드롭 판정에서 통째로 빠진다.
+  const drawingMode = mode.type === 'drawing' || mode.type === 'drawing-erase';
+  const canInteract = !drawingMode && (isTarget || mode.type === null);
 
   return (
     <>
@@ -134,10 +135,10 @@ export function SiamesePipeIcon({ face }: Props) {
         ref={wrapperRef}
         className={[
           'siamese-pipe-wrap',
-          `siamese-pipe-wrap--${face.toLowerCase()}`,
           isTarget ? 'siamese-pipe-wrap--target' : '',
         ].filter(Boolean).join(' ')}
         data-token-id={siameseId}
+        data-water-type="siamese_pipe"
         style={{ pointerEvents: canInteract ? 'auto' : 'none' }}
         onClick={handleClick}
         onContextMenu={handleContextMenu}

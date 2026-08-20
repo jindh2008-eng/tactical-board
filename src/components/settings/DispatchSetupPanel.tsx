@@ -13,12 +13,6 @@ const UNIT_ROWS: { key: keyof DispatchSetup['units']; label: string }[] = [
   { key: 'ems',         label: '구급대' },
 ];
 
-// ── 자동 연동 차량 안내 (구급차 제외) ────────────
-const AUTO_VEHICLES = [
-  { label: '펌프',   unitKey: 'suppression' as const, hint: '진압대 연동' },
-  { label: '구조차', unitKey: 'rescue'      as const, hint: '구조대 연동' },
-];
-
 // ── 별도 입력 차량 ──────────────────────────────
 const VEHICLE_ROWS: { key: keyof DispatchSetup['vehicles']; label: string }[] = [
   { key: 'aerial',       label: '고가차' },
@@ -26,38 +20,57 @@ const VEHICLE_ROWS: { key: keyof DispatchSetup['vehicles']; label: string }[] = 
   { key: 'smokeExhaust', label: '배연차' },
   { key: 'command',      label: '지휘차' },
   { key: 'waterTank',    label: '물탱크' },
+  { key: 'rescueVehicle', label: '구조차' },
 ];
 
 // 착대 옵션 (1~10)
 const ORDER_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
 
-// ── 스테퍼 컴포넌트 ─────────────────────────────
+// ── 수량 칩 ─────────────────────────────────────
 
-interface StepperProps {
+/**
+ * CountChip — 훈련모드 출동대 생성 버튼과 같은 모양의 수량 칩.
+ *
+ * 설정창은 "지금 만든다"가 아니라 "몇 대인지 정한다"라서 버튼 하나로는 줄일 수 없다.
+ * 그래서 생김새(색 박스·버튼 톤·크기)는 훈련모드에 맞추고, 안에 −/수량/+ 를 둔다.
+ */
+interface CountChipProps {
+  label:    string;
+  tone:     'activity' | 'vehicle';
   value:    number;
   onChange: (n: number) => void;
+  /** 라벨 아래 보조 설명 (예: 자동 연동되는 펌프 수) */
+  suffix?:  string;
 }
 
-function Stepper({ value, onChange }: StepperProps) {
+function CountChip({ label, tone, value, onChange, suffix }: CountChipProps) {
   return (
-    <div className="dsp__stepper">
-      <button
-        className="dsp__step-btn"
-        type="button"
-        onClick={() => onChange(Math.max(0, value - 1))}
-      >−</button>
-      <input
-        className="dsp__num-input"
-        type="number"
-        min={0}
-        value={value}
-        onChange={e => onChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
-      />
-      <button
-        className="dsp__step-btn"
-        type="button"
-        onClick={() => onChange(value + 1)}
-      >+</button>
+    <div className={`dsp__chip dsp__chip--${tone}${value > 0 ? ' dsp__chip--on' : ''}`}>
+      <span className="dsp__chip-label">
+        {label}
+        {suffix && <span className="dsp__chip-suffix">{suffix}</span>}
+      </span>
+      <div className="dsp__stepper">
+        <button
+          className="dsp__step-btn"
+          type="button"
+          onClick={() => onChange(Math.max(0, value - 1))}
+          aria-label={`${label} 줄이기`}
+        >−</button>
+        <input
+          className="dsp__num-input"
+          type="number"
+          min={0}
+          value={value}
+          onChange={e => onChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
+        />
+        <button
+          className="dsp__step-btn"
+          type="button"
+          onClick={() => onChange(value + 1)}
+          aria-label={`${label} 늘리기`}
+        >+</button>
+      </div>
     </div>
   );
 }
@@ -109,51 +122,45 @@ export function DispatchSetupPanel() {
   return (
     <div className="dsp">
 
-      {/* 활동대 */}
-      <div className="dsp__group">
-        <div className="dsp__group-title">활동대</div>
-        {UNIT_ROWS.map(row => (
-          <div key={row.key} className="dsp__row">
-            <span className="dsp__label">{row.label}</span>
-            <Stepper
+      {/* 활동대 — 훈련모드 출동대 생성 메뉴와 같은 색 박스·버튼 배열 */}
+      <div className="dsp__group dsp__group--activity">
+        <div className="dsp__group-title dsp__group-title--activity">활동대</div>
+        <p className="dsp__group-hint">진압대를 넣으면 펌프가 함께 생성됩니다. 구조대·구급대는 차량 연동 없음.</p>
+        <div className="dsp__chips">
+          {UNIT_ROWS.map(row => (
+            <CountChip
+              key={row.key}
+              label={row.label}
+              tone="activity"
               value={units[row.key]}
               onChange={n => updateDispatchUnits({ [row.key]: n })}
+              suffix={row.key === 'suppression' && units.suppression > 0
+                ? `+ 펌프 ${units.suppression}`
+                : undefined}
             />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* 차량 — 자동 연동 (구급차 제외) */}
-      <div className="dsp__group">
-        <div className="dsp__group-title">차량 — 자동 연동</div>
-        <p className="dsp__group-hint">활동대 수량에 맞춰 자동으로 생성됩니다. 구급대는 차량 연동 없음.</p>
-        {AUTO_VEHICLES.map(v => (
-          <div key={v.label} className="dsp__auto-row">
-            <span className="dsp__label">{v.label}</span>
-            <span className="dsp__auto-info">
-              {units[v.unitKey]}대 ({v.hint})
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* 차량 — 별도 입력 */}
-      <div className="dsp__group">
-        <div className="dsp__group-title">차량 — 별도 입력</div>
-        {VEHICLE_ROWS.map(row => (
-          <div key={row.key} className="dsp__row">
-            <span className="dsp__label">{row.label}</span>
-            <Stepper
+      {/* 차량 */}
+      <div className="dsp__group dsp__group--vehicle">
+        <div className="dsp__group-title dsp__group-title--vehicle">차량</div>
+        <div className="dsp__chips">
+          {VEHICLE_ROWS.map(row => (
+            <CountChip
+              key={row.key}
+              label={row.label}
+              tone="vehicle"
               value={vehicles[row.key]}
               onChange={n => updateDispatchVehicles({ [row.key]: n })}
             />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* 유관기관 및 직접입력 */}
-      <div className="dsp__group">
-        <div className="dsp__group-title">유관기관 및 직접입력</div>
+      <div className="dsp__group dsp__group--agency">
+        <div className="dsp__group-title dsp__group-title--agency">유관기관 및 직접입력</div>
 
         {/* 유관기관 프리셋 버튼 */}
         <div className="dsp__extra-presets">

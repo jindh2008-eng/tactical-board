@@ -15,7 +15,13 @@ export interface BuildingSettings {
   fireStatus:          FireStatus | null;  // 초기 화재상태
   targetName:          string;             // 대상명 (훈련 건물명)
   extraFireFloors?:    ExtraFireFloor[];   // 화점층 외 추가 화재 층
-  siamesePipeFaces?:   Face[];            // 연결송수구 설치 방면 (A/B/D)
+  /**
+   * 연결송수구 표시 여부. 위치는 1층 좌측 하단(지면)에 고정이라 방면을 고르지 않는다.
+   * 구버전은 `siamesePipeFaces: Face[]` 였다 — resolveHasSiamesePipe() 가 변환한다.
+   */
+  hasSiamesePipe?:     boolean;
+  /** @deprecated 구버전 호환용. 읽기만 하고 새로 쓰지 않는다. */
+  siamesePipeFaces?:   Face[];
   hasIndoorHydrant?:   boolean;           // 옥내소화전 표시 여부
 }
 
@@ -115,7 +121,7 @@ export interface ChecklistItem {
   messageTitle?:     string;     // 메세지 타입일 때 제목
   messageLocation?:  string;     // 메세지 타입일 때 층/구역 위치
   messageBody?:      string;     // 메세지 타입일 때 본문 (줄바꿈 포함)
-  eventId?:          string;     // 이벤트 타입일 때 대상 돌발상황 ID
+  eventId?:          string;     // 현장요소 타입일 때 대상 현장요소 ID
   eventTargetStatus?: string;    // 이벤트 타입일 때 목표 상태
   linkedParentId?:    string;     // 연동할 상위 항목 ID (체크 시 하위 항목 자동 트리거)
   unitRosterId?:      string;     // 출동대 타입일 때 대상 로스터 ID
@@ -183,18 +189,19 @@ export interface DispatchSetup {
     ems:         number;  // 구급대
   };
   vehicles: {
-    aerial:       number;  // 고가차
-    ladder:       number;  // 굴절차
-    smokeExhaust: number;  // 배연차
-    command:      number;  // 지휘차
-    waterTank:    number;  // 물탱크
+    aerial:         number;  // 고가차
+    ladder:         number;  // 굴절차
+    smokeExhaust:   number;  // 배연차
+    command:        number;  // 지휘차
+    waterTank:      number;  // 물탱크
+    rescueVehicle:  number;  // 구조차 (구조대 자동 연동을 없애면서 별도 항목이 됐다)
   };
   extraUnits?: DispatchExtraUnit[];
 }
 
 export const DEFAULT_DISPATCH_SETUP: DispatchSetup = {
   units:    { suppression: 0, rescue: 0, ems: 0 },
-  vehicles: { aerial: 0, ladder: 0, smokeExhaust: 0, command: 0, waterTank: 0 },
+  vehicles: { aerial: 0, ladder: 0, smokeExhaust: 0, command: 0, waterTank: 0, rescueVehicle: 0 },
   extraUnits: [],
 };
 

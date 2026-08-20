@@ -4,6 +4,7 @@ import type { TokenPos } from '../../context/TokenContext';
 import { useTokens } from '../../context/TokenContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
+import { useVictims } from '../../context/VictimContext';
 import type { UnitToken } from '../../types';
 import { PRESET_COLORS } from '../../types/presets';
 import { secsToMmss } from '../../utils/dispatchRoster';
@@ -11,6 +12,12 @@ import { setDragGrabOffset } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import { useWaterLevel }       from '../../context/WaterLevelContext';
 import { useDisplayOptions }   from '../../context/DisplayOptionsContext';
+import { useTouchDrag } from '../../hooks/useTouchDrag';
+import { isOnTacticalBoard, isOnBuildingFace } from '../../utils/tokenHandles';
+import { useWaterConnectDrag } from '../../hooks/useWaterConnectDrag';
+import { VictimCard }       from './VictimCard';
+import { NozzleHandle }     from './NozzleHandle';
+import { LadderHandle }     from './LadderHandle';
 import { UnitStatusBarMenu } from './UnitStatusBarMenu';
 import { HydrantBarMenu }    from './HydrantBarMenu';
 import './TokenCard.css';
@@ -19,17 +26,31 @@ import './TokenCard.css';
 
 const WATER_UNIT_TYPES  = new Set(['pump', 'water_tank']);
 const AERIAL_UNIT_TYPES = new Set(['aerial', 'ladder']);
+// 관창(진압·구조) + 방수포(펌프·물탱크) — 둘 다 우측 상단 방수 핸들을 쓴다
+const SPRAY_HANDLE_TYPES = new Set(['suppression', 'rescue', 'pump', 'water_tank']);
 
-function WaterGauge({ levelL, capacityL }: { levelL: number; capacityL: number }) {
+function WaterGauge({ levelL, capacityL, token, draggable }: {
+  levelL: number; capacityL: number; token: UnitToken; draggable: boolean;
+}) {
   const pct       = capacityL > 0 ? Math.max(0, Math.min(1, levelL / capacityL)) : 0;
   const pctInt    = Math.round(pct * 100);
   const isLow     = pct < 0.5;
   const fillColor = isLow ? '#d94040' : '#2a8fd4';
 
+  // 게이지 자체가 송수 연결의 손잡이다 — 끌어서 받을 대상에 놓는다
+  const { drag } = useWaterConnectDrag({
+    fromId:   token.id,
+    fromType: token.unitType,
+    disabled: !draggable || token.statusTag?.label === '펌프고장',
+  });
+
   return (
     <div
-      className="water-gauge"
-      title={`${Math.round(levelL).toLocaleString()}L / ${capacityL.toLocaleString()}L`}
+      className={`water-gauge${draggable ? ' water-gauge--draggable' : ''}`}
+      title={draggable
+        ? `${Math.round(levelL).toLocaleString()}L / ${capacityL.toLocaleString()}L — 끌어서 송수 연결`
+        : `${Math.round(levelL).toLocaleString()}L / ${capacityL.toLocaleString()}L`}
+      {...(draggable ? drag : {})}
     >
       {/* 채움 바 — 아래에서 위로 */}
       <div
@@ -61,15 +82,14 @@ interface Props {
   selectMode?:     boolean;
   selected?:       boolean;
   onToggleSelect?: () => void;
-  hideQuantity?:   boolean; // true면 수량(물탱크 게이지) 항상 숨김 — 대기 패널용
   onDoubleClick?:  () => void; // 대기 패널 간 더블클릭 이동용
 }
 
-export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect, hideQuantity, onDoubleClick }: Props) {
+export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect, onDoubleClick }: Props) {
   const { mode, clearMode }        = useActionMode();
   const { addConnection, connections } = useWaterConnections();
   const waterLevel                 = useWaterLevel();
-  const { showWaterLevel }         = useDisplayOptions();
+  const { showWaterSupply }        = useDisplayOptions();
 
   const [barMenu,      setBarMenu]      = useState<{
     left: number; top: number; right: number; bottom: number; width: number; height: number;
@@ -126,7 +146,50 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
     logDragEvent('TokenCard dragend', token.label);
   }
 
+  const touchDrag = useTouchDrag({
+    enabled: mode.type === null && !selectMode,
+    payload: { tokenId: token.id },
+    dragElementRef: wrapperRef,
+    onDragStart: () => {
+      setBarMenu(null);
+      logDragEvent('TokenCard touch dragstart', `token=${token.label} id=${token.id}`);
+    },
+    onDragEnd: () => logDragEvent('TokenCard touch dragend', token.label),
+  });
+
+  // ── 구조대상자를 출동대 위에 드롭 → 이송 연결 ──────────────────────
+  // 연결되면 이 출동대가 구역을 옮길 때마다 따라 움직이고(VictimContext),
+  // 임시의료소에 도착하면 자동으로 구조 처리된다.
+  const { victims, attachVictimToUnit } = useVictims();
+  // 연결된 구조대상자는 구역 흐름 배치에서 빼고(각 구역 컴포넌트가 carriedBy 를 걸러낸다)
+  // 이 토큰 우측에 아이콘만 붙여 렌더한다.
+  const carriedVictims = victims.filter(v => v.carriedBy === token.id);
+
+  function handleVictimDragOver(e: React.DragEvent<HTMLDivElement>) {
+    if (token.unitType === 'hydrant') return;
+    // dragover 에서는 값을 못 읽으므로 타입만 확인한다(브라우저가 소문자로 준다).
+    const types = e.dataTransfer.types;
+    if (!types.includes('victimid') && !types.includes('victimId')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleVictimDrop(e: React.DragEvent<HTMLDivElement>) {
+    if (token.unitType === 'hydrant') return;
+    const victimId = e.dataTransfer.getData('victimId');
+    if (!victimId) return;          // 출동대 드롭 등 — 구역이 처리하게 둔다
+    e.preventDefault();
+    e.stopPropagation();
+    attachVictimToUnit(victimId, token.id);
+    logDragEvent('TokenCard victim attach', `victim=${victimId} → ${token.label}`);
+  }
+
   function handleContextMenu(e: React.MouseEvent) {
+    // 현장(ABCD면·건물)에 배치됐을 때만 상태 메뉴를 연다.
+    // 대기 구역·추가출동대 박스에서는 이벤트를 그대로 흘려보내야 한다 —
+    // 여기서 stopPropagation 하면 바깥(추가출동대 삭제 등)이 우클릭을 못 받는다.
+    if (!onBoard) return;
     e.preventDefault();
     e.stopPropagation();
     if (mode.type !== null) { clearMode(); return; }
@@ -176,7 +239,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   const hasBadges    = token.badges.length > 0;
   const hasMission   = (token.missionTags?.length ?? 0) > 0;
 
-  // 카운트다운은 우측 고정 위치 표시용으로 포털 유지
+  // 카운트다운은 좌측 상단 고정 위치 표시용으로 포털 유지
   // (드래그 중 표시되지 않으므로 좌표 지연 문제 없음)
   function countdownPortal(className: string, label: string, content: React.ReactNode) {
     const rect = wrapperRef.current?.getBoundingClientRect();
@@ -187,7 +250,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
         aria-label={label}
         style={{
           position:      'fixed',
-          left:          rect.right,
+          left:          rect.left,
           top:           rect.top,
           transform:     'translate(-50%, -50%)',
           pointerEvents: 'none',
@@ -199,6 +262,12 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
       document.body,
     );
   }
+
+  // ── 조작 핸들·게이지 표시 조건 ────────────────
+  // 현장(ABCD면·건물)에 배치됐을 때만 띄운다. 출동대현황·자원대기소·대기1단계·
+  // 직전대기·RIT·임시의료소에서는 활동 중이 아니라 의미가 없다.
+  // 수량 게이지도 같은 규칙을 따른다 — 게이지가 곧 송수 연결 손잡이라서다.
+  const onBoard = isOnTacticalBoard(token.zoneKey);
 
   // ── 수량 게이지 ──────────────────────────────
   const isWaterUnit    = waterLevel !== null && WATER_UNIT_TYPES.has(token.unitType);
@@ -222,8 +291,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
 
   // ── 수량 소진 (0%) ───────────────────────────
   const isWaterEmpty   = isWaterUnit && waterLevelL === 0;
-  // 수량표시 OFF여도 소진 시에는 게이지 표시
-  const showWaterGauge = !hideQuantity && isWaterUnit && (showWaterLevel || isWaterEmpty);
+  const showWaterGauge = onBoard && isWaterUnit && showWaterSupply;
 
   // ── CSS 클래스 조합 ──────────────────────────
   const cardClasses = [
@@ -239,6 +307,14 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
 
   const hasOverlay = hasBadges; // statusTag는 토큰 하단으로 이동
 
+  // 방수 핸들만 방면 한정 — 건물 내부는 자리가 좁아 부속을 붙이지 않는다.
+  // (방수 지점은 건물 내부도 그대로 지정할 수 있다)
+  const showNozzle      = isOnBuildingFace(token.zoneKey)
+                          && SPRAY_HANDLE_TYPES.has(token.unitType) && !selectMode;
+  // 전개 전에만 띄운다 — 전개 후에는 사다리 끝단을 직접 끌어 옮긴다(AerialOverlay)
+  const showLadder      = onBoard && AERIAL_UNIT_TYPES.has(token.unitType)
+                          && !selectMode && token.aerialTarget == null;
+
   // ─────────────────────────────────────────────
   // 렌더
   // ─────────────────────────────────────────────
@@ -246,10 +322,14 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   return (
     <>
       <div
-        className={`token-card-wrapper${selectMode ? ' token-card-wrapper--select' : ''}`}
+        className={`token-card-wrapper${selectMode ? ' token-card-wrapper--select' : ''}${carriedVictims.length > 0 ? ' token-card-wrapper--carrying' : ''}`}
         style={wrapperStyle}
         ref={wrapperRef}
         data-token-id={token.id}
+        data-water-type={token.unitType}
+        data-touch-drop-target="true"
+        onDragOver={handleVictimDragOver}
+        onDrop={handleVictimDrop}
       >
         {selectMode && (
           <label className="token-card__checkbox" onMouseDown={e => e.stopPropagation()}>
@@ -349,6 +429,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
         <div
           className={cardClasses}
           draggable={mode.type === null}
+          {...touchDrag}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onContextMenu={handleContextMenu}
@@ -375,7 +456,27 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
         })()}
 
         {showWaterGauge && (
-          <WaterGauge levelL={waterLevelL} capacityL={waterCapL} />
+          <WaterGauge
+            levelL={waterLevelL}
+            capacityL={waterCapL}
+            token={token}
+            draggable={onBoard && !selectMode}
+          />
+        )}
+
+        {/* ── 관창 핸들 — 끌어서 방수, 클릭해서 중단 ── */}
+        {showNozzle && <NozzleHandle token={token} />}
+
+        {/* ── 사다리·바스켓 핸들 — 끌어서 전개 ── */}
+        {showLadder && <LadderHandle token={token} />}
+
+        {/* ── 이송 연결된 구조대상자 — 토큰 바로 우측에 아이콘만 부착 ── */}
+        {carriedVictims.length > 0 && (
+          <div className="token-carried-victims">
+            {carriedVictims.map(v => (
+              <VictimCard key={v.id} victim={v} attached />
+            ))}
+          </div>
         )}
       </div>
 

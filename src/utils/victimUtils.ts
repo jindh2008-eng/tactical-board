@@ -194,3 +194,52 @@ export function buildVictim(input: CreateVictimInput): VictimToken {
     };
   }
 }
+
+// ─────────────────────────────────────────────
+// 구조 자격 판정
+//
+// 우클릭 구조 메뉴(VictimContextBarMenu)와 드롭 구조(VictimCard)가
+// 같은 규칙을 쓰도록 여기로 모았다. 두 경로가 갈리면 같은 상황에서
+// 메뉴에는 뜨는데 드롭은 안 되는 식의 불일치가 생긴다.
+// ─────────────────────────────────────────────
+
+/** zoneKey 에서 건물 층 식별자 추출 ("3F-center" → "3F") */
+export function extractBuildingFloor(zoneKey: string | null): string | null {
+  if (!zoneKey) return null;
+  const m = zoneKey.match(/^(RF|\d+F|B\d+)-/);
+  return m ? m[1] : null;
+}
+
+/** zoneKey 에서 외곽 방면 추출 ("face-A" 또는 "A-..." → "A") */
+export function extractFace(zoneKey: string | null): 'A' | 'B' | 'C' | 'D' | null {
+  if (!zoneKey) return null;
+  const m1 = zoneKey.match(/^face-([ABCD])$/);
+  if (m1) return m1[1] as 'A' | 'B' | 'C' | 'D';
+  const m2 = zoneKey.match(/^([ABCD])-/);
+  if (m2) return m2[1] as 'A' | 'B' | 'C' | 'D';
+  return null;
+}
+
+/**
+ * 이 출동대가 이 구조대상자를 구조할 수 있는가.
+ *   - 이미 '구조중' 이면 불가
+ *   - 같은 층 또는 같은 구역이면 가능
+ *   - 외곽 방면의 고가차·굴절차는 층 무관하게 가능
+ */
+export function canUnitRescueVictim(
+  unitZoneKey:   string | null,
+  unitType:      string,
+  unitBadges:    { line1?: string }[],
+  victimZoneKey: string | null,
+): boolean {
+  if (!victimZoneKey) return false;
+  if (unitBadges.some(b => b.line1 === '구조중')) return false;
+
+  const victimFloor = extractBuildingFloor(victimZoneKey);
+  if (victimFloor && extractBuildingFloor(unitZoneKey) === victimFloor) return true;
+  if (unitZoneKey === victimZoneKey) return true;
+
+  if ((unitType === 'ladder' || unitType === 'aerial') && extractFace(unitZoneKey) !== null) return true;
+
+  return false;
+}

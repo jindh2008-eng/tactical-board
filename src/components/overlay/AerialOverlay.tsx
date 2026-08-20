@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom';
 import { useTokens } from '../../context/TokenContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useActionMode } from '../../context/ActionModeContext';
+import {
+  resolveAerialDeployFloor, maxDeployHeight, overHeightMessage,
+} from '../../utils/aerialDeploy';
+import { useDisplayOptions } from '../../context/DisplayOptionsContext';
+import { canStartSpray } from '../../utils/waterSupply';
+import { useWaterLevel } from '../../context/WaterLevelContext';
 import './AerialOverlay.css';
 
 // ─────────────────────────────────────────────
@@ -10,7 +16,6 @@ import './AerialOverlay.css';
 // ─────────────────────────────────────────────
 
 const AERIAL_TYPES = new Set(['aerial', 'ladder']);
-const WATER_SOURCE_TYPES = new Set(['pump', 'water_tank']);
 const MONITOR_TYPES = new Set(['pump', 'water_tank']);
 
 // 방수 팬 반각도 (도) — 진압대와 동일한 22°
@@ -21,10 +26,6 @@ const FAN_MAX_R = 14;
 // 끝단 사각형 크기
 const TIP_W = 14;
 const TIP_H = 10;
-
-// 고가차/굴절차 최대 전개 층수
-const AERIAL_MAX_HEIGHT = 15;
-const LADDER_MAX_HEIGHT = 7;
 
 // 사다리 레일 반폭 (px) — 레일 간격 = RAIL_HALF * 2
 const RAIL_HALF    = 5;
@@ -93,18 +94,22 @@ function computeElbow(
   return e1.ey > e2.ey ? e1 : e2;
 }
 
-// 펌프차/물탱크차 방수포 원점: 토큰 우측 중앙 → 화점
+// 펌프차/물탱크차 방수포 원점: 방수포 핸들(우측 상단) → 화점.
+// 핸들이 숨은 상태(대기 구역 등)면 토큰 우측 중앙으로 폴백한다.
 function getMonitorOrigin(
   tokenEl: Element,
   target: { x: number; y: number },
 ): Endpoints | null {
-  const tokenRect = tokenEl.getBoundingClientRect();
   const board     = document.getElementById('tactical-area');
   const boardRect = board?.getBoundingClientRect();
   if (!boardRect) return null;
 
-  const ox = tokenRect.right;
-  const oy = tokenRect.top + tokenRect.height / 2;
+  const handleEl  = tokenEl.querySelector('.nozzle-handle');
+  const tokenRect = tokenEl.getBoundingClientRect();
+  const originRect = handleEl?.getBoundingClientRect();
+
+  const ox = originRect ? originRect.left + originRect.width  / 2 : tokenRect.right;
+  const oy = originRect ? originRect.top  + originRect.height / 2 : tokenRect.top + tokenRect.height / 2;
   const tx = boardRect.left + target.x * boardRect.width;
   const ty = boardRect.top  + target.y * boardRect.height;
 
@@ -230,9 +235,13 @@ function TipPopup({ tokenId, x, y, hasWater, isSpray, onClose }: TipPopupProps) 
   function handleSprayStop() {
     const token = tokens.find(t => t.id === tokenId);
     if (token?.aerialTarget) {
+      // 고가·굴절 — 방수만 멈추고 전개 상태 표시로 되돌린다
       const deployLabel = token.aerialTarget.deployLabel;
       const floorLabel  = token.aerialTarget.floorId;
       setStatusTag(tokenId, { label: `${floorLabel} ${deployLabel}`, color: 'yellow' });
+    } else {
+      // 방수포(펌프·물탱크) — 전개 개념이 없으므로 방수 태그를 지운다
+      setStatusTag(tokenId, null);
     }
     setAerialSprayTarget(tokenId, null);
     onClose();
@@ -287,13 +296,20 @@ function TipPopup({ tokenId, x, y, hasWater, isSpray, onClose }: TipPopupProps) 
 export function AerialOverlay() {
   const { tokens, moveAerialTarget, setStatusTag } = useTokens();
   const { connections } = useWaterConnections();
+  const { showWaterSupply } = useDisplayOptions();
+  const waterLevel          = useWaterLevel();
   const svgRef         = useRef<SVGSVGElement>(null);
   const tokensRef      = useRef(tokens);
   const connsRef       = useRef(connections);
+  // rAF 루프·이벤트 핸들러에서 최신값을 읽어야 해 ref 로 들고 있는다
+  const showWaterSupplyRef = useRef(showWaterSupply);
+  const emptyIdsRef        = useRef<ReadonlySet<string> | undefined>(undefined);
   const dragRef        = useRef<{ tokenId: string } | null>(null);
   const tipDragPosRef  = useRef<Map<string, { x: number; y: number }>>(new Map());
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);
   useEffect(() => { connsRef.current = connections; }, [connections]);
+  useEffect(() => { showWaterSupplyRef.current = showWaterSupply; }, [showWaterSupply]);
+  useEffect(() => { emptyIdsRef.current = waterLevel?.emptyVehicleIds; }, [waterLevel]);
 
   const [popup, setPopup] = useState<{
     tokenId: string;
@@ -319,8 +335,10 @@ export function AerialOverlay() {
     e.stopPropagation();
     const token   = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
-    const hasWater = connsRef.current.some(
-      c => c.toId === tokenId && WATER_SOURCE_TYPES.has(c.fromType),
+    // 송수 미사용 훈련(표시옵션 OFF)에서는 급수차 연결 없이도 방수한다
+    const hasWater = canStartSpray(
+      showWaterSupplyRef.current, connsRef.current, tokenId, token.unitType,
+      emptyIdsRef.current,
     );
     const isSpray = token.aerialSprayTarget != null;
     setPopup({ tokenId, x: e.clientX, y: e.clientY, hasWater, isSpray });
@@ -362,34 +380,17 @@ export function AerialOverlay() {
       const x = Math.max(0, Math.min(1, (ev.clientX - boardRect.left) / boardRect.width));
       const y = Math.max(0, Math.min(1, (ev.clientY - boardRect.top)  / boardRect.height));
 
-      // 드롭 위치의 층 감지 (초기 전개와 동일한 방식)
-      const elements = document.elementsFromPoint(ev.clientX, ev.clientY);
-      let floorEl: Element | null = null;
-      for (const el of elements) {
-        let cur: Element | null = el;
-        while (cur) {
-          if (cur.getAttribute('data-floor-id')) { floorEl = cur; break; }
-          cur = cur.parentElement;
-        }
-        if (floorEl) break;
-      }
+      // 드롭 위치의 층 감지 (초기 전개와 동일한 방식 — B·D면 포함)
+      const target = resolveAerialDeployFloor(ev.clientX, ev.clientY);
+      const tk     = tokensRef.current.find(t => t.id === tokenId);
 
-      const tk = tokensRef.current.find(t => t.id === tokenId);
+      // 층 미감지(지하층·A/C면·판 밖)면 원위치로 스냅백
+      if (!target || !tk?.aerialTarget) { cleanup(); return; }
 
-      // 층 미감지 또는 지하층이면 원위치로 스냅백
-      if (!floorEl || floorEl.classList.contains('floor-row--basement') || !tk?.aerialTarget) {
-        cleanup(); return;
-      }
-
-      const newFloorId     = floorEl.getAttribute('data-floor-id')!;
-      const floorHeight    = Number(floorEl.getAttribute('data-floor-height') ?? 0);
-      const displayLabel   = floorEl.getAttribute('data-floor-label') ?? newFloorId;
-      const isLadder       = tk.unitType === 'ladder';
-      const maxHeight      = isLadder ? LADDER_MAX_HEIGHT : AERIAL_MAX_HEIGHT;
-
+      const { floorId: newFloorId, floorHeight, displayLabel } = target;
       // 높이 초과 시 스냅백
-      if (floorHeight > maxHeight) {
-        alert(`${isLadder ? '굴절차' : '고가차'}는 ${maxHeight}층 높이까지만 전개 가능합니다.`);
+      if (floorHeight > maxDeployHeight(tk.unitType)) {
+        alert(overHeightMessage(tk.unitType));
         cleanup(); return;
       }
 
@@ -474,8 +475,9 @@ export function AerialOverlay() {
         // 끝단 사각형
         const tip = svg.querySelector(`#aa-tip-${token.id}`) as SVGRectElement | null;
         if (tip) {
-          const hasWater = connsRef.current.some(
-            c => c.toId === token.id && WATER_SOURCE_TYPES.has(c.fromType),
+          const hasWater = canStartSpray(
+            showWaterSupplyRef.current, connsRef.current, token.id, token.unitType,
+            emptyIdsRef.current,
           );
           tip.setAttribute('x', String(tx - TIP_W / 2));
           tip.setAttribute('y', String(ty - TIP_H / 2));
@@ -491,6 +493,7 @@ export function AerialOverlay() {
         // 방수 팬·스트림 — 끝단(aerialTarget)에서 화점(aerialSprayTarget)으로
         const fan    = svg.querySelector(`#aa-fan-${token.id}`)    as SVGPathElement | null;
         const stream = svg.querySelector(`#aa-stream-${token.id}`) as SVGPathElement | null;
+        const hit = svg.querySelector(`#aa-hit-${token.id}`) as SVGPathElement | null;
         if (isSpray && token.aerialSprayTarget) {
           // 끝단 위치: aerialTarget의 tx,ty를 원점으로 사용
           const sprayPts = getEndpoints(tokenEl, token.aerialSprayTarget);
@@ -498,10 +501,13 @@ export function AerialOverlay() {
             // ox,oy = 전개 끝단(사각형 중심), tx,ty = 화점
             fan.setAttribute('d',    buildFanPath(tx, ty, sprayPts.tx, sprayPts.ty));
             stream.setAttribute('d', buildStreamPath(tx, ty, sprayPts.tx, sprayPts.ty));
+            // 눌러서 방수 중단 — 가운데 줄기에만 판정선을 둔다
+            if (hit) hit.setAttribute('d', buildStreamPath(tx, ty, sprayPts.tx, sprayPts.ty));
           }
         } else {
           if (fan)    fan.setAttribute('d', '');
           if (stream) stream.setAttribute('d', '');
+          if (hit)    hit.setAttribute('d', '');
         }
       }
 
@@ -513,10 +519,12 @@ export function AerialOverlay() {
         const isDragging = tokenEl?.getAttribute('data-dragging') === 'true';
         const fan    = svg.querySelector(`#aa-mfan-${token.id}`)    as SVGPathElement | null;
         const stream = svg.querySelector(`#aa-mstream-${token.id}`) as SVGPathElement | null;
+        const hit    = svg.querySelector(`#aa-mhit-${token.id}`)    as SVGPathElement | null;
 
         if (!tokenEl || isDragging) {
           if (fan)    fan.setAttribute('d', '');
           if (stream) stream.setAttribute('d', '');
+          if (hit)    hit.setAttribute('d', '');
           continue;
         }
 
@@ -526,6 +534,7 @@ export function AerialOverlay() {
         const { ox, oy, tx, ty } = pts;
         if (fan)    fan.setAttribute('d',    buildFanPath(ox, oy, tx, ty));
         if (stream) stream.setAttribute('d', buildStreamPath(ox, oy, tx, ty));
+        if (hit)    hit.setAttribute('d',    buildStreamPath(ox, oy, tx, ty));
       }
 
       rafId = requestAnimationFrame(update);
@@ -557,6 +566,13 @@ export function AerialOverlay() {
       }
     };
   });
+
+  // 방수선을 클릭하면 끝단 팝업과 같은 "방수중단" 팝업을 띄운다.
+  // 송수 해제(연결선 클릭)·관창 방수 중단과 같은 조작 문법이다.
+  function handleSprayLineClick(e: React.MouseEvent, tokenId: string) {
+    e.stopPropagation();
+    setPopup({ tokenId, x: e.clientX, y: e.clientY, hasWater: true, isSpray: true });
+  }
 
   if (activeTokens.length === 0 && monitorTokens.length === 0) return null;
 
@@ -597,15 +613,28 @@ export function AerialOverlay() {
                 {/* 방수 팬 + 스트림 */}
                 <path id={`aa-fan-${token.id}`}    d="" className="aerial-fan" />
                 <path id={`aa-stream-${token.id}`} d="" className="aerial-fan-stream" />
+                {/* 방수선 클릭 → 방수 중단 */}
+                <path
+                  id={`aa-hit-${token.id}`}
+                  d=""
+                  className="aerial-fan-hit"
+                  onClick={e => handleSprayLineClick(e, token.id)}
+                />
               </g>
             );
           })}
 
-          {/* 방수포 (펌프차/물탱크차): 팬 + 스트림만 */}
+          {/* 방수포 (펌프차/물탱크차): 팬 + 스트림 + 클릭 판정선 */}
           {monitorTokens.map(token => (
             <g key={`monitor-${token.id}`}>
               <path id={`aa-mfan-${token.id}`}    d="" className="aerial-fan" />
               <path id={`aa-mstream-${token.id}`} d="" className="aerial-fan-stream" />
+              <path
+                id={`aa-mhit-${token.id}`}
+                d=""
+                className="aerial-fan-hit"
+                onClick={e => handleSprayLineClick(e, token.id)}
+              />
             </g>
           ))}
         </svg>,

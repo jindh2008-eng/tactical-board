@@ -1,10 +1,12 @@
-import { useLayoutEffect, useRef, useCallback } from 'react';
+import { useLayoutEffect, useEffect, useRef, useCallback } from 'react';
 import { useEvents } from '../../context/EventContext';
 import { resolveEventType, EVENT_TYPE_STATUSES } from '../../types/events';
 import type { EventStatus } from '../../types/events';
 import { useTokens } from '../../context/TokenContext';
 import { EventTokenCard } from './EventTokenCard';
 import { useActionMode } from '../../context/ActionModeContext';
+import { zoneLabel } from '../../utils/logLabels';
+import { readEventLocationAtPos, splitEventZoneKey } from '../../utils/eventLocation';
 import './EventLayer.css';
 
 // ─────────────────────────────────────────────
@@ -22,10 +24,13 @@ const TOKEN_H_BASE = 104;
 const GAP = 4;
 const PAD = 8;
 
+/** 화재계 이벤트 진행 %를 다시 남기기까지 필요한 하락폭(%). 작을수록 촘촘해진다 */
+const EVENT_PCT_LOG_STEP = 20;
+
 export function EventLayer() {
   const { mode } = useActionMode();
   const drawingInteraction = mode.type === 'drawing' || mode.type === 'drawing-erase';
-  const { enabledEvents, positions, statuses, firePercentages, moveEvent, setEventStatus, setEventFloorId } = useEvents();
+  const { enabledEvents, positions, statuses, firePercentages, zoneKeys, moveEvent, setEventStatus, setEventZoneKey } = useEvents();
   const { addLog } = useTokens();
   const layerRef = useRef<HTMLDivElement>(null);
   const initRef  = useRef(false);
@@ -35,11 +40,62 @@ export function EventLayer() {
     if (ev) {
       const eventType  = resolveEventType(ev);
       const statusItem = EVENT_TYPE_STATUSES[eventType].find(s => s.value === status);
-      const note = status === '-' ? '해제' : (statusItem?.label ?? status);
-      addLog({ logType: 'event-status', tokenId: id, tokenName: ev.label, fromZoneId: '', toZoneId: '', note });
+      const resolved   = status === '-';
+      const note       = resolved ? '해제' : (statusItem?.label ?? status);
+      // 이벤트가 **어디서** 났는지가 로그에 없으면 대응 출동대와 이어 붙일 수 없다.
+      const zoneKey = zoneKeys[id] ?? null;
+      const loc     = zoneKey ? splitEventZoneKey(zoneKey) : null;
+      const where   = zoneKey ? zoneLabel(zoneKey) : null;
+      addLog({
+        logType:    'event-status',
+        tokenId:    id,
+        tokenName:  ev.label,
+        fromZoneId: zoneKey ?? '',
+        toZoneId:   '',
+        note:       where ? `${where} ${note}` : note,
+        payload: {
+          kind: 'event-status', eventId: id, eventLabel: ev.label, eventType,
+          status, resolved,
+          zoneKey, floorId: loc?.floorId ?? null, face: loc?.face ?? null,
+          firePercentage: firePercentages[id] ?? null,
+        },
+      });
     }
     setEventStatus(id, status);
-  }, [enabledEvents, addLog, setEventStatus]);
+  }, [enabledEvents, addLog, setEventStatus, zoneKeys, firePercentages]);
+
+  // ── 화재계 이벤트 진행 % — 구간을 넘길 때만 기록 ──────────────────
+  // %는 1초마다 연속으로 변한다. 전부 남기면 로그를 뒤덮으므로 20% 구간 경계만 남긴다.
+  // 상태 전환(최성기→큰불잡음→…)은 위 event-status가 이미 잡고 있어, 여기서는
+  // 같은 상태 안의 진행 속도만 보완하는 셈이다. docs/EVENT_LOG_PLAN.md N-8
+  // 마지막으로 남긴 % — 고정 경계(100/80/60…)로 자르면 100%에서 조금만 내려가도
+  // 곧바로 경계를 넘어 첫 줄이 바로 찍힌다. **직전에 남긴 값에서 얼마나 떨어졌는지**로 판단한다.
+  const lastLoggedPctRef = useRef<Record<string, number>>({});
+  useEffect(() => {
+    for (const [id, pct] of Object.entries(firePercentages)) {
+      const prev = lastLoggedPctRef.current[id];
+      if (prev === undefined) {
+        lastLoggedPctRef.current[id] = pct;   // 최초 관측은 기준점만 잡는다
+        continue;
+      }
+      if (prev - pct < EVENT_PCT_LOG_STEP) continue;
+      lastLoggedPctRef.current[id] = pct;
+      const shown = Math.round(pct);
+      const ev = enabledEvents.find(e => e.id === id);
+      if (!ev) continue;
+      const zoneKey = zoneKeys[id] ?? null;
+      addLog({
+        logSource:  'system',
+        logType:    'event-status',
+        tokenId:    id,
+        tokenName:  ev.label,
+        fromZoneId: zoneKey ?? '',
+        toZoneId:   '',
+        note:       `${zoneKey ? `${zoneLabel(zoneKey)} ` : ''}진행 ${shown}%`,
+        payload:    { kind: 'event-fire-pct', eventId: id, eventLabel: ev.label, zoneKey, percentage: shown },
+      });
+    }
+  }, [firePercentages, enabledEvents, zoneKeys, addLog]);
 
   // 위치 미지정 이벤트를 A면 중앙 상단에 배치 (레이어 기준 상대좌표로 환산)
   const placeUnplaced = useCallback((unplaced: typeof enabledEvents) => {
@@ -82,6 +138,20 @@ export function EventLayer() {
     });
   }, [moveEvent]);
 
+  // ── 배치 구역 보정 ────────────────────────────────────────────────
+  // 위치는 있는데 구역 값이 없는 이벤트(자동 배치분·구버전 세션)를 화면에서 판정해 채운다.
+  // 이 값이 있어야 이벤트가 "A면인지 3층 내부인지"를 스스로 알게 된다.
+  // docs/EVENT_LOG_PLAN.md X-5
+  useEffect(() => {
+    for (const ev of enabledEvents) {
+      if (zoneKeys[ev.id]) continue;
+      const pos = positions[ev.id];
+      if (!pos) continue;
+      const loc = readEventLocationAtPos(pos);
+      if (loc) setEventZoneKey(ev.id, loc.zoneKey);
+    }
+  }, [enabledEvents, positions, zoneKeys, setEventZoneKey]);
+
   // 최초 마운트 시 배치
   useLayoutEffect(() => {
     if (initRef.current) return;
@@ -121,9 +191,10 @@ export function EventLayer() {
             firePercentage={firePercentages[ev.id]}
             x={pos.x}
             y={pos.y}
+            zoneKey={zoneKeys[ev.id] ?? null}
             onMove={moveEvent}
             onStatusChange={handleStatusChange}
-            onDrop={setEventFloorId}
+            onDrop={setEventZoneKey}
           />
         );
       })}

@@ -11,12 +11,23 @@ import { ErrorBoundary }   from './components/shared/ErrorBoundary';
 import './App.css';
 
 // ── 메뉴 버튼 (드롭다운) ──────────────────────────────────────────────
+/**
+ * 네 모드로 나눈 진입 메뉴 — docs/MASTER_PLAN.md 결정 D-4
+ *
+ *   설정모드            /settings
+ *   훈련모드(무플)      /play          ★ 현재 작업 범위
+ *   훈련모드(지휘)      미구현          → MASTER_PLAN.md §7.1
+ *   분석(창)            /play 내부 모달
+ *
+ * 지휘 항목은 자리만 잡아 두고 비활성이다. 라우트를 미리 만들지 않는 이유는
+ * 빈 화면으로 들어가는 경로가 생기면 훈련 중 오조작이 되기 때문이다.
+ */
 function MenuButton() {
-  const [open, setOpen]  = useState(false);
-  const navigate         = useNavigate();
-  const location         = useLocation();
-  const { openOverlay }  = useUIOverlay();
-  const menuRef          = useRef<HTMLDivElement>(null);
+  const [open, setOpen]          = useState(false);
+  const navigate                 = useNavigate();
+  const location                 = useLocation();
+  const { overlay, openOverlay } = useUIOverlay();
+  const menuRef                  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -27,6 +38,16 @@ function MenuButton() {
     return () => document.removeEventListener('mousedown', onMouseDown);
   }, [open]);
 
+  // 분석창이 열려 있는 동안에는 경로가 /play 여도 분석을 현재 모드로 본다
+  const analysisOpen = overlay === 'analysis';
+  const itemClass = (active: boolean) =>
+    `app-menu__item${active ? ' app-menu__item--active' : ''}`;
+
+  function goTo(path: string) {
+    if (location.pathname !== path) navigate(path);
+    setOpen(false);
+  }
+
   return (
     <div className="app-menu" ref={menuRef}>
       <button className="app-menu__trigger" onClick={() => setOpen(v => !v)}>
@@ -34,17 +55,38 @@ function MenuButton() {
       </button>
       {open && (
         <div className="app-menu__dropdown">
-          <button className="app-menu__item" onClick={() => { navigate('/settings'); setOpen(false); }}>
-            설정
+          <button
+            className={itemClass(location.pathname === '/settings')}
+            onClick={() => goTo('/settings')}
+          >
+            설정모드
           </button>
-          <button className="app-menu__item" onClick={() => { navigate('/play'); setOpen(false); }}>
-            훈련
+
+          <div className="app-menu__group">훈련모드</div>
+          <button
+            className={itemClass(location.pathname === '/play' && !analysisOpen)}
+            onClick={() => goTo('/play')}
+          >
+            무전플레이어
           </button>
-          <button className="app-menu__item" onClick={() => {
-            if (location.pathname !== '/play') navigate('/play');
-            openOverlay('analysis');
-            setOpen(false);
-          }}>
+          <button
+            className="app-menu__item app-menu__item--pending"
+            disabled
+            title="훈련모드(무플) 완성 후 착수 — docs/MASTER_PLAN.md §7.1"
+          >
+            지휘교수
+            <span className="app-menu__badge">준비 중</span>
+          </button>
+
+          <div className="app-menu__divider" />
+          <button
+            className={itemClass(analysisOpen)}
+            onClick={() => {
+              if (location.pathname !== '/play') navigate('/play');
+              openOverlay('analysis');
+              setOpen(false);
+            }}
+          >
             분석
           </button>
         </div>

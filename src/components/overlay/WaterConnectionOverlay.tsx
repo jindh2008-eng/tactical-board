@@ -5,7 +5,6 @@ import { useHydrantState }     from '../../context/HydrantStateContext';
 import { useTokens }           from '../../context/TokenContext';
 import { useWaterLevel }       from '../../context/WaterLevelContext';
 import { useDisplayOptions }   from '../../context/DisplayOptionsContext';
-import { useActionMode }       from '../../context/ActionModeContext';
 import './WaterConnectionOverlay.css';
 
 // ─────────────────────────────────────────────
@@ -85,8 +84,7 @@ export function WaterConnectionOverlay() {
   const { isBroken: isHydrantBroken }     = useHydrantState();
   const { tokens }                        = useTokens();
   const waterLevel                        = useWaterLevel();
-  const { showWaterConn }                 = useDisplayOptions();
-  const { mode }                          = useActionMode();
+  const { showWaterSupply }               = useDisplayOptions();
 
   function isConnectionBroken(fromId: string, fromType: string, toId: string, toType: string): boolean {
     if (fromType === 'hydrant' || fromType === 'indoor_hydrant') return isHydrantBroken(fromId);
@@ -152,7 +150,7 @@ export function WaterConnectionOverlay() {
     setPopup(null);
   }
 
-  if (!showWaterConn && mode.type !== 'water-connect') return null;
+  if (!showWaterSupply) return null;   // 송수 미사용 훈련 — 연결선 자체가 없다
   if (connections.length === 0 && popup === null) return null;
 
   return ReactDOM.createPortal(

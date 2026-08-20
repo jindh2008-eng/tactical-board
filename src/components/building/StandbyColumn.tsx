@@ -1,12 +1,16 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { useSettings } from '../../store/settingsStore';
 import { useMedicalPost } from '../../context/MedicalPostContext';
+import { useUIOverlay } from '../../context/UIOverlayContext';
 import { TokenCard } from '../shared/TokenCard';
 import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
 import { VictimCard } from '../shared/VictimCard';
 import { RescueStats } from './RescueStats';
+import { ArrivedGroupRow } from '../shared/ArrivedGroupRow';
+import { splitArrivalGroup } from '../../utils/arrivalGroup';
+
 import './StandbyColumn.css';
 
 // ─────────────────────────────────────────────
@@ -54,35 +58,67 @@ function ChiefSelector({ value, onChange, zoneKey }: ChiefSelectorProps) {
 
 // ─────────────────────────────────────────────
 // 임시의료소 — 단일 드롭 영역 (구조대상자 + 출동대)
+//
+// A면 우측 하단에 배치된다(ExteriorZone.tsx, face === 'A').
+// 현장에 설치되는 공간이라 상황판 위에 있는 것이 교리에 맞다.
+// 스타일은 A면과 이질감이 없도록 옅은 선 + 명칭만 — .a-face-zone (ExteriorZone.css)
 // ─────────────────────────────────────────────
 
-interface MedicalPostBoxProps {
-  extraHeaderAction?: ReactNode;
-}
-
-export function MedicalPostBox({ extraHeaderAction }: MedicalPostBoxProps) {
-  const { tokens, moveToken }   = useTokens();
+export function MedicalPostBox() {
+  const { tokens, moveToken, addLog } = useTokens();
   const { victims, moveVictim } = useVictims();
   const {
     isInstalled, setIsInstalled,
     assignedTokenId, setAssignedTokenId,
   } = useMedicalPost();
+  const { openOverlay } = useUIOverlay();
+
+  // 설치·소장 지명은 지휘관의 명시적 결정이라 시각이 남아야 한다 (EVENT_LOG_PLAN N-13)
+  function toggleInstalled() {
+    const next = !isInstalled;
+    setIsInstalled(next);
+    addLog({
+      logType: 'post', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '',
+      note:    next ? '임시의료소 설치' : '임시의료소 해제',
+      payload: { kind: 'post-install', post: 'medical', installed: next },
+    });
+  }
+
+  function changeChief(nextId: string | null) {
+    if (nextId === assignedTokenId) return;
+    setAssignedTokenId(nextId);
+    const label = nextId ? (tokens.find(t => t.id === nextId)?.label ?? nextId) : null;
+    addLog({
+      logType: 'post', tokenId: nextId ?? '', tokenName: label ?? '', fromZoneId: '', toZoneId: '',
+      note:    label ? `임시의료소장 지명: ${label}` : '임시의료소장 해제',
+      payload: { kind: 'post-chief', post: 'medical', chiefTokenId: nextId, chiefLabel: label },
+    });
+  }
 
   const zoneKey     = 'medical-post';
   const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
-  const zoneVictims = victims.filter(v => v.zoneKey === zoneKey);
+  // 이송 연결된 구조대상자는 출동대 토큰 우측에 붙어 렌더된다(TokenCard) — 구역 배치에서 제외.
+  const zoneVictims = victims.filter(v => v.zoneKey === zoneKey && !v.carriedBy);
 
   // 담당 토큰이 구역을 벗어나면 담당자만 자동 해제 (설치 상태는 유지)
   useEffect(() => {
     if (assignedTokenId && !zoneTokens.some(t => t.id === assignedTokenId)) {
-      setAssignedTokenId(null);
+      changeChief(null);
     }
-  }, [zoneTokens, assignedTokenId, setAssignedTokenId]);
+  // changeChief는 매 렌더 새로 만들어진다 — 의존성에 넣으면 매 렌더 재실행된다
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoneTokens, assignedTokenId]);
 
-  const panel = useDropPanel();
+  function onDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation(); // A면(부모) 드롭존으로 버블링 방지
+    e.dataTransfer.dropEffect = 'move';
+  }
 
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
+    e.stopPropagation(); // A면 핸들러가 같은 이벤트를 또 처리해 zoneKey가 'face-A'로
+    // 덮어써지는 것을 막는다 (직전대기와 동일한 이유)
     const victimId = e.dataTransfer.getData('victimId');
     if (victimId) { moveVictim(victimId, zoneKey); return; }
     const tokenId = e.dataTransfer.getData('tokenId');
@@ -90,53 +126,59 @@ export function MedicalPostBox({ extraHeaderAction }: MedicalPostBoxProps) {
   }
 
   return (
-    <div className="standby-box standby-box--medical standby-box--medical-large">
-      <div className="standby-box__header standby-box__header--chief">
-        <span className="standby-box__title">임시의료소</span>
-        <button
-          className={`medical-status-btn medical-status-btn--${isInstalled ? 'installed' : 'none'}`}
-          onClick={() => setIsInstalled(v => !v)}
-        >
-          {isInstalled ? '설치' : '미설치'}
-        </button>
-        <div className="standby-chief">
-          <select
-            className="standby-chief__select"
-            value={assignedTokenId ?? ''}
-            onChange={e => setAssignedTokenId(e.target.value || null)}
+    <div className="a-face-zone a-face-zone--medical">
+      <div className="a-face-zone__sub">
+        <div className="a-face-zone__header">
+          <button
+            className={`medical-status-btn medical-status-btn--${isInstalled ? 'installed' : 'none'}`}
+            onClick={toggleInstalled}
           >
-            <option value="">소장 미지정</option>
-            {zoneTokens.map(t => (
-              <option key={t.id} value={t.id}>{t.label}</option>
-            ))}
-          </select>
+            {isInstalled ? '설치' : '미설치'}
+          </button>
+          <div className="standby-chief">
+            <select
+              className="standby-chief__select"
+              value={assignedTokenId ?? ''}
+              onChange={e => changeChief(e.target.value || null)}
+            >
+              <option value="">소장 미지정</option>
+              {zoneTokens.map(t => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+          {/* 헤더 우측 끝 — 구조활동통계를 화면 가운데 팝업으로 연다.
+              이 자리는 좁아서 표를 넣으면 글씨를 줄여야 한다 */}
+          <button
+            className="medical-stats-toggle"
+            onClick={() => openOverlay('rescue-stats')}
+            title="구조활동통계 보기"
+          >
+            구조활동통계
+          </button>
         </div>
-        {extraHeaderAction}
-      </div>
 
-      <div
-        className="standby-box__body"
-        onDragOver={panel.onDragOver}
-        onDrop={onDrop}
-      >
-        {zoneVictims.length === 0 && zoneTokens.length === 0 ? (
-          <span className="standby-box__placeholder">―</span>
-        ) : (
-          <>
-            {zoneVictims.map(v => <VictimCard key={v.id} victim={v} />)}
-            {zoneTokens.map(t => (
-              <div
-                key={t.id}
-                className={[
-                  'medical-post__token-wrap',
-                  assignedTokenId === t.id ? 'medical-post__token-wrap--selected' : '',
-                ].filter(Boolean).join(' ')}
-              >
-                <TokenCard token={t} />
-              </div>
-            ))}
-          </>
-        )}
+        <div
+          className="a-face-zone__body"
+          data-zone-key={zoneKey}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+        >
+          {zoneVictims.map(v => <VictimCard key={v.id} victim={v} />)}
+          {zoneTokens.map(t => (
+            <div
+              key={t.id}
+              className={[
+                'medical-post__token-wrap',
+                assignedTokenId === t.id ? 'medical-post__token-wrap--selected' : '',
+              ].filter(Boolean).join(' ')}
+            >
+              <TokenCard token={t} />
+            </div>
+          ))}
+        </div>
+        {/* 명칭은 박스 하단 — 직전대기·RIT 와 같은 자리 */}
+        <span className="a-face-zone__label a-face-zone__label--bottom">임시의료소</span>
       </div>
     </div>
   );
@@ -158,6 +200,8 @@ interface SimpleStandbyBoxProps {
 function SimpleStandbyBox({ label, zoneKey, colorMod, chief, onChiefChange, onTokenDoubleClick }: SimpleStandbyBoxProps) {
   const { tokens, moveToken } = useTokens();
   const zoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
+  // 맨 윗줄은 "도착대" — 방금 들어온 한 무리. 나머지는 아래에서 종류별로 정렬한다.
+  const { arrived, rest } = splitArrivalGroup(zoneTokens);
   const panel = useDropPanel();
 
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -177,13 +221,21 @@ function SimpleStandbyBox({ label, zoneKey, colorMod, chief, onChiefChange, onTo
 
       <div
         className="standby-box__body"
+        data-zone-key={zoneKey}
         onDragOver={panel.onDragOver}
         onDrop={onDrop}
       >
         {zoneTokens.length === 0 ? (
           <span className="standby-box__placeholder">―</span>
         ) : (
-          <CategorizedTokenGrid tokens={zoneTokens} hideQuantity onTokenDoubleClick={onTokenDoubleClick} />
+          <>
+            <ArrivedGroupRow tokens={arrived} onTokenDoubleClick={onTokenDoubleClick} />
+            {rest.length > 0 && (
+              <div className="standby-box__rest">
+                <CategorizedTokenGrid tokens={rest} onTokenDoubleClick={onTokenDoubleClick} />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -194,12 +246,12 @@ function SimpleStandbyBox({ label, zoneKey, colorMod, chief, onChiefChange, onTo
 // StandbyColumn — TacticalArea col 1 좌측 운영패널
 //
 // 순서: 임시의료소(소장+분할) → 구조현황통계 → 자원대기소(2열) → 대기1단계(2열)
-// 직전대기는 ImminentStandby (TacticalArea col 2, row 3) 로 분리
+// 임시의료소·직전대기·RIT는 A면으로 이동함(2026-08-18)
 // ─────────────────────────────────────────────
 
 // ─────────────────────────────────────────────
-// BottomStandbyBoxes — TacticalArea col 1, row 3
-// 자원대기소 + 대기1단계를 세로로 쌓아 배치
+// BottomStandbyBoxes — 좌측 운영 패널의 "대기1단계" 섹션
+// 더블클릭하면 A면의 직전대기로 보낸다(차량은 여기 남는다 — 교리대로)
 // ─────────────────────────────────────────────
 
 export function BottomStandbyBoxes() {
@@ -227,6 +279,17 @@ export type StandbyZoneKey = typeof STANDBY_ZONE_KEYS[number];
 
 export function StandbyColumn() {
   const { stagingAreaChief, updateStagingAreaChief } = useSettings();
+  const { addLog } = useTokens();
+
+  function changeStagingChief(name: string) {
+    if (name === stagingAreaChief) return;
+    updateStagingAreaChief(name);
+    addLog({
+      logType: 'post', tokenId: '', tokenName: name, fromZoneId: '', toZoneId: '',
+      note:    name ? `자원대기소장 지명: ${name}` : '자원대기소장 해제',
+      payload: { kind: 'post-chief', post: 'resource', chiefTokenId: null, chiefLabel: name || null },
+    });
+  }
 
   return (
     <div className="standby-column">
@@ -242,7 +305,7 @@ export function StandbyColumn() {
         zoneKey="standby-resource"
         colorMod="resource"
         chief={stagingAreaChief}
-        onChiefChange={updateStagingAreaChief}
+        onChiefChange={changeStagingChief}
       />
 
       {/* 대기1단계 — 2열: 차량(좌) / 출동대(우) */}

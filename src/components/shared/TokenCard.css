@@ -136,7 +136,7 @@
   left:           50%;
   bottom:         100%;          /* 기본: 토큰 위쪽 */
   transform:      translateX(-50%);
-  margin-bottom:  1px;           /* 기존 3px → 1px (1/2 이하로 축소) */
+  margin-bottom:  calc(1px * var(--ui-scale, 1));
   pointer-events: none;
   z-index:        999;
   display:        flex;
@@ -150,7 +150,7 @@
   bottom:        auto;
   top:           100%;
   margin-bottom: 0;
-  margin-top:    3px;
+  margin-top:    calc(3px * var(--ui-scale, 1));
 }
 
 /* ─────────────────────────────────────────────
@@ -161,7 +161,7 @@
   display:        flex;
   flex-direction: column;
   align-items:    center;
-  gap:            2px;
+  gap:            calc(2px * var(--ui-scale, 1));
   white-space:    nowrap;
 }
 
@@ -171,14 +171,16 @@
   align-items: center;
   background: rgba(10, 10, 20, 0.88);
   border: 1px solid rgba(120, 110, 180, 0.45);
-  border-radius: 3px;
-  padding: 1px 5px;
+  border-radius: calc(3px * var(--ui-scale, 1));
+  padding:
+    calc(1px * var(--ui-scale, 1))
+    calc(5px * var(--ui-scale, 1));
   gap: 0;
   backdrop-filter: blur(2px);
 }
 
 .token-badge__line {
-  font-size: 0.68rem;
+  font-size: calc(10.2px * var(--font-scale, 1));
   font-weight: 700;
   color: #e8e6ff;
   line-height: 1.35;
@@ -186,7 +188,7 @@
 }
 
 .token-badge__line--sub {
-  font-size: 0.64rem;
+  font-size: calc(9.6px * var(--font-scale, 1));
   font-weight: 600;
   color: #b0aed0;
 }
@@ -322,7 +324,7 @@
 /* ── 하단 상태 태그 (임무/상태 프리셋) ── */
 .token-status-tag-below {
   position:       absolute;
-  top:            calc(100% + 3px);
+  top:            calc(100% + 3px * var(--ui-scale, 1));
   left:           50%;
   transform:      translateX(-50%);
   display:        flex;
@@ -343,10 +345,12 @@
   display:        flex;
   flex-direction: column;
   align-items:    center;
-  padding:        1px 6px;
-  border-radius:  3px;
+  padding:
+    calc(1px * var(--ui-scale, 1))
+    calc(6px * var(--ui-scale, 1));
+  border-radius:  calc(3px * var(--ui-scale, 1));
   border:         1px solid;
-  font-size:      0.62rem;
+  font-size:      calc(9.3px * var(--font-scale, 1));
   font-weight:    700;
   line-height:    1.5;
   letter-spacing: 0.03em;
@@ -358,7 +362,7 @@
 }
 
 .token-status-tag__linked {
-  font-size:      0.58rem;
+  font-size:      calc(8.7px * var(--font-scale, 1));
   font-weight:    600;
   opacity:        0.85;
   letter-spacing: 0.02em;
@@ -431,6 +435,28 @@
   pointer-events: none;
 }
 
+/* 현장 배치 상태에서는 게이지가 송수 연결 손잡이가 된다 */
+.water-gauge--draggable {
+  pointer-events: auto;
+  cursor:         grab;
+  touch-action:   none;
+  border-color:   #2255aa;
+}
+
+.water-gauge--draggable:active { cursor: grabbing; }
+
+.water-gauge--draggable:hover {
+  border-color: #66ccff;
+  box-shadow:   0 0 calc(6px * var(--ui-scale, 1)) rgba(102, 204, 255, 0.5);
+}
+
+/* 송수 드래그 중 — 연결 가능한 대상 표시 (급수 설비 공통) */
+.water-drop-ok {
+  outline:        2px dashed #66ccff;
+  outline-offset: 2px;
+  border-radius:  4px;
+}
+
 /* 채움 바 — 하단 기준 위로 채움 */
 .water-gauge__fill {
   position:   absolute;
@@ -470,7 +496,7 @@
 /* 임무 레이블 컨테이너 — 토큰 좌측에 붙어서 복수 레이블을 간격 없이 나열 */
 .token-mission-labels {
   position:       absolute;
-  right:          calc(100% + 4px);
+  right:          calc(100% + 4px * var(--ui-scale, 1));
   top:            0;
   bottom:         0;
   display:        flex;
@@ -481,27 +507,27 @@
 
 /* 개별 임무 레이블 칩 */
 .token-mission-label {
-  padding:        0 4px;
+  padding:        0 calc(4px * var(--ui-scale, 1));
   border:         1px solid;
   display:        flex;
   flex-direction: row-reverse;  /* 첫 번째 컬럼이 토큰에 가장 가깝게 */
   align-items:    stretch;
-  gap:            2px;
+  gap:            calc(2px * var(--ui-scale, 1));
 }
 
 /* 첫 번째(가장 왼쪽) 레이블만 왼쪽 모서리 둥글게 */
 .token-mission-label:first-child {
-  border-radius: 4px 0 0 4px;
+  border-radius: calc(4px * var(--ui-scale, 1)) 0 0 calc(4px * var(--ui-scale, 1));
 }
 
 /* 마지막(토큰에 붙는) 레이블만 오른쪽 모서리 둥글게 */
 .token-mission-label:last-child {
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 calc(4px * var(--ui-scale, 1)) calc(4px * var(--ui-scale, 1)) 0;
 }
 
 /* 레이블이 1개뿐이면 전체 둥글게 */
 .token-mission-label:only-child {
-  border-radius: 4px;
+  border-radius: calc(4px * var(--ui-scale, 1));
 }
 
 /* 인접 레이블 간 좌측 보더 제거 (이중선 방지) */
@@ -520,11 +546,11 @@
 /* 개별 글자 */
 .token-mission-label__char {
   display:               block;
-  font-size:             12px;
+  font-size:             calc(12px * var(--font-scale, 1));
   font-weight:           900;
   line-height:           1;
   text-align:            center;
-  -webkit-text-stroke:   0.4px currentColor;
+  -webkit-text-stroke:   calc(0.4px * var(--ui-scale, 1)) currentColor;
 }
 
 /* ─────────────────────────────────────────────
@@ -592,4 +618,44 @@
 .token-bubble__close:hover {
   color:       #e8d8ff;
   background:  rgba(120, 80, 200, 0.3);
+}
+
+/* ─────────────────────────────────────────────
+   구조대상자 이송 중 표시 — 연결된 구조대상자가 있는 출동대
+   (구조대상자를 출동대 위에 드롭하면 연결됨)
+   ─────────────────────────────────────────────*/
+.token-card-wrapper--carrying::after {
+  content: '';
+  position: absolute;
+  inset: calc(-3px * var(--ui-scale, 1));
+  border: calc(2px * var(--ui-scale, 1)) dashed rgba(120, 200, 255, 0.85);
+  border-radius: calc(5px * var(--ui-scale, 1));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 연결된 구조대상자 토큰 — 출동대 바로 우측에 나란히 부착 */
+.token-carried-victims {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: calc(7px * var(--ui-scale, 1));
+  display: flex;
+  align-items: center;
+  gap: calc(3px * var(--ui-scale, 1));
+  z-index: 6;
+}
+
+/* 출동대와 이어 보이도록 짧은 연결선 */
+.token-carried-victims::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: calc(7px * var(--ui-scale, 1));
+  height: calc(2px * var(--ui-scale, 1));
+  transform: translateY(-50%);
+  background: rgba(120, 200, 255, 0.85);
+  pointer-events: none;
 }

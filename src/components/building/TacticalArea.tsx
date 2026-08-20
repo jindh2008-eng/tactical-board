@@ -4,8 +4,6 @@ import { DEFAULT_BUILDING_CONFIG, buildDisplayFloors } from '../../data/building
 import { BuildingBoard } from './BuildingBoard';
 import { ExteriorZone } from './ExteriorZone';
 import { BFaceWithStandby } from './BFaceWithStandby';
-import { FireLine } from './FireLine';
-import { useFireLine } from '../../context/FireLineContext';
 import { EventLayer } from '../events/EventLayer';
 import { useActionMode } from '../../context/ActionModeContext';
 import { DrawingBoard } from '../drawing/DrawingBoard';
@@ -43,7 +41,6 @@ export function TacticalArea({
   initialFireStatus = null,
   extraFireFloors   = [],
 }: Props) {
-  const { showFireLine } = useFireLine();
   const { mode } = useActionMode();
   const drawingInteraction = mode.type === 'drawing' || mode.type === 'drawing-erase';
   const displayFloors  = buildDisplayFloors(config, fireFloor);
@@ -87,7 +84,8 @@ export function TacticalArea({
     : rowWeights.map(w => `${w}fr`);
   const gridTemplateRows = `140px ${midRowParts.join(' ')} minmax(${A_FACE_MIN_HEIGHT}px, 1fr)`;
 
-  function handleRowResizeStart(e: React.MouseEvent) {
+  function handleRowResizeStart(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.button !== 0) return;
     e.preventDefault();
     if (drawingInteraction) return;
     const el = areaRef.current;
@@ -102,13 +100,18 @@ export function TacticalArea({
     document.body.style.cursor     = 'ns-resize';
     document.body.style.userSelect = 'none';
 
-    function onMove(ev: MouseEvent) {
+    const pointerId = e.pointerId;
+
+    function onMove(ev: PointerEvent) {
+      if (ev.pointerId !== pointerId) return;
       const next = Math.min(maxAllowed, Math.max(minAllowed, startHeight + (ev.clientY - startY)));
       setBuildingHeight(next);
     }
-    function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
+    function onUp(ev: PointerEvent) {
+      if (ev.pointerId !== pointerId) return;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
       document.body.style.cursor     = '';
       document.body.style.userSelect = '';
       setBuildingHeight(h => {
@@ -116,8 +119,9 @@ export function TacticalArea({
         return h;
       });
     }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
   }
 
   return (
@@ -146,17 +150,15 @@ export function TacticalArea({
       {/* row 2, col 3 — D면 (RF 트랙까지 확장) */}
       <ExteriorZone face="D" />
 
-      {/* row 2, 전체 폭 — 1층 바닥 슬래브 + 소방통제선 */}
-      <div className="tactical-area__slab" aria-hidden="true">
-        {showFireLine && (
-          <FireLine height={15} style={{ position: 'absolute', top: 'calc(var(--above-pct, 100%) - 9px)', left: 0, right: 0 }} />
-        )}
-      </div>
+      {/* row 2, 전체 폭 — 1층 바닥 슬래브. 소방통제선은 A면(exterior-zone--a) 내부 최상단에서 그린다
+          — 이 슬랩 컨테이너(z-index:10)에 두면 A면(z-index:15)에 가려 보이지 않는다 */}
+      <div className="tactical-area__slab" aria-hidden="true" />
 
       {/* 건물↔A면 높이 조절 핸들 — col 1(좌측)에서만, 훈련 중 실수 클릭 방지 */}
       <div
         className={`tactical-area__row-resize-handle${drawingInteraction ? ' tactical-area__row-resize-handle--disabled' : ''}`}
-        onMouseDown={handleRowResizeStart}
+        onPointerDown={handleRowResizeStart}
+        onContextMenu={e => e.preventDefault()}
         title="드래그하여 건물/A면 높이 조절"
       />
 

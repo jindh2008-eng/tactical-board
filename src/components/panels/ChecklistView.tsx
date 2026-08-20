@@ -36,7 +36,7 @@ const TYPE_LABELS: Record<ChecklistItemType, string> = {
   fire:      '화재',
   xvr:       'XVR',
   unit:      '출동대',
-  incident:  '돌발상황',
+  incident:  '현장요소',
   victim:    '구조대상자',
 };
 

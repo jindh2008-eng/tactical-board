@@ -27,6 +27,7 @@
    층 번호 레이블 (좌측 고정 컬럼)
    ─────────────────────────────────────────────*/
 .floor-row__label {
+  position: relative;   /* 연결송수구 고정 위치 기준 */
   width: 34px;
   flex-shrink: 0;
   display: flex;

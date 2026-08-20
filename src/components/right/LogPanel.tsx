@@ -2,41 +2,8 @@ import type { LogEntry } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
 import { exportLogsAsCsv, exportLogsAsPdf } from '../../utils/exportLog';
+import { zoneLabel } from '../../utils/logLabels';
 import './LogPanel.css';
-
-// ─────────────────────────────────────────────
-// 구역 키 → 한글 레이블
-// ─────────────────────────────────────────────
-
-const STATIC_LABELS: Record<string, string> = {
-  pool:               '대기(풀)',
-  'medical-post':     '임시의료소',
-  'standby-resource': '자원대기소',
-  'standby-standby1': '대기1단계',
-  'standby-imminent': '직전대기',
-  'face-A':           'A면',
-  'face-B':           'B면',
-  'face-C':           'C면',
-  'face-D':           'D면',
-};
-
-const ZONE_NAMES: Record<string, string> = {
-  left:   '단위',
-  center: '내부',
-  right:  '화재',
-  stair:  '계단실',
-};
-
-function zoneLabel(zoneId: string): string {
-  if (STATIC_LABELS[zoneId]) return STATIC_LABELS[zoneId];
-  const dashIdx = zoneId.lastIndexOf('-');
-  if (dashIdx > 0) {
-    const floor = zoneId.slice(0, dashIdx);
-    const zone  = zoneId.slice(dashIdx + 1);
-    if (ZONE_NAMES[zone]) return `${floor} ${ZONE_NAMES[zone]}`;
-  }
-  return zoneId;
-}
 
 // ─────────────────────────────────────────────
 // 개별 로그 항목 렌더
@@ -120,6 +87,53 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     );
   }
 
+  if (logType === 'post') {
+    return (
+      <div className="log-panel__entry log-panel__entry--post">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className="log-panel__post-note">{note}</span>
+      </div>
+    );
+  }
+
+  if (logType === 'victim-found') {
+    return (
+      <div className="log-panel__entry log-panel__entry--found">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className="log-panel__found-name">{tokenName}</span>
+        <span className="log-panel__found-note">{note}</span>
+      </div>
+    );
+  }
+
+  if (logType === 'search') {
+    return (
+      <div className="log-panel__entry log-panel__entry--search">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        {tokenName && <span className="log-panel__search-name">{tokenName}</span>}
+        <span className="log-panel__search-note">{note}</span>
+      </div>
+    );
+  }
+
+  if (logType === 'dispatch') {
+    return (
+      <div className="log-panel__entry log-panel__entry--dispatch">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className="log-panel__dispatch-note">{note}</span>
+      </div>
+    );
+  }
+
+  if (logType === 'training') {
+    return (
+      <div className="log-panel__entry log-panel__entry--training">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className="log-panel__training-note">{note}</span>
+      </div>
+    );
+  }
+
   if (logType === 'checklist') {
     return (
       <div className="log-panel__entry log-panel__entry--checklist">
@@ -129,7 +143,7 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     );
   }
 
-  // move / assignment / rescue
+  // move / rescue
   return (
     <div className="log-panel__entry">
       <span className="log-panel__time">{entry.timestamp}</span>

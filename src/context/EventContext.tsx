@@ -15,11 +15,16 @@ interface EventContextValue {
   positions:         Record<string, EventPos>;
   statuses:          Record<string, EventStatus>;
   firePercentages:   Record<string, number>;   // 화재계 이벤트 연속 % (0~100)
-  floorIds:          Record<string, string>;   // eventId → floorId (드롭된 층, 층 외부면 키 없음)
+  /**
+   * eventId → 배치 구역 키. 'face-A'~'face-D'(방면) 또는 '3F-center'·'3F-stair'(건물 안).
+   * 좌표와 달리 **의미가 있는 값**이라 로그·방수 판정·분석이 이걸 쓴다.
+   */
+  zoneKeys:          Record<string, string>;
   moveEvent:         (id: string, x: number, y: number) => void;
   setEventStatus:    (id: string, status: EventStatus) => void;
   setFirePercentage: (id: string, pct: number) => void;
-  setEventFloorId:   (id: string, floorId: string | null) => void;
+  /** 드롭·자동배치 시점에 판정한 구역을 기록한다. null이면 판정 실패(보드 밖) */
+  setEventZoneKey:   (id: string, zoneKey: string | null) => void;
 }
 
 const EventContext = createContext<EventContextValue | null>(null);
@@ -54,9 +59,10 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     return saved?.firePercentages ?? {};
   });
 
-  const [floorIds, setFloorIds] = useState<Record<string, string>>(() => {
+  const [zoneKeys, setZoneKeys] = useState<Record<string, string>>(() => {
     const saved = loadEventSession();
-    return saved?.floorIds ?? {};
+    // 구버전은 floorIds에 층 id와 면 키가 섞여 있었다 — 그대로 옮겨도 문법이 같다
+    return saved?.zoneKeys ?? saved?.floorIds ?? {};
   });
 
   // 새로 활성화된 이벤트에 기본 상태 부여 (위치는 EventOverlay가 초기화)
@@ -76,8 +82,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   // 변경 시 세션 저장
   useEffect(() => {
-    saveEventSession({ positions, statuses, floorIds, firePercentages });
-  }, [positions, statuses, floorIds, firePercentages]);
+    saveEventSession({ positions, statuses, zoneKeys, firePercentages });
+  }, [positions, statuses, zoneKeys, firePercentages]);
 
   // ── 액션 ──────────────────────────────────
 
@@ -85,14 +91,16 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     setPositions(prev => ({ ...prev, [id]: { x, y } }));
   }, []);
 
-  const setEventFloorId = useCallback((id: string, floorId: string | null) => {
-    setFloorIds(prev => {
-      if (floorId === null) {
+  const setEventZoneKey = useCallback((id: string, zoneKey: string | null) => {
+    setZoneKeys(prev => {
+      if (zoneKey === null) {
+        if (prev[id] === undefined) return prev;
         const next = { ...prev };
         delete next[id];
         return next;
       }
-      return { ...prev, [id]: floorId };
+      if (prev[id] === zoneKey) return prev;
+      return { ...prev, [id]: zoneKey };
     });
   }, []);
 
@@ -115,7 +123,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <EventContext.Provider value={{ enabledEvents, positions, statuses, firePercentages, floorIds, moveEvent, setEventStatus, setFirePercentage, setEventFloorId }}>
+    <EventContext.Provider value={{ enabledEvents, positions, statuses, firePercentages, zoneKeys, moveEvent, setEventStatus, setFirePercentage, setEventZoneKey }}>
       {children}
     </EventContext.Provider>
   );

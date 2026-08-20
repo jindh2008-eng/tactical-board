@@ -2,10 +2,10 @@ import { getFaceZones, getFaceZoneDataAttrs } from '../../data/faceZoneData';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { useSettings } from '../../store/settingsStore';
-import { useFireLine } from '../../context/FireLineContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { HydrantIcon } from '../shared/HydrantIcon';
+import { ControlLineToggles } from './ControlLineToggles';
 import { computeDropCenter } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import './BFaceWithStandby.css';
@@ -31,7 +31,8 @@ function BFaceDropZone() {
   const zoneKey  = 'face-B';
 
   const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
-  const zoneVictims = victims.filter(v => v.zoneKey === zoneKey);
+  // 이송 연결된 구조대상자는 출동대 토큰 우측에 붙어 렌더된다(TokenCard) — 구역 배치에서 제외.
+  const zoneVictims = victims.filter(v => v.zoneKey === zoneKey && !v.carriedBy);
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -59,6 +60,7 @@ function BFaceDropZone() {
   return (
     <div
       className="face-general-zone bface-drop-zone"
+      data-zone-key={zoneKey}
       {...getFaceZoneDataAttrs(faceZone)}
       title="B면 일반 이동 영역"
       onDragOver={handleDragOver}
@@ -100,18 +102,14 @@ function BFaceDropZone() {
 // ─────────────────────────────────────────────
 
 export function BFaceWithStandby() {
-  const { showFireLine, toggleFireLine } = useFireLine();
   return (
     <div className="exterior-zone exterior-zone--b exterior-zone--primary exterior-zone--vertical">
+      {/* 통제선·연결송수구 설치 버튼 — B면 상단(2026-08-20 A면 코너에서 이동).
+          드롭존 위에 겹쳐 띄운다 — 자리를 차지하면 B면 배치 공간이 줄어든다 */}
+      <ControlLineToggles />
       <div className="exterior-zone__content">
         <BFaceDropZone />
       </div>
-      <button
-        className={`fire-line-toggle${showFireLine ? ' fire-line-toggle--active' : ''}`}
-        onClick={toggleFireLine}
-      >
-        소방통제선 {showFireLine ? '해제' : '표시'}
-      </button>
     </div>
   );
 }

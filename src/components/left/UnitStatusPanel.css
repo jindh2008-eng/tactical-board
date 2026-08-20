@@ -1,5 +1,11 @@
 /* ─────────────────────────────────────────────
    출동대현황 — 토큰 표시용 placeholder 패널
+
+   화이트보드 통일(2026-08-18) — 원래 어두운 앱 테마 전용 색상이었으나
+   좌측 운영 패널 전체가 밝은 보드 톤(--ctr-*)으로 바뀌면서 함께 옮겼다.
+   .unit-status-panel 클래스명은 settings/UnitStatusPanel.css 와 같지만
+   두 파일이 서로 다른 속성만 정의해 현재는 충돌하지 않는다 — 새 속성을
+   추가할 때는 이 점을 확인할 것.
    ─────────────────────────────────────────────*/
 /* ─── 헤더 선택삭제 UI ─── */
 .usp__header {
@@ -21,28 +27,28 @@
   font-family:   inherit;
   padding:       1px 6px;
   border-radius: 3px;
-  border:        1px solid #2a4a3a;
+  border:        1px solid var(--ctr-border-soft);
   background:    transparent;
-  color:         #5a8a7a;
+  color:         #2e6660;
   cursor:        pointer;
   line-height:   1.5;
   transition:    color 0.12s, border-color 0.12s, background 0.12s;
 }
 
 .usp__header-btn:hover {
-  color:        #88ccaa;
-  border-color: #3a6a5a;
-  background:   rgba(30, 70, 55, 0.3);
+  color:        #1e4a46;
+  border-color: var(--ctr-border-mid);
+  background:   rgba(46, 102, 96, 0.12);
 }
 
 .usp__header-btn--delete {
-  border-color: #6a2230;
-  color:        #cc4466;
+  border-color: #b85868;
+  color:        #a03048;
 }
 
 .usp__header-btn--delete:hover:not(:disabled) {
-  background: rgba(80, 20, 30, 0.35);
-  color:      #ff5577;
+  background: rgba(160, 48, 72, 0.12);
+  color:      #7a2036;
 }
 
 .usp__header-btn--delete:disabled {
@@ -51,8 +57,8 @@
 }
 
 .unit-status-panel {
-  border-color: #2a4a3a;
-  background-color: #0a1410;
+  border-color: var(--ctr-border-soft);
+  background-color: var(--ctr-surface);
 }
 
 .unit-status-panel__body {
@@ -80,7 +86,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.70rem;
-  color: #2a4a3a;
+  color: var(--ctr-border-mid);
   padding-top: 8px;
 }
 
@@ -103,8 +109,8 @@
   gap: 5px;
   padding: 2px 4px;
   border-radius: 3px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--ctr-bg);
+  border: 1px solid var(--ctr-border-soft);
 }
 
 .usp-order-row__card {
@@ -122,11 +128,11 @@
   align-items: center;
   justify-content: center;
   width: 20px;
-  border: 1.5px solid #7ac8f4;
+  border: 1.5px solid var(--color-accent);
   border-radius: 2px;
   font-size: 0.75rem;
   font-weight: 800;
-  color: #7ac8f4;
+  color: var(--color-accent);
   line-height: 1;
 }
 
@@ -153,19 +159,129 @@
 }
 
 .usp-order-btn--standby1 {
-  background: #1a3a4a;
-  border-color: #2a5a7a;
-  color: #7ac8f4;
+  background: rgba(68, 136, 204, 0.14);
+  border-color: rgba(68, 136, 204, 0.4);
+  color: #2a6a9a;
 }
 .usp-order-btn--standby1:hover {
-  background: #204858;
+  background: rgba(68, 136, 204, 0.24);
 }
 
 .usp-order-btn--resource {
-  background: #2a2a1a;
-  border-color: #4a4a2a;
-  color: #c8c870;
+  background: rgba(192, 168, 106, 0.18);
+  border-color: rgba(192, 168, 106, 0.45);
+  color: #7a5e28;
 }
 .usp-order-btn--resource:hover {
-  background: #363620;
+  background: rgba(192, 168, 106, 0.30);
+}
+
+/* ─────────────────────────────────────────────
+   나열 방식 전환 (모드1 종류별 / 모드2 착대순)
+   ─────────────────────────────────────────────*/
+.usp__mode {
+  display:     flex;
+  align-items: center;
+  margin-left: 8px;
+  border:      1px solid var(--ctr-border-mid);
+  border-radius: 3px;
+  overflow:    hidden;
+}
+
+.usp__mode-btn {
+  font-family:  inherit;
+  font-size:    0.78rem;
+  font-weight:  700;
+  padding:      1px 8px;
+  border:       none;
+  background:   transparent;
+  color:        #5b5750;
+  cursor:       pointer;
+  line-height:  1.5;
+  white-space:  nowrap;
+  transition:   background 0.12s, color 0.12s;
+}
+
+.usp__mode-btn + .usp__mode-btn {
+  border-left: 1px solid var(--ctr-border-mid);
+}
+
+.usp__mode-btn:hover { background: rgba(91, 87, 80, 0.12); }
+
+.usp__mode-btn--on {
+  color:      #1f5fa8;
+  background: rgba(31, 95, 168, 0.16);
+}
+
+/* ─────────────────────────────────────────────
+   모드2 — 착대 순번마다 열 하나
+   ─────────────────────────────────────────────*/
+.usp-arrival-list {
+  height:      100%;
+  min-height:  0;
+  display:     flex;
+  flex-direction: column;
+  gap:         4px;
+  padding:     6px 6px 4px;
+  overflow-y:  auto;
+  overflow-x:  hidden;
+}
+
+/* 착대 한 차수 = 한 줄. 라벨(좌) + 토큰들(우, 넘치면 줄바꿈) */
+.usp-arrival-list__row {
+  display:       flex;
+  align-items:   flex-start;
+  gap:           6px;
+  padding-bottom: 4px;
+}
+
+.usp-arrival-list__row + .usp-arrival-list__row {
+  border-top:  1px solid rgba(91, 87, 80, 0.16);
+  padding-top: 4px;
+}
+
+.usp-arrival-list__label {
+  flex-shrink:    0;
+  min-width:      calc(30px * var(--ui-scale, 1));
+  padding-top:    7px;
+  font-size:      0.88rem;
+  font-weight:    700;
+  letter-spacing: 0.02em;
+  color:          #5b5750;
+  white-space:    nowrap;
+  user-select:    none;
+}
+
+/* 착대모드에서는 라벨을 더블클릭해 그 차수 전체를 도착시킬 수 있다 */
+.usp-arrival-list__label--dispatch {
+  color:         #1f5fa8;
+  cursor:        pointer;
+  border-radius: 3px;
+  padding:       7px 4px 2px;
+  transition:    background 0.12s;
+}
+
+.usp-arrival-list__label--dispatch:hover {
+  background: rgba(31, 95, 168, 0.16);
+}
+
+.usp-arrival-list__body {
+  flex:      1;
+  min-width: 0;
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       5px 6px;
+}
+
+.usp-arrival-list__body .token-card-wrapper { flex-shrink: 0; }
+
+/* 컬럼 폭에 눌리지 않으므로 추가출동대 박스와 같은 기본 크기를 쓴다.
+   (.unit-status-panel .token-card 축소 규칙을 되돌린다 — 계획서 W-3 에서
+    px 고정값을 일괄 토큰화할 때 두 곳을 함께 손보면 된다) */
+.unit-status-panel .usp-arrival-list .token-card {
+  min-width:     60px;
+  height:        32px;
+  padding:       0 12px;
+  border-radius: 8px;
+  font-size:     14px;
 }

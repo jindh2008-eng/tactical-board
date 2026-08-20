@@ -10,9 +10,10 @@
 /* ── 카드 공통 베이스 ── */
 
 .victim-card {
+  touch-action: none;
   display: inline-flex;
   align-items: center;
-  border-radius: 9px;
+  border-radius: calc(9px * var(--ui-scale, 1));
   cursor: grab;
   user-select: none;
   transition: opacity 0.1s, transform 0.1s;
@@ -34,8 +35,8 @@
 .victim-card--person {
   flex-direction: row;
   align-items: center;
-  gap: 5px;
-  padding: 7px 11px;
+  gap: calc(4px * var(--ui-scale, 1));
+  padding: calc(7px * var(--ui-scale, 1)) calc(7px * var(--ui-scale, 1));
   background: #ffffff;
   color: #222;
   position: relative;
@@ -48,8 +49,8 @@
 /* 성별 아이콘 */
 .victim-gender-icon {
   flex-shrink: 0;
-  width: 16px;
-  height: 29px;
+  width: calc(14px * var(--ui-scale, 1));
+  height: calc(26px * var(--ui-scale, 1));
   display: block;
 }
 
@@ -64,7 +65,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 85px;
+  max-width: calc(70px * var(--ui-scale, 1));
 }
 
 /* ─────────────────────────────────────────────
@@ -112,24 +113,27 @@
 .victim-card--group {
   flex-direction: column;
   align-items: center;
-  padding: 8px 11px 7px;
-  gap: 4px;
+  padding:
+    calc(8px * var(--ui-scale, 1))
+    calc(7px * var(--ui-scale, 1))
+    calc(7px * var(--ui-scale, 1));
+  gap: calc(4px * var(--ui-scale, 1));
   background: #ffffff;
   border: 1.5px solid #90bfe0;
   color: #1976d2;
-  min-width: 67px;
+  min-width: calc(56px * var(--ui-scale, 1));
 }
 
 .group-icons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: calc(4px * var(--ui-scale, 1));
   width: 100%;
 }
 
 .group-person-icon {
-  width: 13px;
-  height: 17px;
+  width: calc(13px * var(--ui-scale, 1));
+  height: calc(17px * var(--ui-scale, 1));
   display: block;
   color: inherit;
 }
@@ -137,7 +141,7 @@
 .group-info {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: calc(5px * var(--ui-scale, 1));
 }
 
 .group-info__count {
@@ -156,11 +160,14 @@
 
 .victim-card--custom {
   flex-direction: column;
-  padding: 4px 11px 3px;
+  padding:
+    calc(4px * var(--ui-scale, 1))
+    calc(7px * var(--ui-scale, 1))
+    calc(3px * var(--ui-scale, 1));
   background: #0e1218;
   color: #88aacc;
   border: 1px solid #2a4060;
-  min-width: 69px;
+  min-width: calc(58px * var(--ui-scale, 1));
 }
 
 .victim-card__top {
@@ -187,8 +194,12 @@
 
 .zone-cell .victim-card--person,
 .face-general-zone .victim-card--person {
-  padding: 4px 8px 3px 5px;
-  gap: 5px;
+  padding:
+    calc(4px * var(--ui-scale, 1))
+    calc(5px * var(--ui-scale, 1))
+    calc(3px * var(--ui-scale, 1))
+    calc(4px * var(--ui-scale, 1));
+  gap: calc(4px * var(--ui-scale, 1));
 }
 
 .zone-cell .victim-card__top {
@@ -199,6 +210,41 @@
   font-size: 0.85rem;
 }
 
+
+/* ─────────────────────────────────────────────
+   출동대에 이송 연결된 부착 토큰 — 아이콘만, 최소 폭
+   (TokenCard 의 .token-carried-victims 안에 렌더된다)
+   ─────────────────────────────────────────────*/
+
+.victim-card--attached.victim-card--person {
+  padding: calc(3px * var(--ui-scale, 1)) calc(4px * var(--ui-scale, 1));
+  gap: 0;
+}
+
+.victim-card--attached .victim-gender-icon {
+  width:  calc(13px * var(--ui-scale, 1));
+  height: calc(24px * var(--ui-scale, 1));
+}
+
+.victim-card--attached.victim-card--group {
+  padding: calc(3px * var(--ui-scale, 1)) calc(4px * var(--ui-scale, 1));
+  gap: 0;
+  min-width: 0;
+}
+
+.victim-card--attached .group-icons {
+  gap: calc(2px * var(--ui-scale, 1));
+}
+
+.victim-card--attached .group-person-icon {
+  width:  calc(11px * var(--ui-scale, 1));
+  height: calc(15px * var(--ui-scale, 1));
+}
+
+.victim-card--attached.victim-card--custom {
+  padding: calc(3px * var(--ui-scale, 1)) calc(5px * var(--ui-scale, 1));
+  min-width: 0;
+}
 
 /* ─────────────────────────────────────────────
    rescue ActionMode 시각 피드백
@@ -220,4 +266,66 @@
   opacity: 0.35;
   filter:  grayscale(0.5);
   cursor:  default;
+}
+
+/* ─────────────────────────────────────────────
+   구조 확인 팝업 — 출동대를 구조대상자 위에 드롭했을 때
+   ─────────────────────────────────────────────*/
+.victim-rescue-ask__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+
+.victim-rescue-ask {
+  position: fixed;
+  z-index: 9999;
+  transform: translate(-50%, calc(-100% - 10px));
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 12px;
+  border-radius: 5px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+
+.victim-rescue-ask__msg {
+  font-size: 0.86rem;
+  color: var(--color-text);
+}
+
+.victim-rescue-ask__btns {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.victim-rescue-ask__btn {
+  font-family: inherit;
+  font-size: 0.80rem;
+  font-weight: 700;
+  padding: 3px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.victim-rescue-ask__btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--color-text);
+}
+
+.victim-rescue-ask__btn--yes {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.victim-rescue-ask__btn--yes:hover {
+  background: rgba(68, 136, 204, 0.18);
 }

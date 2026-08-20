@@ -1,4 +1,4 @@
-import type { Face, FaceZone, AssignmentType } from '../types';
+import type { Face, FaceZone } from '../types';
 
 // ─────────────────────────────────────────────
 // 방면별 메타 정보
@@ -22,8 +22,6 @@ export const FACE_META: Record<Face, FaceMeta> = {
 //
 // 각 면마다 3개의 zone:
 //   1) 일반 면 영역   (category: 'face')
-//   2) 1선펌프 부서칸 (category: 'assignment', assignmentType: 'pump')
-//   3) 중요물탱크 부서칸 (category: 'assignment', assignmentType: 'tank')
 //
 // zone.id 설계:
 //   "A-face", "A-pump", "A-tank"
@@ -41,50 +39,7 @@ export function getFaceZones(face: Face): FaceZone[] {
       label:    `${face}면`,
       tokenIds: [],
     },
-    {
-      id:             `${face}-pump`,
-      face,
-      category:       'assignment',
-      assignmentType: 'pump',
-      label:          '1선펌프 부서',
-      tokenIds:       [],
-    },
-    {
-      id:             `${face}-tank`,
-      face,
-      category:       'assignment',
-      assignmentType: 'tank',
-      label:          '중요물탱크 부서',
-      tokenIds:       [],
-    },
   ];
-}
-
-// ─────────────────────────────────────────────
-// 로그 문자열 생성 헬퍼
-//
-// 향후 드래그 완료 이벤트에서 LogEntry.note를 생성하는 데 사용.
-// zone의 category로 '일반 이동' vs '부서 지정' 을 구분한다.
-//
-// 사용 예:
-//   getFaceZoneLogText({ category:'face', face:'A' }, '진압1대')
-//   → "진압1대 A면으로 이동"
-//
-//   getFaceZoneLogText({ category:'assignment', assignmentType:'pump', face:'B' }, '진압1대')
-//   → "진압1대 B방면 부서 1선 펌프차 지정"
-// ─────────────────────────────────────────────
-
-const ASSIGNMENT_LABEL: Record<AssignmentType, string> = {
-  pump: '1선 펌프차',
-  tank: '중요 물탱크차',
-};
-
-export function getFaceZoneLogText(zone: FaceZone, tokenName: string): string {
-  if (zone.category === 'face') {
-    return `${tokenName} ${zone.face}면으로 이동`;
-  }
-  const roleLabel = ASSIGNMENT_LABEL[zone.assignmentType!];
-  return `${tokenName} ${zone.face}방면 부서 ${roleLabel} 지정`;
 }
 
 // ─────────────────────────────────────────────
@@ -100,8 +55,5 @@ export function getFaceZoneDataAttrs(zone: FaceZone): Record<string, string> {
     'data-face':            zone.face,
     'data-zone-category':   zone.category,
   };
-  if (zone.assignmentType) {
-    attrs['data-assignment-type'] = zone.assignmentType;
-  }
   return attrs;
 }

@@ -16,7 +16,7 @@ const TYPE_LABELS: Record<ChecklistItemType, string> = {
   fire:      '화재',
   xvr:       'XVR',
   unit:      '출동대',
-  incident:  '돌발상황',
+  incident:  '현장요소',
   victim:    '구조대상자',
 };
 
@@ -701,7 +701,7 @@ export function ChecklistSetupPanel() {
               >
                 <option value="procedure">절차</option>
                 <option value="event">이벤트</option>
-                <option value="incident">돌발상황</option>
+                <option value="incident">현장요소</option>
                 <option value="unit">출동대</option>
                 <option value="victim">구조대상자</option>
                 <option value="message">메세지</option>
@@ -749,11 +749,11 @@ export function ChecklistSetupPanel() {
                 </>
               )}
 
-              {/* 돌발상황 선택 */}
+              {/* 현장요소 선택 */}
               {curItemType === 'incident' && (
                 eventSetup.length === 0 ? (
                   <span style={{ fontSize: '0.74rem', color: 'var(--color-text-dim)' }}>
-                    돌발상황 설정에서 항목을 먼저 등록하세요.
+                    현장요소 설정에서 항목을 먼저 등록하세요.
                   </span>
                 ) : (
                   <>

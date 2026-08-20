@@ -41,14 +41,13 @@ const SUBGROUP_PRIORITY: Record<string, number> = {
 
 interface Props {
   tokens:             UnitToken[];
-  hideQuantity?:      boolean;
   selectMode?:        boolean;
   selected?:          Set<string>;
   onToggleSelect?:    (tokenId: string) => void;
   onTokenDoubleClick?: (tokenId: string) => void;
 }
 
-export function CategorizedTokenGrid({ tokens, hideQuantity, selectMode, selected, onToggleSelect, onTokenDoubleClick }: Props) {
+export function CategorizedTokenGrid({ tokens, selectMode, selected, onToggleSelect, onTokenDoubleClick }: Props) {
   const columns = COLUMNS.map(col => ({
     ...col,
     items: tokens
@@ -69,7 +68,6 @@ export function CategorizedTokenGrid({ tokens, hideQuantity, selectMode, selecte
                 <TokenCard
                   key={token.id}
                   token={token}
-                  hideQuantity={hideQuantity}
                   selectMode={selectMode}
                   selected={selected?.has(token.id)}
                   onToggleSelect={onToggleSelect ? () => onToggleSelect(token.id) : undefined}

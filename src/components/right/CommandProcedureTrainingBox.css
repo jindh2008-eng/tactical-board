@@ -1,0 +1,183 @@
+/* CommandProcedureTrainingBox — 대부분의 스타일은 ChecklistPanel.css(.checklist-panel__*)를
+   그대로 재사용한다. 여기서는 이 컴포넌트에만 있는 요소만 추가한다. */
+
+/* ─────────────────────────────────────────────
+   화이트보드 통일(2026-08-18) — ChecklistPanel.css 는 어두운 앱 테마
+   (--color-*) 기준이라 이 패널(.command-procedure-box)에서만 밝은 보드 톤으로
+   덮어쓴다. ChecklistPanel.css 자체는 향후 지휘교수 태블릿 화면에서 그대로
+   재사용할 예정이라 건드리지 않는다.
+   ─────────────────────────────────────────────*/
+.command-procedure-box .checklist-panel__header {
+  border-bottom-color: var(--ctr-border-soft);
+}
+
+.command-procedure-box .checklist-panel__title {
+  color: #3a3730;
+}
+
+/* 분류 제목은 본문(--ctr-border-hard)보다 한 단계 진하게 — 크기만으로는
+   그룹 경계가 안 읽혀서 색으로도 위계를 만든다 */
+.command-procedure-box .checklist-panel__section-title {
+  color: #3a3730;
+}
+
+.command-procedure-box .checklist-panel__section-arrow,
+.command-procedure-box .checklist-panel__empty,
+.command-procedure-box .checklist-panel__link-icon {
+  color: var(--ctr-border-mid);
+}
+
+.command-procedure-box .checklist-panel__divider {
+  background-color: var(--ctr-border-mid);
+  margin-bottom: 4px;
+}
+
+/* 진행도 — 앱 테마 파랑(--color-accent)은 밝은 면에서 대비 2.67 로 읽히지 않는다.
+   상시 정보라 튈 이유도 없어 잉크 계열로 낮춘다 */
+.command-procedure-box .checklist-panel__progress {
+  color: #3a3730;
+  font-weight: 700;
+}
+
+/* 레벨 배지 — 같은 이유로 무채색 아웃라인 칩 */
+.command-procedure-box .command-procedure-box__level-badge {
+  color: #5b5750;
+  border-color: var(--ctr-border-mid);
+  background-color: rgba(91, 87, 80, 0.08);
+}
+
+/* ─────────────────────────────────────────────
+   가독성 — 훈련 중 멀리서도 읽어야 하는 패널이라
+   공용 체크리스트보다 한 단계 크게 잡는다.
+   (ChecklistPanel.css 원본은 교수 태블릿용이라 건드리지 않는다)
+   ─────────────────────────────────────────────*/
+.command-procedure-box .checklist-panel__title        { font-size: 1.15rem; }
+.command-procedure-box .checklist-panel__progress     { font-size: 0.95rem; }
+.command-procedure-box .checklist-panel__section-title{ font-size: 1.12rem; }
+
+.command-procedure-box .checklist-panel__item {
+  gap: 8px;
+  padding: 7px 8px;
+  border-left: 3px solid transparent;   /* 완료 표시 바 자리 — 폭이 흔들리지 않게 미리 잡는다 */
+}
+
+.command-procedure-box .checklist-panel__item-text {
+  font-size: 1.12rem;
+  line-height: 1.45;
+  color: var(--ctr-border-hard);
+}
+
+.command-procedure-box .checklist-panel__item-badge {
+  font-size: 0.92rem;
+  padding: 2px 7px;
+}
+
+.command-procedure-box .checklist-panel__item:not(.checklist-panel__item--locked):hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 미완료 행에도 아주 옅은 경계 — 배경이 완전 투명이라 항목 구분이 없었다 */
+.command-procedure-box .checklist-panel__item + .checklist-panel__item {
+  border-top: 1px solid rgba(91, 87, 80, 0.12);
+}
+
+/* ─────────────────────────────────────────────
+   완료 표시 — "지워진 항목"이 아니라 "해낸 항목"으로 읽히게 한다.
+   초록 배경 + 좌측 바 + 우측 체크. 글자는 흐리게 하지 않는다.
+   ─────────────────────────────────────────────*/
+.command-procedure-box .checklist-panel__item--checked {
+  background-color: rgba(46, 160, 90, 0.22);
+  border-left-color: #2ea05a;
+}
+
+.command-procedure-box .checklist-panel__item--checked:not(.checklist-panel__item--locked):hover {
+  background-color: rgba(46, 160, 90, 0.30);
+}
+
+/* 취소선·굵게는 쓰지 않는다 — 우측 패널 폭에서 본문이 줄바꿈된다.
+   완료는 배경·좌측 바·앞쪽 체크표시로 충분히 읽힌다. */
+.command-procedure-box .checklist-panel__item--checked .checklist-panel__item-text {
+  color: #14572f;              /* 4.06 → AA 통과 수준으로 낮춘 초록 */
+  text-decoration: none;
+}
+
+/* 앞쪽 배지 자리의 완료 체크 — 종류 라벨(절차·출동…)을 대신한다.
+   글자 수가 줄어 본문이 오히려 넓어진다. */
+.command-procedure-box .checklist-panel__item--checked .checklist-panel__item-badge {
+  opacity: 1;
+}
+
+.command-procedure-box .checklist-panel__item-badge--check {
+  background-color: rgba(20, 87, 47, 0.16);
+  color: #14572f;              /* 완료 본문과 같은 잉크 초록 — 초록 면 위라 더 진해야 한다 */
+  border: 1px solid rgba(20, 87, 47, 0.45);
+  font-size: 1.0rem;
+  line-height: 1;
+  font-weight: 900;
+  min-width: calc(22px * var(--ui-scale, 1));
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────
+   ② 종류 배지 — 밝은 면(화이트보드)용 팔레트
+   ─────────────────────────────────────────────
+   ChecklistPanel.css 의 배지 색은 어두운 테마 기준(#aaaaaa·#5599ff·#d4a800 …)이라
+   이 밝은 면 위에서 대비가 1.6~2.2 까지 떨어져 사실상 읽히지 않았다.
+   글자를 어둡게 / 면을 옅게 잡아 전부 4.5 이상으로 올린다.
+
+   채도는 전반적으로 낮춘다 — 이 패널에서 튀어야 하는 색은 "완료 초록" 하나다.
+   그래서 메세지 배지는 초록 → 청록으로 옮겨 완료 표시와의 의미 충돌을 없앤다.
+   ─────────────────────────────────────────────*/
+.command-procedure-box .checklist-panel__item-badge--procedure {
+  background-color: rgba(91, 87, 80, 0.10);
+  color: #5b5750;
+  border: 1px solid rgba(91, 87, 80, 0.30);
+}
+
+.command-procedure-box .checklist-panel__item-badge--dispatch {
+  background-color: rgba(31, 95, 168, 0.10);
+  color: #1f5fa8;
+  border: 1px solid rgba(31, 95, 168, 0.30);
+}
+
+.command-procedure-box .checklist-panel__item-badge--event {
+  background-color: rgba(122, 85, 0, 0.10);
+  color: #6f4e00;              /* 황색 계열은 밝아서 한 단계 더 낮춰야 4.5 를 넘는다 */
+  border: 1px solid rgba(122, 85, 0, 0.32);
+}
+
+/* 초록은 완료 표시가 독점한다 — 메세지는 청록 */
+.command-procedure-box .checklist-panel__item-badge--message {
+  background-color: rgba(15, 107, 107, 0.10);
+  color: #0f6b6b;
+  border: 1px solid rgba(15, 107, 107, 0.30);
+}
+
+.command-procedure-box .checklist-panel__item-badge--fire {
+  background-color: rgba(176, 48, 48, 0.10);
+  color: #b03030;
+  border: 1px solid rgba(176, 48, 48, 0.30);
+}
+
+.command-procedure-box__level-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 8px;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  background-color: rgba(68, 136, 204, 0.12);
+  white-space: nowrap;
+}
+
+.command-procedure-box__section-title {
+  cursor: default;
+}
+
+/* CommandProcedureItemType 의 'dispatch' 는 ChecklistPanel.css 배지 색상표에 없다.
+   어두운 테마(교수 태블릿)용 기본값만 여기 남기고, 이 패널용 밝은 면 색은 위에서 덮는다. */
+.checklist-panel__item-badge--dispatch {
+  background-color: rgba(68, 140, 255, 0.12);
+  color: #5599ff;
+  border: 1px solid rgba(68, 140, 255, 0.25);
+}

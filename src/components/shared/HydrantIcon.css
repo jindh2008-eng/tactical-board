@@ -32,11 +32,57 @@
 }
 
 /* ── 이미지 ────────────────────────────────── */
+/* 이미지 + 토출구 핫스팟의 기준 상자 */
+.hydrant-icon__body {
+  position: relative;
+  display:  block;
+  width:    45px;
+}
+
 .hydrant-icon__img {
   width:          45px;
   height:         auto;
   display:        block;
   pointer-events: none;
+}
+
+/* ── 토출구 핫스팟 (좌·우 2구) ───────────────────
+   소화전이 PNG 라 토출구가 DOM 요소가 아니다. 이미지 위에 퍼센트 좌표로
+   투명 핫스팟을 얹는다. 위치는 그림에 맞춰 눈으로 맞춘 값이다. */
+.hydrant-outlet {
+  position:       absolute;
+  top:            42%;
+  width:          30%;
+  height:         22%;
+  border-radius:  3px;
+  cursor:         grab;
+  touch-action:   none;
+  pointer-events: auto;
+  background:     rgba(68, 160, 224, 0.28);
+  border:         1px solid rgba(102, 204, 255, 0.55);
+  transition:     background 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+
+.hydrant-outlet--left  { left:  -6%; }
+.hydrant-outlet--right { right: -6%; }
+
+.hydrant-outlet:hover {
+  background:   rgba(102, 204, 255, 0.45);
+  border-color: #66ccff;
+  box-shadow:   0 0 6px rgba(102, 204, 255, 0.7);
+}
+
+.hydrant-outlet:active { cursor: grabbing; }
+
+/* 사용 중인 구 — 채워진 상태로 표시 */
+.hydrant-outlet--used {
+  background:   rgba(102, 204, 255, 0.7);
+  border-color: #aaddff;
+}
+
+/* 2구를 모두 쓰면 더 못 끈다 */
+.hydrant-outlet--full {
+  cursor: not-allowed;
 }
 
 /* ── 거리 (이미지 아래) ─────────────────────── */

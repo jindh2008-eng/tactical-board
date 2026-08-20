@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { BuildingConfig, FireStatus, Face } from '../types';
+import type { BuildingConfig, FireStatus } from '../types';
 import type {
   BuildingSettings, TimingSettings,
   DispatchSetup, DispatchRosterItem, DispatchExtraUnit, VictimSetupItem, ArrivalMode, HydrantSetupItem,
@@ -21,9 +21,12 @@ import {
   removeSettingsSet,
   loadCommandProcedureConfigs,
   saveCommandProcedureConfigs,
+  loadActiveCommandProcedureLevel,
+  saveActiveCommandProcedureLevel,
   loadUnitStatusConfig,
   saveUnitStatusConfig,
   loadUnitTagPresetConfig,
+  resolveHasSiamesePipe,
   saveUnitTagPresetConfig,
 } from '../utils/settingsStorage';
 import { buildRoster } from '../utils/dispatchRoster';
@@ -41,7 +44,7 @@ interface SettingsContextValue {
   updateFireStatus:         (status: FireStatus | null) => void;
   updateTargetName:         (name: string) => void;
   updateExtraFireFloors:    (floors: ExtraFireFloor[]) => void;
-  updateSiamesePipeFaces:   (faces: Face[]) => void;
+  updateSiamesePipe:        (v: boolean) => void;
   updateIndoorHydrant:      (has: boolean) => void;
 
   // ── 타이밍 설정 ───────────────────────────────
@@ -112,6 +115,9 @@ interface SettingsContextValue {
   // ── 지휘절차 ──────────────────────────────────
   commandProcedureConfigs:     CommandProcedureConfigs;
   updateCommandProcedureLevel: (level: CommandProcedureLevel, categories: CommandProcedureCategory[]) => void;
+  // 훈련 중 무플 화면에 표시할 레벨 — 시나리오와 무관한 전역값 (commandProcedureConfigs와 동일하게 독립 저장)
+  activeCommandProcedureLevel:       CommandProcedureLevel;
+  updateActiveCommandProcedureLevel: (level: CommandProcedureLevel) => void;
 
   // ── 출동대 상태메세지 ─────────────────────────
   unitStatusConfig:            UnitStatusConfig;
@@ -162,8 +168,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [extraFireFloors, setExtraFireFloors] = useState<ExtraFireFloor[]>(
     () => loadWorkingPresets().building?.extraFireFloors ?? []
   );
-  const [siamesePipeFaces, setSiamesePipeFaces] = useState<Face[]>(
-    () => loadWorkingPresets().building?.siamesePipeFaces ?? []
+  const [hasSiamesePipe, setHasSiamesePipe] = useState<boolean>(
+    () => resolveHasSiamesePipe(loadWorkingPresets().building)
   );
   const [hasIndoorHydrant, setHasIndoorHydrant] = useState<boolean>(
     () => loadWorkingPresets().building?.hasIndoorHydrant ?? false
@@ -212,6 +218,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [commandProcedureConfigs, setCommandProcedureConfigs] = useState<CommandProcedureConfigs>(
     loadCommandProcedureConfigs
   );
+  const [activeCommandProcedureLevel, setActiveCommandProcedureLevel] = useState<CommandProcedureLevel>(
+    loadActiveCommandProcedureLevel
+  );
   const [unitStatusConfig, setUnitStatusConfig] = useState<UnitStatusConfig>(
     loadUnitStatusConfig
   );
@@ -230,6 +239,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // 독립 항목 자동 저장 (메인 설정과 별도)
   useEffect(() => { saveCommandProcedureConfigs(commandProcedureConfigs); }, [commandProcedureConfigs]);
+  useEffect(() => { saveActiveCommandProcedureLevel(activeCommandProcedureLevel); }, [activeCommandProcedureLevel]);
   useEffect(() => { saveUnitStatusConfig(unitStatusConfig); }, [unitStatusConfig]);
   useEffect(() => { saveUnitTagPresetConfig(unitTagPresetConfig); }, [unitTagPresetConfig]);
 
@@ -237,13 +247,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     saveWorkingPresets({
       sharedBadgePresets: [], unitBadgePresets: [],
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant },
       timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
       fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
       unitTagPresetConfig,
     });
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -254,7 +264,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const updateFireStatus          = useCallback((s: FireStatus | null)   => setFireStatus(s),                 []);
   const updateTargetName          = useCallback((name: string)           => setTargetName(name),              []);
   const updateExtraFireFloors     = useCallback((floors: ExtraFireFloor[]) => setExtraFireFloors(floors),     []);
-  const updateSiamesePipeFaces    = useCallback((faces: Face[])           => setSiamesePipeFaces(faces),      []);
+  const updateSiamesePipe         = useCallback((v: boolean)              => setHasSiamesePipe(v),            []);
   const updateIndoorHydrant       = useCallback((has: boolean)            => setHasIndoorHydrant(has),          []);
 
   // ── 타이밍 설정 ──────────────────────────────
@@ -483,6 +493,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const updateCommandProcedureLevel = useCallback((level: CommandProcedureLevel, categories: CommandProcedureCategory[]) => {
     setCommandProcedureConfigs(prev => ({ ...prev, [level]: categories }));
   }, []);
+  const updateActiveCommandProcedureLevel = useCallback((level: CommandProcedureLevel) => {
+    setActiveCommandProcedureLevel(level);
+  }, []);
 
   // ── 출동대 상태메세지 ─────────────────────────
   const updateUnitStatusMessages = useCallback((unitType: string, messages: string[]) => {
@@ -500,7 +513,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const id = activeSettingsId ?? generateId();
     const set: SettingsSet = {
       id, name: activeSettingsName, updatedAt: '',
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant },
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
@@ -509,13 +522,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
     const set: SettingsSet = {
       id, name: newName, updatedAt: '',
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant },
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
@@ -525,7 +538,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -578,7 +591,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     else setChecklistConfig({ level: 'junior', sections: [] });
     // 지휘절차 / 출동대 상태메세지 / 태그 프리셋은 메인 설정 불러오기 시 변경하지 않음
     setExtraFireFloors(set.building?.extraFireFloors ? JSON.parse(JSON.stringify(set.building.extraFireFloors)) : []);
-    setSiamesePipeFaces(set.building?.siamesePipeFaces ?? []);
+    setHasSiamesePipe(resolveHasSiamesePipe(set.building));
     setHasIndoorHydrant(set.building?.hasIndoorHydrant ?? false);
     setActiveSettingsId(id);
     setActiveSettingsName(set.name);
@@ -606,7 +619,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setChecklistConfig({ level: 'junior', sections: [] });
     // 지휘절차 / 출동대 상태메세지 / 태그 프리셋은 신규 작성 시에도 유지
     setExtraFireFloors([]);
-    setSiamesePipeFaces([]);
+    setHasSiamesePipe(false);
     setHasIndoorHydrant(false);
     setActiveSettingsId(null);
     setActiveSettingsName('새 설정');
@@ -614,9 +627,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <SettingsContext.Provider value={{
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, siamesePipeFaces, hasIndoorHydrant },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant },
       updateBuildingConfig, updateFireFloor, updateFireStatus, updateTargetName, updateExtraFireFloors,
-      updateSiamesePipeFaces, updateIndoorHydrant,
+      updateSiamesePipe, updateIndoorHydrant,
       timing, updateTiming,
       arrivalMode, updateArrivalMode,
       medicalPostChief, stagingAreaChief,
@@ -633,6 +646,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       addChecklistSection, updateChecklistSection, removeChecklistSection, reorderChecklistSections,
       addChecklistItem, updateChecklistItem, removeChecklistItem, reorderChecklistItems, appendChecklistSections,
       commandProcedureConfigs, updateCommandProcedureLevel,
+      activeCommandProcedureLevel, updateActiveCommandProcedureLevel,
       unitStatusConfig, updateUnitStatusMessages,
       unitTagPresetConfig, updateUnitTagPresets,
       settingsList, activeSettingsId, activeSettingsName, setActiveSettingsName,

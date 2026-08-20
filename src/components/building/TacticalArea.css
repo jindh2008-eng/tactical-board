@@ -133,9 +133,17 @@
   height: 8px;
   margin-top: -4px;
   cursor: ns-resize;
+  touch-action: none;
   z-index: 25;
   background-color: transparent;
   transition: background-color 0.12s;
+}
+
+@media (pointer: coarse) {
+  .tactical-area__row-resize-handle {
+    height: 24px;
+    margin-top: -12px;
+  }
 }
 
 .tactical-area__row-resize-handle:hover,
