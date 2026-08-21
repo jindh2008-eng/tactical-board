@@ -59,9 +59,10 @@ function ChiefSelector({ value, onChange, zoneKey }: ChiefSelectorProps) {
 // ─────────────────────────────────────────────
 // 임시의료소 — 단일 드롭 영역 (구조대상자 + 출동대)
 //
-// A면 우측 하단에 배치된다(ExteriorZone.tsx, face === 'A').
-// 현장에 설치되는 공간이라 상황판 위에 있는 것이 교리에 맞다.
-// 스타일은 A면과 이질감이 없도록 옅은 선 + 명칭만 — .a-face-zone (ExteriorZone.css)
+// A면 하단 밴드의 마지막 칸이다(AFaceBottomZones.tsx). 현장에 설치되는
+// 공간이라 상황판 위에 있는 것이 교리에 맞다.
+// 스타일은 A면과 이질감이 없도록 옅은 선 + 명칭만 — .a-face-band__zone
+// (AFaceBottomZones.css) / .a-face-zone__body·__label (ExteriorZone.css)
 // ─────────────────────────────────────────────
 
 export function MedicalPostBox() {
@@ -126,60 +127,59 @@ export function MedicalPostBox() {
   }
 
   return (
-    <div className="a-face-zone a-face-zone--medical">
-      <div className="a-face-zone__sub">
-        <div className="a-face-zone__header">
-          <button
-            className={`medical-status-btn medical-status-btn--${isInstalled ? 'installed' : 'none'}`}
-            onClick={toggleInstalled}
+    <div className="a-face-band__zone a-face-band__zone--medical">
+      <div className="a-face-zone__header">
+        <div className="standby-chief">
+          <select
+            className="standby-chief__select"
+            value={assignedTokenId ?? ''}
+            onChange={e => changeChief(e.target.value || null)}
           >
-            {isInstalled ? '설치' : '미설치'}
-          </button>
-          <div className="standby-chief">
-            <select
-              className="standby-chief__select"
-              value={assignedTokenId ?? ''}
-              onChange={e => changeChief(e.target.value || null)}
-            >
-              <option value="">소장 미지정</option>
-              {zoneTokens.map(t => (
-                <option key={t.id} value={t.id}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-          {/* 헤더 우측 끝 — 구조활동통계를 화면 가운데 팝업으로 연다.
-              이 자리는 좁아서 표를 넣으면 글씨를 줄여야 한다 */}
-          <button
-            className="medical-stats-toggle"
-            onClick={() => openOverlay('rescue-stats')}
-            title="구조활동통계 보기"
-          >
-            구조활동통계
-          </button>
+            <option value="">소장 미지정</option>
+            {zoneTokens.map(t => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
         </div>
-
-        <div
-          className="a-face-zone__body"
-          data-zone-key={zoneKey}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
+        {/* 헤더 우측 끝 — 구조활동통계를 화면 가운데 팝업으로 연다.
+            이 자리는 좁아서 표를 넣으면 글씨를 줄여야 한다 */}
+        <button
+          className="medical-stats-toggle"
+          onClick={() => openOverlay('rescue-stats')}
+          title="구조활동통계 보기"
         >
-          {zoneVictims.map(v => <VictimCard key={v.id} victim={v} />)}
-          {zoneTokens.map(t => (
-            <div
-              key={t.id}
-              className={[
-                'medical-post__token-wrap',
-                assignedTokenId === t.id ? 'medical-post__token-wrap--selected' : '',
-              ].filter(Boolean).join(' ')}
-            >
-              <TokenCard token={t} />
-            </div>
-          ))}
-        </div>
-        {/* 명칭은 박스 하단 — 직전대기·RIT 와 같은 자리 */}
-        <span className="a-face-zone__label a-face-zone__label--bottom">임시의료소</span>
+          구조활동통계
+        </button>
+        {/* 설치 여부는 구조활동통계 우측 — 헤더 맨 끝에 둔다 */}
+        <button
+          className={`medical-status-btn medical-status-btn--${isInstalled ? 'installed' : 'none'}`}
+          onClick={toggleInstalled}
+        >
+          {isInstalled ? '설치' : '미설치'}
+        </button>
       </div>
+
+      <div
+        className="a-face-zone__body"
+        data-zone-key={zoneKey}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+      >
+        {zoneVictims.map(v => <VictimCard key={v.id} victim={v} />)}
+        {zoneTokens.map(t => (
+          <div
+            key={t.id}
+            className={[
+              'medical-post__token-wrap',
+              assignedTokenId === t.id ? 'medical-post__token-wrap--selected' : '',
+            ].filter(Boolean).join(' ')}
+          >
+            <TokenCard token={t} />
+          </div>
+        ))}
+      </div>
+    {/* 명칭은 박스 하단 — 직전대기·RIT·현장지휘소 와 같은 자리 */}
+      <span className="a-face-zone__label a-face-zone__label--bottom">임시의료소</span>
     </div>
   );
 }

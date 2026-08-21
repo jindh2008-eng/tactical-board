@@ -14,8 +14,7 @@ import { useSettings } from '../../store/settingsStore';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { HydrantIcon } from '../shared/HydrantIcon';
-import { ImminentStandby } from './ImminentStandby';
-import { MedicalPostBox } from './StandbyColumn';
+import { AFaceBottomZones } from './AFaceBottomZones';
 import { computeDropCenter } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import './ExteriorZone.css';
@@ -35,14 +34,16 @@ function getHydrantCorner(face: Face, index: number): HydrantCorner {
   return 'bottom-left';   // B, C
 }
 
-// A면: 좌/우측에 배치하되 상하 중앙(높이의 중간 지점) 고정
+// A면: 하단 밴드(직전대기·RIT·현장지휘소·임시의료소) 바로 위에 앉힌다.
+//       밴드가 A면 바닥 전체 폭을 쓰므로 예전처럼 상하 중앙에 두면 겹친다.
 // 그 외 면: 기존과 동일하게 하단 고정
 function cornerStyle(corner: HydrantCorner, face: Face): React.CSSProperties {
   const base: React.CSSProperties = face === 'A'
     ? {
         position:      'absolute',
-        top:           '50%',
-        transform:     'translateY(-50%)',
+        // 밴드는 A면이 낮으면 max-height(100% - 42px)에 눌린다. 같은 식으로
+        // 실제 높이를 구해야 낮은 화면에서 소화전이 A면 밖으로 밀려나지 않는다.
+        bottom:        'calc(min(var(--a-face-band-h), 100% - 42px - var(--a-face-hydrant-clear)) + var(--a-face-band-bottom) + 6px)',
         display:       'flex',
         flexDirection: 'column',
         gap:           4,
@@ -118,7 +119,7 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
         <VictimCard key={victim.id} victim={victim} absPos={victimPositions[victim.id]} />
       ))}
 
-      {/* 소화전 아이콘 — 좌측 (A면: 상하 중앙 / 그 외: 하단) */}
+      {/* 소화전 아이콘 — 좌측 (A면: 하단 밴드 위 / 그 외: 하단) */}
       {leftHydrants.length > 0 && (
         <div style={cornerStyle('bottom-left', face)}>
           {leftHydrants.map(h => (
@@ -127,7 +128,7 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
         </div>
       )}
 
-      {/* 소화전 아이콘 — 우측 (A면: 상하 중앙 / 그 외: 하단) */}
+      {/* 소화전 아이콘 — 우측 (A면: 하단 밴드 위 / 그 외: 하단) */}
       {rightHydrants.length > 0 && (
         <div style={cornerStyle('bottom-right', face)}>
           {rightHydrants.map(h => (
@@ -152,7 +153,7 @@ interface Props {
 const FIRE_LINE_H = 15;
 /** 경찰통제선 띠 높이(px) — 바닥 고정 */
 const POLICE_LINE_H = 15;
-/** 띠가 A면 하단 박스(직전대기·임시의료소)에 닿기 전에 남길 최소 간격 */
+/** 띠가 A면 하단 밴드에 닿기 전에 남길 최소 간격 */
 const FIRE_LINE_MIN_GAP = 6;
 
 export function ExteriorZone({ face }: Props) {
@@ -165,21 +166,23 @@ export function ExteriorZone({ face }: Props) {
   const { showControlLine } = useDisplayOptions();
   const { moveToken } = useTokens();
   const { moveVictim } = useVictims();
+  // A면 소화전은 하단 밴드 위에 앉는다 — 있을 때만 밴드에서 그 높이를 뺀다
+  const { hydrantSetup } = useSettings();
+  const hasFaceHydrant = hydrantSetup.some(h => h.side === face);
 
   // ── 소방통제선 세로 드래그 ────────────────────────────────────
-  // A면 최상단(0)에서 아래로, 하단 박스 윗변까지만 내려간다.
+  // A면 최상단(0)에서 아래로, 하단 밴드 윗변까지만 내려간다.
   // 저장은 하지 않는다(설치 상태와 같은 수명 — 새로고침하면 초기화).
   const rootRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ pointerId: number; grabOffset: number } | null>(null);
 
-  /** 지금 화면에서 띠가 내려갈 수 있는 최대 top(px). 박스 크기가 배율마다 달라 실측한다 */
+  /** 지금 화면에서 띠가 내려갈 수 있는 최대 top(px). 밴드 높이가 배율마다 달라 실측한다 */
   function fireLineMaxTop(host: HTMLElement, hostH: number): number {
     let max = hostH - FIRE_LINE_H - POLICE_LINE_H;
     const hostTop = host.getBoundingClientRect().top;
-    for (const sel of ['.a-face-zone--medical', '.a-face-zone--imminent']) {
-      const box = host.querySelector(sel);
-      if (!box) continue;
-      max = Math.min(max, box.getBoundingClientRect().top - hostTop - FIRE_LINE_H - FIRE_LINE_MIN_GAP);
+    const band = host.querySelector('.a-face-band');
+    if (band) {
+      max = Math.min(max, band.getBoundingClientRect().top - hostTop - FIRE_LINE_H - FIRE_LINE_MIN_GAP);
     }
     return Math.max(0, max);
   }
@@ -241,6 +244,7 @@ export function ExteriorZone({ face }: Props) {
         `exterior-zone--${face.toLowerCase()}`,
         meta.isPrimary  ? 'exterior-zone--primary'    : '',
         isHorizontal    ? 'exterior-zone--horizontal' : 'exterior-zone--vertical',
+        hasFaceHydrant  ? 'exterior-zone--has-hydrant' : '',
       ].filter(Boolean).join(' ')}
       data-deployment-face={face}
       ref={rootRef}
@@ -270,14 +274,10 @@ export function ExteriorZone({ face }: Props) {
       <div className="exterior-zone__content">
         <FaceGeneralZone zone={faceZone} face={face} />
       </div>
-      {/* A면 하단 구역 — 좌: 직전대기·RIT / 우: 임시의료소 (2026-08-18 좌측 패널에서 이동).
+      {/* A면 하단 밴드 — 직전대기·RIT·현장지휘소·임시의료소가 바닥 전체 폭을 나눠 쓴다
+          (2026-08-21. 그 전에는 좌·우 상자 두 개였고 가운데가 비어 있었다).
           exterior-zone__content 다음에 둬서 A면 워터마크 라벨 위에 그려지게 한다. */}
-      {face === 'A' && (
-        <>
-          <ImminentStandby />
-          <MedicalPostBox />
-        </>
-      )}
+      {face === 'A' && <AFaceBottomZones />}
     </div>
   );
 }

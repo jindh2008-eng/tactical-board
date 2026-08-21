@@ -2,14 +2,21 @@ import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
-import './ImminentStandby.css';
+import { MedicalPostBox } from './StandbyColumn';
+import './AFaceBottomZones.css';
 
 // ─────────────────────────────────────────────
-// ImminentStandby — 직전대기(3.5) : RIT(1) 가로 분할 독립 드롭존
+// A면 하단 밴드 — 직전대기 / RIT / 현장지휘소 / 임시의료소
 //
-// A면 좌측 하단에 배치된다(ExteriorZone.tsx, face === 'A').
-// 현장 지휘소 옆에서 대기하는 공간이라 상황판 위에 있는 것이 교리에 맞다.
-// 스타일은 A면과 이질감이 없도록 옅은 선 + 명칭만 — .a-face-zone (ExteriorZone.css)
+// 네 구역이 A면 바닥 전체 폭을 나눠 쓴다(2026-08-21). 종전에는 좌측 상자
+// (직전대기+RIT)와 우측 상자(임시의료소) 둘뿐이라 가운데가 비어 있었고,
+// 현장지휘소는 아예 없었다.
+//
+// 소화전은 A면 좌우 코너에 붙으므로 밴드 위로 올려 앉힌다
+// (ExteriorZone.tsx 의 cornerStyle — bottom 기준 계산).
+//
+// 구역 구분은 바탕 8% 틴트 + 하단 명칭 띠 색으로 한다. A면 팔레트(#dedad0)
+// 위에서 고른 저채도라 전체 화면과 이질감이 없다.
 //
 // unit token + victim token 모두 수용.
 // RIT 구역으로 드롭된 출동대 토큰은 임무 태그 "RIT"가 자동 부여됨.
@@ -17,17 +24,18 @@ import './ImminentStandby.css';
 
 const ZONE_KEY_IMMINENT = 'standby-imminent';
 const ZONE_KEY_RIT      = 'standby-rit';
+const ZONE_KEY_COMMAND  = 'command-post';
 const RIT_TAG           = { label: 'RIT', color: 'red' } as const;
 
 function SubZone({
   zoneKey,
   label,
-  className,
+  modifier,
   taggedAsRit,
 }: {
   zoneKey:     string;
   label:       string;
-  className:   string;
+  modifier:    string;
   taggedAsRit: boolean;
 }) {
   const { tokens, moveToken, toggleMissionTag } = useTokens();
@@ -47,7 +55,7 @@ function SubZone({
     e.preventDefault();
     e.stopPropagation(); // A면(부모) 드롭존으로 버블링 방지 — 안 하면 A면 핸들러가
     // 같은 이벤트를 또 처리해서 zoneKey가 'face-A'로 덮어써짐(토큰이
-    // 직전대기 박스 밑에 깔려 안 보이는 원인이었음)
+    // 밴드 밑에 깔려 안 보이는 원인이었음)
     const tokenId  = e.dataTransfer.getData('tokenId');
     const victimId = e.dataTransfer.getData('victimId');
     if (tokenId) {
@@ -62,7 +70,7 @@ function SubZone({
   }
 
   return (
-    <div className={`a-face-zone__sub ${className}`}>
+    <div className={`a-face-band__zone a-face-band__zone--${modifier}`}>
       <div
         className="a-face-zone__body"
         data-zone-key={zoneKey}
@@ -78,11 +86,13 @@ function SubZone({
   );
 }
 
-export function ImminentStandby() {
+export function AFaceBottomZones() {
   return (
-    <div className="a-face-zone a-face-zone--imminent">
-      <SubZone zoneKey={ZONE_KEY_IMMINENT} label="직전대기" className="a-face-zone__sub--imminent" taggedAsRit={false} />
-      <SubZone zoneKey={ZONE_KEY_RIT}      label="RIT"      className="a-face-zone__sub--rit"      taggedAsRit={true} />
+    <div className="a-face-band">
+      <SubZone zoneKey={ZONE_KEY_IMMINENT} label="직전대기"   modifier="imminent" taggedAsRit={false} />
+      <SubZone zoneKey={ZONE_KEY_RIT}      label="RIT"        modifier="rit"      taggedAsRit={true}  />
+      <SubZone zoneKey={ZONE_KEY_COMMAND}  label="현장지휘소" modifier="command"  taggedAsRit={false} />
+      <MedicalPostBox />
     </div>
   );
 }

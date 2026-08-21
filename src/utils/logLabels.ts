@@ -12,6 +12,8 @@ const STATIC_LABELS: Record<string, string> = {
   'standby-resource': '자원대기소',
   'standby-standby1': '대기1단계',
   'standby-imminent': '직전대기',
+  'standby-rit':      'RIT',
+  'command-post':     '현장지휘소',
   'unit-add':         '추가출동대',
   'face-A':           'A면',
   'face-B':           'B면',
@@ -73,7 +75,8 @@ export interface ZoneRef {
 }
 
 const STAGING_KEYS = new Set([
-  'medical-post', 'standby-resource', 'standby-standby1', 'standby-imminent', 'unit-add',
+  'medical-post', 'standby-resource', 'standby-standby1', 'standby-imminent',
+  'standby-rit', 'command-post', 'unit-add',
 ]);
 
 export function parseZoneKey(zoneKey: string | null | undefined): ZoneRef {

@@ -1,0 +1,77 @@
+/* ─────────────────────────────────────────────
+   A면 하단 밴드 — 직전대기 / RIT / 현장지휘소 / 임시의료소
+
+   네 구역이 A면 바닥 전체 폭을 나눠 쓴다. 본문·명칭 띠의 공통 스타일은
+   ExteriorZone.css 의 .a-face-zone__body / .a-face-zone__label 이 그대로
+   담당하고, 여기에는 밴드 배치와 구역별 색만 둔다.
+   ─────────────────────────────────────────────*/
+
+.exterior-zone--a .a-face-band {
+  position: absolute;
+  left:     0;
+  right:    0;
+  /* 경찰통제선 띠(15px)가 A면 최하단에 깔린다 — 켜져 있든 아니든 자리를 비워
+     토글할 때 밴드가 들썩이지 않게 한다 */
+  bottom:   var(--a-face-band-bottom);
+
+  /* 높이 기준은 임시의료소였던 198px. 구조대상자·출동대가 함께 쌓이는 구역이
+     가장 크니 그 값으로 네 칸을 통일한다.
+     --ui-scale(기하)이 아니라 --font-scale 을 쓰는 이유는 안에 담기는 것이
+     글자·토큰이라서다. 작아지는 쪽은 max-height 가 맡는다. */
+  height:     var(--a-face-band-h);
+  /* 위아래 통제선 띠와 소화전 자리를 모두 피한다
+     — 아래 경찰 15px+6, 위 소방 15px+6, 그 위 소화전 88px */
+  max-height: calc(100% - 42px - var(--a-face-hydrant-clear));
+
+  z-index: 6;
+  display: grid;
+  /* 직전대기 : RIT : 현장지휘소 : 임시의료소.
+     RIT 는 한두 대만 서는 예비대라 가장 좁고, 직전대기와 임시의료소가 넓다. */
+  grid-template-columns: 3.5fr 1.2fr 2.5fr 3fr;
+  border-top: 1px solid var(--ctr-border-mid);
+  overflow: hidden;
+}
+
+/* ── 구역 한 칸 ── */
+
+.a-face-band__zone {
+  display:        flex;
+  flex-direction: column;
+  min-width:      0;
+  background:     var(--zone-tint);
+  border-right:   1px solid var(--ctr-border-soft);
+}
+
+.a-face-band__zone:last-child {
+  border-right: none;
+}
+
+/* 구역 색 — A면 바탕(#dedad0) 위 8% 틴트와, 명칭 띠.
+   띠는 기존 rgba(56,52,46,.86) 과 같은 명도대에서 색만 돌린 값이라
+   네 칸이 나란히 있어도 한 벌로 보인다. */
+
+.a-face-band__zone--imminent {
+  --zone-tint: rgba(51, 90, 96, 0.08);
+  --zone-bar:  rgba(40, 62, 66, 0.90);
+}
+
+.a-face-band__zone--rit {
+  --zone-tint: rgba(122, 52, 42, 0.08);
+  --zone-bar:  rgba(74, 44, 38, 0.90);
+}
+
+.a-face-band__zone--command {
+  --zone-tint: rgba(48, 62, 104, 0.08);
+  --zone-bar:  rgba(44, 52, 78, 0.90);
+}
+
+.a-face-band__zone--medical {
+  --zone-tint: rgba(48, 96, 62, 0.08);
+  --zone-bar:  rgba(42, 68, 54, 0.90);
+}
+
+/* 명칭 띠에 구역 색을 입힌다.
+   글자색은 ExteriorZone.css 의 .a-face-zone__label--bottom 이 담당한다. */
+.a-face-band__zone .a-face-zone__label--bottom {
+  background: var(--zone-bar);
+}
