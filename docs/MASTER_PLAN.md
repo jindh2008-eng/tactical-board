@@ -174,9 +174,9 @@ CSV는 사람이 읽는 산출물이라 재현의 근거가 될 수 없다(§7.5
 |---|---|---|
 | Phase 4 좌표 정규화 | ✅ 완료 | 커밋 `cecbc07`·`ebec5a9`. 구역 폭 4.4배 변화에 상대위치 오차 0.11% 실측 |
 | **무플 레이아웃 재배치·지휘절차 우측 패널화** | ✅ 완료 | D-5. 진행상황관리 제거, 운영 패널 좌측 이동, `CommandProcedureTrainingBox` 신설. 브라우저 검증 완료 |
-| Phase 3 공통 배율 | 🔄 기반만 | `hooks/useUiScale.ts` 동작 확인. 잔여 px 6개 영역 — 운영 패널 내부·상단 nav·전술상황판 고정치수·배지류·메뉴/모달·오버레이 |
-| Phase 2 B/D면 재배분 | ❌ 미착수 | `PlayPage.css`의 `aspect-ratio: 4/3` 잔존. 회수한 폭이 여백으로 남아 있음 |
-| Phase 6 오버레이 회귀 | ❌ 미착수 | |
+| Phase 3 공통 배율 | ⛔ **대체됨** | `useUiScale.ts` **삭제**. 고정 스테이지가 배율을 전담한다 → [SCREEN_STAGE_PLAN.md](SCREEN_STAGE_PLAN.md). "잔여 px 토큰화"는 **전제가 사라졌다** — 캔버스 안은 px 로 두는 것이 맞다 |
+| Phase 2 B/D면 재배분 | ✅ **완료** | `aspect-ratio: 4/3` 제거·정사각 보드, B:건물:D 비율 설정값화(`boardColumnRatio`), 건물높이 비율 저장. 가변 캔버스로 좌우 여백이 구조적으로 0 |
+| Phase 6 오버레이 회귀 | 🔄 **대부분 완료** | W-4 좌표계 회귀 검증 완료([SCREEN_STAGE_PLAN.md §6.4](SCREEN_STAGE_PLAN.md)) — 드롭 좌표 오차 0.1%, 좌표계 버그 3건 발견·수정. 남은 것은 §6.4.3 |
 | ~~D면 지휘절차 직접 체크~~ | **D-5로 대체 완료** | D면이 아니라 우측 고정 패널로 구현됐다. `CommandProcedureStatusBox.tsx`(D면 읽기전용 박스)는 삭제 |
 | ~~Phase 5 Pointer Events~~ | 범위 제외 | D-1 |
 
@@ -201,9 +201,9 @@ D-5로 `ChecklistPanel`을 무플 화면에서 **아예 렌더하지 않게 됐�
 
 **남는 것** — 지휘절차는 이제 `checklistConfig`를 거치지 않고 `commandProcedureConfigs`를 직접 읽으므로, `ChecklistCommandContext`/`ChecklistPanel` 브릿지가 필요한 대상은 (향후 지휘모드에서) **진행상황관리의 나머지 항목 타입(화재·이벤트·출동대·도착·메시지·구조대상자)뿐**이다. §7.1 착수 시 이 축소된 범위를 반영해야 한다.
 
-### X-2. `useTouchDrag`가 미커밋·미검증 상태다
+### X-2. `useTouchDrag`가 ~~미커밋·~~미검증 상태다 (⚠ **커밋은 해소, 검증은 남음**)
 
-`src/hooks/useTouchDrag.ts`(신규 217행)와 `TokenCard`·`VictimCard`·`EventTokenCard`·`TacticalArea`의 Pointer Events 전환이 작업트리에만 있다. 문서에 근거가 없고 실기기 검증 기록도 없다.
+~~작업트리에만 있다.~~ 커밋 `8136178`(2026-08-20)에 포함됐다. **다만 아래 검증은 여전히 기록이 없다.**
 
 D-1에 따라 **보조 수단으로 확정**됐으므로, 문서화하고 커밋한다(W-0-1). 다만 아래는 검증이 필요하다.
 
@@ -212,7 +212,9 @@ D-1에 따라 **보조 수단으로 확정**됐으므로, 문서화하고 커밋
 - S펜 측면 버튼(`button !== 0`) 분기와 기존 우클릭 컨텍스트 메뉴의 간섭
 - 마우스 경로가 기존과 동일한지 (`pointerType === 'mouse'`면 즉시 반환하므로 이론상 안전하나 확인 필요)
 
-### X-3. `TacticalArea`의 0 높이 측정 고착
+### X-3. ~~`TacticalArea`의 0 높이 측정 고착~~ (✅ **해소** — 측정 자체가 사라짐)
+
+> 스테이지 도입으로 `TacticalArea` 가 컨테이너를 재지 않고 캔버스 상수를 쓴다. 잴 일이 없으므로 0 으로 굳을 경로가 없다. 아래는 기록으로 남긴다.
 
 [반응형 계획 §0.5](RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md)에 기록된 알려진 취약점이다. [TacticalArea.tsx:68](../src/components/building/TacticalArea.tsx:68)의 `useLayoutEffect`가 **마운트 시 1회만** 측정하고, 그 시점 `clientHeight`가 0이면 `140px 0px 0px minmax(200px,1fr)`로 굳어 건물 층이 전부 무너진다. 새로고침 전까지 복구되지 않는다.
 
@@ -296,7 +298,9 @@ D-5가 진행상황관리를 무플 화면에서 완전히 제거하면서 이 �
 
 ---
 
-### W-2 — Phase 2: 전술상황판 확대와 B/D면 재배분 (2.5일)
+### W-2 — Phase 2: 전술상황판 확대와 B/D면 재배분 ✅ **완료 (2026-08-23)**
+
+> 스테이지 작업이 2-1~2-4 를 전부 처리했다. 아래 표는 원래 계획이며, 실제 구현은 [SCREEN_STAGE_PLAN.md](SCREEN_STAGE_PLAN.md) §3.4·§3.7·§3.10 을 따랐다.
 
 Phase 1이 회수한 폭이 현재 좌측 여백으로 버려지고 있다. 이걸 B/D면에 배정한다.
 
@@ -314,7 +318,9 @@ Phase 1이 회수한 폭이 현재 좌측 여백으로 버려지고 있다. 이�
 
 ---
 
-### W-3 — Phase 3: 잔여 px 토큰화 (2일)
+### W-3 — Phase 3: 잔여 px 토큰화 ⛔ **무효 (2026-08-23)**
+
+> **이 작업은 더 이상 필요 없다.** 고정 스테이지가 배율을 한 번만 걸므로 캔버스 안의 px 는 서로 어긋날 수 없다. `--ui-scale` 로 환산할 대상 자체가 사라졌고, `useUiScale.ts` 는 삭제됐다. 아래는 기록이다.
 
 `--ui-scale` / `--font-scale` 기반은 완료됐다. 아래가 아직 px 고정이다([반응형 계획 §0.7](RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md)).
 
@@ -336,7 +342,9 @@ Phase 1이 회수한 폭이 현재 좌측 여백으로 버려지고 있다. 이�
 
 ---
 
-### W-4 — Phase 6: 오버레이·팝업 전체 회귀 (1.5일)
+### W-4 — Phase 6: 오버레이·팝업 전체 회귀 🔄 **대부분 완료 (2026-08-23)**
+
+> 4-1~4-3 은 [SCREEN_STAGE_PLAN.md §6.4](SCREEN_STAGE_PLAN.md) 에서 실측 완료. 좌표계 버그 3건을 발견·수정했다. 남은 것은 §6.4.3 세 항목.
 
 | # | 작업 |
 |---|---|

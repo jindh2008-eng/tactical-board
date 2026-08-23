@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { stagePortalTarget } from '../utils/stagePortal';
 import { useSettings }        from '../store/settingsStore';
 import { useTraining }        from '../context/TrainingContext';
 import { useNavSlot }         from '../context/NavSlotContext';
@@ -169,13 +171,21 @@ function SprayTargetOverlay() {
         style={{ position: 'fixed', inset: 0, zIndex: 9800, cursor: 'crosshair' }}
         onClick={handleClick}
       />
-      {invalidClickAt && (
+      {/* 피드백 말풍선은 **포털**로 뺀다.
+          `position: fixed` 인 요소가 스테이지(transform: scale) 안에 있으면 left/top 이
+          뷰포트가 아니라 **캔버스** 기준으로 해석되는데, 여기 좌표는 clientX/clientY —
+          즉 뷰포트 px 다. 스테이지 안에 두면 배율만큼 어긋난 자리에 뜬다
+          (배율 0.9749·판 우측에서 가로 50px). 포털 루트는 뷰포트 전면이라
+          좌표 변환 없이 클릭 지점에 정확히 얹힌다.
+          → docs/SCREEN_STAGE_PLAN.md §4.1 */}
+      {invalidClickAt && createPortal(
         <div
           className="spray-target-overlay__invalid-msg"
           style={{ left: invalidClickAt.x, top: invalidClickAt.y }}
         >
           방수 대상 구역이 아닙니다
-        </div>
+        </div>,
+        stagePortalTarget(),
       )}
     </>
   );

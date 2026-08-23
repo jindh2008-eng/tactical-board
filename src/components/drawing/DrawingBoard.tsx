@@ -26,6 +26,33 @@ const MIN_POINT_DISTANCE_PX = 3;
 const ERASE_HIT_RADIUS_PX = 14;
 const TOOLBAR_POSITION_KEY = 'tacticalBoardDrawingToolbarPos';
 
+/**
+ * 툴바가 놓인 스테이지의 배율·원점·캔버스 크기를 잰다.
+ *
+ * 툴바는 스테이지(`transform: scale`) **안**에 있다. 변환이 걸린 조상 아래에서는
+ * `position: fixed` 가 뷰포트가 아니라 **그 조상** 기준으로 해석되므로, 툴바의
+ * `left`/`top` 은 뷰포트 px 가 아니라 **캔버스 px** 다.
+ *
+ * 예전에는 위치를 `rect.left`·`clientX`·`window.innerWidth` 로 전부 뷰포트 px 로
+ * 계산해 놓고 그 값을 캔버스 px 인 `left` 에 그대로 넣었다. 배율 0.9749 에서
+ * 잡는 순간 툴바가 25px 튀고, 드래그하면 커서보다 2.5% 느리게 따라왔다.
+ *
+ * 저장 단위를 캔버스 px 로 두는 것은 SCREEN_STAGE_PLAN.md §3.10.1 의 R4 이기도
+ * 하다 — 뷰포트 px 로 저장하면 기기가 바뀔 때 값이 오염된다.
+ *
+ * 스테이지가 없는 화면에서는 항등(배율 1 · 원점 0 · 뷰포트 크기)으로 떨어진다.
+ */
+function stageMetrics(el: HTMLElement | null) {
+  const stage = el?.closest<HTMLElement>('.stage');
+  if (!stage || !stage.offsetWidth || !stage.offsetHeight) {
+    return { scale: 1, left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+  }
+  const rect  = stage.getBoundingClientRect();
+  const raw   = rect.width / stage.offsetWidth;
+  const scale = Number.isFinite(raw) && raw > 0 ? raw : 1;
+  return { scale, left: rect.left, top: rect.top, width: stage.offsetWidth, height: stage.offsetHeight };
+}
+
 function strokePoints(stroke: DrawingStroke): string {
   return stroke.points
     .map(point => `${point.x * SVG_SIZE},${point.y * SVG_SIZE}`)
@@ -127,15 +154,21 @@ export function DrawingBoard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * 캔버스 px 기준으로 클램프한다. 크기는 `offsetWidth`(변환 전 = 캔버스 px)로
+   * 재고, 경계는 스테이지의 캔버스 크기를 쓴다 — `getBoundingClientRect` 나
+   * `window.innerWidth` 를 섞으면 배율만큼 어긋난다(stageMetrics 주석 참고).
+   *
+   * 가로 캔버스는 폭이 화면 종횡비에서 역산돼 **가변**이므로 리사이즈마다 다시
+   * 클램프해야 한다. 아래 resize 핸들러가 그 역할을 한다.
+   */
   function clampToolbarPos(left: number, top: number) {
     const el = toolbarRef.current;
-    // 툴바 위치는 뷰포트(window.innerWidth/Height) 와 비교하므로
-    // 변환 후 좌표계인 getBoundingClientRect 로 재야 배율 아래에서도 맞는다.
-    const rect = el?.getBoundingClientRect();
-    const width = rect?.width ?? 0;
-    const height = rect?.height ?? 0;
-    const maxLeft = Math.max(0, window.innerWidth - width);
-    const maxTop = Math.max(0, window.innerHeight - height);
+    const m = stageMetrics(el);
+    const width  = el?.offsetWidth  ?? 0;
+    const height = el?.offsetHeight ?? 0;
+    const maxLeft = Math.max(0, m.width  - width);
+    const maxTop  = Math.max(0, m.height - height);
     return { left: Math.min(maxLeft, Math.max(0, left)), top: Math.min(maxTop, Math.max(0, top)) };
   }
 
@@ -145,13 +178,15 @@ export function DrawingBoard() {
     if (!el) return;
     event.preventDefault();
     const rect = el.getBoundingClientRect();
+    const m = stageMetrics(el);
     event.currentTarget.setPointerCapture(event.pointerId);
     toolbarDragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      originLeft: rect.left,
-      originTop: rect.top,
+      // 시작점도 캔버스 px 로 — 뷰포트 rect 에서 스테이지 원점을 빼고 배율로 나눈다
+      originLeft: (rect.left - m.left) / m.scale,
+      originTop:  (rect.top  - m.top)  / m.scale,
     };
     setIsDraggingToolbar(true);
   }
@@ -160,9 +195,12 @@ export function DrawingBoard() {
     const drag = toolbarDragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     event.preventDefault();
+    // 포인터 이동량은 뷰포트 px 다. 캔버스 px 로 환산해야 커서와 툴바가 같은
+    // 속도로 움직인다 — 나누지 않으면 배율만큼 뒤처진다.
+    const m = stageMetrics(toolbarRef.current);
     setToolbarPos(clampToolbarPos(
-      drag.originLeft + (event.clientX - drag.startX),
-      drag.originTop + (event.clientY - drag.startY),
+      drag.originLeft + (event.clientX - drag.startX) / m.scale,
+      drag.originTop  + (event.clientY - drag.startY) / m.scale,
     ));
   }
 
