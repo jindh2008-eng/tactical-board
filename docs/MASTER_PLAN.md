@@ -447,6 +447,14 @@ D-4에 따라 아래는 이번 범위 밖이다. W-5가 끝나면 [DEFERRED_PROP
 3. **P-2 · P-7 판정** ([DEFERRED_PROPAGATION.md](DEFERRED_PROPAGATION.md)) — 교수 화면이 `ChecklistPanel`(부수효과)이 아니라 `ChecklistView`(표시 전용)를 써야 한다
 4. **훈련장 Wi-Fi의 AP 클라이언트 격리 여부** ([DUAL_SCREEN_SYNC_PLAN.md §10-2](DUAL_SCREEN_SYNC_PLAN.md)) — 막혀 있으면 태블릿↔PC 직접 통신이 불가하다. **현장에서 미리 확인해야 한다.** 막혀 있어도 W-0~W-5 결과물은 그대로 남는다
 
+**이미 있는 자산 — `ChecklistDrawer` 를 지우지 말 것 (2026-08-23 확인)**
+
+[`components/overlays/ChecklistDrawer.tsx`](../src/components/overlays/ChecklistDrawer.tsx)(75행) + `.css`(128행)는 **현재 아무도 import 하지 않는다.** 정적 분석으로는 죽은 코드로 잡히지만 **의도적 보존이다** — Track C(교수 태블릿 화면)에서 쓸 예정이다.
+
+`UIOverlayContext` 의 `OverlayType` 에 남아 있는 `'checklist'` 값도 같은 이유로 유지한다. 같은 시기에 용도가 사라진 `'log'`/`LogDrawer` 는 삭제했으므로, **둘을 같은 것으로 보고 함께 정리하면 안 된다.**
+
+되살릴 때 고칠 점 — 체크 상태를 로컬 `useState` 로 들고 있어 `ChecklistProgressContext` 로 옮겨야 하고, 표시 전용이어야 하므로 `ChecklistPanel`(부수효과)이 아니라 `ChecklistView` 를 따라야 한다(위 착수 전 확인 3번, P-2·P-7).
+
 **과도기 운영** — 그때까지 교수는 태블릿 없이 구두로 무플에게 지시하고 무플이 상황판을 조작한다. 오늘과 같은 방식이며, 필요하면 상단 `표시옵션 → 진행상황 관리`로 패널을 되살릴 수 있다.
 
 ### 7.2 설정모드 정합
