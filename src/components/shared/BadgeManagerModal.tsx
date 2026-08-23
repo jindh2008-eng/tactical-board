@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BadgePreset } from '../../types';
 import './BadgeManagerModal.css';
+import { stagePortalTarget } from '../../utils/stagePortal';
 
 interface Props {
   presets:  BadgePreset[];
@@ -150,6 +151,6 @@ export function BadgeManagerModal({ presets, onAdd, onRemove, onUpdate, onClose 
         </div>
       </div>
     </div>,
-    document.body
+    stagePortalTarget()
   );
 }

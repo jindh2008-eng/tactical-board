@@ -21,6 +21,7 @@ import { LadderHandle }     from './LadderHandle';
 import { UnitStatusBarMenu } from './UnitStatusBarMenu';
 import { HydrantBarMenu }    from './HydrantBarMenu';
 import './TokenCard.css';
+import { stagePortalTarget, rectToStage } from '../../utils/stagePortal';
 
 // ── 수량 게이지 바 ───────────────────────────
 
@@ -130,10 +131,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
       e.preventDefault();
       return;
     }
-    const el = e.currentTarget;
     e.dataTransfer.setData('tokenId', token.id);
-    e.dataTransfer.setData('tokenW', String(el.offsetWidth));
-    e.dataTransfer.setData('tokenH', String(el.offsetHeight));
     setDragGrabOffset(e);
     e.dataTransfer.effectAllowed = 'move';
     setBarMenu(null);
@@ -242,8 +240,10 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   // 카운트다운은 좌측 상단 고정 위치 표시용으로 포털 유지
   // (드래그 중 표시되지 않으므로 좌표 지연 문제 없음)
   function countdownPortal(className: string, label: string, content: React.ReactNode) {
-    const rect = wrapperRef.current?.getBoundingClientRect();
-    if (!rect) return null;
+    const raw = wrapperRef.current?.getBoundingClientRect();
+    if (!raw) return null;
+    // 포털이 스테이지(배율) 안에 있으므로 left/top 은 캔버스 좌표여야 한다.
+    const rect = rectToStage(raw);
     return ReactDOM.createPortal(
       <div
         className={`token-countdown ${className}`}
@@ -259,7 +259,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
       >
         {content}
       </div>,
-      document.body,
+      stagePortalTarget(),
     );
   }
 

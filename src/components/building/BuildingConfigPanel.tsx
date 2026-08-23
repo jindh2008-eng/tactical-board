@@ -3,6 +3,7 @@ import type { BuildingConfig, FireStatus } from '../../types';
 import type { ExtraFireFloor } from '../../types/settings';
 import { floorLabel, buildFloorList } from '../../utils/floorOptions';
 import './BuildingConfigPanel.css';
+import { BOARD_COL_RATIO_MIN, BOARD_COL_RATIO_MAX, BOARD_COL_RATIO_DEFAULT } from '../../types/settings';
 
 const FIRE_STATUS_OPTIONS: { value: FireStatus; label: string }[] = [
   { value: 'extension-peak', label: '연소확대' },
@@ -38,6 +39,8 @@ interface Props {
   onSiamesePipeChange:       (v: boolean) => void;
   hasIndoorHydrant:          boolean;
   onIndoorHydrantChange:     (v: boolean) => void;
+  boardColumnRatio:          number;
+  onBoardColumnRatioChange:  (ratio: number) => void;
 }
 
 export function BuildingConfigPanel({
@@ -49,6 +52,7 @@ export function BuildingConfigPanel({
   extraFireFloors, onExtraFireFloorsChange,
   hasSiamesePipe, onSiamesePipeChange,
   hasIndoorHydrant, onIndoorHydrantChange,
+  boardColumnRatio, onBoardColumnRatioChange,
 }: Props) {
   const [above,    setAbove]    = useState(String(config.aboveGroundFloors));
   const [basement, setBasement] = useState(String(config.basementFloors));
@@ -139,6 +143,50 @@ export function BuildingConfigPanel({
           <span className="bcf__unit">층</span>
         </label>
 
+      </div>
+      )}
+
+      {/* ── 상황판 구역 비율 ──
+          보드가 정사각으로 고정되면서 B:건물:D 비율이 화면 크기와 무관한
+          시나리오 변수가 됐다. → docs/SCREEN_STAGE_PLAN.md §3.7 */}
+      {show('structure') && (
+      <div className="bcf__ratio-section">
+        <span className="bcf__fire-label">상황판 구역 비율</span>
+        <p className="bcf__ratio-hint">
+          전술상황판에서 B면 · 건물 · D면이 차지하는 가로 폭의 비율입니다.
+          건물 쪽을 넓히면 층 내부가 자세해지고, 줄이면 B/D면 활동 공간이 넓어집니다.
+        </p>
+
+        <div className="bcf__ratio-row">
+          <input
+            className="bcf__ratio-slider"
+            type="range"
+            min={BOARD_COL_RATIO_MIN}
+            max={BOARD_COL_RATIO_MAX}
+            step={0.05}
+            value={boardColumnRatio}
+            onChange={e => onBoardColumnRatioChange(Number(e.target.value))}
+            aria-label="B면 대 건물 대 D면 비율"
+          />
+          <span className="bcf__ratio-value">
+            1 : {boardColumnRatio.toFixed(2)} : 1
+          </span>
+          <button
+            type="button"
+            className="bcf__ratio-reset"
+            onClick={() => onBoardColumnRatioChange(BOARD_COL_RATIO_DEFAULT)}
+            disabled={Math.abs(boardColumnRatio - BOARD_COL_RATIO_DEFAULT) < 0.001}
+          >
+            기본값
+          </button>
+        </div>
+
+        {/* 미리보기 — 실제 열 폭과 같은 비율로 그린다 */}
+        <div className="bcf__ratio-preview" aria-hidden>
+          <div className="bcf__ratio-bar bcf__ratio-bar--side" style={{ flex: 1 }}>B면</div>
+          <div className="bcf__ratio-bar bcf__ratio-bar--center" style={{ flex: boardColumnRatio }}>건물</div>
+          <div className="bcf__ratio-bar bcf__ratio-bar--side" style={{ flex: 1 }}>D면</div>
+        </div>
       </div>
       )}
 

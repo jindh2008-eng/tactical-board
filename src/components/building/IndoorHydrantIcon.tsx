@@ -8,6 +8,7 @@ import { useWaterConnectDrag }  from '../../hooks/useWaterConnectDrag';
 import { useDisplayOptions }    from '../../context/DisplayOptionsContext';
 import '../shared/HydrantIcon.css';  // hi-menu 스타일 + hi-pulse 키프레임 공유
 import './IndoorHydrantIcon.css';
+import { stagePortalTarget, stageBounds, rectToStage } from '../../utils/stagePortal';
 
 function floorLabel(floorId: string): string {
   if (floorId === 'RF') return '옥상';
@@ -93,11 +94,16 @@ export function IndoorHydrantIcon({ floorId }: Props) {
   useLayoutEffect(() => {
     if (!menuOpen || !menuRef.current || !wrapperRef.current) return;
     const menu   = menuRef.current;
-    const anchor = wrapperRef.current.getBoundingClientRect();
-    const menuW  = menu.offsetWidth;
-    const menuH  = menu.offsetHeight;
-    const vw     = window.innerWidth;
-    const vh     = window.innerHeight;
+    // 뷰포트 rect → 캔버스 rect. bottom 은 rectToStage 결과에 없으므로 직접 만든다.
+    const a0 = rectToStage(wrapperRef.current.getBoundingClientRect());
+    const anchor = { ...a0, bottom: a0.top + a0.height };
+    // 메뉴는 이제 스테이지(배율) 안의 포털에 그려진다. 그래서 여기 좌표는 전부
+    // **캔버스 px** 여야 한다 — offsetWidth 가 곧 캔버스 폭이고, 뷰포트에서 온
+    // 앵커는 rectToStage 로, 화면 경계는 stageBounds 로 바꿔 쓴다.
+    // → docs/SCREEN_STAGE_PLAN.md §4.1
+    const menuW = menu.offsetWidth;
+    const menuH = menu.offsetHeight;
+    const { width: vw, height: vh } = stageBounds();
     const GAP    = 6;
 
     const cx  = anchor.left + anchor.width / 2;
@@ -233,7 +239,7 @@ export function IndoorHydrantIcon({ floorId }: Props) {
             )}
           </div>
         </>,
-        document.body,
+        stagePortalTarget(),
       )}
     </>
   );

@@ -8,6 +8,7 @@ import { useSettings } from '../../store/settingsStore';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import '../shared/HydrantIcon.css';   // hi-menu 스타일 공유
 import './ExteriorZone.css';
+import { stagePortalTarget, stageBounds, rectToStage } from '../../utils/stagePortal';
 
 /**
  * ControlLineToggles — 소방통제선·경찰통제선·연결송수구 설치 버튼 묶음.
@@ -86,11 +87,15 @@ function InstallerMenu({
     const menu   = menuRef.current;
     const anchor = anchorRef.current;
     if (!menu || !anchor) return;
-    const anchorRect = anchor.getBoundingClientRect();
+    const a0 = rectToStage(anchor.getBoundingClientRect());
+    const anchorRect = { ...a0, bottom: a0.top + a0.height };
+    // 메뉴는 이제 스테이지(배율) 안의 포털에 그려진다. 그래서 여기 좌표는 전부
+    // **캔버스 px** 여야 한다 — offsetWidth 가 곧 캔버스 폭이고, 뷰포트에서 온
+    // 앵커는 rectToStage 로, 화면 경계는 stageBounds 로 바꿔 쓴다.
+    // → docs/SCREEN_STAGE_PLAN.md §4.1
     const menuW = menu.offsetWidth;
     const menuH = menu.offsetHeight;
-    const vw    = window.innerWidth;
-    const vh    = window.innerHeight;
+    const { width: vw, height: vh } = stageBounds();
     const GAP   = 6;
 
     const cx  = anchorRect.left + anchorRect.width / 2;
@@ -163,7 +168,7 @@ function InstallerMenu({
         </div>
       </div>
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 }
 

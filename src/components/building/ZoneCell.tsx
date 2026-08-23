@@ -12,6 +12,7 @@ import { FlameIcon } from '../shared/FlameIcon';
 import { computeDropCenter } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import './ZoneCell.css';
+import { stagePortalTarget } from '../../utils/stagePortal';
 
 // RF=Infinity, 3F=3, B1=-1, 비해당=null
 function floorIdToNum(floorId: string): number | null {
@@ -98,7 +99,7 @@ function FireRadialMenu({ cx, cy, current, onSelect, onClose }: {
         })}
       </div>
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 }
 

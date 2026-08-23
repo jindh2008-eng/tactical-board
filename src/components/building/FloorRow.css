@@ -28,7 +28,7 @@
    ─────────────────────────────────────────────*/
 .floor-row__label {
   position: relative;   /* 연결송수구 고정 위치 기준 */
-  width: 34px;
+  width: 29px;      /* 34px → 보드 축소분 환산 (×0.8456) */
   flex-shrink: 0;
   display: flex;
   align-items: center;

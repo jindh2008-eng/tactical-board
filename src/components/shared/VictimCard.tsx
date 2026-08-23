@@ -12,6 +12,7 @@ import { zoneKeyToFullLabel, buildVictimDisplayLine, canUnitRescueVictim } from 
 import { setDragGrabOffset } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import './VictimCard.css';
+import { stagePortalTarget, rectToStage } from '../../utils/stagePortal';
 
 interface Props {
   victim:  VictimToken;
@@ -155,15 +156,12 @@ export function VictimCard({ victim, absPos, attached }: Props) {
   }
 
   function handleMouseEnter() {
-    if (wrapperRef.current) setTooltipRect(wrapperRef.current.getBoundingClientRect());
+    if (wrapperRef.current) setTooltipRect(rectToStage(wrapperRef.current.getBoundingClientRect()) as DOMRect);
   }
   function handleMouseLeave() { setTooltipRect(null); }
 
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
-    const el = e.currentTarget;
     e.dataTransfer.setData('victimId', victim.id);
-    e.dataTransfer.setData('tokenW', String(el.offsetWidth));
-    e.dataTransfer.setData('tokenH', String(el.offsetHeight));
     setDragGrabOffset(e);
     e.dataTransfer.effectAllowed = 'move';
     setCtxMenu(null);       // 드래그 시작 시 메뉴 닫기
@@ -244,7 +242,7 @@ export function VictimCard({ victim, absPos, attached }: Props) {
         </div>
       </div>
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 
   const displayTop =
@@ -308,7 +306,7 @@ export function VictimCard({ victim, absPos, attached }: Props) {
             <span className="tooltip__cond">{victim.condition ?? '경상'}</span>
             {subLoc && <span className="tooltip__loc">{subLoc}</span>}
           </div>,
-          document.body,
+          stagePortalTarget(),
         )}
         {rescueAskPortal}
         {ctxMenu && (

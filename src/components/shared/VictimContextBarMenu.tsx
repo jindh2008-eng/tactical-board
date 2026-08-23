@@ -5,6 +5,7 @@ import { VICTIM_CONDITIONS } from '../../types/victim';
 import type { UnitToken } from '../../types';
 import type { VictimUpdate } from '../../context/VictimContext';
 import './VictimContextBarMenu.css';
+import { stagePortalTarget, stageBounds, rectToStage } from '../../utils/stagePortal';
 
 // ─────────────────────────────────────────────
 // 헬퍼 (VictimContextMenu 로직 재사용)
@@ -77,28 +78,34 @@ export function VictimContextBarMenu({
     const menu = menuRef.current;
     if (!menu) return;
 
+    // 메뉴는 이제 스테이지(배율) 안의 포털에 그려진다. 그래서 여기 좌표는 전부
+    // **캔버스 px** 여야 한다 — offsetWidth 가 곧 캔버스 폭이고, 뷰포트에서 온
+    // 앵커는 rectToStage 로, 화면 경계는 stageBounds 로 바꿔 쓴다.
+    // → docs/SCREEN_STAGE_PLAN.md §4.1
     const menuW = menu.offsetWidth;
     const menuH = menu.offsetHeight;
-    const vw    = window.innerWidth;
-    const vh    = window.innerHeight;
+    const { width: vw, height: vh } = stageBounds();
+    // 앵커는 호출부에서 뷰포트 rect 로 넘어온다 → 캔버스 좌표로 바꾼다.
+    const a0 = rectToStage(anchorRect);
+    const anchor = { ...a0, bottom: a0.top + a0.height };
     const GAP   = 6;
 
     // 토큰 중앙 기준 수평 정렬, 화면 경계 보정
-    const cx  = anchorRect.left + anchorRect.width / 2;
+    const cx  = anchor.left + anchor.width / 2;
     let left  = Math.round(cx - menuW / 2);
     left      = Math.max(8, Math.min(left, vw - menuW - 8));
 
     // 위쪽 공간이 충분하면 위에, 아래가 더 넓으면 아래에
-    const spaceAbove = anchorRect.top;
-    const spaceBelow = vh - anchorRect.bottom;
+    const spaceAbove = anchor.top;
+    const spaceBelow = vh - anchor.bottom;
     let top: number;
     let openAbove: boolean;
 
     if (spaceAbove >= menuH + GAP || spaceAbove >= spaceBelow) {
-      top       = Math.max(8, anchorRect.top - menuH - GAP);
+      top       = Math.max(8, anchor.top - menuH - GAP);
       openAbove = true;
     } else {
-      top       = Math.min(anchorRect.bottom + GAP, vh - menuH - 8);
+      top       = Math.min(anchor.bottom + GAP, vh - menuH - 8);
       openAbove = false;
     }
 
@@ -371,6 +378,6 @@ export function VictimContextBarMenu({
         {!layout.openAbove && subPanel}
       </div>
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 }

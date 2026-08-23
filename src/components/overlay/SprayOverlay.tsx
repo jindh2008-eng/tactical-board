@@ -4,6 +4,7 @@ import type { SprayState } from '../../types';
 import { useTokens }         from '../../context/TokenContext';
 import { useDisplayOptions } from '../../context/DisplayOptionsContext';
 import './SprayOverlay.css';
+import { stagePortalTarget } from '../../utils/stagePortal';
 
 // ─────────────────────────────────────────────
 // 방수 상태별 설정
@@ -248,6 +249,6 @@ function SprayOverlayInner() {
       </>
     )}
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 }

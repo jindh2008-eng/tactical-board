@@ -4,6 +4,7 @@ import {
   useDrawing, type DrawingColor, type DrawingPoint, type DrawingStroke,
 } from '../../context/DrawingContext';
 import './DrawingBoard.css';
+import { useDisplayOptions } from '../../context/DisplayOptionsContext';
 
 const COLOR_HEX: Record<DrawingColor, string> = {
   black: '#1c1c1c',
@@ -82,6 +83,7 @@ function findStrokeAt(
 
 export function DrawingBoard() {
   const { mode, enterMode, clearMode } = useActionMode();
+  const { showDrawingTools } = useDisplayOptions();
   const {
     selectedColor, strokes, draft, history,
     setSelectedColor, startStroke, appendPoint, finishStroke, cancelDraft,
@@ -127,8 +129,11 @@ export function DrawingBoard() {
 
   function clampToolbarPos(left: number, top: number) {
     const el = toolbarRef.current;
-    const width = el?.offsetWidth ?? 0;
-    const height = el?.offsetHeight ?? 0;
+    // 툴바 위치는 뷰포트(window.innerWidth/Height) 와 비교하므로
+    // 변환 후 좌표계인 getBoundingClientRect 로 재야 배율 아래에서도 맞는다.
+    const rect = el?.getBoundingClientRect();
+    const width = rect?.width ?? 0;
+    const height = rect?.height ?? 0;
     const maxLeft = Math.max(0, window.innerWidth - width);
     const maxTop = Math.max(0, window.innerHeight - height);
     return { left: Math.min(maxLeft, Math.max(0, left)), top: Math.min(maxTop, Math.max(0, top)) };
@@ -174,6 +179,15 @@ export function DrawingBoard() {
       return pos;
     });
   }
+
+  // 도구모음을 끄는 순간 그리기/지우기 모드가 켜져 있으면 함께 해제한다.
+  // 도구상자가 사라지면 모드를 빠져나올 진입점이 없어지기 때문이다.
+  useEffect(() => {
+    if (!showDrawingTools && (mode.type === 'drawing' || mode.type === 'drawing-erase')) {
+      cancelDraft();
+      clearMode();
+    }
+  }, [showDrawingTools, mode.type, cancelDraft, clearMode]);
 
   // ESC, 그리기↔지우기 전환 또는 다른 작업 모드 진입 시 미완성 획을 남기지 않는다.
   useEffect(() => {
@@ -282,7 +296,7 @@ export function DrawingBoard() {
         ))}
       </svg>
 
-      {isDrawingInteraction && (
+      {showDrawingTools && isDrawingInteraction && (
         <div
           className={`drawing-board__input${isErasing ? ' drawing-board__input--erase' : ''}`}
           aria-label="전술상황판 전체 그리기 영역"
@@ -294,6 +308,7 @@ export function DrawingBoard() {
         />
       )}
 
+      {showDrawingTools && (
       <div
         ref={toolbarRef}
         className={`drawing-toolbar${isDraggingToolbar ? ' drawing-toolbar--dragging' : ''}`}
@@ -417,6 +432,7 @@ export function DrawingBoard() {
           </svg>
         </button>
       </div>
+      )}
     </>
   );
 }

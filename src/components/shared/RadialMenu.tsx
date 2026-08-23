@@ -5,6 +5,7 @@ import type { TagPreset } from '../../types/settings';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
 import './RadialMenu.css';
+import { stageBounds, stagePortalTarget, viewportToStage } from '../../utils/stagePortal';
 
 // ─────────────────────────────────────────────
 // 상수
@@ -56,7 +57,9 @@ function angleOffset(deg: number, radius: number) {
 // RadialMenu
 // ─────────────────────────────────────────────
 
-export function RadialMenu({ token, cx, cy, onClose }: Props) {
+export function RadialMenu({ token, cx: rawCx, cy: rawCy, onClose }: Props) {
+  // 뷰포트 클릭 좌표 → 캔버스 좌표 (스테이지 안 포털)
+  const { x: cx, y: cy } = viewportToStage(rawCx, rawCy);
   const { setStatusTag, setCustomNote } = useTokens();
   const { unitTagPresetConfig }         = useSettings();
 
@@ -77,7 +80,7 @@ export function RadialMenu({ token, cx, cy, onClose }: Props) {
   const totalItems = presets.length + 1;  // +1 = 직접입력
 
   // 직접입력 패널 방향
-  const panelOnRight = cx + RADIUS_RING + 8 + PANEL_W < window.innerWidth;
+  const panelOnRight = cx + RADIUS_RING + 8 + PANEL_W < stageBounds().width;
 
   // ── 핸들러 ──────────────────────────────────
 
@@ -238,6 +241,6 @@ export function RadialMenu({ token, cx, cy, onClose }: Props) {
         )}
       </div>
     </>,
-    document.body
+    stagePortalTarget()
   );
 }

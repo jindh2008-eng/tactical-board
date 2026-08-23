@@ -7,6 +7,7 @@ import { FireEventIcon, FlameIcon, EVENT_STATUS_TO_FIRE, gasElectricFireStage } 
 import { readEventLocationAtPoint } from '../../utils/eventLocation';
 import { zoneLabel } from '../../utils/logLabels';
 import './EventTokenCard.css';
+import { stagePortalTarget } from '../../utils/stagePortal';
 
 // ─────────────────────────────────────────────
 // 원형 상태 선택 메뉴 — 아이콘 + 텍스트 세로 배치
@@ -62,7 +63,7 @@ function RadialMenu({ cx, cy, eventType, current, onSelect, onClose }: {
         })}
       </div>
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 }
 

@@ -10,7 +10,8 @@ import type {
   UnitTagPresetConfig, UnitTagPresets,
 } from '../types/settings';
 import type { EventSetupItem, EventType } from '../types/events';
-import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP, DEFAULT_FIRE_SUPPRESSION_CONFIG, DEFAULT_AERIAL_SUPPRESSION_CONFIG } from '../types/settings';
+import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP, DEFAULT_FIRE_SUPPRESSION_CONFIG, DEFAULT_AERIAL_SUPPRESSION_CONFIG,
+         BOARD_COL_RATIO_MIN, BOARD_COL_RATIO_MAX, BOARD_COL_RATIO_DEFAULT } from '../types/settings';
 import type { SettingsSet } from '../utils/settingsStorage';
 import {
   generateId,
@@ -46,6 +47,8 @@ interface SettingsContextValue {
   updateExtraFireFloors:    (floors: ExtraFireFloor[]) => void;
   updateSiamesePipe:        (v: boolean) => void;
   updateIndoorHydrant:      (has: boolean) => void;
+  boardColumnRatio:         number;
+  updateBoardColumnRatio:   (ratio: number) => void;
 
   // ── 타이밍 설정 ───────────────────────────────
   timing:        TimingSettings;
@@ -174,6 +177,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [hasIndoorHydrant, setHasIndoorHydrant] = useState<boolean>(
     () => loadWorkingPresets().building?.hasIndoorHydrant ?? false
   );
+  const [boardColumnRatio, setBoardColumnRatio] = useState<number>(
+    () => loadWorkingPresets().building?.boardColumnRatio ?? BOARD_COL_RATIO_DEFAULT
+  );
 
   // ── 타이밍 (자동 복원) ──────────────────────────
   const [timing, setTiming] = useState<TimingSettings>(
@@ -247,13 +253,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     saveWorkingPresets({
       sharedBadgePresets: [], unitBadgePresets: [],
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
       timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
       fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
       unitTagPresetConfig,
     });
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -266,6 +272,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const updateExtraFireFloors     = useCallback((floors: ExtraFireFloor[]) => setExtraFireFloors(floors),     []);
   const updateSiamesePipe         = useCallback((v: boolean)              => setHasSiamesePipe(v),            []);
   const updateIndoorHydrant       = useCallback((has: boolean)            => setHasIndoorHydrant(has),          []);
+  // 범위 밖 값이 저장 파일에서 들어와도 상황판이 깨지지 않도록 여기서 한 번 자른다.
+  const updateBoardColumnRatio    = useCallback((ratio: number) => {
+    if (!Number.isFinite(ratio)) return;
+    setBoardColumnRatio(Math.min(BOARD_COL_RATIO_MAX, Math.max(BOARD_COL_RATIO_MIN, ratio)));
+  }, []);
 
   // ── 타이밍 설정 ──────────────────────────────
   const updateTiming = useCallback((next: Partial<TimingSettings>) => {
@@ -513,7 +524,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const id = activeSettingsId ?? generateId();
     const set: SettingsSet = {
       id, name: activeSettingsName, updatedAt: '',
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
@@ -522,13 +533,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
     const set: SettingsSet = {
       id, name: newName, updatedAt: '',
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
@@ -538,7 +549,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -593,6 +604,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setExtraFireFloors(set.building?.extraFireFloors ? JSON.parse(JSON.stringify(set.building.extraFireFloors)) : []);
     setHasSiamesePipe(resolveHasSiamesePipe(set.building));
     setHasIndoorHydrant(set.building?.hasIndoorHydrant ?? false);
+    setBoardColumnRatio(set.building?.boardColumnRatio ?? BOARD_COL_RATIO_DEFAULT);
     setActiveSettingsId(id);
     setActiveSettingsName(set.name);
   }, [settingsList]);
@@ -627,9 +639,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <SettingsContext.Provider value={{
-      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant },
+      building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
       updateBuildingConfig, updateFireFloor, updateFireStatus, updateTargetName, updateExtraFireFloors,
       updateSiamesePipe, updateIndoorHydrant,
+      boardColumnRatio, updateBoardColumnRatio,
       timing, updateTiming,
       arrivalMode, updateArrivalMode,
       medicalPostChief, stagingAreaChief,

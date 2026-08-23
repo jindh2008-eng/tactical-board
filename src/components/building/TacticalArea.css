@@ -27,8 +27,17 @@
   position: relative; /* EventLayer 절대위치 기준점 */
   display: grid;
 
+  /* B : 건물 : D 열은 TacticalArea 가 인라인 style 로 넣는다.
+     `var(--x)fr` 은 유효한 CSS 가 아니고(토큰이 하나의 dimension 이어야 한다),
+     fr 은 calc() 에도 들어가지 못해 CSS 변수만으로는 비율을 만들 수 없다.
+     여기 값은 인라인이 없을 때의 폴백이다.
+     → docs/SCREEN_STAGE_PLAN.md §3.7 */
   grid-template-columns: 1fr 1.744fr 1fr;
-  grid-template-rows: 140px 1fr 200px;
+  /* C면 140px / A면 200px → **세로** 계수로 환산한다.
+     보드는 폭 1703→1440(×0.8456)로 줄고 높이 1277→1440(×1.1276)으로 늘었다.
+     가로·세로가 반대 방향이라 한 계수를 양쪽에 쓰면 안 된다.
+     계획서 §3.6 */
+  grid-template-rows: 158px 1fr 226px;
 
   gap: 0;
   width: 100%;

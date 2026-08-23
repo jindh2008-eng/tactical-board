@@ -11,6 +11,7 @@ import { useSettings } from '../../store/settingsStore';
 import { useVictims } from '../../context/VictimContext';
 import { useOptionalBuildingState, computeStairSmokeLevel } from '../../context/BuildingStateContext';
 import './UnitStatusBarMenu.css';
+import { stagePortalTarget, stageBounds, rectToStage } from '../../utils/stagePortal';
 
 // ─────────────────────────────────────────────
 // 색상 팔레트
@@ -160,8 +161,12 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   if (hasFuncButtons)                               tabs.push({ key: 'func',      label: '기능' });
 
   // ── 위/아래 배치 결정 ────────────────────────
-  const cx = anchorRect.left + anchorRect.width / 2;
-  const showAbove = anchorRect.top > 160;
+  // 이 메뉴도 스테이지 안 포털이라 좌표를 캔버스 기준으로 바꿔 쓴다.
+  const a0 = rectToStage(anchorRect);
+  const anchor = { ...a0, bottom: a0.top + a0.height };
+  const stage = stageBounds();
+  const cx = anchor.left + anchor.width / 2;
+  const showAbove = anchor.top > 160;
 
   // ── 외부 클릭 / Esc ──────────────────────────
   useEffect(() => {
@@ -464,14 +469,14 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const barStyle: React.CSSProperties = showAbove
     ? {
         position:  'fixed',
-        bottom:    `${window.innerHeight - anchorRect.top + GAP}px`,
+        bottom:    `${stage.height - anchor.top + GAP}px`,
         left:      `${cx}px`,
         transform: 'translateX(-50%)',
         zIndex:    9998,
       }
     : {
         position:  'fixed',
-        top:       `${anchorRect.bottom + GAP}px`,
+        top:       `${anchor.bottom + GAP}px`,
         left:      `${cx}px`,
         transform: 'translateX(-50%)',
         zIndex:    9998,
@@ -539,6 +544,6 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
         </div>
       </div>
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 }

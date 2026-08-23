@@ -4,6 +4,7 @@ import type { UnitToken, TokenBadge } from '../../types';
 import type { SharedBadgePreset, UnitSpecificBadgePreset } from '../../types/presets';
 import { getUnitLabel, PRESET_COLORS } from '../../types/presets';
 import './TokenContextMenu.css';
+import { stageBounds, stagePortalTarget, viewportToStage } from '../../utils/stagePortal';
 
 type SubPanel = 'add' | 'remove' | null;
 
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export function TokenContextMenu({
-  token, x, y,
+  token, x: vx, y: vy,
   sharedBadgePresets, unitBadgePresets,
   onAddBadge, onRemoveBadge, onClose,
 }: Props) {
@@ -47,8 +48,11 @@ export function TokenContextMenu({
   // 화면 경계 보정
   const MENU_W = 240;
   const MENU_H = 400;
-  const safeX = Math.min(x, window.innerWidth  - MENU_W - 8);
-  const safeY = Math.min(y, window.innerHeight - MENU_H - 8);
+  // 클릭 좌표는 뷰포트 px 로 들어온다. 메뉴가 스테이지(배율) 안 포털에
+  // 그려지므로 캔버스 좌표로 바꿔 쓴다. → docs/SCREEN_STAGE_PLAN.md §4.1
+  const { x, y } = viewportToStage(vx, vy);
+  const safeX = Math.min(x, stageBounds().width  - MENU_W - 8);
+  const safeY = Math.min(y, stageBounds().height - MENU_H - 8);
 
   // ── 프리셋 필터링 ──────────────────────────────
   // 공통: targetTypes가 비어있거나 이 토큰의 unitType 포함
@@ -226,6 +230,6 @@ export function TokenContextMenu({
         </>
       )}
     </div>,
-    document.body
+    stagePortalTarget()
   );
 }

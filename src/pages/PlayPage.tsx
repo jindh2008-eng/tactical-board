@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useSettings }        from '../store/settingsStore';
 import { useTraining }        from '../context/TrainingContext';
-import { useUIOverlay }       from '../context/UIOverlayContext';
 import { useNavSlot }         from '../context/NavSlotContext';
-import { DisplayOptionsContext } from '../context/DisplayOptionsContext';
+import { DisplayOptionsContext, type DisplayOptionKey } from '../context/DisplayOptionsContext';
 import { useTokens, TokenProvider } from '../context/TokenContext';
 import { LogProvider, useLog }  from '../context/LogContext';
 import { VictimProvider }     from '../context/VictimContext';
@@ -17,7 +16,7 @@ import { ResourceStatusProvider, useResourceStatus } from '../context/ResourceSt
 import { MedicalPostProvider } from '../context/MedicalPostContext';
 import { FireCommandProvider }     from '../context/FireCommandContext';
 import { ChecklistCommandProvider } from '../context/ChecklistCommandContext';
-import { useUiScale }              from '../hooks/useUiScale';
+import { StageRoot }               from '../components/stage/StageRoot';
 import { FireLineProvider }        from '../context/FireLineContext';
 import { DrawingProvider }         from '../context/DrawingContext';
 import { SprayOverlay }            from '../components/overlay/SprayOverlay';
@@ -38,7 +37,6 @@ import {
   resolveAerialDeployFloor, maxDeployHeight, overHeightMessage,
 } from '../utils/aerialDeploy';
 import { resolveSprayTarget } from '../utils/sprayTarget';
-import { LogDrawer }          from '../components/overlays/LogDrawer';
 import { LogPanel }           from '../components/right/LogPanel';
 import { CommandProcedureTrainingBox } from '../components/right/CommandProcedureTrainingBox';
 import './PlayPage.css';
@@ -392,9 +390,9 @@ function ResourcePanel() {
 // 그 결과 임시의료소 ⇄ 구조활동통계 토글이 상대를 잃어, 통계표만 단독으로 남긴다
 // (통계는 장소가 아니라 표라서 상황판보다 패널에 맞다).
 //
-// 이벤트 로그는 원래 상단 nav 버튼 → LogDrawer(오버레이)로만 볼 수 있었는데,
-// 항상 보이게 좌측 패널 맨 아래 다섯 번째 칸으로 추가했다(2026-08-20).
-// nav 버튼·LogDrawer 는 그대로 둔다 — 좁은 화면에서 패널이 눌려도 로그를 볼 길이 남는다.
+// 이벤트 로그는 원래 상단 nav 버튼 → LogDrawer(오버레이)로만 볼 수 있었다.
+// 항상 보이는 독립 열(LogColumn)이 생기며 그 오버레이 경로는 완전히 대체됐다 —
+// nav 버튼과 LogDrawer 를 제거했다(2026-08-22).
 // ─────────────────────────────────────────────
 
 function OperationPanel() {
@@ -412,6 +410,24 @@ function OperationPanel() {
       <div className="op-panel__section op-panel__section--standby1">
         <BottomStandbyBoxes />
       </div>
+    </div>
+  );
+}
+
+/**
+ * 이벤트 로그 열 — 운영 패널에서 분리한 다섯 번째 칸.
+ *
+ * 가로에서는 운영 패널 **아래**에 붙어 예전과 똑같이 1/5 높이를 차지하고,
+ * 세로에서는 **독립 열**이 되어 세로로 길어진다(로그는 줄 단위라 폭보다
+ * 높이가 이득이다). 배치는 전적으로 .play-layout 의 방향별 규칙이 정한다.
+ *
+ * 겉을 `.op-panel` 로 감싸 둔 이유는 기존 CSS 를 그대로 쓰기 위해서다 —
+ * 화이트보드 통일 규칙과 로그 전용 어두운 테마가 모두
+ * `.op-panel ...` 선택자에 걸려 있다.
+ */
+function LogColumn() {
+  return (
+    <div className="op-panel op-panel--log">
       <div className="op-panel__section op-panel__section--log">
         <LogPanel collapsed={false} onToggle={() => {}} />
       </div>
@@ -422,40 +438,6 @@ function OperationPanel() {
 // ─────────────────────────────────────────────
 // nav 옵션 드롭다운
 // ─────────────────────────────────────────────
-
-type OptionKey = 'waterSupply' | 'spray' | 'controlLine' | 'victims';
-
-interface NavOptionsMenuProps {
-  showWaterSupply: boolean;
-  showSpray:       boolean;
-  showControlLine: boolean;
-  showAllVictims:  boolean;
-  onToggle:        (key: OptionKey) => void;
-}
-
-function NavOptionsMenu({ showWaterSupply, showSpray, showControlLine, showAllVictims, onToggle }: NavOptionsMenuProps) {
-  return (
-    <div className="nav-options">
-      <span className="nav-options__label">표시옵션</span>
-      <label className="nav-options__item">
-        <input type="checkbox" checked={showWaterSupply} onChange={() => onToggle('waterSupply')} />
-        송수·수량
-      </label>
-      <label className="nav-options__item">
-        <input type="checkbox" checked={showSpray} onChange={() => onToggle('spray')} />
-        방수 표시
-      </label>
-      <label className="nav-options__item">
-        <input type="checkbox" checked={showControlLine} onChange={() => onToggle('controlLine')} />
-        통제선
-      </label>
-      <label className="nav-options__item">
-        <input type="checkbox" checked={showAllVictims} onChange={() => onToggle('victims')} />
-        구조대상자
-      </label>
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────
 // PlayPage
@@ -468,19 +450,27 @@ function NavOptionsMenu({ showWaterSupply, showSpray, showControlLine, showAllVi
 export function PlayPage() {
   const { building, timing, dispatchRoster, victimSetup, arrivalMode } = useSettings();
   const { runKey, status, elapsed, loadSettings, start, stop }         = useTraining();
-  const { openOverlay }                                                 = useUIOverlay();
 
   const [showWaterSupply, setShowWaterSupply] = useState(true);
   const [showSpray,       setShowSpray]       = useState(true);
   const [showControlLine, setShowControlLine] = useState(true);
   const [showAllVictims,  setShowAllVictims]  = useState(false);
+  // 그리기 도구모음은 기본 숨김 — 상단 표시옵션에서 켠다
+  const [showDrawingTools, setShowDrawingTools] = useState(false);
 
-  function handleOptionToggle(key: OptionKey) {
+  const handleOptionToggle = useCallback((key: DisplayOptionKey) => {
     if (key === 'waterSupply')      setShowWaterSupply(v => !v);
     else if (key === 'spray')       setShowSpray(v => !v);
     else if (key === 'controlLine') setShowControlLine(v => !v);
     else if (key === 'victims')     setShowAllVictims(v => !v);
-  }
+    else if (key === 'drawing')     setShowDrawingTools(v => !v);
+  }, []);
+
+  const displayOptions = useMemo(
+    () => ({ showWaterSupply, showSpray, showControlLine, showAllVictims, showDrawingTools,
+             toggleOption: handleOptionToggle }),
+    [showWaterSupply, showSpray, showControlLine, showAllVictims, showDrawingTools, handleOptionToggle],
+  );
 
   const elapsedRef = useRef(elapsed);
   useEffect(() => { elapsedRef.current = elapsed; }, [elapsed]);
@@ -497,16 +487,7 @@ export function PlayPage() {
     <div className="play-nav-slot">
       {/* 좌 */}
       <div className="play-nav__left">
-        <button className="nav-btn nav-btn--overlay" onClick={() => openOverlay('log')}>
-          이벤트 로그
-        </button>
-        <NavOptionsMenu
-          showWaterSupply={showWaterSupply}
-          showSpray={showSpray}
-          showControlLine={showControlLine}
-          showAllVictims={showAllVictims}
-          onToggle={handleOptionToggle}
-        />
+        {/* 표시옵션은 C면 좌측 상단(DisplayOptionsBar)으로 옮겼다 */}
         <div className="play-nav__divider" />
       </div>
 
@@ -539,14 +520,10 @@ export function PlayPage() {
 
   const started = status === 'running';
 
-  // 훈련 화면 공통 배율 — 기준 화면(2560×1364) 대비 비율을 --ui-scale 과 루트 글꼴에 반영
-  const playPageRef = useRef<HTMLDivElement>(null);
-  useUiScale(playPageRef);
-
   return (
-    <div className="play-page" ref={playPageRef} onContextMenu={e => e.preventDefault()}>
+    <div className="play-page" onContextMenu={e => e.preventDefault()}>
       <FireLineProvider>
-      <DisplayOptionsContext.Provider value={{ showWaterSupply, showSpray, showControlLine, showAllVictims }}>
+      <DisplayOptionsContext.Provider value={displayOptions}>
       {/* LogProvider는 runKey Provider 중 가장 바깥이다 — 안쪽 어디서든 useLog()를 쓸 수 있게 한다.
           훈련 시작 전에는 undefined를 넘겨 로그가 00:00으로 뭉치지 않게 한다(EVENT_LOG_PLAN E-2). */}
       <LogProvider
@@ -579,9 +556,13 @@ export function PlayPage() {
           <ChecklistCommandProvider>
           <WaterLevelProvider>
           <HydrantStateProvider>
+            <StageRoot>
             <div className="play-layout">
-              {/* ── 좌측 운영 패널 — 임시의료소/구조활동통계 → 출동대현황 → 자원대기소 → 대기1단계 ── */}
+              {/* ── 좌측 운영 패널 — 추가출동대 → 출동대현황 → 자원대기소 → 대기1단계 ── */}
               <OperationPanel />
+
+              {/* ── 이벤트 로그 — 가로: 운영 패널 아래 / 세로: 우측 독립 열 ── */}
+              <LogColumn />
 
               {/* ── 전술상황판 ── */}
               <div className="tactical-board-wrap">
@@ -602,8 +583,7 @@ export function PlayPage() {
                 </div>
               </div>
 
-              {/* ── 오버레이 (Drawer / Modal) ── */}
-                      <LogDrawer />
+              {/* ── 오버레이 (Modal) ── */}
               <AnalysisModal />
               <RescueStatsModal />
 
@@ -629,6 +609,7 @@ export function PlayPage() {
               {/* ── 드래그 진단 패널 (개발 모드 전용) ── */}
               <DragDiagnosticsPanel />
             </div>
+            </StageRoot>
           </HydrantStateProvider>
           </WaterLevelProvider>
           </ChecklistCommandProvider>

@@ -5,6 +5,7 @@ import { useTokens } from '../../context/TokenContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import './HydrantBarMenu.css';
+import { stagePortalTarget, stageBounds, rectToStage } from '../../utils/stagePortal';
 
 // ─────────────────────────────────────────────
 // Props
@@ -43,21 +44,27 @@ export function HydrantBarMenu({ token, anchorRect, onClose }: Props) {
     const menu = menuRef.current;
     if (!menu) return;
 
+    // 메뉴는 이제 스테이지(배율) 안의 포털에 그려진다. 그래서 여기 좌표는 전부
+    // **캔버스 px** 여야 한다 — offsetWidth 가 곧 캔버스 폭이고, 뷰포트에서 온
+    // 앵커는 rectToStage 로, 화면 경계는 stageBounds 로 바꿔 쓴다.
+    // → docs/SCREEN_STAGE_PLAN.md §4.1
     const menuW = menu.offsetWidth;
     const menuH = menu.offsetHeight;
-    const vw    = window.innerWidth;
-    const vh    = window.innerHeight;
+    const { width: vw, height: vh } = stageBounds();
+    // 앵커는 호출부에서 뷰포트 rect 로 넘어온다 → 캔버스 좌표로 바꾼다.
+    const a0 = rectToStage(anchorRect);
+    const anchor = { ...a0, bottom: a0.top + a0.height };
     const GAP   = 6;
 
-    const cx  = anchorRect.left + anchorRect.width / 2;
+    const cx  = anchor.left + anchor.width / 2;
     let left  = Math.round(cx - menuW / 2);
     left      = Math.max(8, Math.min(left, vw - menuW - 8));
 
-    const spaceAbove = anchorRect.top;
-    const spaceBelow = vh - anchorRect.bottom;
+    const spaceAbove = anchor.top;
+    const spaceBelow = vh - anchor.bottom;
     const top = (spaceAbove >= menuH + GAP || spaceAbove >= spaceBelow)
-      ? Math.max(8, anchorRect.top - menuH - GAP)
-      : Math.min(anchorRect.bottom + GAP, vh - menuH - 8);
+      ? Math.max(8, anchor.top - menuH - GAP)
+      : Math.min(anchor.bottom + GAP, vh - menuH - 8);
 
     setStyle({ position: 'fixed', left, top, visibility: 'visible' });
   }, [anchorRect]);
@@ -145,6 +152,6 @@ export function HydrantBarMenu({ token, anchorRect, onClose }: Props) {
         </div>
       </div>
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 }

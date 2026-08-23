@@ -18,6 +18,7 @@ import { AFaceBottomZones } from './AFaceBottomZones';
 import { computeDropCenter } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import './ExteriorZone.css';
+import { DisplayOptionsBar } from './DisplayOptionsBar';
 
 // ─────────────────────────────────────────────
 // 일반 방면 영역 — 드롭 타겟 + 자유 위치 토큰
@@ -109,6 +110,10 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
       onDrop={handleDrop}
     >
       <span className="face-general-zone__label">{zone.face}</span>
+
+      {/* 표시옵션 — C면 좌측 상단. 이 자리 드롭을 포기하는 대신
+          제어 대상(보드) 바로 옆에 둔다 */}
+      {face === 'C' && <DisplayOptionsBar />}
 
       {/* 출동대 토큰 */}
       {zoneTokens.map(token => (

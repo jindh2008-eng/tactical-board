@@ -1,0 +1,59 @@
+/* ─────────────────────────────────────────────
+   StageRoot — 고정 캔버스 + contain 배율
+   → docs/SCREEN_STAGE_PLAN.md §3.3
+   ─────────────────────────────────────────────*/
+
+/*
+ * 레터박스 바탕. 캔버스 종횡비와 뷰포트 종횡비가 다를 때 남는 띠가
+ * "검은 여백"이 아니라 상황판 바탕의 연장으로 보이도록 같은 색을 쓴다.
+ * → 계획서 §3.9
+ */
+.stage-host {
+  position:   relative;
+  width:      100%;
+  height:     100%;
+  overflow:   hidden;
+  background: var(--color-bg);
+}
+
+/*
+ * 캔버스. width/height/transform 은 StageRoot 가 인라인으로 넣는다.
+ *
+ * transform-origin 을 center 로 두고 translate(-50%,-50%) 로 중앙에 건다.
+ * scale() 을 쓰는 이유 — zoom 은 레이아웃을 다시 계산해서 서브픽셀 반올림이
+ * 층마다 누적되고 브라우저 편차가 있다. transform 은 합성 단계에서 처리돼
+ * 구성이 어긋나지 않는다.
+ */
+.stage {
+  position:         absolute;
+  top:              50%;
+  left:             50%;
+  transform-origin: center center;
+  will-change:      transform;
+  overflow:         hidden;
+  background-color: var(--color-bg);
+}
+
+/*
+ * 포털 루트 — 컨텍스트 메뉴·모달·오버레이가 여기로 들어온다.
+ *
+ * document.body 에 뷰포트 전면으로 깔린다(스테이지 밖). 이유는
+ * utils/stagePortal.ts 의 attachStagePortalRoot 주석 참고 — 요약하면
+ * 오버레이 SVG 들이 뷰포트 좌표계를 전제로 설계돼 있고, 뷰포트에 두면
+ * 배율이 얼마든 변환 후 rect 를 재게 되어 판 위에 정확히 얹히기 때문이다.
+ *
+ * inset: 0 을 유지하는 이유가 하나 더 있다. stagePortal.ts 의 좌표 변환
+ * 함수들이 이 엘리먼트의 rect 와 offsetWidth 로 배율을 역산하는데,
+ * 뷰포트 전면일 때 그 값이 정확히 1(항등)이 된다.
+ */
+.app-portal-root {
+  position: fixed;
+  inset:    0;
+  /* 컨테이너 자체는 클릭을 가로채지 않는다. 실제 메뉴만 되살린다. */
+  pointer-events: none;
+  z-index:  1000;
+}
+
+.app-portal-root > * {
+  pointer-events: auto;
+}

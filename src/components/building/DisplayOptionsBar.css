@@ -1,0 +1,66 @@
+/* ─────────────────────────────────────────────
+   표시옵션 바 — C면 좌측 상단
+
+   치수는 전부 **캔버스 px**다(스테이지 배율을 따른다).
+   훈련장 PC 배율 0.975 에서 nav 시절과 같은 크기로 보이도록,
+   기존 값(글꼴 12px · 체크박스 14px)을 그대로 쓰되 클릭 타깃만 키웠다.
+   ─────────────────────────────────────────────*/
+
+.display-options-bar {
+  position: absolute;
+  top:  6px;
+  left: 8px;
+  z-index: 40;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 5px 12px;
+  border: 1px solid var(--ctr-border-soft);
+  border-radius: 5px;
+  /* C면 바탕이 비쳐 글자가 묻히지 않도록 한 단계 밝은 면을 깐다 */
+  background-color: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.10);
+  backdrop-filter: blur(2px);
+
+  user-select: none;
+  white-space: nowrap;
+}
+
+.display-options-bar__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ctr-text-dim);
+  padding-right: 10px;
+  border-right: 1px solid var(--ctr-border-soft);
+}
+
+.display-options-bar__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* 클릭 타깃 확보 — nav 시절 15px 이던 것을 24px 로 키웠다.
+     세로 패딩으로 늘려 줄 높이는 유지한다. */
+  min-height: 24px;
+  font-size: 12px;
+  color: var(--ctr-label-bg);
+  cursor: pointer;
+}
+
+.display-options-bar__item:hover {
+  color: #000;
+}
+
+.display-options-bar__item input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--color-accent, #4488cc);
+}
+
+.display-options-bar__item input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--color-accent, #4488cc);
+  outline-offset: 2px;
+}

@@ -5,6 +5,7 @@ import { VICTIM_CONDITIONS } from '../../types/victim';
 import type { UnitToken } from '../../types';
 import type { VictimUpdate } from '../../context/VictimContext';
 import './VictimContextMenu.css';
+import { stageBounds, stagePortalTarget, viewportToStage } from '../../utils/stagePortal';
 
 interface Props {
   victim:   VictimToken;
@@ -16,7 +17,7 @@ interface Props {
   onClose:  () => void;
 }
 
-export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, onClose }: Props) {
+export function VictimContextMenu({ victim, x: vx, y: vy, tokens, onUpdate, onRescue, onClose }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [subDraft,    setSubDraft]    = useState(victim.subLocation);
@@ -40,8 +41,11 @@ export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, on
   }, [onClose]);
 
   // 화면 경계 보정
-  const safeX = Math.min(x, window.innerWidth  - 230 - 8);
-  const safeY = Math.min(y, window.innerHeight - 380 - 8);
+  // 클릭 좌표는 뷰포트 px 로 들어온다. 메뉴가 스테이지(배율) 안 포털에
+  // 그려지므로 캔버스 좌표로 바꿔 쓴다. → docs/SCREEN_STAGE_PLAN.md §4.1
+  const { x, y } = viewportToStage(vx, vy);
+  const safeX = Math.min(x, stageBounds().width  - 230 - 8);
+  const safeY = Math.min(y, stageBounds().height - 380 - 8);
 
   function applySubLocation() {
     onUpdate({ subLocation: subDraft.trim() });
@@ -250,7 +254,7 @@ export function VictimContextMenu({ victim, x, y, tokens, onUpdate, onRescue, on
         </div>
       </div>
     </div>,
-    document.body,
+    stagePortalTarget(),
   );
 }
 

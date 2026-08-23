@@ -93,6 +93,8 @@ export function SettingsPage() {
     updateExtraFireFloors,
     updateSiamesePipe,
     updateIndoorHydrant,
+    boardColumnRatio,
+    updateBoardColumnRatio,
   } = useSettings();
 
   return (
@@ -159,6 +161,8 @@ export function SettingsPage() {
                 onSiamesePipeChange={updateSiamesePipe}
                 hasIndoorHydrant={building.hasIndoorHydrant ?? false}
                 onIndoorHydrantChange={updateIndoorHydrant}
+                boardColumnRatio={boardColumnRatio}
+                onBoardColumnRatioChange={updateBoardColumnRatio}
               />
 
               {/* 옥외소화전 — 예전 "소화전 설정" 화면이 여기로 들어왔다 */}

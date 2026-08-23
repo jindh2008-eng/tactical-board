@@ -7,6 +7,7 @@ import { PoolTokenGrid } from '../shared/PoolTokenGrid';
 import { UNIT_ADD_ZONE } from '../../utils/unitAddZone';
 import { summarizeUnits, summaryText, toUnitRefs } from '../../utils/dispatchSummary';
 import './UnitAddPanel.css';
+import { rectToStage, stageBounds, stagePortalTarget } from '../../utils/stagePortal';
 
 /**
  * UnitAddPanel — 좌측 최상단 `추가출동대` 박스 + 아래로 펼쳐지는 생성 메뉴.
@@ -80,11 +81,13 @@ export function UnitAddPanel() {
   const measure = useCallback(() => {
     const el = boxRef.current;
     if (!el) return;
-    const r = el.getBoundingClientRect();
+    // 패널이 스테이지 안 포털이라 캔버스 좌표로 잡는다.
+    const c = rectToStage(el.getBoundingClientRect());
+    const bottom = c.top + c.height;
     // 높이는 내용에 맞추고 화면을 넘길 때만 스크롤한다 (아래 빈 공간 없이)
     setRect({
-      left: r.left, top: r.bottom, width: r.width,
-      maxHeight: Math.max(160, window.innerHeight - r.bottom - 10),
+      left: c.left, top: bottom, width: c.width,
+      maxHeight: Math.max(160, stageBounds().height - bottom - 10),
     });
   }, []);
 
@@ -199,7 +202,7 @@ export function UnitAddPanel() {
           </div>
         </div>
         </>,
-        document.body,
+        stagePortalTarget(),
       )}
     </div>
   );

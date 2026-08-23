@@ -10,6 +10,7 @@ import { useChecklistCommand }  from '../../context/ChecklistCommandContext';
 import { ChecklistView }     from './ChecklistView';
 import type { ChecklistItem } from '../../types/settings';
 import './ChecklistPanel.css';
+import { stagePortalTarget } from '../../utils/stagePortal';
 
 /**
  * ChecklistPanel — 진행상황 관리 (무플 화면용, 부수효과 담당)
@@ -334,7 +335,7 @@ export function ChecklistPanel() {
             ))}
           </div>
         </div>,
-        document.body
+        stagePortalTarget()
       )}
     </>
   );

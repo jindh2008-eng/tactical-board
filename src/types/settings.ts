@@ -23,7 +23,20 @@ export interface BuildingSettings {
   /** @deprecated 구버전 호환용. 읽기만 하고 새로 쓰지 않는다. */
   siamesePipeFaces?:   Face[];
   hasIndoorHydrant?:   boolean;           // 옥내소화전 표시 여부
+  /**
+   * 상황판 B면 : 건물 : D면 열 비율의 가운데 값 (`1 : N : 1`).
+   * 보드가 정사각으로 고정되면서 이 값이 화면 크기와 무관한 순수
+   * 시나리오 변수가 되어 설정으로 뺐다. 없으면 1.744(기존 상수).
+   * → docs/SCREEN_STAGE_PLAN.md §3.7
+   */
+  boardColumnRatio?:   number;
 }
+
+/** B:건물:D 비율의 허용 범위 — 하한은 B/D면이 건물보다 넓어지지 않게,
+ *  상한은 B/D면에 출동대 토큰 1열이 들어가는 폭으로 정했다. */
+export const BOARD_COL_RATIO_MIN     = 1.0;
+export const BOARD_COL_RATIO_MAX     = 3.0;
+export const BOARD_COL_RATIO_DEFAULT = 1.744;
 
 /** 출동대 행동 타이밍 설정 */
 export interface TimingSettings {

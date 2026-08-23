@@ -10,6 +10,7 @@ import { useDisplayOptions } from '../../context/DisplayOptionsContext';
 import { canStartSpray } from '../../utils/waterSupply';
 import { useWaterLevel } from '../../context/WaterLevelContext';
 import './AerialOverlay.css';
+import { stageBounds, stagePortalTarget } from '../../utils/stagePortal';
 
 // ─────────────────────────────────────────────
 // 상수
@@ -250,8 +251,7 @@ function TipPopup({ tokenId, x, y, hasWater, isSpray, onClose }: TipPopupProps) 
   // 팝업이 화면 밖으로 나가지 않도록 조정
   const popupW = 120;
   const popupH = isSpray ? 44 : 44;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const { width: vw, height: vh } = stageBounds();
   const left = Math.max(8, Math.min(x - popupW / 2, vw - popupW - 8));
   const top  = Math.max(8, Math.min(y - popupH - 8, vh - popupH - 8));
 
@@ -285,7 +285,7 @@ function TipPopup({ tokenId, x, y, hasWater, isSpray, onClose }: TipPopupProps) 
         </button>
       )}
     </div>,
-    document.body,
+    stagePortalTarget(),
   );
 }
 
@@ -638,7 +638,7 @@ export function AerialOverlay() {
             </g>
           ))}
         </svg>,
-        document.body,
+        stagePortalTarget(),
       )}
 
       {popup && (

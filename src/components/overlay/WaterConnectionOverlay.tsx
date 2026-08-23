@@ -6,6 +6,7 @@ import { useTokens }           from '../../context/TokenContext';
 import { useWaterLevel }       from '../../context/WaterLevelContext';
 import { useDisplayOptions }   from '../../context/DisplayOptionsContext';
 import './WaterConnectionOverlay.css';
+import { rectToStage, stageBounds, stagePortalTarget } from '../../utils/stagePortal';
 
 // ─────────────────────────────────────────────
 // 좌표 계산
@@ -60,11 +61,11 @@ function computePathD(fromId: string, toId: string): string | null {
 // clipPath d 생성: 뷰포트 전체에서 토큰 영역을 evenodd로 제거
 const TOKEN_CLIP_PAD = 6;
 function buildTokenClipD(): string {
-  const W = window.innerWidth;
-  const H = window.innerHeight;
+  // SVG 가 스테이지 안 포털이라 클립 경로도 캔버스 좌표계여야 한다.
+  const { width: W, height: H } = stageBounds();
   let d = `M 0 0 L ${W} 0 L ${W} ${H} L 0 ${H} Z`;
   document.querySelectorAll('.token-card-wrapper').forEach(el => {
-    const r = el.getBoundingClientRect();
+    const r = rectToStage(el.getBoundingClientRect());
     if (!r.width || !r.height) return;
     const x = r.left - TOKEN_CLIP_PAD;
     const y = r.top  - TOKEN_CLIP_PAD;
@@ -209,6 +210,6 @@ export function WaterConnectionOverlay() {
         </>
       )}
     </>,
-    document.body,
+    stagePortalTarget(),
   );
 }

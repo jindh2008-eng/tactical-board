@@ -44,9 +44,10 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
-/* 기준 글꼴은 html 에만 둔다. 훈련 화면에서 useUiScale 이 이 값을 배율에 맞춰
-   조정하며, body/#root 가 15px 를 다시 박으면 상속이 끊겨 일부 글자만
-   안 줄어든다 → 1rem 으로 html 을 따라가게 한다. */
+/* 기준 글꼴은 html 에만 둔다. 예전에는 useUiScale 이 화면 배율에 맞춰 이 값을
+   직접 흔들었지만, 지금은 배율을 StageRoot 의 transform 이 전담하므로 고정이다.
+   body/#root 가 15px 를 다시 박으면 상속이 끊기므로 1rem 으로 html 을 따라가게 한다.
+   → docs/SCREEN_STAGE_PLAN.md §3.3 */
 html {
   font-size: 15px;
 }
@@ -104,6 +105,8 @@ body, #root {
 .app-shell {
   display: flex;
   flex-direction: column;
+  /* 100% 로 바꿨다가 iPad 에서 세로 전환이 아예 안 되는 회귀가 나서 되돌렸다
+     (2026-08-22). vw/vh 가 회전에 더 확실히 반응한다. */
   width: 100vw;
   height: 100vh;
 }

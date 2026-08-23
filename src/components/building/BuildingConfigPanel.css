@@ -340,3 +340,109 @@
   color: #5a5650;
 }
 
+
+/* ─────────────────────────────────────────────
+   상황판 구역 비율 (B면 : 건물 : D면)
+   → docs/SCREEN_STAGE_PLAN.md §3.7
+   ─────────────────────────────────────────────*/
+.bcf__ratio-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.bcf__ratio-hint {
+  font-size: 0.87rem;
+  line-height: 1.6;
+  color: var(--set-text-dim, #8aa8c4);
+  max-width: 620px;
+}
+
+.bcf__ratio-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bcf__ratio-slider {
+  flex: 0 1 320px;
+  height: 32px;          /* 클릭 영역 확보 */
+  accent-color: var(--color-accent, #4488cc);
+  cursor: pointer;
+}
+
+.bcf__ratio-slider:focus-visible {
+  outline: 2px solid var(--color-accent, #4488cc);
+  outline-offset: 3px;
+}
+
+/* 값이 바뀔 때 폭이 흔들리지 않도록 고정폭 숫자를 쓴다 */
+.bcf__ratio-value {
+  font-size: 0.93rem;
+  font-weight: 600;
+  color: #e2ecf6;
+  font-variant-numeric: tabular-nums;
+  min-width: 108px;
+}
+
+.bcf__ratio-reset {
+  height: 26px;
+  padding: 0 12px;
+  font-size: 0.83rem;
+  font-family: inherit;
+  color: var(--set-text-dim, #8aa8c4);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s;
+}
+
+.bcf__ratio-reset:hover:not(:disabled) {
+  color: #e2ecf6;
+  border-color: var(--color-accent, #4488cc);
+}
+
+.bcf__ratio-reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 미리보기 막대 — 실제 열 폭과 같은 flex 비율로 그린다 */
+.bcf__ratio-preview {
+  display: flex;
+  gap: 2px;
+  height: 40px;
+  max-width: 620px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bcf__ratio-bar {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  font-size: 0.83rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: flex-grow 0.18s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.bcf__ratio-bar--side {
+  background: rgba(68, 136, 204, 0.16);
+  color: #b9d4ee;
+}
+
+.bcf__ratio-bar--center {
+  background: rgba(68, 136, 204, 0.38);
+  color: #eaf3fb;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bcf__ratio-bar { transition: none; }
+}

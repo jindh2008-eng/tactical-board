@@ -39,7 +39,7 @@
    화재 구역 — 88px 고정
    ─────────────────────────────────────────────*/
 .zone-cell--right {
-  flex: 0 0 88px;
+  flex: 0 0 74px;   /* 88px → 보드 축소분 환산 (×0.8456) */
   background-color: var(--ctr-surface);
 }
 
@@ -70,7 +70,7 @@
    border-right 없음 — 오른쪽 벽선은 StairDiagram SVG 내부에서 렌더링.
    open 상태: 문 구간 벽선 없음 / closed 상태: 두꺼운 bar */
 .zone-cell--stair {
-  flex: 0 0 110px;
+  flex: 0 0 93px;   /* 110px → 보드 축소분 환산 (×0.8456) */
   border-left:  none;
   cursor: default;
   background-color: transparent;
