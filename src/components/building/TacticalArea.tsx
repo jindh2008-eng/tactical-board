@@ -5,6 +5,7 @@ import { BuildingBoard } from './BuildingBoard';
 import { ExteriorZone } from './ExteriorZone';
 import { BFaceWithStandby } from './BFaceWithStandby';
 import { EventLayer } from '../events/EventLayer';
+import { computeEventTokenSize, EVENT_TOKEN_SIZE_VAR } from '../../utils/eventLocation';
 import { useActionMode } from '../../context/ActionModeContext';
 import { DrawingBoard } from '../drawing/DrawingBoard';
 import './TacticalArea.css';
@@ -100,6 +101,14 @@ export function TacticalArea({
   );
   const gridTemplateRows =
     `${C_FACE_HEIGHT}px ${midRowParts.join(' ')} minmax(${A_FACE_MIN_HEIGHT}px, 1fr)`;
+
+  // ── 이벤트 토큰 크기 ──
+  // 층 행은 전부 같은 높이다. midRowParts 가 블록(옥상 / 지상나머지 / 지하)별
+  // 높이이고 각 블록 안에서 행이 균등 분할되므로, 행 하나의 높이는 언제나
+  // `건물높이 / 총가중치` 다. 이 값 하나로 토큰 크기가 정해진다.
+  // → docs/SCREEN_STAGE_PLAN.md §6.6
+  const floorRowH      = totalWeight > 0 ? buildingHeight / totalWeight : 0;
+  const eventTokenSize = computeEventTokenSize(floorRowH);
   // B : 건물 : D — 설정값을 fr 비율로 직접 만든다(§3.7). CSS 변수로는 안 된다.
   const gridTemplateColumns = `1fr ${boardColumnRatio}fr 1fr`;
 
@@ -148,7 +157,12 @@ export function TacticalArea({
       id="tactical-area"
       ref={areaRef}
       className="tactical-area"
-      style={{ '--above-pct': abovePct, gridTemplateColumns, gridTemplateRows } as React.CSSProperties}
+      style={{
+        '--above-pct': abovePct,
+        [EVENT_TOKEN_SIZE_VAR]: `${eventTokenSize.toFixed(1)}px`,
+        gridTemplateColumns,
+        gridTemplateRows,
+      } as React.CSSProperties}
     >
       {/* row 1, 전체 폭 — C면 (후면) */}
       <ExteriorZone face="C" />

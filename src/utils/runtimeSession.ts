@@ -41,7 +41,7 @@ function isPlainRecord(v: unknown): v is Record<string, unknown> {
  * 'norm' = 구역 대비 0~1 정규화 (현재). 값이 없으면 구버전 px 저장분이다.
  * → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md Phase 4
  */
-export type PosFormat = 'norm';
+export type PosFormat = 'norm' | 'norm-center';
 
 export interface TokenSessionState {
   tokens:     UnitToken[];
@@ -203,7 +203,13 @@ export function loadTrainingSession(): TrainingSessionState | null {
 const KEY_EVENTS = 'tactical-board.runtime.events';
 
 export interface EventSessionState {
-  /** 보드(.tactical-area) 대비 0~1 정규화된 토큰 좌상단 */
+  /**
+   * 보드(.tactical-area) 대비 0~1 정규화된 토큰 **중심**.
+   *
+   * 예전에는 좌상단이었다. 토큰 크기가 층 행 높이에 따라 변하게 되면서
+   * 좌상단 기준으로는 같은 저장값이 크기마다 다른 중심을 가리켜 토큰이
+   * 저절로 움직인다 — 중심으로 바꿨다(`posFormat: 'norm-center'`).
+   */
   positions:        Record<string, { x: number; y: number }>;
   statuses:         Record<string, EventStatus>;
   /**
@@ -221,7 +227,7 @@ export interface EventSessionState {
 
 export function saveEventSession(state: EventSessionState): void {
   try {
-    sessionStorage.setItem(KEY_EVENTS, JSON.stringify({ ...state, posFormat: 'norm' }));
+    sessionStorage.setItem(KEY_EVENTS, JSON.stringify({ ...state, posFormat: 'norm-center' }));
   } catch { /* ignore */ }
 }
 
@@ -231,9 +237,11 @@ export function loadEventSession(): EventSessionState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as EventSessionState;
 
-    // 좌표 형식 마이그레이션 — 구버전 px 값 폐기.
-    // 위치가 비면 EventLayer 가 A면 상단에 자동 재배치하므로 이벤트 자체는 남는다.
-    if (parsed.posFormat !== 'norm') {
+    // 좌표 형식 마이그레이션 — 구버전 값 폐기.
+    // 'norm'(좌상단 기준)과 그 이전 px 값이 모두 여기서 걸린다. 환산하지 않고
+    // 버리는 것은 이 코드베이스의 기존 방식이다 — 위치가 비면 EventLayer 가
+    // A면 상단에 자동 재배치하므로 이벤트 자체는 남는다.
+    if (parsed.posFormat !== 'norm-center') {
       parsed.positions = {};
     }
 

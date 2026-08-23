@@ -4,7 +4,7 @@ import type { EventType, EventStatus } from '../../types/events';
 import { EVENT_TYPE_STATUSES } from '../../types/events';
 import type { FireStatus } from '../../types';
 import { FireEventIcon, FlameIcon, EVENT_STATUS_TO_FIRE, gasElectricFireStage } from '../shared/FlameIcon';
-import { readEventLocationAtPoint } from '../../utils/eventLocation';
+import { readEventLocationAtPoint, EVENT_TOKEN_SIZE_VAR, EVENT_TOKEN_FALLBACK } from '../../utils/eventLocation';
 import { zoneLabel } from '../../utils/logLabels';
 import './EventTokenCard.css';
 import { stagePortalTarget } from '../../utils/stagePortal';
@@ -79,8 +79,10 @@ function getStatusItem(eventType: EventType, value: EventStatus) {
 // EventTokenCard — 카드형 UI (아이콘 중심)
 // ─────────────────────────────────────────────
 
-const TOKEN_W = 100;
-const TOKEN_H = 100;
+// 실측(getBoundingClientRect)이 0 으로 나오는 순간에만 쓰는 폴백이다.
+// 진짜 크기는 --event-token-size 가 정한다 → utils/eventLocation.ts
+const TOKEN_W = EVENT_TOKEN_FALLBACK;
+const TOKEN_H = EVENT_TOKEN_FALLBACK;
 
 interface Props {
   id:              string;
@@ -120,7 +122,7 @@ export function EventTokenCard({
     if (!container) return;
     const rect = container.getBoundingClientRect();
 
-    // 카드가 --ui-scale 로 줄어들 수 있으므로 클램프 경계는 실측값을 쓴다
+    // 클램프 경계는 실측값을 쓴다 — 토큰 크기가 층 행 높이에 따라 변하기 때문이다
     const cardRect = e.currentTarget.getBoundingClientRect();
     const tw = cardRect.width  || TOKEN_W;
     const th = cardRect.height || TOKEN_H;
@@ -137,8 +139,9 @@ export function EventTokenCard({
     function onPointerMove(ev: PointerEvent) {
       if (ev.pointerId !== pointerId) return;
       const r = container!.getBoundingClientRect();
-      const newX = Math.max(0, Math.min(r.width  - tw, ev.clientX - r.left - dragOffsetRef.current.x));
-      const newY = Math.max(0, Math.min(r.height - th, ev.clientY - r.top  - dragOffsetRef.current.y));
+      // x, y 는 토큰 **중심**이므로 경계도 절반만큼 안쪽이다
+      const newX = Math.max(tw / 2, Math.min(r.width  - tw / 2, ev.clientX - r.left - dragOffsetRef.current.x));
+      const newY = Math.max(th / 2, Math.min(r.height - th / 2, ev.clientY - r.top  - dragOffsetRef.current.y));
       onMove(id, r.width > 0 ? newX / r.width : 0, r.height > 0 ? newY / r.height : 0);
     }
     function onPointerUp(ev: PointerEvent) {
@@ -181,11 +184,12 @@ export function EventTokenCard({
   })();
 
   // 상태 텍스트를 항상 1줄로 꽉 채우기 위해 글자 수 기반 font-size 계산.
-  // 기준 화면 크기로 계산한 뒤 --ui-scale 을 곱해 카드와 같은 비율로 줄인다.
-  const statusFontBase = statusLabel
-    ? Math.min(24, Math.floor((TOKEN_W - 4) / statusLabel.length))
-    : 24;
-  const statusFontSize = `calc(${statusFontBase}px * var(--ui-scale, 1))`;
+  // 카드 크기가 층 행 높이를 따라 변하므로 글자도 같은 비율로 따라가야 한다 —
+  // 카드 폭 대비 비율로 내고 CSS 변수에 곱한다.
+  const statusRatio = statusLabel
+    ? Math.min(0.24, (1 - 4 / EVENT_TOKEN_FALLBACK) / statusLabel.length)
+    : 0.24;
+  const statusFontSize = `calc(var(${EVENT_TOKEN_SIZE_VAR}, ${EVENT_TOKEN_FALLBACK}px) * ${statusRatio.toFixed(4)})`;
 
   // 화염 오버레이 — 아이콘 위에 반투명 화염 이미지를 겹쳐 "불타는" 느낌 표현
   // (fire 타입 + 커스텀 아이콘 없음인 경우는 화염 자체가 이미 베이스 아이콘이므로 중복 생략)

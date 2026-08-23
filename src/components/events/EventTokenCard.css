@@ -8,8 +8,11 @@
   display:        flex;
   flex-direction: column;
   align-items:    center;
-  /* 기준 화면에서 100px. 보드가 줄면 함께 줄어든다 (계획서 Phase 3) */
-  width:          calc(100px * var(--ui-scale, 1));
+  /* 층 행 높이에 비례한다 — TacticalArea 가 --event-token-size 를 심는다.
+     left/top 은 토큰의 **중심**이므로 절반만큼 되돌린다. 크기가 변해도
+     중심이 고정이라 토큰이 제자리에 머문다. → utils/eventLocation.ts */
+  width:          var(--event-token-size, 100px);
+  transform:      translate(-50%, -50%);
   cursor:         grab;
   user-select:    none;
   z-index:        20;
@@ -35,9 +38,9 @@
 
 .event-token__card {
   position:      relative;
-  width:         calc(100px * var(--ui-scale, 1));
-  height:        calc(100px * var(--ui-scale, 1));
-  border-radius: calc(7px * var(--ui-scale, 1));
+  width:         var(--event-token-size, 100px);
+  height:        var(--event-token-size, 100px);
+  border-radius: calc(var(--event-token-size, 100px) * 0.07);
   overflow:      hidden;
   flex-shrink:   0;
   box-sizing:    border-box;
@@ -61,8 +64,8 @@
 .event-token__icon--emoji {
   width:       auto;
   height:      auto;
-  font-size:   calc(52px * var(--ui-scale, 1));
-  line-height: calc(100px * var(--ui-scale, 1));
+  font-size:   calc(var(--event-token-size, 100px) * 0.52);
+  line-height: var(--event-token-size, 100px);
   text-align:  center;
 }
 
@@ -92,14 +95,14 @@
   position:       absolute;
   left:           50%;
   transform:      translateX(-50%);
-  bottom:         calc(104px * var(--ui-scale, 1)); /* 카드 100px + 여백 4px */
+  bottom:         calc(var(--event-token-size, 100px) + 4px); /* 카드 + 여백 4px */
 
   /* 가독성 하한 9px — 이 밑으로는 비율보다 읽히는 쪽을 우선한다 (계획서 §3.2) */
-  font-size:      max(9px, calc(11px * var(--ui-scale, 1)));
+  font-size:      max(9px, calc(var(--event-token-size, 100px) * 0.11));
   font-weight:    700;
   text-align:     center;
   line-height:    1.3;
-  max-width:      calc(100px * var(--ui-scale, 1));
+  max-width:      var(--event-token-size, 100px);
   word-break:     keep-all;
   overflow-wrap:  break-word;
   white-space:    normal;
