@@ -38,6 +38,13 @@
   display:        flex;
   flex-direction: column;
   min-width:      0;
+  /* ⚠ min-height: 0 이 없으면 명칭 띠가 밴드 밖으로 밀려 잘린다.
+     그리드 아이템의 기본 min-height 는 auto 라 "콘텐츠보다 작아지지 않는다".
+     구조대상자·출동대가 쌓이면 칸이 밴드 높이(--a-face-band-h)를 넘어 늘어나고,
+     밴드의 overflow:hidden 이 아래를 잘라내는데 그 자리가 바로 명칭 띠다.
+     실측: 구조대상자 40명에서 칸 237px vs 밴드 184px → 명칭이 54px 밖으로 밀림.
+     본문의 overflow-y:auto 도 무력화된다 — 부모가 늘어나면 넘칠 일이 없어서다. */
+  min-height:     0;
   background:     var(--zone-tint);
   border-right:   1px solid var(--ctr-border-soft);
 }

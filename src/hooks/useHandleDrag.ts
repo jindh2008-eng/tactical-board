@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type {
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
@@ -112,14 +112,91 @@ export function useHandleDrag({
   enabled, lineColor = '#66ccff', originRef, onDrop, onTap, onDragStart, onDragEnd,
 }: Options) {
   const stateRef = useRef<DragState | null>(null);
+  // 콜백은 ref 로 들고 있는다. 아래 window 리스너·언마운트 정리가 최신 콜백을
+  // 봐야 하는데, 매번 리스너를 다시 붙이면 드래그 중에 끊긴다.
+  const cbRef = useRef({ onDrop, onDragEnd });
+  cbRef.current = { onDrop, onDragEnd };
 
   function cleanup() {
     const s = stateRef.current;
     if (!s) return;
     s.svg?.remove();
+    detachWindowListeners();
     try { s.handle.releasePointerCapture(s.pointerId); } catch { /* 이미 해제됨 */ }
     stateRef.current = null;
   }
+
+  /* ─────────────────────────────────────────────
+     고무줄 선이 화면에 남는 문제(잔상)
+
+     선은 `document.body` 에 직접 붙인 <svg> 이고, 지우는 곳은 cleanup() 뿐이다.
+     그런데 cleanup 을 부르는 onPointerUp/onPointerCancel 은 **핸들 엘리먼트의
+     React 핸들러**라, 그 이벤트가 핸들에 도달하지 못하면 영영 안 지워진다.
+
+     도달하지 못하는 경로가 실제로 있다.
+
+     1. `setPointerCapture` 가 실패하면(try/catch 로 삼키고 진행한다) 포인터가
+        핸들을 벗어나는 순간 up 이 **다른 엘리먼트**에서 발생한다.
+     2. 캡처가 도중에 해제되면(`lostpointercapture`) 같은 일이 벌어진다.
+     3. 드래그 중 핸들이 언마운트되면(토큰이 구역을 옮겨 리렌더되는 등)
+        React 핸들러 자체가 사라진다.
+
+     세 경우 모두 <svg> 가 body 에 남아 새로고침 전까지 지워지지 않는다.
+     그래서 **window 레벨 백스톱**과 **언마운트 정리**를 둔다.
+     ───────────────────────────────────────────── */
+  const winRef = useRef<(() => void) | null>(null);
+
+  function detachWindowListeners() {
+    winRef.current?.();
+    winRef.current = null;
+  }
+
+  function attachWindowListeners() {
+    detachWindowListeners();
+    const onUp     = (ev: PointerEvent) => endDrag(ev.clientX, ev.clientY, false, ev.pointerId);
+    const onCancel = (ev: PointerEvent) => endDrag(ev.clientX, ev.clientY, true,  ev.pointerId);
+    // lostpointercapture 는 따로 듣지 않는다 — 캡처를 잃어도 포인터는 살아 있고,
+    // 실제 종료는 위 두 리스너가 window 에서 받는다.
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+    winRef.current = () => {
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+    };
+  }
+
+  /**
+   * 드래그 종료의 **단일 진입점**. 어느 경로로 들어와도 한 번만 처리된다 —
+   * cleanup() 이 stateRef 를 비우므로 뒤이어 도착한 호출은 조용히 반환한다.
+   */
+  function endDrag(clientX: number, clientY: number, canceled: boolean, pointerId?: number) {
+    const s = stateRef.current;
+    if (!s) return;
+    if (pointerId !== undefined && pointerId !== s.pointerId) return;
+    const wasActive = s.active;
+    const selfId = s.handle.closest<HTMLElement>('[data-token-id]')?.getAttribute('data-token-id') ?? null;
+    cleanup();
+
+    if (!wasActive) {
+      if (!canceled) onTap?.();
+      return;
+    }
+    cbRef.current.onDragEnd?.();
+    if (canceled) return;
+
+    const targetEl = findTarget(clientX, clientY, selfId);
+    cbRef.current.onDrop({
+      clientX, clientY,
+      targetId: targetEl?.getAttribute('data-token-id') ?? null,
+      targetEl,
+    });
+  }
+
+  // 언마운트 백스톱 — 드래그 중 핸들이 사라져도 선을 반드시 지운다.
+  // cleanup 을 의존성에 넣으면 매 렌더마다 효과가 다시 돌아 **진행 중인 드래그를
+  // 취소한다.** 마운트/언마운트에 한 번씩만 돌아야 하므로 빈 배열이 맞다.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => cleanup, []);
 
   function handlePointerDown(e: ReactPointerEvent<HTMLElement>) {
     if (!enabled || e.button !== 0) return;
@@ -149,37 +226,18 @@ export function useHandleDrag({
       if (dist < DRAG_START_DISTANCE) return;
       const { svg, line } = createLine(lineColor);
       s.svg = svg; s.line = line; s.active = true;
+      attachWindowListeners();   // 핸들이 up 을 못 받아도 선이 남지 않게
       onDragStart?.();
     }
     updateLine(s, e.clientX, e.clientY);
   }
 
   function handlePointerUp(e: ReactPointerEvent<HTMLElement>) {
-    const s = stateRef.current;
-    if (!s || e.pointerId !== s.pointerId) return;
-    const wasActive = s.active;
-    const selfId    = s.handle.closest<HTMLElement>('[data-token-id]')?.getAttribute('data-token-id') ?? null;
-    cleanup();
-
-    if (wasActive) {
-      onDragEnd?.();
-      const targetEl = findTarget(e.clientX, e.clientY, selfId);
-      onDrop({
-        clientX: e.clientX, clientY: e.clientY,
-        targetId: targetEl?.getAttribute('data-token-id') ?? null,
-        targetEl,
-      });
-    } else {
-      onTap?.();
-    }
+    endDrag(e.clientX, e.clientY, false, e.pointerId);
   }
 
   function handlePointerCancel(e: ReactPointerEvent<HTMLElement>) {
-    const s = stateRef.current;
-    if (!s || e.pointerId !== s.pointerId) return;
-    const wasActive = s.active;
-    cleanup();
-    if (wasActive) onDragEnd?.();
+    endDrag(e.clientX, e.clientY, true, e.pointerId);
   }
 
   return {

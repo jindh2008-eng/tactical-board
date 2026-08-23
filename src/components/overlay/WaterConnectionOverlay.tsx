@@ -115,12 +115,18 @@ export function WaterConnectionOverlay() {
       if (!svg) { rafId = requestAnimationFrame(update); return; }
 
       for (const conn of connections) {
-        const pathD = computePathD(conn.fromId, conn.toId);
-        if (!pathD) continue;
-
         const vis = svg.querySelector(`#wc-vis-${conn.id}`) as SVGPathElement | null;
         const dot = svg.querySelector(`#wc-dot-${conn.id}`) as SVGPathElement | null;
         const hit = svg.querySelector(`#wc-hit-${conn.id}`) as SVGPathElement | null;
+
+        const pathD = computePathD(conn.fromId, conn.toId);
+        if (!pathD) {
+          // 양 끝 중 하나가 DOM 에서 사라졌거나(구역 이동·리렌더) 두 점이 겹쳤다.
+          // 예전에는 그냥 continue 라 **직전 d 가 그대로 남아 선이 얼어붙었다**(잔상).
+          // 그릴 수 없으면 지운다 — 다음 프레임에 다시 그려지면 그만이다.
+          for (const el of [vis, dot, hit]) el?.removeAttribute('d');
+          continue;
+        }
         if (vis) vis.setAttribute('d', pathD);
         if (dot) dot.setAttribute('d', pathD);
         if (hit) hit.setAttribute('d', pathD);
