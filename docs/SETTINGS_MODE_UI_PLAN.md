@@ -552,9 +552,42 @@ function checkReadiness(settings): Check[]
 
 ---
 
-## 13. 변경 이력
+## 14. 진행 상황 — 다른 컴퓨터에서 이어갈 때 (2026-08-24)
+
+**브랜치**: `feat/settings-ui-redesign` (기준 `main`). **원격에 아직 푸시하지 않았다** — 이어서 작업할 컴퓨터에서 이 브랜치를 받으려면 먼저 `git push -u origin feat/settings-ui-redesign`이 필요하다.
+
+### 끝난 것
+
+1. **문서 정정** — CLAUDE.md의 낙후된 `--ui-scale` 서술 교정, MASTER_PLAN D-7 신설, DEFERRED_PROPAGATION P-5 해소·P-6 신설, 이 문서의 §0.1~0.3·§3·§11 갱신. (커밋 `7fc4ae6`)
+2. **시안** — Claude Design 캔버스로 현행 재현·개선안·토큰 시트·브레이크포인트 도해 4장을 그리고 검토(별도 에이전트)까지 마쳤다. 검토에서 나온 실제 결함(박스사이징 누락으로 폭 주장이 다 어긋남, `Current.dc.html`의 스페이서가 본문을 반토막냄, `Breakpoints.dc.html`의 세 밴드가 서로 다른 좌우여백을 암시)을 전부 고치고 산술을 스크립트로 재검산한 뒤 재게시했다. 이 시안 파일은 로컬 스크래치패드에 있어 **저장소에 없다** — 다시 필요하면 이 문서의 설계(§4~§7)를 그대로 재현하면 된다. 게시된 캔버스 URL은 이 세션의 대화 기록에만 있다.
+3. **stylelint 도입** — `package.json`에 `stylelint` + `stylelint-config-standard` 추가 완료(§5.2 근거: 계획서 작성 후 이틀 만에 hex 121→128 등으로 수치가 악화된 것을 실증). **설정 파일(`.stylelintrc*`)은 아직 안 만들었다** — S-1에서 `--set-*` 토큰 화이트리스트와 함께 작성해야 한다.
+4. **감사 스크립트** — [scripts/settings-ui-audit.mjs](../scripts/settings-ui-audit.mjs). playwright로 `/settings`의 9개 화면 × 3개 폭(1280/1800/2560)을 돌며 §9 지표(최소 글자 크기·경계 대비·작은 클릭 타깃·이름 없는 아이콘 버튼·가로 스크롤·프레임 사용률)를 실측하고 `audit.json`/`audit.md`/스크린샷을 낸다. 스크린샷은 커밋 대상이 아니다(`.gitignore`에 등록). 1차 실행 중 아이콘 버튼 판정 오탐(2글자 한글 라벨을 이름 없음으로 오판)을 발견해 수정했다 — 글자 수가 아니라 **기호 글리프 여부**로 판정하도록 고쳤다.
+
+### 끝나지 않은 것 — 여기부터 잇는다
+
+**S-0 기준선이 미완성이다.** `docs/baseline/before/audit.json`이 저장소에 있지만 **빈 설정 상태로 측정한 것**이다. 이게 왜 문제냐면:
+
+- 저장소 루트의 `tactical-board-settings-2026-08-06.json`이 실제 시나리오 11건을 담은 샘플이고(예: 출동대 37건, 구조대상자 11명), 이걸 불러오면 `DispatchSetupPanel.tsx:59,72`의 `−`/`+` 글리프 버튼, `VictimSetupPanel.tsx:161`의 `×` 글리프 버튼처럼 **롤 목록이 있어야 렌더되는 요소**가 비로소 나타난다.
+- 빈 설정으로 잰 1차 결과는 `이름없는_아이콘버튼: 0`인데, 이건 버그가 없어서가 아니라 **그 버튼들이 화면에 아예 없어서**다. 이 숫자를 §9의 실제 기준선으로 쓰면 안 된다.
+- `importSettings()`(`src/utils/settingsStorage.ts:305`)는 파일을 읽어 `localStorage`의 `tacticalBoardSettingsList`·`tacticalBoardWorkingPresets` 등 개별 키에 그대로 쓰는 구조라, 감사 스크립트가 브라우저를 열기 전에 **`context.addInitScript()`로 같은 키에 샘플 JSON을 미리 심으면** UI에서 파일 선택 없이 실 데이터 상태를 재현할 수 있다. 이 작업을 하다가 중단됐다.
+
+**다음 컴퓨터에서 할 일 (순서대로)**:
+
+1. `scripts/settings-ui-audit.mjs`에 실 시나리오 주입을 추가한다 — `chromium.newContext()` 직후 `page.addInitScript()`로 `tactical-board-settings-2026-08-06.json`의 `settingsList[0]`(또는 가장 큰 것)을 `workingPresets` 형태로 변환해 `localStorage`에 심는다. `SettingsExport`의 필드명은 `src/utils/settingsStorage.ts`의 `importSettings` 본문 참고.
+2. `docs/baseline/before`를 **실 데이터 기준으로 재실행**한다. 이번 결과가 진짜 기준선이다 — §9 표를 이걸로 채운다.
+3. 기준선이 확정되면 S-1(토큰 정의 + `.stylelintrc` 작성) → S-2(`var(--color-*)` 362건을 `--set-*`로 재지정, §0.3에서 지적한 대로 "hex 치환"이 아니라 이것이 진짜 작업량)로 진행한다.
+4. S-1·S-2가 끝나면 같은 감사 스크립트를 `docs/baseline/after`로 재실행해 §9 표와 대조한다.
+
+### 참고 — 사용자 질문 (미답변, 무플 작업과 무관)
+
+이 세션 도중 사용자가 "API Error 529 Overloaded가 무슨 뜻인지, 서비스 혼잡으로 중단돼도 사용 한도가 차감되는지"를 물었으나 컨텍스트 전환으로 답하지 못했다. **다음 세션에서 먼저 짚어줄 것**: 529는 Anthropic 서버 과부하로 인한 일시적 오류로 요청이 처리되지 않은 것이며 이 저장소 코드와 무관하다. 사용 한도 차감 여부는 클라이언트(Claude Code 자체)의 과금 정책 질문이라 이 저장소의 지식 범위 밖이다 — 확답이 필요하면 사용자가 status.claude.com 또는 자신의 Claude 요금제 대시보드를 확인해야 한다.
+
+---
+
+## 15. 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
 | 2026-08-22 | 최초 작성. 코드 실측 기반 진단(§1), 문제 5건(F-1~F-5), 재설계안(§4~§7), 작업 순서 S-0~S-6, 미결 Q-1~Q-4 |
 | 2026-08-24 | **착수 결정(B)** — MASTER_PLAN D-7. §0.1~0.3 재검증 블록 추가(수치 악화 실증, 브라우저 실측, 전역 토큰 공유 위험·미정의 토큰 4곳 발견). Q-1·Q-4 해소, Q-5 신설. §3 원칙 2의 `--ui-scale` 서술을 스테이지 기준으로 정정. stylelint 도입 확정 |
+| 2026-08-24 (2) | 시안 4장 작성·검토·수정 완료. `scripts/settings-ui-audit.mjs` 신설(§9 지표 자동 측정). S-0 기준선 1차 실행 — **빈 설정 상태라 롤 목록 의존 요소 미검증**임을 §14에 기록하고 다른 컴퓨터로 이어갈 수 있게 상태 저장 |

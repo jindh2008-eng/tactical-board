@@ -1,0 +1,4599 @@
+{
+  "url": "http://localhost:5174",
+  "at": "2026-08-24T01:36:22.366Z",
+  "widths": [
+    1280,
+    1800,
+    2560
+  ],
+  "sections": {
+    "건물 · 소방시설": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 9,
+          "13.05": 8,
+          "13.95": 16,
+          "18.75": 1,
+          "10.80": 2,
+          "13.50": 1
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 6,
+        "controls": 24,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 36,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 2,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 1016,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 9,
+          "13.05": 8,
+          "13.95": 16,
+          "18.75": 1,
+          "10.80": 2,
+          "13.50": 1
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 6,
+        "controls": 24,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 36,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 2,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 76.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 9,
+          "13.05": 8,
+          "13.95": 16,
+          "18.75": 1,
+          "10.80": 2,
+          "13.50": 1
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 6,
+        "controls": 24,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 36,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 2,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 53.9
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "현장요소": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "13.50": 1,
+          "9.00": 10,
+          "16.50": 1,
+          "9.75": 3,
+          "12.30": 1,
+          "12.00": 1,
+          "11.10": 1
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 11,
+        "controls": 31,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--fire esp__type-btn--active",
+            "text": "화재",
+            "w": 17.9,
+            "h": 18
+          },
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--gas",
+            "text": "가스",
+            "w": 17.9,
+            "h": 18
+          },
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--electric",
+            "text": "전기",
+            "w": 16.9,
+            "h": 18
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 76,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 1016,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "13.50": 1,
+          "9.00": 10,
+          "16.50": 1,
+          "9.75": 3,
+          "12.30": 1,
+          "12.00": 1,
+          "11.10": 1
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 11,
+        "controls": 31,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--fire esp__type-btn--active",
+            "text": "화재",
+            "w": 17.9,
+            "h": 18
+          },
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--gas",
+            "text": "가스",
+            "w": 17.9,
+            "h": 18
+          },
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--electric",
+            "text": "전기",
+            "w": 16.9,
+            "h": 18
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 76,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 76.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "13.50": 1,
+          "9.00": 10,
+          "16.50": 1,
+          "9.75": 3,
+          "12.30": 1,
+          "12.00": 1,
+          "11.10": 1
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 11,
+        "controls": 31,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--fire esp__type-btn--active",
+            "text": "화재",
+            "w": 17.9,
+            "h": 18
+          },
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--gas",
+            "text": "가스",
+            "w": 17.9,
+            "h": 18
+          },
+          {
+            "tag": "button",
+            "cls": "esp__type-btn esp__type-btn--electric",
+            "text": "전기",
+            "w": 16.9,
+            "h": 18
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 76,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 53.9
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "구조대상자": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "11.25": 2,
+          "12.00": 1
+        },
+        "minFontPx": 11.25,
+        "distinctFontSizes": 6,
+        "controls": 17,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 18,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 8,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 1016,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "11.25": 2,
+          "12.00": 1
+        },
+        "minFontPx": 11.25,
+        "distinctFontSizes": 6,
+        "controls": 17,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 18,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 8,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 76.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "11.25": 2,
+          "12.00": 1
+        },
+        "minFontPx": 11.25,
+        "distinctFontSizes": 6,
+        "controls": 17,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 18,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 8,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 53.9
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "출동대": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 6,
+          "13.05": 8,
+          "13.95": 11,
+          "18.75": 1,
+          "13.50": 5,
+          "13.80": 9,
+          "15.00": 18,
+          "11.70": 8,
+          "11.40": 1,
+          "12.00": 3
+        },
+        "minFontPx": 11.4,
+        "distinctFontSizes": 10,
+        "controls": 56,
+        "smallTargets": [
+          {
+            "tag": "input",
+            "cls": "",
+            "text": "",
+            "w": 13,
+            "h": 13
+          },
+          {
+            "tag": "input",
+            "cls": "",
+            "text": "",
+            "w": 13,
+            "h": 13
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 181,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          },
+          "rgba(255, 80, 80, 0.3)": {
+            "count": 4,
+            "ratio": 1.49
+          },
+          "rgba(255, 80, 80, 0.28)": {
+            "count": 13,
+            "ratio": 1.45
+          },
+          "rgba(255, 180, 0, 0.3)": {
+            "count": 4,
+            "ratio": 1.93
+          },
+          "rgba(255, 180, 0, 0.28)": {
+            "count": 25,
+            "ratio": 1.86
+          },
+          "rgba(150, 100, 255, 0.3)": {
+            "count": 4,
+            "ratio": 1.46
+          },
+          "rgba(150, 100, 255, 0.28)": {
+            "count": 1,
+            "ratio": 1.44
+          }
+        },
+        "minBorderRatio": 1.44,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 1016,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 6,
+          "13.05": 8,
+          "13.95": 11,
+          "18.75": 1,
+          "13.50": 5,
+          "13.80": 9,
+          "15.00": 18,
+          "11.70": 8,
+          "11.40": 1,
+          "12.00": 3
+        },
+        "minFontPx": 11.4,
+        "distinctFontSizes": 10,
+        "controls": 56,
+        "smallTargets": [
+          {
+            "tag": "input",
+            "cls": "",
+            "text": "",
+            "w": 13,
+            "h": 13
+          },
+          {
+            "tag": "input",
+            "cls": "",
+            "text": "",
+            "w": 13,
+            "h": 13
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 181,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          },
+          "rgba(255, 80, 80, 0.3)": {
+            "count": 4,
+            "ratio": 1.49
+          },
+          "rgba(255, 80, 80, 0.28)": {
+            "count": 13,
+            "ratio": 1.45
+          },
+          "rgba(255, 180, 0, 0.3)": {
+            "count": 4,
+            "ratio": 1.93
+          },
+          "rgba(255, 180, 0, 0.28)": {
+            "count": 25,
+            "ratio": 1.86
+          },
+          "rgba(150, 100, 255, 0.3)": {
+            "count": 4,
+            "ratio": 1.46
+          },
+          "rgba(150, 100, 255, 0.28)": {
+            "count": 1,
+            "ratio": 1.44
+          }
+        },
+        "minBorderRatio": 1.44,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 76.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 6,
+          "13.05": 8,
+          "13.95": 11,
+          "18.75": 1,
+          "13.50": 5,
+          "13.80": 9,
+          "15.00": 18,
+          "11.70": 8,
+          "11.40": 1,
+          "12.00": 3
+        },
+        "minFontPx": 11.4,
+        "distinctFontSizes": 10,
+        "controls": 56,
+        "smallTargets": [
+          {
+            "tag": "input",
+            "cls": "",
+            "text": "",
+            "w": 13,
+            "h": 13
+          },
+          {
+            "tag": "input",
+            "cls": "",
+            "text": "",
+            "w": 13,
+            "h": 13
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 181,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          },
+          "rgba(255, 80, 80, 0.3)": {
+            "count": 4,
+            "ratio": 1.49
+          },
+          "rgba(255, 80, 80, 0.28)": {
+            "count": 13,
+            "ratio": 1.45
+          },
+          "rgba(255, 180, 0, 0.3)": {
+            "count": 4,
+            "ratio": 1.93
+          },
+          "rgba(255, 180, 0, 0.28)": {
+            "count": 25,
+            "ratio": 1.86
+          },
+          "rgba(150, 100, 255, 0.3)": {
+            "count": 4,
+            "ratio": 1.46
+          },
+          "rgba(150, 100, 255, 0.28)": {
+            "count": 1,
+            "ratio": 1.44
+          }
+        },
+        "minBorderRatio": 1.44,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 53.9
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "임무 · 상태 프리셋": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 25,
+          "13.05": 27,
+          "13.95": 9,
+          "18.75": 1,
+          "13.50": 12,
+          "10.80": 20
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 6,
+        "controls": 156,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 136,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          },
+          "rgb(255, 255, 255)": {
+            "count": 80,
+            "ratio": 1
+          }
+        },
+        "minBorderRatio": 1,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 1016,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 25,
+          "13.05": 27,
+          "13.95": 9,
+          "18.75": 1,
+          "13.50": 12,
+          "10.80": 20
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 6,
+        "controls": 156,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 136,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          },
+          "rgb(255, 255, 255)": {
+            "count": 80,
+            "ratio": 1
+          }
+        },
+        "minBorderRatio": 1,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 76.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 25,
+          "13.05": 27,
+          "13.95": 9,
+          "18.75": 1,
+          "13.50": 12,
+          "10.80": 20
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 6,
+        "controls": 156,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn tag-preset-panel__swatch-btn--a",
+            "text": "",
+            "w": 16.1,
+            "h": 16.1
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__swatch-btn",
+            "text": "",
+            "w": 14,
+            "h": 14
+          },
+          {
+            "tag": "button",
+            "cls": "tag-preset-panel__add-btn",
+            "text": "추가",
+            "w": 34.7,
+            "h": 19
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 136,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          },
+          "rgb(255, 255, 255)": {
+            "count": 80,
+            "ratio": 1
+          }
+        },
+        "minBorderRatio": 1,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 53.9
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "상태 메시지": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 20,
+          "13.95": 9,
+          "18.75": 1,
+          "12.00": 2,
+          "13.50": 15,
+          "10.80": 13
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 7,
+        "controls": 42,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 121,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 1016,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 20,
+          "13.95": 9,
+          "18.75": 1,
+          "12.00": 2,
+          "13.50": 15,
+          "10.80": 13
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 7,
+        "controls": 42,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 121,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 76.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 20,
+          "13.95": 9,
+          "18.75": 1,
+          "12.00": 2,
+          "13.50": 15,
+          "10.80": 13
+        },
+        "minFontPx": 10.8,
+        "distinctFontSizes": 7,
+        "controls": 42,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 121,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 53.9
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "체크리스트": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "11.10": 2,
+          "11.40": 1
+        },
+        "minFontPx": 11.1,
+        "distinctFontSizes": 6,
+        "controls": 20,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "checklist-setup__import-btn",
+            "text": "지휘절차에서 불러오기",
+            "w": 125.1,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "checklist-setup__import-btn",
+            "text": "마크다운으로 내보내기",
+            "w": 125.1,
+            "h": 23
+          },
+          {
+            "tag": "input",
+            "cls": "checklist-setup__add-section-input",
+            "text": "",
+            "w": 929.6,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "checklist-setup__add-section-btn",
+            "text": "+ 섹션 추가",
+            "w": 78.4,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 30,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 1016,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "11.10": 2,
+          "11.40": 1
+        },
+        "minFontPx": 11.1,
+        "distinctFontSizes": 6,
+        "controls": 20,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "checklist-setup__import-btn",
+            "text": "지휘절차에서 불러오기",
+            "w": 125.1,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "checklist-setup__import-btn",
+            "text": "마크다운으로 내보내기",
+            "w": 125.1,
+            "h": 23
+          },
+          {
+            "tag": "input",
+            "cls": "checklist-setup__add-section-input",
+            "text": "",
+            "w": 1029.6,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "checklist-setup__add-section-btn",
+            "text": "+ 섹션 추가",
+            "w": 78.4,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 30,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 76.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "11.10": 2,
+          "11.40": 1
+        },
+        "minFontPx": 11.1,
+        "distinctFontSizes": 6,
+        "controls": 20,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "checklist-setup__import-btn",
+            "text": "지휘절차에서 불러오기",
+            "w": 125.1,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "checklist-setup__import-btn",
+            "text": "마크다운으로 내보내기",
+            "w": 125.1,
+            "h": 23
+          },
+          {
+            "tag": "input",
+            "cls": "checklist-setup__add-section-input",
+            "text": "",
+            "w": 1029.6,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "checklist-setup__add-section-btn",
+            "text": "+ 섹션 추가",
+            "w": 78.4,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 30,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 1,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 53.9
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "지휘절차": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "12.00": 1,
+          "12.30": 3,
+          "11.40": 1
+        },
+        "minFontPx": 11.4,
+        "distinctFontSizes": 7,
+        "controls": 22,
+        "smallTargets": [
+          {
+            "tag": "input",
+            "cls": "cp-panel__add-category-input",
+            "text": "",
+            "w": 909.8,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "cp-panel__add-category-btn",
+            "text": "+ 카테고리 추가",
+            "w": 98.2,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 39,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 5,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 1016,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "12.00": 1,
+          "12.30": 3,
+          "11.40": 1
+        },
+        "minFontPx": 11.4,
+        "distinctFontSizes": 7,
+        "controls": 22,
+        "smallTargets": [
+          {
+            "tag": "input",
+            "cls": "cp-panel__add-category-input",
+            "text": "",
+            "w": 1009.8,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "cp-panel__add-category-btn",
+            "text": "+ 카테고리 추가",
+            "w": 98.2,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 39,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 5,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 76.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 7,
+          "13.95": 9,
+          "18.75": 1,
+          "12.00": 1,
+          "12.30": 3,
+          "11.40": 1
+        },
+        "minFontPx": 11.4,
+        "distinctFontSizes": 7,
+        "controls": 22,
+        "smallTargets": [
+          {
+            "tag": "input",
+            "cls": "cp-panel__add-category-input",
+            "text": "",
+            "w": 1009.8,
+            "h": 23
+          },
+          {
+            "tag": "button",
+            "cls": "cp-panel__add-category-btn",
+            "text": "+ 카테고리 추가",
+            "w": 98.2,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 39,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 5,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 1180,
+          "sectionW": 1116,
+          "frameUsagePct": 53.9
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "시나리오 예측": {
+      "1280": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 6,
+          "13.95": 9,
+          "10.20": 36,
+          "10.80": 5,
+          "11.40": 11,
+          "9.90": 2,
+          "12.00": 2,
+          "12.30": 9,
+          "11.70": 3,
+          "9.00": 5,
+          "12.60": 1
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 12,
+        "controls": 42,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-add-btn",
+            "text": "+ 화재층 추가",
+            "w": 273,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 98,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 200,
+          "mainW": 1080,
+          "sectionW": 0,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 6,
+          "13.95": 9,
+          "10.20": 36,
+          "10.80": 5,
+          "11.40": 11,
+          "9.90": 2,
+          "12.00": 2,
+          "12.30": 9,
+          "11.70": 3,
+          "9.00": 5,
+          "12.60": 1
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 12,
+        "controls": 42,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-add-btn",
+            "text": "+ 화재층 추가",
+            "w": 273,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 98,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 200,
+          "mainW": 1600,
+          "sectionW": 0,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "12.45": 5,
+          "13.05": 6,
+          "13.95": 9,
+          "10.20": 36,
+          "10.80": 5,
+          "11.40": 11,
+          "9.90": 2,
+          "12.00": 2,
+          "12.30": 9,
+          "11.70": 3,
+          "9.00": 5,
+          "12.60": 1
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 12,
+        "controls": 42,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-add-btn",
+            "text": "+ 화재층 추가",
+            "w": 273,
+            "h": 23
+          }
+        ],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(42, 58, 74)": {
+            "count": 98,
+            "ratio": 1.68
+          },
+          "rgb(85, 68, 204)": {
+            "count": 4,
+            "ratio": 2.71
+          },
+          "rgb(42, 90, 42)": {
+            "count": 4,
+            "ratio": 2.28
+          },
+          "rgb(42, 80, 112)": {
+            "count": 8,
+            "ratio": 2.18
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "ratio": 5.13
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 200,
+          "mainW": 2360,
+          "sectionW": 0,
+          "frameUsagePct": 100
+        },
+        "horizontalOverflow": false
+      }
+    }
+  },
+  "summary": {
+    "최소_글자px": 9,
+    "최소_경계대비": 1,
+    "작은_클릭타깃_총계": 450,
+    "이름없는_아이콘버튼": 0,
+    "가로스크롤_발생": [],
+    "작은_클릭타깃_화면별": {
+      "임무 · 상태 프리셋": 120,
+      "시나리오 예측": 19,
+      "체크리스트": 4,
+      "현장요소": 3,
+      "출동대": 2,
+      "지휘절차": 2
+    },
+    "최소대비_경계색": {
+      "color": "rgb(255, 255, 255)",
+      "ratio": 1,
+      "at": "임무 · 상태 프리셋@1280"
+    },
+    "프레임_사용률": {
+      "1280": 100,
+      "1800": 79.3,
+      "2560": 59
+    }
+  }
+}

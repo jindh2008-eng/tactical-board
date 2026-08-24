@@ -25,3 +25,8 @@ dist-ssr
 
 # Claude Code 워크트리 (로컬 전용)
 .claude/worktrees/
+
+# settings-ui-audit.mjs 산출물 — 스크린샷은 커밋하지 않는다.
+# 기준선은 커밋된 스크립트 + audit.json/.md 이며, 이미지는 그 커밋을
+# 체크아웃해 스크립트를 다시 돌리면 언제든 재생성된다.
+docs/baseline/**/*.png
