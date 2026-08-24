@@ -123,8 +123,8 @@
 }
 
 .checklist-setup__delete-btn:hover {
-  color: #e05c5c;
-  background-color: rgba(224, 92, 92, 0.1);
+  color: var(--set-danger);
+  background-color: color-mix(in srgb, var(--set-danger) 12%, transparent);
 }
 
 .checklist-setup__add-item-row {
@@ -233,19 +233,19 @@
 .checklist-setup__type-badge--procedure {
   background-color: rgba(200, 200, 200, 0.12);
   color: var(--set-text-faint);
-  border: 1px solid rgba(200, 200, 200, 0.2);
+  border: 1px solid var(--set-border-subtle);
 }
 
 .checklist-setup__type-badge--event {
-  background-color: rgba(255, 200, 50, 0.12);
-  color: #d4a800;
-  border: 1px solid rgba(255, 200, 50, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-event) 14%, transparent);
+  color: var(--set-type-event);
+  border: 1px solid color-mix(in srgb, var(--set-type-event) 45%, transparent);
 }
 
 .checklist-setup__type-badge--arrival {
-  background-color: rgba(68, 140, 255, 0.12);
-  color: #5599ff;
-  border: 1px solid rgba(68, 140, 255, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-arrival) 14%, transparent);
+  color: var(--set-type-arrival);
+  border: 1px solid color-mix(in srgb, var(--set-type-arrival) 45%, transparent);
 }
 
 .checklist-setup__item-text {
@@ -261,33 +261,33 @@
 }
 
 .checklist-setup__type-badge--message {
-  background-color: rgba(80, 200, 120, 0.12);
-  color: #55cc88;
-  border: 1px solid rgba(80, 200, 120, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-message) 14%, transparent);
+  color: var(--set-type-message);
+  border: 1px solid color-mix(in srgb, var(--set-type-message) 45%, transparent);
 }
 
 .checklist-setup__type-badge--fire {
-  background-color: rgba(220, 60, 60, 0.12);
-  color: #e05c5c;
-  border: 1px solid rgba(220, 60, 60, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-fire) 14%, transparent);
+  color: var(--set-type-fire);
+  border: 1px solid color-mix(in srgb, var(--set-type-fire) 45%, transparent);
 }
 
 .checklist-setup__type-badge--xvr {
-  background-color: rgba(160, 100, 255, 0.12);
-  color: #aa66ff;
-  border: 1px solid rgba(160, 100, 255, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-xvr) 14%, transparent);
+  color: var(--set-type-xvr);
+  border: 1px solid color-mix(in srgb, var(--set-type-xvr) 45%, transparent);
 }
 
 .checklist-setup__type-badge--unit {
-  background-color: rgba(80, 160, 220, 0.12);
-  color: #55aadd;
-  border: 1px solid rgba(80, 160, 220, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-unit) 14%, transparent);
+  color: var(--set-type-unit);
+  border: 1px solid color-mix(in srgb, var(--set-type-unit) 45%, transparent);
 }
 
 .checklist-setup__type-badge--incident {
-  background-color: rgba(220, 60, 60, 0.15);
-  color: #ff6666;
-  border: 1px solid rgba(220, 60, 60, 0.35);
+  background-color: color-mix(in srgb, var(--set-type-incident) 14%, transparent);
+  color: var(--set-type-incident);
+  border: 1px solid color-mix(in srgb, var(--set-type-incident) 45%, transparent);
 }
 
 /* ── 상위 연동 ── */
@@ -323,7 +323,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.06);
+  border-top: 1px dashed var(--set-border-subtle);
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -450,7 +450,7 @@
   background: var(--set-accent);
   border: none;
   border-radius: 3px;
-  color: #fff;
+  color: var(--set-on-accent);
   cursor: pointer;
   transition: opacity 0.1s;
 }

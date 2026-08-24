@@ -98,7 +98,7 @@
 }
 
 .unit-status-panel__remove-btn:hover {
-  color: #e05c5c;
+  color: var(--set-danger);
   background: rgba(220,60,60,0.10);
 }
 
@@ -129,7 +129,7 @@
   padding: 3px 8px;
   font-size: 0.72rem;
   background: var(--set-accent);
-  color: #fff;
+  color: var(--set-on-accent);
   border: none;
   border-radius: 3px;
   cursor: pointer;

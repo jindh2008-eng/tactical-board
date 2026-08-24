@@ -80,7 +80,7 @@
 }
 
 .dsp__step-btn:hover {
-  background: #2a3040;
+  background: var(--set-surface-hover);
   border-color: var(--set-accent);
 }
 
@@ -340,7 +340,7 @@
 }
 
 .dsp__extra-btn:hover {
-  background: #2a3040;
+  background: var(--set-surface-hover);
   border-color: var(--set-accent);
   color: var(--set-text-body);
 }
@@ -413,7 +413,7 @@
 }
 
 .dsp__extra-remove:hover {
-  color: #ff6666;
+  color: var(--set-danger-strong);
   background: rgba(255, 80, 80, 0.1);
 }
 
@@ -425,13 +425,13 @@
    칩 안에 −/수량/+ 를 둔다. 설정창은 어두운 앱 테마라 색은 그쪽 톤을 쓴다.
    ─────────────────────────────────────────────*/
 
-.dsp__group--activity { border-color: rgba(255, 80, 80, 0.30); }
-.dsp__group--vehicle  { border-color: rgba(255, 180, 0, 0.30); }
-.dsp__group--agency   { border-color: rgba(150, 100, 255, 0.30); }
+.dsp__group--activity { border-color: color-mix(in srgb, var(--set-cat-activity) 70%, transparent); }
+.dsp__group--vehicle  { border-color: color-mix(in srgb, var(--set-cat-vehicle) 70%, transparent); }
+.dsp__group--agency   { border-color: color-mix(in srgb, var(--set-cat-agency) 70%, transparent); }
 
-.dsp__group-title--activity { color: #f08080; border-bottom-color: rgba(255, 80, 80, 0.28); }
-.dsp__group-title--vehicle  { color: #e0aa44; border-bottom-color: rgba(255, 180, 0, 0.28); }
-.dsp__group-title--agency   { color: #b088ee; border-bottom-color: rgba(150, 100, 255, 0.28); }
+.dsp__group-title--activity { color: var(--set-cat-activity); border-bottom-color: color-mix(in srgb, var(--set-cat-activity) 45%, transparent); }
+.dsp__group-title--vehicle  { color: var(--set-cat-vehicle); border-bottom-color: color-mix(in srgb, var(--set-cat-vehicle) 45%, transparent); }
+.dsp__group-title--agency   { color: var(--set-cat-agency); border-bottom-color: color-mix(in srgb, var(--set-cat-agency) 45%, transparent); }
 
 /* 칩들을 가로로 흘려 담는다 — 훈련모드 버튼 배열과 같은 리듬 */
 .dsp__chips {
@@ -465,21 +465,21 @@
 .dsp__chip-suffix {
   font-size:   0.76rem;
   font-weight: 600;
-  color:       #e0aa44;
+  color:       var(--set-cat-vehicle);
 }
 
-.dsp__chip--activity { border-color: rgba(255, 80, 80, 0.28); }
-.dsp__chip--vehicle  { border-color: rgba(255, 180, 0, 0.28); }
+.dsp__chip--activity { border-color: color-mix(in srgb, var(--set-cat-activity) 70%, transparent); }
+.dsp__chip--vehicle  { border-color: color-mix(in srgb, var(--set-cat-vehicle) 70%, transparent); }
 
 /* 수량이 0보다 크면 담겼다는 표시 */
 .dsp__chip--activity.dsp__chip--on {
   background:   rgba(255, 80, 80, 0.09);
-  border-color: rgba(255, 80, 80, 0.55);
+  border-color: color-mix(in srgb, var(--set-cat-activity) 80%, transparent);
 }
 
 .dsp__chip--vehicle.dsp__chip--on {
   background:   rgba(255, 180, 0, 0.09);
-  border-color: rgba(255, 180, 0, 0.55);
+  border-color: color-mix(in srgb, var(--set-cat-vehicle) 80%, transparent);
 }
 
 .dsp__chip .dsp__stepper { justify-content: center; }

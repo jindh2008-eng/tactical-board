@@ -186,7 +186,7 @@
 }
 
 .cp-panel__delete-btn:hover {
-  color: #e05c5c;
+  color: var(--set-danger);
   background-color: rgba(224, 92, 92, 0.1);
 }
 
@@ -296,29 +296,29 @@
 .cp-panel__type-badge--procedure {
   background-color: rgba(200, 200, 200, 0.12);
   color: var(--set-text-faint);
-  border: 1px solid rgba(200, 200, 200, 0.2);
+  border: 1px solid var(--set-border-subtle);
 }
 
 .cp-panel__type-badge--dispatch {
-  background-color: rgba(68, 140, 255, 0.12);
-  color: #5599ff;
-  border: 1px solid rgba(68, 140, 255, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-arrival) 14%, transparent);
+  color: var(--set-type-arrival);
+  border: 1px solid color-mix(in srgb, var(--set-type-arrival) 45%, transparent);
 }
 
 .cp-panel__type-badge--event {
-  background-color: rgba(255, 200, 50, 0.12);
-  color: #d4a800;
-  border: 1px solid rgba(255, 200, 50, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-event) 14%, transparent);
+  color: var(--set-type-event);
+  border: 1px solid color-mix(in srgb, var(--set-type-event) 45%, transparent);
 }
 
 .cp-panel__type-badge--message {
-  background-color: rgba(80, 200, 120, 0.12);
-  color: #55cc88;
-  border: 1px solid rgba(80, 200, 120, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-message) 14%, transparent);
+  color: var(--set-type-message);
+  border: 1px solid color-mix(in srgb, var(--set-type-message) 45%, transparent);
 }
 
 .cp-panel__type-badge--fire {
-  background-color: rgba(220, 60, 60, 0.12);
-  color: #e05c5c;
-  border: 1px solid rgba(220, 60, 60, 0.25);
+  background-color: color-mix(in srgb, var(--set-type-fire) 14%, transparent);
+  color: var(--set-type-fire);
+  border: 1px solid color-mix(in srgb, var(--set-type-fire) 45%, transparent);
 }

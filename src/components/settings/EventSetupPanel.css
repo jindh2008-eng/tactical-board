@@ -91,7 +91,7 @@
   background:  var(--set-accent);
   border:      none;
   border-radius: 3px;
-  color:       #fff;
+  color:       var(--set-on-accent);
   font-size:   0.82rem;
   font-weight: 600;
   cursor:      pointer;
@@ -180,20 +180,20 @@
 
 /* 화재 활성 */
 .esp__type-btn--fire.esp__type-btn--active {
-  background: #6b1a0a;
-  color:      #ff9966;
+  background: color-mix(in srgb, var(--set-type-fire) 24%, var(--set-surface-0));
+  color:      var(--set-type-incident);
 }
 
 /* 가스 활성 */
 .esp__type-btn--gas.esp__type-btn--active {
-  background: #0a3a1a;
-  color:      #66cc88;
+  background: var(--set-ok-bg);
+  color:      var(--set-ok-strong);
 }
 
 /* 전기 활성 */
 .esp__type-btn--electric.esp__type-btn--active {
-  background: #2a2a00;
-  color:      #ffdd44;
+  background: var(--set-warn-bg);
+  color:      var(--set-warn-strong);
 }
 
 /* ── 각 아이템 (메인 행 + 피커 묶음) ── */
@@ -277,7 +277,7 @@
 
 .esp__icon-btn--has-icon {
   border-style: solid;
-  border-color: rgba(99, 102, 241, 0.45);
+  border-color: var(--set-accent);
 }
 
 .esp__icon-thumb {
@@ -318,7 +318,7 @@
 
 .esp__del-btn:hover {
   background: rgba(200, 60, 60, 0.15);
-  color: #c84040;
+  color: var(--set-danger);
 }
 
 /* ── 아이콘 피커 그리드 ── */

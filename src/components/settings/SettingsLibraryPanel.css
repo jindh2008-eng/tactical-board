@@ -63,7 +63,7 @@
 
 .slp__btn {
   padding: 5px 12px;
-  background: #252535;
+  background: var(--set-surface-2);
   border: 1px solid var(--set-border);
   border-radius: 3px;
   color: var(--set-text-body);
@@ -75,7 +75,7 @@
 }
 
 .slp__btn:hover:not(:disabled) {
-  background: #303048;
+  background: var(--set-surface-hover);
 }
 
 .slp__btn:active:not(:disabled) {
@@ -89,46 +89,46 @@
 }
 
 .slp__btn--primary {
-  background: #4433aa;
-  border-color: #5544cc;
-  color: #fff;
+  background: var(--set-accent);
+  border-color: var(--set-accent);
+  color: var(--set-on-accent);
 }
 
 .slp__btn--primary:hover:not(:disabled) {
-  background: #5544cc;
+  background: var(--set-accent-strong);
 }
 
 .slp__btn--saved {
-  background: #1a4a1a;
-  border-color: #2a6a2a;
-  color: #7ccc7c;
+  background: var(--set-ok-bg);
+  border-color: var(--set-ok-border);
+  color: var(--set-ok-strong);
   transition: background 0.2s, color 0.2s;
 }
 
 .slp__btn--new {
-  background: #1a3a1a;
-  border-color: #2a5a2a;
-  color: #88cc88;
+  background: var(--set-ok-bg);
+  border-color: var(--set-ok-border);
+  color: var(--set-ok-strong);
 }
 
 .slp__btn--new:hover:not(:disabled) {
-  background: #224422;
+  background: var(--set-ok-bg-hover);
 }
 
 .slp__btn--active {
-  background: #1e2a3a;
+  background: var(--set-accent-bg);
   border-color: var(--set-accent);
 }
 
 .slp__btn--danger {
-  background: #3a1414;
-  border-color: #6a2222;
-  color: #f09090;
+  background: var(--set-danger-bg);
+  border-color: var(--set-danger-border);
+  color: var(--set-danger-strong);
 }
 
 .slp__btn--danger:hover:not(:disabled) {
-  background: #4a1a1a;
-  border-color: #883333;
+  background: var(--set-danger-bg-hover);
+  border-color: var(--set-danger);
 }
 
 .slp__btn--sm {
@@ -137,14 +137,14 @@
 }
 
 .slp__btn--export {
-  background: #1a3040;
-  border-color: #2a5070;
-  color: #80c0e0;
+  background: var(--set-accent-bg);
+  border-color: var(--set-border);
+  color: var(--set-accent-strong);
 }
 
 .slp__btn--export:hover:not(:disabled) {
-  background: #224455;
-  border-color: #3a6080;
+  background: var(--set-surface-hover);
+  border-color: var(--set-border-strong);
 }
 
 /* 다른 이름으로 저장 */
@@ -194,7 +194,7 @@
 
 .slp__list-item--active {
   border-color: var(--set-accent);
-  background: #0c1822;
+  background: var(--set-surface-0);
 }
 
 .slp__item-info {

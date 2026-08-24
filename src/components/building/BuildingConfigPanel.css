@@ -109,8 +109,8 @@
 }
 
 .bcf__floor-select--primary {
-  border-color: rgba(192, 96, 80, 0.5);
-  color: #f0a090;
+  border-color: var(--set-danger-border);
+  color: var(--set-danger-strong);
 }
 
 .bcf__floor-select:focus {
@@ -123,8 +123,8 @@
   padding: 1px 6px;
   border-radius: 3px;
   background: rgba(192, 96, 80, 0.15);
-  color: #c06050;
-  border: 1px solid rgba(192, 96, 80, 0.3);
+  color: var(--set-danger);
+  border: 1px solid var(--set-danger-border);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -157,7 +157,7 @@
 }
 
 .bcf__remove-btn:hover {
-  color: #e05c5c;
+  color: var(--set-danger);
   background: rgba(224, 92, 92, 0.1);
 }
 
@@ -220,15 +220,15 @@
   align-items: center;
   gap: 10px;
   padding: 5px 12px;
-  background-color: #2a2620;
-  border-bottom: 2px solid #4e4a42;
+  background-color: var(--set-board-bar-bg);
+  border-bottom: 2px solid var(--ctr-border-hard);
   flex-shrink: 0;
 }
 
 .config-bar__title {
   font-size: 0.62rem;
   font-weight: 700;
-  color: #9a9690;
+  color: var(--set-board-text);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   flex-shrink: 0;
@@ -239,7 +239,7 @@
 .config-bar__divider {
   width: 1px;
   height: 16px;
-  background-color: #4e4a42;
+  background-color: var(--ctr-border-hard);
   flex-shrink: 0;
 }
 
@@ -254,29 +254,29 @@
 
 .config-bar__label {
   font-size: 0.62rem;
-  color: #7a7670;
+  color: var(--ctr-text-dim);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 /* 화점층 레이블 — 적색 계열로 강조 */
 .config-bar__label--fire {
-  color: #c07060;
+  color: var(--set-danger);
 }
 
 /* 계단실 연기 레이블 — 회청색 계열 */
 .config-bar__label--smoke {
-  color: #8090a8;
+  color: var(--set-text-dim);
 }
 
 /* ─── 숫자 입력 ────────────────────────────── */
 .config-bar__input {
   width: 40px;
   padding: 2px 5px;
-  background-color: #1a1814;
-  border: 1px solid #4e4a42;
+  background-color: var(--set-board-panel-bg);
+  border: 1px solid var(--ctr-border-hard);
   border-radius: 2px;
-  color: #e8e4da;
+  color: var(--ctr-label-text);
   font-size: 0.7rem;
   font-weight: 700;
   font-family: inherit;
@@ -292,20 +292,20 @@
 }
 
 .config-bar__input:focus {
-  border-color: #7a9ab8;
-  background-color: #0e1420;
+  border-color: var(--set-border-strong);
+  background-color: var(--set-surface-1);
 }
 
 /* 화점층 입력 — 붉은 테두리로 구분 */
 .config-bar__input--fire {
-  border-color: #7a3a30;
-  color: #f0a090;
+  border-color: var(--set-danger-border);
+  color: var(--set-danger-strong);
 }
 
 .config-bar__input--fire:focus {
-  border-color: #c06050;
-  background-color: #1a0e0c;
-  color: #f8c0b0;
+  border-color: var(--set-danger);
+  background-color: var(--set-danger-bg);
+  color: var(--set-danger-strong);
 }
 
 /* 대상명 텍스트 입력 — 더 넓게 */
@@ -316,21 +316,21 @@
 
 /* 화점층 셀렉트 — 붉은 계열 */
 .config-bar__select--fire {
-  border-color: #7a3a30;
-  color: #f0a090;
+  border-color: var(--set-danger-border);
+  color: var(--set-danger-strong);
 }
 
 .config-bar__select--fire:focus {
-  border-color: #c06050;
+  border-color: var(--set-danger);
 }
 
 /* ─── 셀렉트 ───────────────────────────────── */
 .config-bar__select {
   padding: 2px 4px;
-  background-color: #1a1814;
-  border: 1px solid #4e4a42;
+  background-color: var(--set-board-panel-bg);
+  border: 1px solid var(--ctr-border-hard);
   border-radius: 2px;
-  color: #e8e4da;
+  color: var(--ctr-label-text);
   font-size: 0.7rem;
   font-weight: 700;
   font-family: inherit;
@@ -339,12 +339,12 @@
 }
 
 .config-bar__select:focus {
-  border-color: #7a9ab8;
+  border-color: var(--set-border-strong);
 }
 
 .config-bar__unit {
   font-size: 0.6rem;
-  color: #5a5650;
+  color: var(--set-board-text-dim);
 }
 
 
@@ -364,7 +364,7 @@
 .bcf__ratio-hint {
   font-size: 0.87rem;
   line-height: 1.6;
-  color: var(--set-text-dim, #8aa8c4);
+  color: var(--set-text-dim);
   max-width: 620px;
 }
 
@@ -390,7 +390,7 @@
 .bcf__ratio-value {
   font-size: 0.93rem;
   font-weight: 600;
-  color: #e2ecf6;
+  color: var(--set-text);
   font-variant-numeric: tabular-nums;
   min-width: 108px;
 }
@@ -400,7 +400,7 @@
   padding: 0 12px;
   font-size: 0.83rem;
   font-family: inherit;
-  color: var(--set-text-dim, #8aa8c4);
+  color: var(--set-text-dim);
   background: transparent;
   border: 1px solid var(--set-border);
   border-radius: 4px;
@@ -409,7 +409,7 @@
 }
 
 .bcf__ratio-reset:hover:not(:disabled) {
-  color: #e2ecf6;
+  color: var(--set-text);
   border-color: var(--set-accent);
 }
 
@@ -442,12 +442,12 @@
 
 .bcf__ratio-bar--side {
   background: rgba(68, 136, 204, 0.16);
-  color: #b9d4ee;
+  color: var(--set-accent-strong);
 }
 
 .bcf__ratio-bar--center {
   background: rgba(68, 136, 204, 0.38);
-  color: #eaf3fb;
+  color: var(--set-text);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -36,8 +36,8 @@
 
 .bpm__count-badge {
   font-size: 0.65rem;
-  background: #252535;
-  color: #9090b0;
+  background: var(--set-surface-2);
+  color: var(--set-text-dim);
   padding: 1px 7px;
   border-radius: 8px;
 }
@@ -50,7 +50,7 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  background: #252535;
+  background: var(--set-surface-2);
   border: 1px solid var(--set-border);
   border-radius: 3px;
   color: var(--set-text-body);
@@ -63,7 +63,7 @@
 }
 
 .bpm__icon-btn:hover {
-  background: #303048;
+  background: var(--set-surface-hover);
 }
 
 .bpm__icon-btn--sm {
@@ -73,9 +73,9 @@
 }
 
 .bpm__icon-btn--danger:hover {
-  background: #3a1414;
-  border-color: #6a2222;
-  color: #f09090;
+  background: var(--set-danger-bg);
+  border-color: var(--set-danger-border);
+  color: var(--set-danger-strong);
 }
 
 /* ══ 좌측: 그룹 목록 ════════════════════════ */
@@ -96,7 +96,7 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background: #0a0e14;
+  background: var(--set-surface-0);
   flex-shrink: 0;
 }
 
@@ -110,25 +110,25 @@
 
 .bpm__chip {
   padding: 2px 8px;
-  background: #1a1a28;
-  border: 1px solid #2e2e44;
+  background: var(--set-surface-2);
+  border: 1px solid var(--set-border-subtle);
   border-radius: 10px;
-  color: #7070a0;
+  color: var(--set-text-faint);
   font-size: 0.65rem;
   cursor: pointer;
   transition: background 0.1s, border-color 0.1s, color 0.1s;
 }
 
 .bpm__chip:hover {
-  background: #252538;
-  border-color: #5555aa;
-  color: #b0b0d0;
+  background: var(--set-surface-hover);
+  border-color: var(--set-border-strong);
+  color: var(--set-text-body);
 }
 
 .bpm__chip--active {
-  background: #2a1a55;
-  border-color: #6644cc;
-  color: #d0c0ff;
+  background: var(--set-accent-bg);
+  border-color: var(--set-accent);
+  color: var(--set-accent-strong);
 }
 
 /* 그룹 목록 스크롤 영역 */
@@ -148,18 +148,18 @@
   justify-content: space-between;
   padding: 8px 10px 8px 12px;
   cursor: pointer;
-  border-bottom: 1px solid #181820;
+  border-bottom: 1px solid var(--set-border-subtle);
   transition: background 0.1s;
   gap: 6px;
   min-height: 48px;
 }
 
 .bpm__group-item:hover {
-  background: #0e0e1a;
+  background: var(--set-surface-0);
 }
 
 .bpm__group-item--active {
-  background: #0a1420;
+  background: var(--set-surface-nav);
   border-left: 2px solid var(--set-accent);
   padding-left: 10px;
 }
@@ -189,7 +189,7 @@
 
 .bpm__group-key {
   font-size: 0.62rem;
-  color: #4a6688;
+  color: var(--set-text-faint);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -198,8 +198,8 @@
 
 .bpm__group-count {
   font-size: 0.62rem;
-  background: #1e1e2a;
-  color: #7070a0;
+  background: var(--set-surface-2);
+  color: var(--set-text-faint);
   padding: 0 5px;
   border-radius: 8px;
   flex-shrink: 0;
@@ -325,7 +325,7 @@
 }
 
 .bpm__input::placeholder {
-  color: #445566;
+  color: var(--set-text-faint);
 }
 
 .bpm__input--sm {
@@ -342,7 +342,7 @@
 
 .bpm__btn {
   padding: 4px 12px;
-  background: #252535;
+  background: var(--set-surface-2);
   border: 1px solid var(--set-border);
   border-radius: 3px;
   color: var(--set-text-body);
@@ -355,7 +355,7 @@
 }
 
 .bpm__btn:hover:not(:disabled) {
-  background: #303048;
+  background: var(--set-surface-hover);
 }
 
 .bpm__btn:disabled {
@@ -364,24 +364,24 @@
 }
 
 .bpm__btn--primary {
-  background: #4433aa;
-  border-color: #5544cc;
-  color: #fff;
+  background: var(--set-accent);
+  border-color: var(--set-accent);
+  color: var(--set-on-accent);
 }
 
 .bpm__btn--primary:hover:not(:disabled) {
-  background: #5544cc;
+  background: var(--set-accent-strong);
 }
 
 .bpm__btn--danger {
-  background: #3a1414;
-  border-color: #6a2222;
-  color: #f09090;
+  background: var(--set-danger-bg);
+  border-color: var(--set-danger-border);
+  color: var(--set-danger-strong);
 }
 
 .bpm__btn--danger:hover:not(:disabled) {
-  background: #4a1a1a;
-  border-color: #883333;
+  background: var(--set-danger-bg-hover);
+  border-color: var(--set-danger);
 }
 
 .bpm__btn--xs {

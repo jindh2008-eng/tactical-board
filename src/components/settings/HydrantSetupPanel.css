@@ -11,7 +11,7 @@
 
 .hsp__empty {
   font-size:  0.82rem;
-  color:      var(--ctr-label-text, #888);
+  color:      var(--set-text-faint);
   font-style: italic;
   margin:     0;
   padding:    4px 0;
@@ -40,10 +40,10 @@
 .hsp__select {
   height:        32px;
   padding:       0 8px;
-  background:    #1a1410;
-  border:        1px solid #3a2818;
+  background:    var(--set-warn-bg);
+  border:        1px solid var(--set-warn-border);
   border-radius: 4px;
-  color:         #ccaa66;
+  color:         var(--set-warn);
   font-size:     0.80rem;
   font-family:   inherit;
   outline:       none;
@@ -52,7 +52,7 @@
 
 .hsp__input:focus,
 .hsp__select:focus {
-  border-color: #6a4820;
+  border-color: var(--set-warn-border);
 }
 
 .hsp__input--name {
@@ -72,7 +72,7 @@
 
 .hsp__unit {
   font-size:   0.78rem;
-  color:       #8a7a5a;
+  color:       var(--set-text-faint);
   white-space: nowrap;
 }
 
@@ -83,9 +83,9 @@
   height:        26px;
   padding:       0;
   background:    transparent;
-  border:        1px solid #5a1818;
+  border:        1px solid var(--set-danger-border);
   border-radius: 4px;
-  color:         #aa4444;
+  color:         var(--set-danger);
   font-size:     0.72rem;
   cursor:        pointer;
   flex-shrink:   0;
@@ -93,8 +93,8 @@
 }
 
 .hsp__del-btn:hover {
-  background: #2a0808;
-  color:      #ff6666;
+  background: var(--set-danger-bg);
+  color:      var(--set-danger-strong);
 }
 
 /* ── 추가 버튼 ──────────────────────────────────*/
@@ -103,9 +103,9 @@
   align-self:    flex-start;
   padding:       6px 14px;
   background:    transparent;
-  border:        1px dashed #3a5030;
+  border:        1px dashed var(--set-ok-border);
   border-radius: 4px;
-  color:         #668855;
+  color:         var(--set-ok);
   font-size:     0.78rem;
   font-family:   inherit;
   cursor:        pointer;
@@ -113,7 +113,7 @@
 }
 
 .hsp__add-btn:hover {
-  background:   #0e1a0a;
-  border-color: #558844;
-  color:        #88bb66;
+  background:   var(--set-ok-bg);
+  border-color: var(--set-ok-border);
+  color:        var(--set-ok-strong);
 }

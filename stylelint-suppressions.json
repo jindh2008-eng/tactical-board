@@ -16,9 +16,6 @@
     "property-no-vendor-prefix": {
       "count": 2
     },
-    "color-no-hex": {
-      "count": 34
-    },
     "declaration-property-value-allowed-list": {
       "count": 29
     }
@@ -59,33 +56,21 @@
     }
   },
   "src/components/settings/BadgePresetManager.css": {
-    "color-no-hex": {
-      "count": 35
-    },
     "declaration-property-value-allowed-list": {
       "count": 23
     }
   },
   "src/components/settings/ChecklistSetupPanel.css": {
-    "color-no-hex": {
-      "count": 9
-    },
     "declaration-property-value-allowed-list": {
       "count": 49
     }
   },
   "src/components/settings/CommandProcedurePanel.css": {
-    "color-no-hex": {
-      "count": 5
-    },
     "declaration-property-value-allowed-list": {
       "count": 27
     }
   },
   "src/components/settings/DispatchSetupPanel.css": {
-    "color-no-hex": {
-      "count": 7
-    },
     "declaration-property-value-allowed-list": {
       "count": 37
     },
@@ -94,49 +79,31 @@
     }
   },
   "src/components/settings/EventSetupPanel.css": {
-    "color-no-hex": {
-      "count": 8
-    },
     "declaration-property-value-allowed-list": {
       "count": 25
     }
   },
   "src/components/settings/HydrantSetupPanel.css": {
-    "color-no-hex": {
-      "count": 15
-    },
     "declaration-property-value-allowed-list": {
       "count": 8
     }
   },
   "src/components/settings/SettingsLibraryPanel.css": {
-    "color-no-hex": {
-      "count": 25
-    },
     "declaration-property-value-allowed-list": {
       "count": 12
     }
   },
   "src/components/settings/TagPresetPanel.css": {
-    "color-no-hex": {
-      "count": 3
-    },
     "declaration-property-value-allowed-list": {
       "count": 13
     }
   },
   "src/components/settings/UnitStatusPanel.css": {
-    "color-no-hex": {
-      "count": 2
-    },
     "declaration-property-value-allowed-list": {
       "count": 13
     }
   },
   "src/components/settings/VictimSetupPanel.css": {
-    "color-no-hex": {
-      "count": 9
-    },
     "declaration-property-value-allowed-list": {
       "count": 15
     }
