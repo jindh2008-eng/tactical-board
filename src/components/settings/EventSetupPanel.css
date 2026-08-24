@@ -17,12 +17,12 @@
   padding:        8px 10px 10px;
   background:     var(--set-surface-1);
   border:         1px solid var(--set-border);
-  border-radius:  5px;
+  border-radius:  var(--set-r-md);
 }
 
 .esp__add-title {
   margin:      0;
-  font-size:   0.70rem;
+  font-size:   var(--set-fs-xs);
   font-weight: 700;
   color:       var(--set-text-faint);
   letter-spacing: 0.05em;
@@ -53,7 +53,7 @@
   justify-content: center;
   background:      var(--set-surface-0);
   border:          1.5px solid var(--set-border);
-  border-radius:   4px;
+  border-radius:   var(--set-r-sm);
 }
 
 .esp__add-preview-img {
@@ -64,7 +64,7 @@
 }
 
 .esp__add-preview-placeholder {
-  font-size: 1.1rem;
+  font-size: var(--set-fs-lg);
   color:     var(--set-text-faint);
   line-height: 1;
 }
@@ -75,9 +75,9 @@
   padding:    5px 8px;
   background: var(--set-surface-0);
   border:     1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color:      var(--set-text-body);
-  font-size:  0.82rem;
+  font-size:  var(--set-fs-xs);
   font-family: inherit;
 }
 
@@ -90,9 +90,9 @@
   padding:     5px 14px;
   background:  var(--set-accent);
   border:      none;
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color:       var(--set-on-accent);
-  font-size:   0.82rem;
+  font-size:   var(--set-fs-xs);
   font-weight: 600;
   cursor:      pointer;
   white-space: nowrap;
@@ -107,17 +107,17 @@
 /* ── 목록 ── */
 
 .esp__empty {
-  font-size: 0.8rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   padding: 10px;
   text-align: center;
   border: 1px dashed var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
 }
 
 .esp__list {
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   overflow: hidden;
 }
 
@@ -134,7 +134,7 @@
 }
 
 .esp__lh {
-  font-size: 0.65rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   color: var(--set-text-faint);
   letter-spacing: 0.06em;
@@ -150,18 +150,20 @@
 .esp__type-seg {
   display:        flex;
   border:         1px solid var(--set-border);
-  border-radius:  3px;
+  border-radius:  var(--set-r-sm);
   overflow:       hidden;
 }
 
 .esp__type-btn {
   flex:        1;
+  min-width:   24px;
+  min-height:  24px;
   padding:     3px 0;
   background:  transparent;
   border:      none;
   border-right: 1px solid var(--set-border);
   color:       var(--set-text-faint);
-  font-size:   0.65rem;
+  font-size:   var(--set-fs-xs);
   font-weight: 600;
   font-family: inherit;
   cursor:      pointer;
@@ -213,7 +215,7 @@
 
 .esp__item-row {
   display: grid;
-  grid-template-columns: 36px 1fr 90px 40px 28px;
+  grid-template-columns: 36px 1fr 114px 40px 28px;
   align-items: center;
   padding: 4px 8px;
   gap: 4px;
@@ -229,8 +231,9 @@
 
 .esp__check-wrap input[type='checkbox'] {
   accent-color: var(--set-accent);
-  width: 14px;
-  height: 14px;
+  /* 24px 는 WCAG 2.5.8(Target Size Minimum). 마우스 전용(D-1)이라 44px 는 과하다 */
+  width: 24px;
+  height: 24px;
   cursor: pointer;
 }
 
@@ -239,9 +242,9 @@
   padding: 3px 6px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: 0.82rem;
+  font-size: var(--set-fs-xs);
   font-family: inherit;
   width: 100%;
 }
@@ -262,7 +265,7 @@
   justify-content: center;
   background: var(--set-surface-1);
   border: 1.5px dashed var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   cursor: pointer;
   padding: 2px;
   transition: border-color 0.1s, background 0.1s;
@@ -288,7 +291,7 @@
 }
 
 .esp__icon-placeholder {
-  font-size: 1rem;
+  font-size: var(--set-fs-lg);
   color: var(--set-text-faint);
   line-height: 1;
 }
@@ -302,17 +305,17 @@
 
 /* 삭제 버튼 */
 .esp__del-btn {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   background: none;
   border: none;
   color: var(--set-text-faint);
-  font-size: 1rem;
+  font-size: var(--set-fs-lg);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 2px;
+  border-radius: var(--set-r-sm);
   flex-shrink: 0;
 }
 
@@ -341,7 +344,7 @@
   padding: 5px 6px;
   background: var(--set-surface-0);
   border: 1.5px solid var(--set-border);
-  border-radius: 5px;
+  border-radius: var(--set-r-md);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s;
   min-width: 52px;
@@ -366,7 +369,7 @@
 }
 
 .esp__icon-cell-name {
-  font-size: 0.60rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   text-align: center;
   line-height: 1.2;
@@ -382,16 +385,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.70rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   border: 1px dashed var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
 }
 
 /* ── 안내 ── */
 
 .esp__hint {
-  font-size: 0.74rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   margin: 0;
 }

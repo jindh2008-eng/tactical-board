@@ -10,7 +10,7 @@
 }
 
 .hsp__empty {
-  font-size:  0.82rem;
+  font-size:  var(--set-fs-xs);
   color:      var(--set-text-faint);
   font-style: italic;
   margin:     0;
@@ -42,9 +42,9 @@
   padding:       0 8px;
   background:    var(--set-warn-bg);
   border:        1px solid var(--set-warn-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   color:         var(--set-warn);
-  font-size:     0.80rem;
+  font-size:     var(--set-fs-xs);
   font-family:   inherit;
   outline:       none;
   transition:    border-color 0.1s;
@@ -71,7 +71,7 @@
 }
 
 .hsp__unit {
-  font-size:   0.78rem;
+  font-size:   var(--set-fs-xs);
   color:       var(--set-text-faint);
   white-space: nowrap;
 }
@@ -84,9 +84,9 @@
   padding:       0;
   background:    transparent;
   border:        1px solid var(--set-danger-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   color:         var(--set-danger);
-  font-size:     0.72rem;
+  font-size:     var(--set-fs-xs);
   cursor:        pointer;
   flex-shrink:   0;
   transition:    background 0.1s;
@@ -104,9 +104,9 @@
   padding:       6px 14px;
   background:    transparent;
   border:        1px dashed var(--set-ok-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   color:         var(--set-ok);
-  font-size:     0.78rem;
+  font-size:     var(--set-fs-xs);
   font-family:   inherit;
   cursor:        pointer;
   transition:    background 0.1s, border-color 0.1s;

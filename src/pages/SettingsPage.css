@@ -121,13 +121,12 @@
   --set-h-input: 32px;
   --set-h-btn: 32px;
   --set-h-btn-sm: 26px;  /* 표 안 인라인. 클릭영역은 ::before 로 32px 확보 */
-  --set-aside-w: 360px;  /* 보조 열 — ≥1800px 에서만 (S-4) */
+  --set-aside-w: 360px;  /* 보조 열 — ≥1800px 에서만 */
 
   /*
-   * ── 이관 대기 ──
-   * --set-font-card·--set-font-meta 는 S-2 에서 --set-fs-sm·--set-fs-xs 로 소진했다.
-   * 남은 하나는 폭이라 레이아웃 단계에서 다룬다.
-   *   --set-nav-w → 240px   S-4 (§4.2. 1280 구간은 Q-7 판단 후)
+   * 사이드바 폭 — 3단 브레이크포인트 중 1280~1799 구간의 값이다(§4.2).
+   * 240px 로 통일하면 이 구간 본문 사용률이 79.4% → 76.3% 로 오히려 나빠진다
+   * (Q-7, 08-24 실측). ≥1800px 에서만 240px 로 넓힌다 — 아래 미디어쿼리.
    */
   --set-nav-w: 200px;
 
@@ -178,25 +177,13 @@
 
 .settings-page__topbar .slp__name-input {
   height: var(--set-h-input);
-  font-size: 0.95rem;
+  font-size: var(--set-fs-md);
   font-weight: 600;
   color: var(--set-text);
 }
 
 .settings-page__topbar .slp__name-group {
   flex: 0 1 380px;
-}
-
-.settings-page__topbar .slp__btn {
-  height: var(--set-h-input);
-  padding: 0 14px;
-  font-size: var(--set-fs-sm);
-}
-
-.settings-page__topbar .slp__btn--sm {
-  height: 26px;
-  padding: 0 10px;
-  font-size: var(--set-fs-xs);
 }
 
 /* 저장 목록 · 다른 이름으로 저장은 바 아래로 겹쳐 띄운다 — 본문을 밀지 않는다 */
@@ -209,13 +196,13 @@
   max-width: calc(100% - 40px);
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   padding: 8px;
   z-index: 30;
 }
 
-/* ── 전체 레이아웃 (사이드바 + 메인) ── */
+/* ── 전체 레이아웃 (사이드바 + 메인 + 보조 열) ── */
 
 .settings-page__layout {
   flex: 1;
@@ -233,6 +220,12 @@
   background: var(--set-surface-nav);
   display: flex;
   flex-direction: column;
+}
+
+.settings-page__nav-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding-bottom: 12px;
 }
 
@@ -242,6 +235,9 @@
 }
 
 .settings-page__nav-group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 14px 16px 6px;
   font-size: var(--set-fs-xs);
   font-weight: 700;
@@ -249,10 +245,34 @@
   color: var(--set-text-faint);
 }
 
+/* 단계 번호 — "무엇을 정의하는가"가 아니라 "어떤 순서로 하는가"를 드러낸다(§4.1) */
+.settings-page__nav-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--set-surface-2);
+  color: var(--set-text-faint);
+  font-size: var(--set-fs-xs);
+  transform: scale(0.85);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-page__nav-row {
+  display: flex;
+  align-items: center;
+}
+
 .settings-page__nav-item {
   display: flex;
   align-items: center;
-  width: 100%;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
   min-height: 36px;
   padding: 8px 16px 8px 21px;
   font-size: var(--set-fs-md);
@@ -271,30 +291,137 @@
 
 .settings-page__nav-item:hover {
   color: var(--set-text);
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--set-surface-hover);
 }
 
 .settings-page__nav-item--active {
   color: var(--set-text);
   border-left-color: var(--set-accent);
-  background-color: rgba(68, 136, 204, 0.10);
+  background-color: var(--set-accent-bg);
   font-weight: 600;
+}
+
+.settings-page__nav-item:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: -2px;
+}
+
+/* 완료 배지 — 건수 또는 미입력 경고점(§4.1). .settings-page__nav-row 의 두 번째 자식이다 */
+.settings-page__nav-badge {
+  flex-shrink: 0;
+  padding-right: 12px;
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-faint);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.settings-page__nav-badge--warn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--set-warn);
+}
+
+.settings-page__nav-warn-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--set-warn);
+  flex-shrink: 0;
+}
+
+/* ── 준비도 요약 (사이드바 하단 고정, §4.1) ── */
+
+.settings-page__readiness {
+  flex-shrink: 0;
+  padding: var(--set-sp-4) var(--set-sp-5);
+  border-top: 1px solid var(--set-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-2);
+}
+
+.settings-page__readiness-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.settings-page__readiness-label {
+  font-size: var(--set-fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--set-text-faint);
+}
+
+.settings-page__readiness-count {
+  font-size: var(--set-fs-lg);
+  font-weight: 700;
+  color: var(--set-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-page__readiness-count--done {
+  color: var(--set-ok-strong);
+}
+
+.settings-page__readiness-bar {
+  height: 4px;
+  border-radius: var(--set-r-sm);
+  background: var(--set-surface-2);
+  overflow: hidden;
+}
+
+.settings-page__readiness-bar-fill {
+  height: 100%;
+  background: var(--set-ok);
+  transition: width var(--set-dur) var(--set-ease);
+}
+
+.settings-page__readiness-warn {
+  font-size: var(--set-fs-xs);
+  color: var(--set-warn);
+  line-height: 1.5;
 }
 
 /* ── 메인 콘텐츠 영역 ── */
 
 .settings-page__main {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
-  padding: 26px 32px;
-  max-width: 1180px;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 시나리오 예측: 패딩 없이 전체 활용 */
+/* sticky 화면 헤더(§4.3) — 스크롤과 함께 사라지지 않는다 */
+.settings-page__main-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+  padding: 22px 32px 16px;
+  background: var(--set-surface-0);
+  border-bottom: 1px solid var(--set-border-subtle);
+}
+
+.settings-page__main-body {
+  flex: 1;
+  padding: 22px 32px 32px;
+}
+
+/* 시나리오 예측: 패딩 없이 전체 활용, sticky 헤더도 없다(§10 범위 밖) */
 .settings-page__main--predict {
-  padding: 0;
-  max-width: none;
   overflow: hidden;
+}
+
+.settings-page__main--predict .settings-page__main-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
 }
 
 /* ── 섹션 ── */
@@ -303,11 +430,20 @@
   margin-bottom: 32px;
 }
 
+.settings-page__section:last-child {
+  margin-bottom: 0;
+}
+
 .settings-page__section-title {
   font-size: var(--set-fs-title);
   font-weight: 700;
   color: var(--set-text);
   margin-bottom: 6px;
+}
+
+/* sticky 헤더 안에서는 여백을 지운다 — 헤더 쪽 패딩이 이미 있다 */
+.settings-page__main-head .settings-page__section-title {
+  margin-bottom: 4px;
 }
 
 /* ── 힌트 텍스트 ── */
@@ -318,6 +454,29 @@
   line-height: 1.65;
   max-width: 760px;
   margin-bottom: 18px;
+}
+
+.settings-page__main-head .settings-page__hint {
+  margin-bottom: 0;
+}
+
+/* ── 보조 열 (§4.2) — ≥1800px 에서만 렌더된다. 없는 화면은 컴포넌트가 null 을 반환한다 */
+
+.settings-page__aside {
+  display: none; /* ≥1800px 미디어쿼리에서 뒤집는다 — 아래 브레이크포인트 블록 */
+  width: var(--set-aside-w);
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--set-border);
+  background: var(--set-surface-nav);
+  padding: var(--set-sp-5);
+}
+
+.settings-page__aside-title {
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  color: var(--set-text);
+  margin-bottom: var(--set-sp-4);
 }
 
 /* ── 탭 (건물 · 소방시설) ── */
@@ -358,7 +517,7 @@
 .settings-page__card {
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
-  border-radius: 5px;
+  border-radius: var(--set-r-md);
   padding: 14px 16px;
   margin-bottom: 16px;
   display: flex;
@@ -428,9 +587,9 @@
   padding: 0 10px;
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text);
-  font-size: 0.95rem;
+  font-size: var(--set-fs-md);
   font-weight: 600;
   text-align: right;
 }
@@ -447,7 +606,7 @@
   color: var(--set-text-dim);
   padding: 10px 14px;
   border: 1px dashed var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
 }
 
 /* ── 프리셋 서브 블록 (기존 호환) ── */
@@ -556,4 +715,116 @@
 
 .settings-page .dsp > .dsp__group:last-child {
   grid-column: 1 / -1;
+}
+
+/* ─────────────────────────────────────────────
+   브레이크포인트 3단 (SETTINGS_MODE_UI_PLAN.md §4.2 · Q-1)
+   1280 은 하한, 1800 은 보조 열이 등장하는 지점, 그 사이는 지금 규칙 그대로다.
+   균일 배율(--ui-scale)을 이식하지 않는 이유는 CLAUDE.md·DEFERRED P-5 참고 —
+   열을 늘리지 못해 F-5(공백)를 못 고친다.
+   ─────────────────────────────────────────────*/
+
+@media (width >= 1800px) {
+  .settings-page {
+    --set-nav-w: 240px;
+  }
+
+  .settings-page__aside {
+    display: block;
+  }
+}
+
+/* < 1280px — 사이드바가 상단 가로 탭으로 접힌다 */
+@media (width <= 1279px) {
+  .settings-page__layout {
+    flex-direction: column;
+  }
+
+  .settings-page__sidebar {
+    width: 100%;
+    max-height: 45vh;
+    flex-direction: column;
+    border-right: none;
+    border-bottom: 1px solid var(--set-border);
+  }
+
+  .settings-page__nav-scroll {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: var(--set-sp-2) var(--set-sp-3);
+  }
+
+  .settings-page__nav-group {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  /* 그룹 라벨은 세로 여백을 두고 있었다 — 가로 탭 줄에서는 구분선으로 축소 */
+  .settings-page__nav-group-label {
+    padding: 0 var(--set-sp-2);
+    border-right: 1px solid var(--set-border-subtle);
+    margin-right: var(--set-sp-1);
+    white-space: nowrap;
+  }
+
+  .settings-page__nav-group:first-child .settings-page__nav-group-label {
+    display: none;
+  }
+
+  .settings-page__nav-row {
+    flex-shrink: 0;
+  }
+
+  .settings-page__nav-item {
+    flex: none;
+    min-height: 32px;
+    padding: 6px 12px;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    border-radius: var(--set-r-sm);
+  }
+
+  .settings-page__nav-item--active {
+    border-left-color: transparent;
+    border-bottom-color: var(--set-accent);
+  }
+
+  /* 배지는 좁은 탭에서 소음이 된다 — 경고점만 남긴다 */
+  .settings-page__nav-badge {
+    padding-right: 8px;
+  }
+
+  .settings-page__nav-badge:not(.settings-page__nav-badge--warn) {
+    display: none;
+  }
+
+  /* 준비도 요약은 상단 탭 줄에 붙는 두 번째 줄로 압축한다 */
+  .settings-page__readiness {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--set-sp-3);
+    padding: var(--set-sp-2) var(--set-sp-4);
+    border-top: 1px solid var(--set-border-subtle);
+  }
+
+  .settings-page__readiness-bar {
+    flex: 1;
+    max-width: 160px;
+  }
+
+  .settings-page__readiness-warn {
+    display: none;
+  }
+
+  .settings-page__main-head {
+    padding: 16px 20px 12px;
+  }
+
+  .settings-page__main-body {
+    padding: 16px 20px 24px;
+  }
 }

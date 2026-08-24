@@ -5,7 +5,7 @@
 .slp {
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@
 }
 
 .slp__label {
-  font-size: 0.72rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   white-space: nowrap;
   flex-shrink: 0;
@@ -41,9 +41,9 @@
   padding: 5px 9px;
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: 0.8rem;
+  font-size: var(--set-fs-xs);
   outline: none;
   min-width: 0;
 }
@@ -58,96 +58,10 @@
   flex-wrap: wrap;
   flex-shrink: 0;
 }
-
-/* 버튼 공통 */
-
-.slp__btn {
-  padding: 5px 12px;
-  background: var(--set-surface-2);
-  border: 1px solid var(--set-border);
-  border-radius: 3px;
-  color: var(--set-text-body);
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.1s, border-color 0.1s;
-}
-
-.slp__btn:hover:not(:disabled) {
-  background: var(--set-surface-hover);
-}
-
-.slp__btn:active:not(:disabled) {
-  transform: scale(0.96);
-  filter: brightness(0.80);
-}
-
-.slp__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.slp__btn--primary {
-  background: var(--set-accent);
-  border-color: var(--set-accent);
-  color: var(--set-on-accent);
-}
-
-.slp__btn--primary:hover:not(:disabled) {
-  background: var(--set-accent-strong);
-}
-
-.slp__btn--saved {
-  background: var(--set-ok-bg);
-  border-color: var(--set-ok-border);
-  color: var(--set-ok-strong);
-  transition: background 0.2s, color 0.2s;
-}
-
-.slp__btn--new {
-  background: var(--set-ok-bg);
-  border-color: var(--set-ok-border);
-  color: var(--set-ok-strong);
-}
-
-.slp__btn--new:hover:not(:disabled) {
-  background: var(--set-ok-bg-hover);
-}
-
-.slp__btn--active {
-  background: var(--set-accent-bg);
-  border-color: var(--set-accent);
-}
-
-.slp__btn--danger {
-  background: var(--set-danger-bg);
-  border-color: var(--set-danger-border);
-  color: var(--set-danger-strong);
-}
-
-.slp__btn--danger:hover:not(:disabled) {
-  background: var(--set-danger-bg-hover);
-  border-color: var(--set-danger);
-}
-
-.slp__btn--sm {
-  padding: 3px 9px;
-  font-size: 0.7rem;
-}
-
-.slp__btn--export {
-  background: var(--set-accent-bg);
-  border-color: var(--set-border);
-  color: var(--set-accent-strong);
-}
-
-.slp__btn--export:hover:not(:disabled) {
-  background: var(--set-surface-hover);
-  border-color: var(--set-border-strong);
-}
-
-/* 다른 이름으로 저장 */
+/*
+ * 버튼 스타일은 여기 없다 — ui/SetButton 이 전담한다(§6).
+ * 패널마다 __btn 을 다시 정의하던 것이 F-1 의 직접 원인이었다.
+ */
 
 .slp__save-as-row {
   display: flex;
@@ -156,7 +70,7 @@
   padding: 8px 10px;
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
 }
 
 .slp__save-as-row .slp__name-input {
@@ -175,7 +89,7 @@
 }
 
 .slp__empty {
-  font-size: 0.75rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   padding: 14px;
   text-align: center;
@@ -188,7 +102,7 @@
   padding: 7px 10px;
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   gap: 10px;
 }
 
@@ -206,7 +120,7 @@
 }
 
 .slp__item-name {
-  font-size: 0.8rem;
+  font-size: var(--set-fs-xs);
   font-weight: 600;
   color: var(--set-text-body);
   white-space: nowrap;
@@ -215,7 +129,7 @@
 }
 
 .slp__item-date {
-  font-size: 0.65rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
 }
 
@@ -223,4 +137,15 @@
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+}
+
+.slp__toast-stack {
+  position: fixed;
+  left: 50%;
+  bottom: var(--set-sp-8);
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-2);
 }

@@ -218,6 +218,9 @@ export function CommandProcedurePanel() {
 
       {/* 카테고리 목록 */}
       <div className="cp-panel__categories">
+        {categories.length === 0 && (
+          <p className="cp-panel__empty">등록된 카테고리가 없습니다. 아래에서 추가해주세요.</p>
+        )}
         {categories.map((category, catIndex) => {
           const curItemType = getNewItemType(category.id);
           return (
@@ -249,13 +252,14 @@ export function CommandProcedurePanel() {
                     autoFocus
                   />
                 ) : (
-                  <span
+                  <button
+                    type="button"
                     className="cp-panel__category-title"
                     onClick={() => startEditCategory(category.id, category.categoryTitle)}
                     title="클릭하여 수정"
                   >
                     {category.categoryTitle}
-                  </span>
+                  </button>
                 )}
 
                 <button

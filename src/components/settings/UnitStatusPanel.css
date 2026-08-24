@@ -5,7 +5,7 @@
 }
 
 .unit-status-panel__section-title {
-  font-size: 0.80rem;
+  font-size: var(--set-fs-xs);
   font-weight: 800;
   color: var(--set-text-body);
   letter-spacing: 0.04em;
@@ -25,7 +25,7 @@
 }
 
 .unit-status-panel__group-label {
-  font-size: 0.72rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   color: var(--set-text-faint);
   text-transform: uppercase;
@@ -43,7 +43,7 @@
 .unit-status-panel__type-block {
   background: var(--set-surface-2);
   border: 1px solid var(--set-border);
-  border-radius: 5px;
+  border-radius: var(--set-r-md);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -51,7 +51,7 @@
 }
 
 .unit-status-panel__type-header {
-  font-size: 0.76rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   color: var(--set-text-body);
 }
@@ -64,7 +64,7 @@
 }
 
 .unit-status-panel__empty {
-  font-size: 0.68rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
 }
 
@@ -73,26 +73,31 @@
   align-items: center;
   gap: 4px;
   padding: 2px 4px;
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   background: rgba(255,255,255,0.04);
 }
 
 .unit-status-panel__message-text {
   flex: 1;
-  font-size: 0.74rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-body);
   line-height: 1.4;
 }
 
 .unit-status-panel__remove-btn {
   flex-shrink: 0;
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   color: var(--set-text-faint);
   cursor: pointer;
-  font-size: 0.64rem;
+  font-size: var(--set-fs-xs);
   padding: 1px 3px;
-  border-radius: 2px;
+  border-radius: var(--set-r-sm);
   line-height: 1;
   transition: color 0.1s, background-color 0.1s;
 }
@@ -112,10 +117,10 @@
   flex: 1;
   min-width: 0;
   padding: 3px 6px;
-  font-size: 0.72rem;
+  font-size: var(--set-fs-xs);
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
   outline: none;
   transition: border-color 0.15s;
@@ -127,11 +132,11 @@
 
 .unit-status-panel__add-btn {
   padding: 3px 8px;
-  font-size: 0.72rem;
+  font-size: var(--set-fs-xs);
   background: var(--set-accent);
   color: var(--set-on-accent);
   border: none;
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   cursor: pointer;
   white-space: nowrap;
   transition: opacity 0.15s;

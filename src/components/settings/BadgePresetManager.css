@@ -7,7 +7,7 @@
   display: grid;
   grid-template-columns: 220px 1fr;
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   overflow: hidden;
   min-height: 380px;
   max-height: 560px;
@@ -27,7 +27,7 @@
 }
 
 .bpm__panel-title {
-  font-size: 0.68rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   color: var(--set-text-faint);
   letter-spacing: 0.08em;
@@ -35,11 +35,11 @@
 }
 
 .bpm__count-badge {
-  font-size: 0.65rem;
+  font-size: var(--set-fs-xs);
   background: var(--set-surface-2);
   color: var(--set-text-dim);
   padding: 1px 7px;
-  border-radius: 8px;
+  border-radius: var(--set-r-lg);
 }
 
 /* ── 아이콘 버튼 ── */
@@ -52,9 +52,9 @@
   height: 22px;
   background: var(--set-surface-2);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: 1rem;
+  font-size: var(--set-fs-lg);
   line-height: 1;
   cursor: pointer;
   transition: background 0.1s;
@@ -69,7 +69,7 @@
 .bpm__icon-btn--sm {
   width: 18px;
   height: 18px;
-  font-size: 0.75rem;
+  font-size: var(--set-fs-xs);
 }
 
 .bpm__icon-btn--danger:hover {
@@ -112,9 +112,9 @@
   padding: 2px 8px;
   background: var(--set-surface-2);
   border: 1px solid var(--set-border-subtle);
-  border-radius: 10px;
+  border-radius: var(--set-r-lg);
   color: var(--set-text-faint);
-  font-size: 0.65rem;
+  font-size: var(--set-fs-xs);
   cursor: pointer;
   transition: background 0.1s, border-color 0.1s, color 0.1s;
 }
@@ -173,7 +173,7 @@
 }
 
 .bpm__group-label {
-  font-size: 0.8rem;
+  font-size: var(--set-fs-xs);
   font-weight: 600;
   color: var(--set-text-body);
   white-space: nowrap;
@@ -188,7 +188,7 @@
 }
 
 .bpm__group-key {
-  font-size: 0.62rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   white-space: nowrap;
   overflow: hidden;
@@ -197,11 +197,11 @@
 }
 
 .bpm__group-count {
-  font-size: 0.62rem;
+  font-size: var(--set-fs-xs);
   background: var(--set-surface-2);
   color: var(--set-text-faint);
   padding: 0 5px;
-  border-radius: 8px;
+  border-radius: var(--set-r-lg);
   flex-shrink: 0;
 }
 
@@ -268,7 +268,7 @@
   padding: 7px 10px;
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
 }
 
 .bpm__preset-preview {
@@ -280,13 +280,13 @@
 }
 
 .bpm__preview-line1 {
-  font-size: 0.8rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   color: var(--set-text-body);
 }
 
 .bpm__preview-line2 {
-  font-size: 0.68rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
 }
 
@@ -314,9 +314,9 @@
   padding: 5px 8px;
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: 0.75rem;
+  font-size: var(--set-fs-xs);
   outline: none;
 }
 
@@ -329,7 +329,7 @@
 }
 
 .bpm__input--sm {
-  font-size: 0.68rem;
+  font-size: var(--set-fs-xs);
 }
 
 .bpm__input--flex {
@@ -344,9 +344,9 @@
   padding: 4px 12px;
   background: var(--set-surface-2);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: 0.72rem;
+  font-size: var(--set-fs-xs);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -386,7 +386,7 @@
 
 .bpm__btn--xs {
   padding: 2px 8px;
-  font-size: 0.68rem;
+  font-size: var(--set-fs-xs);
 }
 
 .bpm__form-actions {
@@ -397,7 +397,7 @@
 /* ── 빈 상태 ── */
 
 .bpm__empty {
-  font-size: 0.75rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   padding: 14px 10px;
   text-align: center;

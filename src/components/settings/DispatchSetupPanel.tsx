@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import type { DispatchSetup } from '../../types/settings';
 import { secsToMmss, mmssToSecs, computeRosterDisplayName } from '../../utils/dispatchRoster';
+import { SetIconButton, IconClose } from './ui';
 import './DispatchSetupPanel.css';
 
 const AGENCY_PRESETS = ['지휘차', '시청', '경찰', '보건소', '군부대', '한전', '가스'];
@@ -210,13 +211,13 @@ export function DispatchSetupPanel() {
             {extraUnits.map(u => (
               <div key={u.id} className="dsp__extra-item">
                 <span className="dsp__extra-name">{u.name}</span>
-                <button
-                  className="dsp__extra-remove"
-                  type="button"
+                <SetIconButton
+                  size="sm"
+                  variant="danger"
+                  label={`${u.name} 제거`}
+                  icon={<IconClose size={13} />}
                   onClick={() => removeDispatchExtraUnit(u.id)}
-                >
-                  ✕
-                </button>
+                />
               </div>
             ))}
           </div>

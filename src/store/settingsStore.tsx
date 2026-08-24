@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import type { BuildingConfig, FireStatus } from '../types';
 import type {
   BuildingSettings, TimingSettings,
@@ -37,7 +37,7 @@ import { DEFAULT_BUILDING_CONFIG } from '../data/buildingData';
 // Context 타입
 // ─────────────────────────────────────────────
 
-interface SettingsContextValue {
+export interface SettingsContextValue {
   // ── 건물 설정 ────────────────────────────────
   building:             BuildingSettings;
   updateBuildingConfig:     (config: BuildingConfig) => void;
@@ -140,6 +140,21 @@ interface SettingsContextValue {
   loadSettings:         (id: string) => void;
   deleteSettingsEntry:  (id: string) => void;
   newSettings:          () => void;
+
+  // ── 저장 · 반영 상태 (SETTINGS_MODE_UI_PLAN.md §7.1 F-3) ──
+  /** 작업본이 activeSettingsId 로 저장된 세트와 다른가 — "저장 필요" */
+  isDirty:       boolean;
+  /** 작업본이 이 탭에서 마지막으로 훈련에 반영한 스냅샷과 같은가 */
+  isApplied:     boolean;
+  lastSavedAt:   number | null;
+  lastAppliedAt: number | null;
+  /**
+   * 훈련모드가 "훈련 세팅"을 눌러 지금 작업본을 실제로 반영했다고 알리는 진입점.
+   * TrainingContext.loadSettings() 에서만 호출한다 — 두 Provider 가 같은 트리에
+   * 있어(App.tsx: SettingsProvider > TrainingProvider) Context 로 직접 부른다.
+   * sessionStorage 왕복 없이 현재 상태를 그대로 스냅샷 뜬다.
+   */
+  markApplied:   () => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -238,6 +253,31 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [activeSettingsId,   setActiveSettingsId]   = useState<string | null>(null);
   const [activeSettingsName, setActiveSettingsName] = useState<string>('새 설정');
 
+  // ── 저장 · 반영 상태 (§7.1 F-3) ──────────────────
+  //
+  // "얕은 비교"는 22개 필드를 하나씩 비교하는 대신 저장 대상과 정확히 같은
+  // 모양으로 직렬화해 문자열로 비교한다 — 이미 autosave 이펙트가 매번 하는
+  // 일이라(아래) 별도 디바운스 없이 그 이펙트에 얹는다.
+  const buildSnapshot = useCallback(() => JSON.stringify({
+    building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
+    timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
+    medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
+    fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
+    unitTagPresetConfig,
+  }), [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+
+  /** "저장됨" 기준선. undefined = 아직 못 정함(마운트 직후) */
+  const savedSnapshotRef = useRef<string | undefined>(undefined);
+  /** "훈련에 반영됨" 기준선. null = 이 탭에서 아직 한 번도 반영 안 함 */
+  const appliedSnapshotRef = useRef<string | null>(null);
+  /** loadSettings/newSettings 직후 한 번, 다음 이펙트 실행을 "저장됨"으로 봉인한다 */
+  const markCleanRef = useRef(false);
+
+  const [isDirty,       setIsDirty]       = useState(false);
+  const [isApplied,     setIsApplied]     = useState(false);
+  const [lastSavedAt,   setLastSavedAt]   = useState<number | null>(null);
+  const [lastAppliedAt, setLastAppliedAt] = useState<number | null>(null);
+
   // dispatchSetup 변경 시 로스터 재생성 (기존 ID·도착시간 보존)
   useEffect(() => {
     setDispatchRoster(prev => buildRoster(dispatchSetup, prev));
@@ -249,8 +289,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { saveUnitStatusConfig(unitStatusConfig); }, [unitStatusConfig]);
   useEffect(() => { saveUnitTagPresetConfig(unitTagPresetConfig); }, [unitTagPresetConfig]);
 
-  // 설정 변경 시 자동 저장 (새로고침 대비)
+  // 설정 변경 시 자동 저장 (새로고침 대비) — 같은 이펙트에서 dirty/applied 도 갱신한다.
   useEffect(() => {
+    const snapshot = buildSnapshot();
     saveWorkingPresets({
       sharedBadgePresets: [], unitBadgePresets: [],
       building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
@@ -259,7 +300,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
       unitTagPresetConfig,
     });
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+
+    // 마운트 직후 · loadSettings/newSettings 직후는 "저장됨" 상태로 봉인한다.
+    // 그 외에는 사용자가 실제로 뭔가 바꿨다는 뜻이라 기준선과 비교만 한다.
+    if (savedSnapshotRef.current === undefined || markCleanRef.current) {
+      savedSnapshotRef.current = snapshot;
+      markCleanRef.current = false;
+    }
+    setIsDirty(snapshot !== savedSnapshotRef.current);
+    setIsApplied(appliedSnapshotRef.current !== null && snapshot === appliedSnapshotRef.current);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig, buildSnapshot]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -533,7 +583,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+    // saveSettings 는 지금 상태를 그대로 저장하는 것이라(다른 필드를 안 바꾼다)
+    // 이펙트를 기다릴 필요 없이 여기서 바로 기준선을 옮긴다.
+    savedSnapshotRef.current = buildSnapshot();
+    setIsDirty(false);
+    setLastSavedAt(Date.now());
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig, buildSnapshot]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
@@ -549,11 +604,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
     setSettingsList(prev => upsertSettingsSet(prev, set));
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+    savedSnapshotRef.current = buildSnapshot();
+    setIsDirty(false);
+    setLastSavedAt(Date.now());
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig, buildSnapshot]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
     if (!set) return;
+    // 아래 setter 들이 필드를 바꾸면 autosave 이펙트가 다시 돈다 — 그때 새
+    // 상태를 "저장됨" 기준선으로 봉인하라는 표시다(사용자가 고친 게 아니라
+    // 불러온 것이므로 dirty 가 아니다).
+    markCleanRef.current = true;
     // 구버전·손상된 저장 세트에 building이 없을 수 있음 —
     // JSON.parse(undefined)는 SyntaxError를 던지므로 형제 필드(timing/dispatchSetup)와
     // 동일하게 존재 여부를 먼저 확인하고, 없으면 현재 값을 유지한다.
@@ -615,6 +677,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, [activeSettingsId]);
 
   const newSettings = useCallback(() => {
+    markCleanRef.current = true;
     setConfig(DEFAULT_BUILDING_CONFIG);
     setFireFloor(1);
     setFireStatus(null);
@@ -636,6 +699,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setActiveSettingsId(null);
     setActiveSettingsName('새 설정');
   }, []);
+
+  const markApplied = useCallback(() => {
+    appliedSnapshotRef.current = buildSnapshot();
+    setLastAppliedAt(Date.now());
+    setIsApplied(true);
+  }, [buildSnapshot]);
 
   return (
     <SettingsContext.Provider value={{
@@ -664,6 +733,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       unitTagPresetConfig, updateUnitTagPresets,
       settingsList, activeSettingsId, activeSettingsName, setActiveSettingsName,
       saveSettings, saveSettingsAs, loadSettings, deleteSettingsEntry, newSettings,
+      isDirty, isApplied, lastSavedAt, lastAppliedAt, markApplied,
     }}>
       {children}
     </SettingsContext.Provider>

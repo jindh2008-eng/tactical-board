@@ -13,21 +13,21 @@
   padding: 8px 10px;
   background-color: var(--set-surface-nav);
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
 }
 
 .cp-panel__active-level-label {
-  font-size: 0.80rem;
+  font-size: var(--set-fs-xs);
   font-weight: 600;
   color: var(--set-text-body);
 }
 
 .cp-panel__active-level-select {
-  font-size: 0.82rem;
+  font-size: var(--set-fs-xs);
   padding: 3px 8px;
   background-color: var(--set-surface-1);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-accent);
   font-weight: 600;
 }
@@ -42,11 +42,11 @@
 }
 
 .cp-panel__level-tab {
-  font-size: 0.82rem;
+  font-size: var(--set-fs-xs);
   padding: 4px 16px;
   background: transparent;
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-faint);
   cursor: pointer;
   transition: background-color 0.1s, color 0.1s, border-color 0.1s;
@@ -71,9 +71,18 @@
   gap: 16px;
 }
 
+.cp-panel__empty {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-faint);
+  padding: 10px;
+  text-align: center;
+  border: 1px dashed var(--set-border);
+  border-radius: var(--set-r-sm);
+}
+
 .cp-panel__category {
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   overflow: hidden;
 }
 
@@ -92,11 +101,23 @@
 }
 
 .cp-panel__category-title {
+  /* <button> 리셋 — 버튼으로 바꾼 이유는 클릭만 되던 <span> 이 키보드로 닿지 않아서다 */
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  min-height: 24px;
   flex: 1;
-  font-size: 0.84rem;
+  font-size: var(--set-fs-sm);
   font-weight: 700;
   color: var(--set-text-body);
   cursor: pointer;
+}
+
+.cp-panel__category-title:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: 1px;
+  border-radius: var(--set-r-sm);
 }
 
 .cp-panel__category-title:hover {
@@ -105,7 +126,7 @@
 
 .cp-panel__category-title-input {
   flex: 1;
-  font-size: 0.84rem;
+  font-size: var(--set-fs-sm);
   font-weight: 700;
   background: transparent;
   border: none;
@@ -119,7 +140,7 @@
 
 .cp-panel__drag-handle {
   color: var(--set-text-faint);
-  font-size: 0.85rem;
+  font-size: var(--set-fs-sm);
   cursor: grab;
   user-select: none;
   flex-shrink: 0;
@@ -130,7 +151,7 @@
 
 .cp-panel__drag-handle:hover { opacity: 1; color: var(--set-text-body); }
 .cp-panel__drag-handle:active { cursor: grabbing; }
-.cp-panel__drag-handle--item { font-size: 0.75rem; }
+.cp-panel__drag-handle--item { font-size: var(--set-fs-xs); }
 
 /* ── 항목 ────────────────────────────────────── */
 
@@ -151,12 +172,13 @@
   background-color: rgba(68, 170, 255, 0.08);
   outline: 1px dashed var(--set-accent);
   outline-offset: -1px;
-  border-radius: 2px;
+  border-radius: var(--set-r-sm);
 }
 
 .cp-panel__item-input {
   flex: 1;
-  font-size: 0.78rem;
+  min-height: 24px;
+  font-size: var(--set-fs-xs);
   background: transparent;
   border: none;
   border-bottom: 1px solid transparent;
@@ -174,13 +196,18 @@
 /* ── 삭제 버튼 ───────────────────────────────── */
 
 .cp-panel__delete-btn {
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   color: var(--set-text-faint);
   cursor: pointer;
-  font-size: 0.68rem;
+  font-size: var(--set-fs-xs);
   padding: 1px 4px;
-  border-radius: 2px;
+  border-radius: var(--set-r-sm);
   flex-shrink: 0;
   transition: color 0.1s, background-color 0.1s;
 }
@@ -200,10 +227,11 @@
 }
 
 .cp-panel__type-select {
-  font-size: 0.72rem;
+  min-height: 24px;
+  font-size: var(--set-fs-xs);
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
   padding: 2px 4px;
   outline: none;
@@ -212,10 +240,11 @@
 
 .cp-panel__add-item-input {
   flex: 1;
-  font-size: 0.76rem;
+  min-height: 24px;
+  font-size: var(--set-fs-xs);
   background: transparent;
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
   padding: 3px 6px;
   outline: none;
@@ -226,11 +255,12 @@
 }
 
 .cp-panel__add-item-btn {
-  font-size: 0.74rem;
+  min-height: 24px;
+  font-size: var(--set-fs-xs);
   padding: 2px 8px;
   background: transparent;
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-faint);
   cursor: pointer;
   white-space: nowrap;
@@ -252,10 +282,10 @@
 
 .cp-panel__add-category-input {
   flex: 1;
-  font-size: 0.78rem;
+  font-size: var(--set-fs-xs);
   background: transparent;
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
   padding: 4px 8px;
   outline: none;
@@ -266,11 +296,11 @@
 }
 
 .cp-panel__add-category-btn {
-  font-size: 0.76rem;
+  font-size: var(--set-fs-xs);
   padding: 4px 12px;
   background: transparent;
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-faint);
   cursor: pointer;
   white-space: nowrap;
@@ -285,10 +315,10 @@
 /* ── 타입 배지 ───────────────────────────────── */
 
 .cp-panel__type-badge {
-  font-size: 0.66rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   flex-shrink: 0;
   letter-spacing: 0.01em;
 }

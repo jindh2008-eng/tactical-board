@@ -1,13 +1,33 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import { exportSettings, importSettings } from '../../utils/settingsStorage';
+import type { SettingsSet } from '../../utils/settingsStorage';
+import {
+  SetButton, SetIconButton, SetMenu, SetMenuItem, SetMenuSeparator,
+  SetStatusChip, SetToast, resolveSaveStatus,
+  IconSave, IconCheck, IconList, IconChevronDown, IconChevronUp,
+  IconExport, IconImport, IconTrash, IconReset,
+} from './ui';
 import './SettingsLibraryPanel.css';
 
+/** 삭제 되돌리기 유예 시간(§7.4 F-4) */
+const DELETE_UNDO_MS = 5000;
+
+function formatClock(ts: number): string {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 /**
- * 설정 라이브러리 패널
- * - 현재 설정 이름 표시/편집
- * - 저장 / 다른 이름으로 저장 / 신규 작성
- * - 저장된 설정 목록 표시 및 불러오기/삭제
+ * 설정 라이브러리 패널 — 상단 설정 파일 바.
+ *
+ * 상단에 노출하는 버튼은 **저장 / 다른 이름으로 / 저장 목록 / ⋯** 넷뿐이다.
+ * 내보내기·가져오기·신규 작성은 ⋯ 안으로 넣었다 — 훈련 준비 중 오조작 경로를
+ * 줄이는 것이 목적이다(SETTINGS_MODE_UI_PLAN.md §7.4 · Q-3).
+ *
+ * 이전에는 버튼 여섯 개가 각자 다른 색을 토큰 밖에서 썼고, 그중 **전체 초기화가
+ * 초록이고 일상적인 저장이 보라**였다(§1.4 F-4). 지금은 CTA 가 저장 하나이고
+ * 파괴적 동작은 위험색 + 메뉴 안 + 구분선 뒤로 세 겹 분리돼 있다.
  */
 export function SettingsLibraryPanel() {
   const {
@@ -20,6 +40,9 @@ export function SettingsLibraryPanel() {
     loadSettings,
     deleteSettingsEntry,
     newSettings,
+    isDirty,
+    isApplied,
+    lastAppliedAt,
   } = useSettings();
 
   const [showList,    setShowList]    = useState(false);
@@ -27,6 +50,36 @@ export function SettingsLibraryPanel() {
   const [saveAsName,  setSaveAsName]  = useState('');
   const [savedFlash,  setSavedFlash]  = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── 삭제 되돌리기(§7.4 F-4) ──
+  // 확인창을 통과하면 목록에서는 즉시 숨기되, 실제 삭제(deleteSettingsEntry)는
+  // 5초 뒤로 미룬다. 그사이 "되돌리기"를 누르면 타이머만 취소하고 아무 일도
+  // 일어나지 않는다 — settingsList 는 그동안 한 번도 바뀌지 않는다.
+  // Map 인 이유는 연속으로 두 개를 삭제할 때 먼저 것의 타이머를 잃어버리지
+  // 않기 위해서다 — 값 하나짜리 상태였다면 두 번째 요청이 첫 번째를 덮어써
+  // 목록에 먼저 지운 항목이 다시 나타나는 깜빡임이 생긴다.
+  const [pendingDeletes, setPendingDeletes] = useState<Map<string, SettingsSet>>(new Map());
+  const deleteTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => () => { for (const t of deleteTimersRef.current.values()) clearTimeout(t); }, []);
+
+  function requestDelete(set: SettingsSet) {
+    if (!window.confirm(`"${set.name}" 설정을 삭제하겠습니까?`)) return;
+    setPendingDeletes(prev => new Map(prev).set(set.id, set));
+    const timer = setTimeout(() => {
+      deleteSettingsEntry(set.id);
+      deleteTimersRef.current.delete(set.id);
+      setPendingDeletes(prev => { const next = new Map(prev); next.delete(set.id); return next; });
+    }, DELETE_UNDO_MS);
+    deleteTimersRef.current.set(set.id, timer);
+  }
+
+  function undoDelete(id: string) {
+    const timer = deleteTimersRef.current.get(id);
+    if (timer) clearTimeout(timer);
+    deleteTimersRef.current.delete(id);
+    setPendingDeletes(prev => { const next = new Map(prev); next.delete(id); return next; });
+  }
 
   function handleSave() {
     saveSettings();
@@ -47,10 +100,6 @@ export function SettingsLibraryPanel() {
     newSettings();
   }
 
-  function handleExport() {
-    exportSettings();
-  }
-
   async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -69,8 +118,9 @@ export function SettingsLibraryPanel() {
       {/* ── 현재 설정 이름 + 버튼 행 ── */}
       <div className="slp__bar">
         <div className="slp__name-group">
-          <label className="slp__label">현재 설정</label>
+          <label className="slp__label" htmlFor="slp-name">현재 설정</label>
           <input
+            id="slp-name"
             className="slp__name-input"
             value={activeSettingsName}
             onChange={e => setActiveSettingsName(e.target.value)}
@@ -78,34 +128,49 @@ export function SettingsLibraryPanel() {
             onKeyDown={e => e.stopPropagation()}
           />
         </div>
+        <SetStatusChip
+          status={resolveSaveStatus(isDirty, isApplied)}
+          appliedAtLabel={lastAppliedAt ? formatClock(lastAppliedAt) : undefined}
+        />
         <div className="slp__actions">
-          <button
-            className={`slp__btn ${savedFlash ? 'slp__btn--saved' : 'slp__btn--primary'}`}
+          <SetButton
+            variant={savedFlash ? 'ok' : 'primary'}
+            icon={savedFlash ? <IconCheck /> : <IconSave />}
             onClick={handleSave}
           >
-            {savedFlash ? '저장됨 ✓' : '저장'}
-          </button>
-          <button
-            className="slp__btn"
-            onClick={() => { setShowSaveAs(s => !s); setSaveAsName(''); }}
-          >
+            {savedFlash ? '저장됨' : '저장'}
+          </SetButton>
+
+          <SetButton onClick={() => { setShowSaveAs(s => !s); setSaveAsName(''); }}>
             다른 이름으로
-          </button>
-          <button className="slp__btn slp__btn--new" onClick={handleNew}>
-            신규 작성
-          </button>
-          <button
-            className={`slp__btn ${showList ? 'slp__btn--active' : ''}`}
+          </SetButton>
+
+          <SetButton
+            icon={<IconList />}
+            aria-expanded={showList}
             onClick={() => setShowList(s => !s)}
           >
-            저장 목록 {showList ? '▲' : '▼'}
-          </button>
-          <button className="slp__btn slp__btn--export" onClick={handleExport} title="설정을 JSON 파일로 저장합니다">
-            내보내기
-          </button>
-          <button className="slp__btn slp__btn--export" onClick={() => fileInputRef.current?.click()} title="다른 기기에서 내보낸 JSON 파일을 불러옵니다">
-            가져오기
-          </button>
+            저장 목록
+            {showList ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />}
+          </SetButton>
+
+          <SetMenu label="설정 파일 더보기">
+            {close => (
+              <>
+                <SetMenuItem icon={<IconExport />} onClick={() => { close(); exportSettings(); }}>
+                  내보내기 (JSON 파일로 저장)
+                </SetMenuItem>
+                <SetMenuItem icon={<IconImport />} onClick={() => { close(); fileInputRef.current?.click(); }}>
+                  가져오기 (JSON 파일 불러오기)
+                </SetMenuItem>
+                <SetMenuSeparator />
+                <SetMenuItem icon={<IconReset />} danger onClick={() => { close(); handleNew(); }}>
+                  신규 작성 (전체 초기화)
+                </SetMenuItem>
+              </>
+            )}
+          </SetMenu>
+
           <input
             ref={fileInputRef}
             type="file"
@@ -122,6 +187,7 @@ export function SettingsLibraryPanel() {
           <input
             className="slp__name-input"
             placeholder="새 이름 입력"
+            aria-label="새 설정 이름"
             value={saveAsName}
             onChange={e => setSaveAsName(e.target.value)}
             onKeyDown={e => {
@@ -131,58 +197,68 @@ export function SettingsLibraryPanel() {
             }}
             autoFocus
           />
-          <button
-            className="slp__btn slp__btn--primary"
-            onClick={handleSaveAs}
-            disabled={!saveAsName.trim()}
-          >
+          <SetButton variant="primary" onClick={handleSaveAs} disabled={!saveAsName.trim()}>
             저장
-          </button>
-          <button className="slp__btn" onClick={() => setShowSaveAs(false)}>
+          </SetButton>
+          <SetButton variant="ghost" onClick={() => setShowSaveAs(false)}>
             취소
-          </button>
+          </SetButton>
         </div>
       )}
 
       {/* ── 저장 목록 ── */}
       {showList && (
         <div className="slp__list">
-          {settingsList.length === 0 ? (
-            <div className="slp__empty">
-              저장된 설정이 없습니다. 위에서 저장해주세요.
-            </div>
-          ) : (
-            settingsList.map(s => (
-              <div
-                key={s.id}
-                className={`slp__list-item ${s.id === activeSettingsId ? 'slp__list-item--active' : ''}`}
-              >
-                <div className="slp__item-info">
-                  <span className="slp__item-name">{s.name}</span>
-                  <span className="slp__item-date">{s.updatedAt}</span>
-                </div>
-                <div className="slp__item-actions">
-                  <button
-                    className="slp__btn slp__btn--sm"
-                    onClick={() => loadSettings(s.id)}
-                    disabled={s.id === activeSettingsId}
-                  >
-                    불러오기
-                  </button>
-                  <button
-                    className="slp__btn slp__btn--sm slp__btn--danger"
-                    onClick={() => {
-                      if (window.confirm(`"${s.name}" 설정을 삭제하겠습니까?`)) {
-                        deleteSettingsEntry(s.id);
-                      }
-                    }}
-                  >
-                    삭제
-                  </button>
-                </div>
+          {(() => {
+            const visible = settingsList.filter(s => !pendingDeletes.has(s.id));
+            return visible.length === 0 ? (
+              <div className="slp__empty">
+                저장된 설정이 없습니다. 위에서 저장해주세요.
               </div>
-            ))
-          )}
+            ) : (
+              visible.map(s => (
+                <div
+                  key={s.id}
+                  className={`slp__list-item ${s.id === activeSettingsId ? 'slp__list-item--active' : ''}`}
+                >
+                  <div className="slp__item-info">
+                    <span className="slp__item-name">{s.name}</span>
+                    <span className="slp__item-date">{s.updatedAt}</span>
+                  </div>
+                  <div className="slp__item-actions">
+                    <SetButton
+                      size="sm"
+                      onClick={() => loadSettings(s.id)}
+                      disabled={s.id === activeSettingsId}
+                    >
+                      불러오기
+                    </SetButton>
+                    <SetIconButton
+                      size="sm"
+                      variant="danger"
+                      label={`"${s.name}" 설정 삭제`}
+                      icon={<IconTrash size={14} />}
+                      onClick={() => requestDelete(s)}
+                    />
+                  </div>
+                </div>
+              ))
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ── 삭제 되돌리기 토스트(§7.4 F-4). 여러 개면 아래에서부터 쌓는다 ── */}
+      {pendingDeletes.size > 0 && (
+        <div className="slp__toast-stack">
+          {[...pendingDeletes.values()].map(set => (
+            <SetToast
+              key={set.id}
+              text={`"${set.name}" 삭제됨`}
+              actionLabel="되돌리기"
+              onAction={() => undoDelete(set.id)}
+            />
+          ))}
         </div>
       )}
     </div>

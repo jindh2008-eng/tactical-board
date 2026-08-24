@@ -549,13 +549,14 @@ export function ChecklistSetupPanel() {
                   autoFocus
                 />
               ) : (
-                <span
+                <button
+                  type="button"
                   className="checklist-setup__section-title"
                   onClick={() => startEditSection(section.id, section.title)}
                   title="클릭하여 수정"
                 >
                   {section.title}
-                </span>
+                </button>
               )}
               <button className="checklist-setup__delete-btn" onClick={() => removeChecklistSection(section.id)} title="섹션 삭제">✕</button>
             </div>

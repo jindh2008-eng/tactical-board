@@ -21,6 +21,7 @@ import {
   saveTrainingSession,
   loadTrainingSession,
 } from '../utils/runtimeSession';
+import { useSettings } from '../store/settingsStore';
 
 // ─────────────────────────────────────────────
 // 타입
@@ -107,6 +108,11 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
     });
   }, [status, elapsed]);
 
+  // 설정모드의 "저장됨 · 훈련 미반영" 칩(§7.1 F-3)이 이 시점을 기준으로 삼는다.
+  // SettingsProvider 가 TrainingProvider 를 감싸고 있어(App.tsx) Context 로 직접 부른다 —
+  // sessionStorage 왕복이 필요 없다.
+  const { markApplied } = useSettings();
+
   // ── 훈련 세팅: 세션 초기화 + runKey 증가 ────────────────────────────
   const loadSettings = useCallback(() => {
     if (intervalRef.current) {
@@ -118,7 +124,8 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
     setStatus('idle');
     setElapsed(0);
     setRunKey(k => k + 1);
-  }, []);
+    markApplied();
+  }, [markApplied]);
 
   // ── 시작 ─────────────────────────────────────────────────────────────
   const start = useCallback(() => {

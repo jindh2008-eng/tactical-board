@@ -31,7 +31,7 @@
 }
 
 .bcf__label {
-  font-size: 0.76rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
   white-space: nowrap;
   flex-shrink: 0;
@@ -41,9 +41,9 @@
   padding: 4px 8px;
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: 0.82rem;
+  font-size: var(--set-fs-xs);
   outline: none;
 }
 
@@ -61,7 +61,7 @@
 }
 
 .bcf__unit {
-  font-size: 0.72rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-faint);
 }
 
@@ -82,7 +82,7 @@
 }
 
 .bcf__fire-label {
-  font-size: 0.70rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   color: var(--set-text-faint);
   letter-spacing: 0.08em;
@@ -100,9 +100,9 @@
   padding: 4px 6px;
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: 0.78rem;
+  font-size: var(--set-fs-xs);
   outline: none;
   cursor: pointer;
   min-width: 70px;
@@ -118,10 +118,10 @@
 }
 
 .bcf__primary-badge {
-  font-size: 0.64rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   padding: 1px 6px;
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   background: rgba(192, 96, 80, 0.15);
   color: var(--set-danger);
   border: 1px solid var(--set-danger-border);
@@ -133,9 +133,9 @@
   padding: 4px 6px;
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: 0.78rem;
+  font-size: var(--set-fs-xs);
   outline: none;
   cursor: pointer;
   min-width: 80px;
@@ -150,9 +150,9 @@
   border: none;
   color: var(--set-text-faint);
   cursor: pointer;
-  font-size: 0.68rem;
+  font-size: var(--set-fs-xs);
   padding: 2px 5px;
-  border-radius: 2px;
+  border-radius: var(--set-r-sm);
   transition: color 0.1s, background 0.1s;
 }
 
@@ -165,10 +165,10 @@
   align-self: flex-start;
   margin-top: 2px;
   padding: 4px 12px;
-  font-size: 0.74rem;
+  font-size: var(--set-fs-xs);
   background: transparent;
   border: 1px dashed var(--set-border);
-  border-radius: 3px;
+  border-radius: var(--set-r-sm);
   color: var(--set-text-faint);
   cursor: pointer;
   transition: background 0.1s, color 0.1s, border-color 0.1s;
@@ -198,7 +198,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.82rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-text-body);
   cursor: pointer;
   user-select: none;
@@ -226,7 +226,7 @@
 }
 
 .config-bar__title {
-  font-size: 0.62rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   color: var(--set-board-text);
   letter-spacing: 0.1em;
@@ -253,7 +253,7 @@
 }
 
 .config-bar__label {
-  font-size: 0.62rem;
+  font-size: var(--set-fs-xs);
   color: var(--ctr-text-dim);
   white-space: nowrap;
   flex-shrink: 0;
@@ -275,9 +275,9 @@
   padding: 2px 5px;
   background-color: var(--set-board-panel-bg);
   border: 1px solid var(--ctr-border-hard);
-  border-radius: 2px;
+  border-radius: var(--set-r-sm);
   color: var(--ctr-label-text);
-  font-size: 0.7rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   font-family: inherit;
   text-align: center;
@@ -329,9 +329,9 @@
   padding: 2px 4px;
   background-color: var(--set-board-panel-bg);
   border: 1px solid var(--ctr-border-hard);
-  border-radius: 2px;
+  border-radius: var(--set-r-sm);
   color: var(--ctr-label-text);
-  font-size: 0.7rem;
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   font-family: inherit;
   outline: none;
@@ -343,7 +343,7 @@
 }
 
 .config-bar__unit {
-  font-size: 0.6rem;
+  font-size: var(--set-fs-xs);
   color: var(--set-board-text-dim);
 }
 
@@ -362,7 +362,7 @@
 }
 
 .bcf__ratio-hint {
-  font-size: 0.87rem;
+  font-size: var(--set-fs-sm);
   line-height: 1.6;
   color: var(--set-text-dim);
   max-width: 620px;
@@ -388,7 +388,7 @@
 
 /* 값이 바뀔 때 폭이 흔들리지 않도록 고정폭 숫자를 쓴다 */
 .bcf__ratio-value {
-  font-size: 0.93rem;
+  font-size: var(--set-fs-md);
   font-weight: 600;
   color: var(--set-text);
   font-variant-numeric: tabular-nums;
@@ -398,12 +398,12 @@
 .bcf__ratio-reset {
   height: 26px;
   padding: 0 12px;
-  font-size: 0.83rem;
+  font-size: var(--set-fs-xs);
   font-family: inherit;
   color: var(--set-text-dim);
   background: transparent;
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   cursor: pointer;
   transition: color 0.18s, border-color 0.18s;
 }
@@ -425,7 +425,7 @@
   height: 40px;
   max-width: 620px;
   border: 1px solid var(--set-border);
-  border-radius: 4px;
+  border-radius: var(--set-r-sm);
   overflow: hidden;
 }
 
@@ -433,7 +433,7 @@
   display: grid;
   place-items: center;
   min-width: 0;
-  font-size: 0.83rem;
+  font-size: var(--set-fs-xs);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;

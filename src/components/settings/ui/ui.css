@@ -1,0 +1,647 @@
+/*
+ * 설정모드 공용 컴포넌트 — 스타일 단일 출처 (SETTINGS_MODE_UI_PLAN.md §6).
+ *
+ * 패널마다 __btn·__del-btn·__input 을 새로 정의하던 것이 F-1 의 직접 원인이었다.
+ * 여기 있는 규칙 외에 새 버튼·입력 스타일을 만들지 않는다.
+ *
+ * 값은 전부 .settings-page 의 --set-* 토큰을 쓴다. stylelint 가 이 디렉터리에서
+ * 원시 font-size·border-radius·hex 를 막는다(.stylelintrc.json).
+ */
+
+/* ─────────────────────────────────────────────
+   SetButton
+   ─────────────────────────────────────────────*/
+
+.set-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--set-sp-2);
+  height: var(--set-h-btn);
+  padding: 0 var(--set-sp-4);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-sm);
+  background: var(--set-surface-2);
+  color: var(--set-text-body);
+  font-family: inherit;
+  font-size: var(--set-fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--set-dur) var(--set-ease),
+    border-color var(--set-dur) var(--set-ease),
+    color var(--set-dur) var(--set-ease);
+}
+
+.set-btn:hover:not(:disabled) {
+  background: var(--set-surface-hover);
+  border-color: var(--set-border-strong);
+}
+
+/* :focus 가 아니라 :focus-visible 이다 — 마우스 클릭에 링이 남지 않는다(§1.6) */
+.set-btn:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: 2px;
+}
+
+.set-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* 화면당 하나. 두 개가 보이면 위계가 없는 것이다(§1.4) */
+.set-btn--primary {
+  background: var(--set-accent);
+  border-color: var(--set-accent);
+  color: var(--set-on-accent);
+}
+
+.set-btn--primary:hover:not(:disabled) {
+  background: var(--set-accent-strong);
+  border-color: var(--set-accent-strong);
+}
+
+.set-btn--ghost {
+  background: none;
+  border-color: transparent;
+  color: var(--set-text-dim);
+  font-weight: 500;
+}
+
+.set-btn--ghost:hover:not(:disabled) {
+  background: var(--set-surface-2);
+  border-color: var(--set-border);
+  color: var(--set-text);
+}
+
+.set-btn--danger {
+  background: var(--set-danger-bg);
+  border-color: var(--set-danger-border);
+  color: var(--set-danger-strong);
+}
+
+.set-btn--danger:hover:not(:disabled) {
+  background: var(--set-danger-bg-hover);
+  border-color: var(--set-danger);
+}
+
+/* 저장 직후 1.5초 플래시 — 상태이지 variant 가 아니다 */
+.set-btn--ok {
+  background: var(--set-ok-bg);
+  border-color: var(--set-ok-border);
+  color: var(--set-ok-strong);
+}
+
+.set-btn--sm {
+  height: var(--set-h-btn-sm);
+  padding: 0 var(--set-sp-3);
+  font-size: var(--set-fs-xs);
+}
+
+/* ─────────────────────────────────────────────
+   SetIconButton — 클릭영역 32×32 를 보장한다
+   ─────────────────────────────────────────────*/
+
+.set-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--set-h-btn);
+  height: var(--set-h-btn);
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--set-r-sm);
+  background: none;
+  color: var(--set-text-dim);
+  cursor: pointer;
+  transition: background-color var(--set-dur) var(--set-ease),
+    color var(--set-dur) var(--set-ease);
+}
+
+.set-icon-btn:hover:not(:disabled) {
+  background: var(--set-surface-2);
+  color: var(--set-text);
+}
+
+.set-icon-btn:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: 2px;
+}
+
+.set-icon-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.set-icon-btn--danger:hover:not(:disabled) {
+  background: var(--set-danger-bg);
+  color: var(--set-danger-strong);
+}
+
+/*
+ * 표 안에서는 26px 로 그리되 클릭영역은 32px 를 지킨다.
+ * 아이콘을 키우는 대신 ::before 로 판정 영역만 넓힌다 — §5.1 --set-h-btn-sm 주석.
+ */
+.set-icon-btn--sm {
+  width: var(--set-h-btn-sm);
+  height: var(--set-h-btn-sm);
+}
+
+.set-icon-btn--sm::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--set-h-btn-sm) - var(--set-h-btn)) / 2);
+}
+
+/* ─────────────────────────────────────────────
+   SetCard
+   ─────────────────────────────────────────────*/
+
+.set-card {
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-md);
+  padding: var(--set-sp-4) var(--set-sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-3);
+}
+
+.set-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  padding-bottom: var(--set-sp-3);
+  border-bottom: 1px solid var(--set-border-subtle);
+}
+
+.set-card__title {
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  color: var(--set-text);
+}
+
+.set-card__meta {
+  margin-left: auto;
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.set-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-3);
+}
+
+/* ─────────────────────────────────────────────
+   SetField — 라벨은 항상 보인다. placeholder 를 라벨로 쓰지 않는다
+   ─────────────────────────────────────────────*/
+
+.set-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-2);
+}
+
+.set-field__label {
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-body);
+}
+
+.set-field__req {
+  color: var(--set-warn);
+  margin-left: var(--set-sp-1);
+}
+
+.set-field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+}
+
+.set-field__input {
+  height: var(--set-h-input);
+  min-width: 0;
+  padding: 0 var(--set-sp-3);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-sm);
+  color: var(--set-text);
+  font-family: inherit;
+  font-size: var(--set-fs-md);
+}
+
+.set-field__input:focus {
+  outline: none;
+  border-color: var(--set-accent);
+}
+
+.set-field__input:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: 1px;
+}
+
+.set-field__suffix {
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-dim);
+  white-space: nowrap;
+}
+
+.set-field__hint {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-dim);
+  line-height: 1.5;
+}
+
+.set-field__error {
+  font-size: var(--set-fs-xs);
+  color: var(--set-danger);
+  line-height: 1.5;
+}
+
+.set-field--invalid .set-field__input {
+  border-color: var(--set-danger);
+}
+
+/* ─────────────────────────────────────────────
+   SetTable — 얼룩 없음. 행 구분은 선 하나로
+   ─────────────────────────────────────────────*/
+
+.set-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.set-table th {
+  text-align: left;
+  padding: var(--set-sp-2) var(--set-sp-3);
+  border-bottom: 1px solid var(--set-border);
+  font-size: var(--set-fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--set-text-dim);
+  white-space: nowrap;
+}
+
+.set-table td {
+  padding: var(--set-sp-2) var(--set-sp-3);
+  border-bottom: 1px solid var(--set-border-subtle);
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-body);
+}
+
+.set-table tbody tr:hover td {
+  background: var(--set-surface-2);
+}
+
+.set-table__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.set-table__actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────
+   SetEmpty — 설명 한 줄 + 즉시 실행 버튼 하나
+   ─────────────────────────────────────────────*/
+
+.set-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--set-sp-3);
+  padding: var(--set-sp-8) var(--set-sp-5);
+  border: 1px dashed var(--set-border);
+  border-radius: var(--set-r-md);
+  color: var(--set-text-dim);
+  text-align: center;
+}
+
+.set-empty__text {
+  font-size: var(--set-fs-sm);
+  line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────────
+   SetMenu — ⋯ 오버플로. 오조작 경로를 줄이는 자리다(§7.4)
+   ─────────────────────────────────────────────*/
+
+.set-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.set-menu__pop {
+  position: absolute;
+  top: calc(100% + var(--set-sp-1));
+  right: 0;
+  z-index: 40;
+  min-width: 260px;
+  padding: var(--set-sp-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-1);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-md);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 55%);
+}
+
+.set-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  width: 100%;
+  height: var(--set-h-btn);
+  padding: 0 var(--set-sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--set-r-sm);
+  background: none;
+  color: var(--set-text-body);
+  font-family: inherit;
+  font-size: var(--set-fs-sm);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--set-dur) var(--set-ease);
+}
+
+.set-menu__item > svg {
+  flex-shrink: 0;
+}
+
+.set-menu__item:hover {
+  background: var(--set-surface-2);
+  color: var(--set-text);
+}
+
+.set-menu__item:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: -2px;
+}
+
+.set-menu__item--danger {
+  color: var(--set-danger);
+}
+
+.set-menu__item--danger:hover {
+  background: var(--set-danger-bg);
+  color: var(--set-danger-strong);
+}
+
+/* 파괴적 동작은 색만이 아니라 공간으로도 분리한다(§7.4) */
+.set-menu__sep {
+  height: 1px;
+  margin: var(--set-sp-1) 0;
+  background: var(--set-border-subtle);
+}
+
+/* ─────────────────────────────────────────────
+   보조 열 콘텐츠 — ≥1800px 에서만 그려진다(§4.2)
+   ─────────────────────────────────────────────*/
+
+.set-aside__empty {
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-dim);
+}
+
+/* 도착 순서 타임라인 (출동대) */
+
+.set-aside__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.set-aside__timeline-row {
+  display: flex;
+  gap: var(--set-sp-3);
+}
+
+.set-aside__timeline-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  margin-top: var(--set-sp-1);
+  border-radius: 50%;
+  background: var(--set-accent);
+}
+
+.set-aside__timeline-dot--dim {
+  background: var(--set-border-subtle);
+}
+
+.set-aside__timeline-row:not(:last-child) {
+  padding-bottom: var(--set-sp-4);
+  position: relative;
+}
+
+.set-aside__timeline-row:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 14px;
+  bottom: 0;
+  width: 1px;
+  background: var(--set-border-subtle);
+}
+
+.set-aside__timeline-title {
+  font-size: var(--set-fs-sm);
+  font-weight: 600;
+  color: var(--set-text);
+}
+
+.set-aside__timeline-desc {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-dim);
+  line-height: 1.5;
+}
+
+.set-aside__timeline-row--more .set-aside__timeline-desc {
+  padding-top: 1px;
+}
+
+/* 층별 분포 막대 (구조대상자) */
+
+.set-aside__bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-2);
+}
+
+.set-aside__bar-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 24px;
+  align-items: center;
+  gap: var(--set-sp-2);
+}
+
+.set-aside__bar-label {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-dim);
+  text-align: right;
+}
+
+.set-aside__bar-track {
+  height: 8px;
+  border-radius: var(--set-r-sm);
+  background: var(--set-surface-2);
+  overflow: hidden;
+}
+
+.set-aside__bar-fill {
+  height: 100%;
+  background: var(--set-accent);
+  border-radius: var(--set-r-sm);
+}
+
+.set-aside__bar-num {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-body);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 항목 타입 범례 (체크리스트) */
+
+.set-aside__legend-summary {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-dim);
+  margin-bottom: var(--set-sp-3);
+}
+
+.set-aside__legend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-2);
+}
+
+.set-aside__legend-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--set-sp-2);
+}
+
+.set-aside__legend-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  align-self: center;
+}
+
+.set-aside__legend-label {
+  font-size: var(--set-fs-sm);
+  font-weight: 600;
+  color: var(--set-text);
+  flex-shrink: 0;
+}
+
+.set-aside__legend-desc {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-dim);
+  line-height: 1.5;
+}
+
+/* ─────────────────────────────────────────────
+   SetStatusChip — 저장 · 반영 상태(§7.1 F-3)
+   ─────────────────────────────────────────────*/
+
+.set-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  height: var(--set-h-btn);
+  padding: 0 var(--set-sp-3);
+  border-radius: var(--set-r-sm);
+  font-size: var(--set-fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.set-status-chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.set-status-chip--dirty {
+  color: var(--set-warn);
+  background: var(--set-warn-bg);
+}
+
+.set-status-chip--dirty .set-status-chip__dot {
+  background: var(--set-warn);
+}
+
+.set-status-chip--saved {
+  color: var(--set-text-dim);
+  background: var(--set-surface-2);
+}
+
+.set-status-chip--saved .set-status-chip__dot {
+  background: var(--set-text-faint);
+}
+
+.set-status-chip--applied {
+  color: var(--set-ok-strong);
+  background: var(--set-ok-bg);
+}
+
+/* ─────────────────────────────────────────────
+   SetToast — 삭제 되돌리기(§7.4 F-4)
+   ─────────────────────────────────────────────*/
+
+/*
+ * 위치는 스스로 정하지 않는다 — 화면에 하나만 뜰지 여러 개를 쌓을지는
+ * 호출하는 쪽(예: .slp__toast-stack)이 정한다.
+ */
+.set-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--set-sp-4);
+  padding: var(--set-sp-3) var(--set-sp-4);
+  background: var(--set-surface-2);
+  border: 1px solid var(--set-border-strong);
+  border-radius: var(--set-r-md);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 55%);
+}
+
+.set-toast__text {
+  font-size: var(--set-fs-sm);
+  color: var(--set-text);
+}
+
+.set-toast__action {
+  height: var(--set-h-btn-sm);
+  padding: 0 var(--set-sp-3);
+  background: none;
+  border: 1px solid var(--set-accent);
+  border-radius: var(--set-r-sm);
+  color: var(--set-accent-strong);
+  font-family: inherit;
+  font-size: var(--set-fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--set-dur) var(--set-ease);
+}
+
+.set-toast__action:hover {
+  background: var(--set-accent-bg);
+}
+
+.set-toast__action:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: 2px;
+}

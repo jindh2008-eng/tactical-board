@@ -138,16 +138,34 @@ function measure({ minTargetPx }) {
   }
 
   // ── 클릭 타깃 ──
+  //
+  // 판정 기준은 **눈에 보이는 상자가 아니라 실제 클릭 판정 영역**이다.
+  // `::before` 로 히트 영역만 넓히는 패턴(표 안 인라인 버튼 · 색 스와치, §5.1
+  // --set-h-btn-sm 주석)을 raw getBoundingClientRect() 로만 재면 늘 작다고
+  // 나온다 — 시각 크기와 클릭 판정 영역이 의도적으로 다른 경우다. inset 이
+  // 네 변 모두 숫자로 잡히는(= 사각형으로 펼쳐지는) 단순한 형태만 인정한다.
+  const effectiveSize = el => {
+    const r = el.getBoundingClientRect();
+    const before = getComputedStyle(el, '::before');
+    if (before.content !== 'none' && (before.position === 'absolute' || before.position === 'fixed')) {
+      const t = parseFloat(before.top), rt = parseFloat(before.right), b = parseFloat(before.bottom), l = parseFloat(before.left);
+      if ([t, rt, b, l].every(n => !Number.isNaN(n))) {
+        return { w: r.width - l - rt, h: r.height - t - b, raw: r };
+      }
+    }
+    return { w: r.width, h: r.height, raw: r };
+  };
+
   const SEL = 'button, [role="button"], a, input, select, textarea, summary';
   const controls = vis.filter(el => el.matches(SEL));
   const smallTargets = controls
-    .map(el => ({ el, r: el.getBoundingClientRect() }))
-    .filter(x => x.r.height < minTargetPx || x.r.width < minTargetPx)
+    .map(el => ({ el, s: effectiveSize(el) }))
+    .filter(x => x.s.h < minTargetPx || x.s.w < minTargetPx)
     .map(x => ({
       tag: x.el.tagName.toLowerCase(),
       cls: (typeof x.el.className === 'string' ? x.el.className : '').slice(0, 60),
       text: (x.el.textContent ?? '').trim().slice(0, 16),
-      w: +x.r.width.toFixed(1), h: +x.r.height.toFixed(1),
+      w: +x.s.w.toFixed(1), h: +x.s.h.toFixed(1),
     }));
 
   // ── 이름 없는 아이콘 전용 버튼 ──
