@@ -159,7 +159,7 @@ CSV는 사람이 읽는 산출물이라 재현의 근거가 될 수 없다(§7.5
 
 **병행이 안전한 근거**는 실측이다 — 설정모드는 `/play`와 컴포넌트를 **하나도 공유하지 않는다**(DEFERRED §1.1). 단 하나의 접점인 상단 `app-nav`(P-4)는 [SETTINGS_MODE_UI_PLAN.md](SETTINGS_MODE_UI_PLAN.md) §10에서 범위 밖으로 뺐다.
 
-다만 **전역 CSS 토큰은 공유한다.** `--color-border` 등 `:root` 토큰(`src/App.css:12~`)을 설정모드가 103건, 훈련모드가 11건 쓴다. 따라서:
+다만 **전역 CSS 토큰은 공유한다**([DEFERRED_PROPAGATION.md](DEFERRED_PROPAGATION.md) **P-8**). `--color-border` 등 `:root` 토큰(`src/App.css:12~`)을 설정모드가 103건, 훈련모드가 11건 쓴다. 따라서:
 
 > **`:root` 토큰의 값을 바꾸지 않는다.** 설정모드는 `.settings-page` 스코프에 `--set-*`를 세우고 그쪽으로 갈아끼운다. 이 격리가 끝나야 D-4를 깰 방법이 없어진다.
 
@@ -554,3 +554,4 @@ tactical-board-run-{yymmdd-hhmm}.json
 | 2026-08-18 | **D-5 추가, W-1 구현 완료** — 무플 레이아웃 재배치(진행상황관리 제거·좌우 반전·지휘절차 우측 패널화). D-2를 대체. X-1·W-0-2 해소. 브라우저 검증 완료(StrictMode 이중 로그 버그 발견·수정 포함) |
 | 2026-08-20 | **D-6 추가** — 모드 전환 기본원칙 M-1~M-5(설정 반영 시점·훈련 중 설정 차단·2단 종료 확인·CSV 파일명 `yymmdd-hhmm`·재현 스냅샷). §7.5 신설. `clearRuntimeSession()`의 equip-msg 누락 발견 |
 | 2026-08-24 | **D-7 추가** — 설정모드 UI 재설계를 무플과 병행(D-4 확장). 브랜치 `feat/settings-ui-redesign`. Q-1을 브레이크포인트로 확정(= DEFERRED P-5의 답), stylelint 도입 확정. 전역 `:root` 토큰 공유(설정 103건/훈련 11건)를 격리 조건으로 명시. `--ui-scale` 제거 사실을 CLAUDE.md에 반영 |
+| 2026-08-24 (2) | **S-0 완료** — 감사 스크립트 측정 버그 5건을 고치고 실 시나리오를 주입해 기준선을 확정했다([SETTINGS_MODE_UI_PLAN.md](SETTINGS_MODE_UI_PLAN.md) §9). 전역 토큰 공유 항목의 번호를 **P-6 → P-8**로 정정(P-6은 이미 분석창 스텁이 쓰고 있었다). 다음은 S-1 |
