@@ -8,16 +8,19 @@
     }
   },
   "src/pages/SettingsPage.css": {
-    "color-no-hex": {
-      "count": 4
-    },
     "declaration-property-value-allowed-list": {
-      "count": 19
+      "count": 7
     }
   },
   "src/components/building/BuildingConfigPanel.css": {
     "property-no-vendor-prefix": {
       "count": 2
+    },
+    "color-no-hex": {
+      "count": 34
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 29
     }
   },
   "src/components/building/ExteriorZone.css": {
@@ -65,7 +68,7 @@
   },
   "src/components/settings/ChecklistSetupPanel.css": {
     "color-no-hex": {
-      "count": 11
+      "count": 9
     },
     "declaration-property-value-allowed-list": {
       "count": 49
@@ -73,7 +76,7 @@
   },
   "src/components/settings/CommandProcedurePanel.css": {
     "color-no-hex": {
-      "count": 6
+      "count": 5
     },
     "declaration-property-value-allowed-list": {
       "count": 27

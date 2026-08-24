@@ -15,8 +15,8 @@
   flex-direction: column;
   gap:            6px;
   padding:        8px 10px 10px;
-  background:     var(--color-surface);
-  border:         1px solid var(--color-border);
+  background:     var(--set-surface-1);
+  border:         1px solid var(--set-border);
   border-radius:  5px;
 }
 
@@ -24,7 +24,7 @@
   margin:      0;
   font-size:   0.70rem;
   font-weight: 700;
-  color:       var(--color-text-dim);
+  color:       var(--set-text-faint);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -51,8 +51,8 @@
   display:         flex;
   align-items:     center;
   justify-content: center;
-  background:      var(--color-bg);
-  border:          1.5px solid var(--color-border);
+  background:      var(--set-surface-0);
+  border:          1.5px solid var(--set-border);
   border-radius:   4px;
 }
 
@@ -65,7 +65,7 @@
 
 .esp__add-preview-placeholder {
   font-size: 1.1rem;
-  color:     var(--color-text-dim);
+  color:     var(--set-text-faint);
   line-height: 1;
 }
 
@@ -73,22 +73,22 @@
   flex:       1;
   min-width:  0;
   padding:    5px 8px;
-  background: var(--color-bg);
-  border:     1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border:     1px solid var(--set-border);
   border-radius: 3px;
-  color:      var(--color-text);
+  color:      var(--set-text-body);
   font-size:  0.82rem;
   font-family: inherit;
 }
 
 .esp__add-input:focus {
   outline:      none;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .esp__add-btn {
   padding:     5px 14px;
-  background:  var(--color-accent);
+  background:  var(--set-accent);
   border:      none;
   border-radius: 3px;
   color:       #fff;
@@ -108,15 +108,15 @@
 
 .esp__empty {
   font-size: 0.8rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   padding: 10px;
   text-align: center;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--set-border);
   border-radius: 3px;
 }
 
 .esp__list {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -129,14 +129,14 @@
   align-items: center;
   padding: 4px 8px;
   gap: 4px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .esp__lh {
   font-size: 0.65rem;
   font-weight: 700;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -149,7 +149,7 @@
 
 .esp__type-seg {
   display:        flex;
-  border:         1px solid var(--color-border);
+  border:         1px solid var(--set-border);
   border-radius:  3px;
   overflow:       hidden;
 }
@@ -159,8 +159,8 @@
   padding:     3px 0;
   background:  transparent;
   border:      none;
-  border-right: 1px solid var(--color-border);
-  color:       var(--color-text-dim);
+  border-right: 1px solid var(--set-border);
+  color:       var(--set-text-faint);
   font-size:   0.65rem;
   font-weight: 600;
   font-family: inherit;
@@ -174,8 +174,8 @@
 }
 
 .esp__type-btn:hover:not(.esp__type-btn--active) {
-  background: var(--color-surface);
-  color:      var(--color-text);
+  background: var(--set-surface-1);
+  color:      var(--set-text-body);
 }
 
 /* 화재 활성 */
@@ -201,8 +201,8 @@
 .esp__item {
   display: flex;
   flex-direction: column;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .esp__item:last-of-type {
@@ -228,7 +228,7 @@
 }
 
 .esp__check-wrap input[type='checkbox'] {
-  accent-color: var(--color-accent);
+  accent-color: var(--set-accent);
   width: 14px;
   height: 14px;
   cursor: pointer;
@@ -240,7 +240,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: 2px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.82rem;
   font-family: inherit;
   width: 100%;
@@ -248,8 +248,8 @@
 
 .esp__label-input:focus {
   outline: none;
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  background: var(--set-surface-1);
+  border-color: var(--set-border);
 }
 
 /* ── 아이콘 선택 버튼 ── */
@@ -260,8 +260,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-surface);
-  border: 1.5px dashed var(--color-border);
+  background: var(--set-surface-1);
+  border: 1.5px dashed var(--set-border);
   border-radius: 4px;
   cursor: pointer;
   padding: 2px;
@@ -271,7 +271,7 @@
 }
 
 .esp__icon-btn:hover {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
   background: rgba(99, 102, 241, 0.08);
 }
 
@@ -289,14 +289,14 @@
 
 .esp__icon-placeholder {
   font-size: 1rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   line-height: 1;
 }
 
 /* 피커 열린 상태 */
 .esp__item--picker-open .esp__icon-btn {
   border-style: solid;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
   background: rgba(99, 102, 241, 0.12);
 }
 
@@ -306,7 +306,7 @@
   height: 22px;
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   font-size: 1rem;
   cursor: pointer;
   display: flex;
@@ -328,8 +328,8 @@
   flex-wrap: wrap;
   gap: 6px;
   padding: 8px 10px 10px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border-top: 1px solid var(--set-border);
 }
 
 /* 아이콘 셀 (없음 포함) */
@@ -339,8 +339,8 @@
   align-items: center;
   gap: 3px;
   padding: 5px 6px;
-  background: var(--color-bg);
-  border: 1.5px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1.5px solid var(--set-border);
   border-radius: 5px;
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s;
@@ -348,14 +348,14 @@
 }
 
 .esp__icon-cell:hover {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
   background: rgba(99, 102, 241, 0.08);
 }
 
 .esp__icon-cell--active {
-  border-color: var(--color-accent) !important;
+  border-color: var(--set-accent) !important;
   background: rgba(99, 102, 241, 0.16) !important;
-  box-shadow: 0 0 0 1px var(--color-accent);
+  box-shadow: 0 0 0 1px var(--set-accent);
 }
 
 .esp__icon-cell-img {
@@ -367,7 +367,7 @@
 
 .esp__icon-cell-name {
   font-size: 0.60rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   text-align: center;
   line-height: 1.2;
   max-width: 52px;
@@ -383,8 +383,8 @@
   align-items: center;
   justify-content: center;
   font-size: 0.70rem;
-  color: var(--color-text-dim);
-  border: 1px dashed var(--color-border);
+  color: var(--set-text-faint);
+  border: 1px dashed var(--set-border);
   border-radius: 3px;
 }
 
@@ -392,6 +392,6 @@
 
 .esp__hint {
   font-size: 0.74rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   margin: 0;
 }

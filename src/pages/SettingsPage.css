@@ -38,10 +38,11 @@
   --set-r-md: 6px;   /* 카드           */
   --set-r-lg: 10px;  /* 모달 · 팝오버   */
 
-  /* ── 면 — 3단 elevation ── */
-  --set-surface-0: #080c12;  /* 페이지 바탕    */
-  --set-surface-1: #0e1420;  /* 카드          */
-  --set-surface-2: #141d2c;  /* 카드 안의 카드 */
+  /* ── 면 — 3단 elevation + 내비 ── */
+  --set-surface-0: #080c12;    /* 페이지 바탕    */
+  --set-surface-1: #0e1420;    /* 카드          */
+  --set-surface-2: #141d2c;    /* 카드 안의 카드 */
+  --set-surface-nav: #0a1018;  /* 사이드바 — §5.1 에 없던 자리. 구 --color-header-bg */
 
   /* ── 경계 — 카드 면(--set-surface-1) 대비 실측 ── */
   --set-border: #54697f;         /* 3.25:1 — 입력 · 카드 경계. WCAG 1.4.11 충족 */
@@ -69,14 +70,10 @@
 
   /*
    * ── 이관 대기 ──
-   * 아래 셋은 위 스케일과 **값이 다르다.** 지금 갈아끼우면 화면이 바뀌므로
-   * S-1(정의만 · 화면 변화 0)의 완료 조건을 깬다. 값을 바꾸는 단계에서 소진한다.
-   *   --set-font-card → --set-fs-sm  (13.5px → 13.05px)  S-2
-   *   --set-font-meta → --set-fs-xs  (12.45px → 12px)    S-2
-   *   --set-nav-w     → 240px                            S-4
+   * --set-font-card·--set-font-meta 는 S-2 에서 --set-fs-sm·--set-fs-xs 로 소진했다.
+   * 남은 하나는 폭이라 레이아웃 단계에서 다룬다.
+   *   --set-nav-w → 240px   S-4 (§4.2. 1280 구간은 Q-7 판단 후)
    */
-  --set-font-card: 0.9rem;
-  --set-font-meta: 0.83rem;
   --set-nav-w: 200px;
 
   /* ── 모션 ── */
@@ -86,7 +83,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  color: var(--color-text);
+  color: var(--set-text-body);
   overflow: hidden;
 }
 /* stylelint-enable color-no-hex */
@@ -104,8 +101,8 @@
   position: relative;
   flex-shrink: 0;
   z-index: 20;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border-bottom: 1px solid var(--set-border);
   padding: 8px 20px;
 }
 
@@ -119,7 +116,7 @@
 }
 
 .settings-page__topbar .slp__label {
-  font-size: var(--set-font-meta);
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   color: var(--set-text-dim);
 }
@@ -144,7 +141,7 @@
 .settings-page__topbar .slp__btn--sm {
   height: 26px;
   padding: 0 10px;
-  font-size: var(--set-font-meta);
+  font-size: var(--set-fs-xs);
 }
 
 /* 저장 목록 · 다른 이름으로 저장은 바 아래로 겹쳐 띄운다 — 본문을 밀지 않는다 */
@@ -155,8 +152,8 @@
   right: 20px;
   width: 520px;
   max-width: calc(100% - 40px);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   padding: 8px;
@@ -176,9 +173,9 @@
 .settings-page__sidebar {
   width: var(--set-nav-w);
   flex-shrink: 0;
-  border-right: 1px solid var(--color-border);
+  border-right: 1px solid var(--set-border);
   overflow-y: auto;
-  background: var(--color-header-bg, #1e1e1e);
+  background: var(--set-surface-nav);
   display: flex;
   flex-direction: column;
   padding-bottom: 12px;
@@ -191,10 +188,10 @@
 
 .settings-page__nav-group-label {
   padding: 14px 16px 6px;
-  font-size: var(--set-font-meta);
+  font-size: var(--set-fs-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
 }
 
 .settings-page__nav-item {
@@ -224,7 +221,7 @@
 
 .settings-page__nav-item--active {
   color: var(--set-text);
-  border-left-color: var(--color-accent, #4a90d9);
+  border-left-color: var(--set-accent);
   background-color: rgba(68, 136, 204, 0.10);
   font-weight: 600;
 }
@@ -274,7 +271,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--set-border);
   margin-bottom: 18px;
 }
 
@@ -298,14 +295,14 @@
 .settings-page__tab--active {
   color: var(--set-text);
   font-weight: 600;
-  border-bottom-color: var(--color-accent, #4a90d9);
+  border-bottom-color: var(--set-accent);
 }
 
 /* ── 페이지가 직접 그리는 카드 ── */
 
 .settings-page__card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
   border-radius: 5px;
   padding: 14px 16px;
   margin-bottom: 16px;
@@ -320,26 +317,26 @@
   justify-content: space-between;
   gap: 10px;
   padding-bottom: 9px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .settings-page__card-title {
-  font-size: var(--set-font-card);
+  font-size: var(--set-fs-sm);
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--set-text-body);
 }
 
 .settings-page__card-meta {
-  font-size: var(--set-font-meta);
-  color: var(--color-text-dim);
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-faint);
 }
 
 /* ── 서브 타이틀 ── */
 
 .settings-page__sub-title {
-  font-size: var(--set-font-card);
+  font-size: var(--set-fs-sm);
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--set-text-body);
   margin-bottom: 6px;
 }
 
@@ -367,15 +364,15 @@
   flex-direction: column;
   gap: 7px;
   font-size: var(--set-fs-md);
-  color: var(--color-text);
+  color: var(--set-text-body);
 }
 
 .settings-page__timing-input {
   width: 96px;
   height: var(--set-h-input);
   padding: 0 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   color: var(--set-text);
   font-size: 0.95rem;
@@ -385,7 +382,7 @@
 
 .settings-page__timing-input:focus {
   outline: none;
-  border-color: var(--color-accent, #4a90d9);
+  border-color: var(--set-accent);
 }
 
 /* ── 플레이스홀더 ── */
@@ -394,7 +391,7 @@
   font-size: var(--set-fs-md);
   color: var(--set-text-dim);
   padding: 10px 14px;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--set-border);
   border-radius: 3px;
 }
 
@@ -417,15 +414,15 @@
 .settings-page [class*="__section-label"] {
   text-transform: none;
   letter-spacing: 0;
-  font-size: var(--set-font-card);
+  font-size: var(--set-fs-sm);
 }
 
 /* 카드·그룹 제목 */
 .settings-page .dsp__group-title,
 .settings-page .tag-preset-panel__group-label,
 .settings-page .unit-status-panel__group-label {
-  font-size: var(--set-font-card);
-  color: var(--color-text);
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-body);
 }
 
 /* 그룹 안내문 */
@@ -447,11 +444,11 @@
 
 .settings-page .tag-preset-panel__type-header,
 .settings-page .unit-status-panel__type-header {
-  font-size: var(--set-font-card);
+  font-size: var(--set-fs-sm);
 }
 
 .settings-page .tag-preset-panel__sub-label {
-  font-size: var(--set-font-meta);
+  font-size: var(--set-fs-xs);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -479,7 +476,7 @@
 .settings-page .dsp__rh,
 .settings-page .dsp__rh--prefix,
 .settings-page .esp__lh {
-  font-size: var(--set-font-meta);
+  font-size: var(--set-fs-xs);
   text-transform: none;
   letter-spacing: 0;
   color: var(--set-text-dim);
@@ -488,10 +485,10 @@
 /* 블록 제목 */
 .settings-page .esp__add-title,
 .settings-page .bcf__fire-label {
-  font-size: var(--set-font-card);
+  font-size: var(--set-fs-sm);
   text-transform: none;
   letter-spacing: 0;
-  color: var(--color-text);
+  color: var(--set-text-body);
 }
 
 /* 출동대 화면은 폭이 남으면 2열로 흐른다 — 목록은 전체 폭 */

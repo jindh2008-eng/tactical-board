@@ -1,5 +1,7 @@
 {
-  "extends": ["stylelint-config-standard"],
+  "extends": [
+    "stylelint-config-standard"
+  ],
   "rules": {
     "no-descending-specificity": null,
     "custom-property-empty-line-before": null,
@@ -12,7 +14,6 @@
     "custom-property-pattern": null,
     "value-keyword-case": null,
     "declaration-block-no-redundant-longhand-properties": null,
-
     "alpha-value-notation": null,
     "color-function-notation": null,
     "color-function-alias-notation": null,
@@ -22,12 +23,21 @@
   },
   "overrides": [
     {
-      "files": ["src/components/settings/**/*.css", "src/pages/SettingsPage.css"],
+      "files": [
+        "src/components/settings/**/*.css",
+        "src/pages/SettingsPage.css",
+        "src/components/building/BuildingConfigPanel.css"
+      ],
       "rules": {
         "declaration-property-value-allowed-list": [
           {
-            "font-size": ["/^var\\(--set-fs-/"],
-            "border-radius": ["/^var\\(--set-r-/", "50%"]
+            "font-size": [
+              "/^var\\(--set-fs-/"
+            ],
+            "border-radius": [
+              "/^var\\(--set-r-/",
+              "50%"
+            ]
           },
           {
             "message": "설정모드는 --set-* 토큰만 쓴다 (docs/SETTINGS_MODE_UI_PLAN.md §5.1)"

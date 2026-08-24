@@ -11,24 +11,24 @@
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  background-color: var(--color-header-bg);
-  border: 1px solid var(--color-border);
+  background-color: var(--set-surface-nav);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
 }
 
 .cp-panel__active-level-label {
   font-size: 0.80rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--set-text-body);
 }
 
 .cp-panel__active-level-select {
   font-size: 0.82rem;
   padding: 3px 8px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background-color: var(--set-surface-1);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-accent);
+  color: var(--set-accent);
   font-weight: 600;
 }
 
@@ -37,7 +37,7 @@
 .cp-panel__level-tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--set-border);
   padding-bottom: 8px;
 }
 
@@ -45,22 +45,22 @@
   font-size: 0.82rem;
   padding: 4px 16px;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   cursor: pointer;
   transition: background-color 0.1s, color 0.1s, border-color 0.1s;
 }
 
 .cp-panel__level-tab:hover {
-  background-color: var(--color-header-bg);
-  color: var(--color-text);
+  background-color: var(--set-surface-nav);
+  color: var(--set-text-body);
 }
 
 .cp-panel__level-tab--active {
-  background-color: var(--color-header-bg);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  background-color: var(--set-surface-nav);
+  border-color: var(--set-accent);
+  color: var(--set-accent);
 }
 
 /* ── 카테고리 ────────────────────────────────── */
@@ -72,13 +72,13 @@
 }
 
 .cp-panel__category {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .cp-panel__category--drag-over {
-  outline: 1.5px dashed var(--color-accent);
+  outline: 1.5px dashed var(--set-accent);
   outline-offset: -1px;
 }
 
@@ -87,20 +87,20 @@
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  background-color: var(--color-header-bg);
-  border-bottom: 1px solid var(--color-border);
+  background-color: var(--set-surface-nav);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .cp-panel__category-title {
   flex: 1;
   font-size: 0.84rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--set-text-body);
   cursor: pointer;
 }
 
 .cp-panel__category-title:hover {
-  color: var(--color-accent);
+  color: var(--set-accent);
 }
 
 .cp-panel__category-title-input {
@@ -109,8 +109,8 @@
   font-weight: 700;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--color-accent);
-  color: var(--color-text);
+  border-bottom: 1px solid var(--set-accent);
+  color: var(--set-text-body);
   padding: 0 2px;
   outline: none;
 }
@@ -118,7 +118,7 @@
 /* ── 드래그 핸들 ─────────────────────────────── */
 
 .cp-panel__drag-handle {
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   font-size: 0.85rem;
   cursor: grab;
   user-select: none;
@@ -128,7 +128,7 @@
   padding: 0 2px;
 }
 
-.cp-panel__drag-handle:hover { opacity: 1; color: var(--color-text); }
+.cp-panel__drag-handle:hover { opacity: 1; color: var(--set-text-body); }
 .cp-panel__drag-handle:active { cursor: grabbing; }
 .cp-panel__drag-handle--item { font-size: 0.75rem; }
 
@@ -149,7 +149,7 @@
 
 .cp-panel__item--drag-over {
   background-color: rgba(68, 170, 255, 0.08);
-  outline: 1px dashed var(--color-accent);
+  outline: 1px dashed var(--set-accent);
   outline-offset: -1px;
   border-radius: 2px;
 }
@@ -160,7 +160,7 @@
   background: transparent;
   border: none;
   border-bottom: 1px solid transparent;
-  color: var(--color-text);
+  color: var(--set-text-body);
   padding: 2px 4px;
   outline: none;
   transition: border-color 0.1s;
@@ -168,7 +168,7 @@
 
 .cp-panel__item-input:hover,
 .cp-panel__item-input:focus {
-  border-bottom-color: var(--color-border);
+  border-bottom-color: var(--set-border);
 }
 
 /* ── 삭제 버튼 ───────────────────────────────── */
@@ -176,7 +176,7 @@
 .cp-panel__delete-btn {
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   cursor: pointer;
   font-size: 0.68rem;
   padding: 1px 4px;
@@ -196,15 +196,15 @@
   display: flex;
   gap: 6px;
   padding: 6px 10px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--set-border);
 }
 
 .cp-panel__type-select {
   font-size: 0.72rem;
-  background: var(--color-bg, #1a1a1a);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   padding: 2px 4px;
   outline: none;
   flex-shrink: 0;
@@ -214,32 +214,32 @@
   flex: 1;
   font-size: 0.76rem;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   padding: 3px 6px;
   outline: none;
 }
 
 .cp-panel__add-item-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .cp-panel__add-item-btn {
   font-size: 0.74rem;
   padding: 2px 8px;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.1s, color 0.1s;
 }
 
 .cp-panel__add-item-btn:hover {
-  background-color: var(--color-header-bg);
-  color: var(--color-text);
+  background-color: var(--set-surface-nav);
+  color: var(--set-text-body);
 }
 
 /* ── 카테고리 추가 행 ─────────────────────────── */
@@ -254,32 +254,32 @@
   flex: 1;
   font-size: 0.78rem;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   padding: 4px 8px;
   outline: none;
 }
 
 .cp-panel__add-category-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .cp-panel__add-category-btn {
   font-size: 0.76rem;
   padding: 4px 12px;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.1s, color 0.1s;
 }
 
 .cp-panel__add-category-btn:hover {
-  background-color: var(--color-header-bg);
-  color: var(--color-text);
+  background-color: var(--set-surface-nav);
+  color: var(--set-text-body);
 }
 
 /* ── 타입 배지 ───────────────────────────────── */
@@ -295,7 +295,7 @@
 
 .cp-panel__type-badge--procedure {
   background-color: rgba(200, 200, 200, 0.12);
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   border: 1px solid rgba(200, 200, 200, 0.2);
 }
 

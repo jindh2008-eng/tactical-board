@@ -6,12 +6,12 @@
 .bpm {
   display: grid;
   grid-template-columns: 220px 1fr;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   overflow: hidden;
   min-height: 380px;
   max-height: 560px;
-  background: var(--color-surface);
+  background: var(--set-surface-1);
 }
 
 /* ── 패널 공통 헤더 ── */
@@ -21,15 +21,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: var(--color-header-bg);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--set-surface-nav);
+  border-bottom: 1px solid var(--set-border);
   flex-shrink: 0;
 }
 
 .bpm__panel-title {
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -51,9 +51,9 @@
   width: 22px;
   height: 22px;
   background: #252535;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
@@ -83,16 +83,16 @@
 .bpm__groups {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--color-border);
+  border-right: 1px solid var(--set-border);
   overflow: hidden;
-  background: var(--color-bg);
+  background: var(--set-surface-0);
 }
 
 /* 그룹 추가 폼 */
 
 .bpm__group-form {
   padding: 8px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--set-border);
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -160,7 +160,7 @@
 
 .bpm__group-item--active {
   background: #0a1420;
-  border-left: 2px solid var(--color-accent);
+  border-left: 2px solid var(--set-accent);
   padding-left: 10px;
 }
 
@@ -175,7 +175,7 @@
 .bpm__group-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--set-text-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -243,8 +243,8 @@
   gap: 6px;
   align-items: center;
   padding: 8px 12px;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border-bottom: 1px solid var(--set-border);
   flex-shrink: 0;
 }
 
@@ -266,8 +266,8 @@
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
 }
 
@@ -282,12 +282,12 @@
 .bpm__preview-line1 {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--set-text-body);
 }
 
 .bpm__preview-line2 {
   font-size: 0.68rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
 }
 
 /* 수정 모드 */
@@ -312,16 +312,16 @@
   width: 100%;
   box-sizing: border-box;
   padding: 5px 8px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.75rem;
   outline: none;
 }
 
 .bpm__input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .bpm__input::placeholder {
@@ -343,9 +343,9 @@
 .bpm__btn {
   padding: 4px 12px;
   background: #252535;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
@@ -398,7 +398,7 @@
 
 .bpm__empty {
   font-size: 0.75rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   padding: 14px 10px;
   text-align: center;
   line-height: 1.7;

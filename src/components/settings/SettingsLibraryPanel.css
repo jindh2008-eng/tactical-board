@@ -3,8 +3,8 @@
    ─────────────────────────────────────────────*/
 
 .slp {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   padding: 10px 14px;
   display: flex;
@@ -31,7 +31,7 @@
 
 .slp__label {
   font-size: 0.72rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -39,17 +39,17 @@
 .slp__name-input {
   flex: 1;
   padding: 5px 9px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.8rem;
   outline: none;
   min-width: 0;
 }
 
 .slp__name-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .slp__actions {
@@ -64,9 +64,9 @@
 .slp__btn {
   padding: 5px 12px;
   background: #252535;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -117,7 +117,7 @@
 
 .slp__btn--active {
   background: #1e2a3a;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .slp__btn--danger {
@@ -154,8 +154,8 @@
   gap: 6px;
   align-items: center;
   padding: 8px 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
 }
 
@@ -176,7 +176,7 @@
 
 .slp__empty {
   font-size: 0.75rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   padding: 14px;
   text-align: center;
 }
@@ -186,14 +186,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 7px 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
   gap: 10px;
 }
 
 .slp__list-item--active {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
   background: #0c1822;
 }
 
@@ -208,7 +208,7 @@
 .slp__item-name {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--set-text-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -216,7 +216,7 @@
 
 .slp__item-date {
   font-size: 0.65rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
 }
 
 .slp__item-actions {

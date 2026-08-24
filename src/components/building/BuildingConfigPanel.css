@@ -1,3 +1,10 @@
+/*
+ * ⚠ 이 파일은 디렉터리가 `building/` 이지만 **설정모드 전용**이다.
+ * BuildingConfigPanel 을 import 하는 곳은 src/pages/SettingsPage.tsx 하나뿐이다.
+ * 따라서 색·치수는 `.settings-page` 스코프의 --set-* 토큰을 쓴다(§5.1).
+ * 훈련모드에서 이 컴포넌트를 렌더하면 토큰이 정의되지 않아 색이 죽는다 —
+ * 그때는 토큰을 어디에 둘지 먼저 정해야 한다.
+ */
 /* ─────────────────────────────────────────────
    건물 정보 설정 폼 (설정창 전용)
    ─────────────────────────────────────────────*/
@@ -25,23 +32,23 @@
 
 .bcf__label {
   font-size: 0.76rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .bcf__input {
   padding: 4px 8px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.82rem;
   outline: none;
 }
 
 .bcf__input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .bcf__input--name {
@@ -55,13 +62,13 @@
 
 .bcf__unit {
   font-size: 0.72rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
 }
 
 .bcf__divider {
   width: 1px;
   height: 18px;
-  background: var(--color-border);
+  background: var(--set-border);
   flex-shrink: 0;
 }
 
@@ -77,7 +84,7 @@
 .bcf__fire-label {
   font-size: 0.70rem;
   font-weight: 700;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 2px;
@@ -91,10 +98,10 @@
 
 .bcf__floor-select {
   padding: 4px 6px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.78rem;
   outline: none;
   cursor: pointer;
@@ -107,7 +114,7 @@
 }
 
 .bcf__floor-select:focus {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .bcf__primary-badge {
@@ -124,10 +131,10 @@
 
 .bcf__status-select {
   padding: 4px 6px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.78rem;
   outline: none;
   cursor: pointer;
@@ -135,13 +142,13 @@
 }
 
 .bcf__status-select:focus {
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .bcf__remove-btn {
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   cursor: pointer;
   font-size: 0.68rem;
   padding: 2px 5px;
@@ -160,17 +167,17 @@
   padding: 4px 12px;
   font-size: 0.74rem;
   background: transparent;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--set-border);
   border-radius: 3px;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   cursor: pointer;
   transition: background 0.1s, color 0.1s, border-color 0.1s;
 }
 
 .bcf__add-floor-btn:hover {
-  background: var(--color-header-bg);
-  color: var(--color-text);
-  border-color: var(--color-accent);
+  background: var(--set-surface-nav);
+  color: var(--set-text-body);
+  border-color: var(--set-accent);
 }
 
 /* ── 연결송수구 ── */
@@ -192,14 +199,14 @@
   align-items: center;
   gap: 6px;
   font-size: 0.82rem;
-  color: var(--color-text);
+  color: var(--set-text-body);
   cursor: pointer;
   user-select: none;
 }
 
 .bcf__siamese-label input[type="checkbox"] {
   cursor: pointer;
-  accent-color: var(--color-accent);
+  accent-color: var(--set-accent);
   width: 14px;
   height: 14px;
 }
@@ -351,7 +358,7 @@
   gap: 8px;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--set-border);
 }
 
 .bcf__ratio-hint {
@@ -370,12 +377,12 @@
 .bcf__ratio-slider {
   flex: 0 1 320px;
   height: 32px;          /* 클릭 영역 확보 */
-  accent-color: var(--color-accent, #4488cc);
+  accent-color: var(--set-accent);
   cursor: pointer;
 }
 
 .bcf__ratio-slider:focus-visible {
-  outline: 2px solid var(--color-accent, #4488cc);
+  outline: 2px solid var(--set-accent);
   outline-offset: 3px;
 }
 
@@ -395,7 +402,7 @@
   font-family: inherit;
   color: var(--set-text-dim, #8aa8c4);
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   cursor: pointer;
   transition: color 0.18s, border-color 0.18s;
@@ -403,7 +410,7 @@
 
 .bcf__ratio-reset:hover:not(:disabled) {
   color: #e2ecf6;
-  border-color: var(--color-accent, #4488cc);
+  border-color: var(--set-accent);
 }
 
 .bcf__ratio-reset:disabled {
@@ -417,7 +424,7 @@
   gap: 2px;
   height: 40px;
   max-width: 620px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   overflow: hidden;
 }

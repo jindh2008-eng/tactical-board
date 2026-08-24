@@ -11,8 +11,8 @@
 /* ── 그룹 카드 ── */
 
 .dsp__group {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   padding: 10px 14px;
   display: flex;
@@ -23,16 +23,16 @@
 .dsp__group-title {
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding-bottom: 6px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .dsp__group-hint {
   font-size: 0.74rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   margin: -2px 0 2px;
 }
 
@@ -49,7 +49,7 @@
 
 .dsp__label {
   font-size: 0.82rem;
-  color: var(--color-text);
+  color: var(--set-text-body);
   flex: 1;
 }
 
@@ -64,10 +64,10 @@
 .dsp__step-btn {
   width: 26px;
   height: 26px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -81,24 +81,24 @@
 
 .dsp__step-btn:hover {
   background: #2a3040;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .dsp__num-input {
   width: 48px;
   text-align: center;
   padding: 3px 4px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.85rem;
   font-family: inherit;
 }
 
 .dsp__num-input:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 /* Chrome 등 스피너 숨김 */
@@ -111,9 +111,9 @@
 
 .dsp__auto-info {
   font-size: 0.78rem;
-  color: var(--color-text-dim);
-  background: var(--color-bg);
-  border: 1px dashed var(--color-border);
+  color: var(--set-text-faint);
+  background: var(--set-surface-0);
+  border: 1px dashed var(--set-border);
   border-radius: 3px;
   padding: 3px 12px;
   min-width: 110px;
@@ -125,15 +125,15 @@
 
 .dsp__roster-empty {
   font-size: 0.8rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   padding: 12px;
   text-align: center;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--set-border);
   border-radius: 4px;
 }
 
 .dsp__roster {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -145,12 +145,12 @@
   align-items: center;
   gap: 10px;
   padding: 4px 0 6px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .dsp__mode-label {
   font-size: 0.76rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   flex-shrink: 0;
 }
 
@@ -164,12 +164,12 @@
   align-items: center;
   gap: 5px;
   font-size: 0.8rem;
-  color: var(--color-text);
+  color: var(--set-text-body);
   cursor: pointer;
 }
 
 .dsp__radio-label input[type='radio'] {
-  accent-color: var(--color-accent);
+  accent-color: var(--set-accent);
   cursor: pointer;
 }
 
@@ -178,10 +178,10 @@
 .dsp__order-select {
   width: 78px;
   padding: 3px 4px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.8rem;
   font-family: inherit;
   text-align: center;
@@ -190,7 +190,7 @@
 
 .dsp__order-select:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 /* 3컬럼: [명칭, 부대명입력, 도착시간/착대] */
@@ -204,14 +204,14 @@
 }
 
 .dsp__roster-head {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--set-surface-1);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .dsp__rh {
   font-size: 0.65rem;
   font-weight: 700;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -222,8 +222,8 @@
 }
 
 .dsp__roster-row {
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .dsp__roster-row:last-of-type {
@@ -232,24 +232,24 @@
 
 /* 연동 차량 행 — 들여쓰기 + 배경 약화 */
 .dsp__roster-row--linked {
-  background: var(--color-surface);
+  background: var(--set-surface-1);
   padding-left: 22px;
 }
 
 .dsp__rc--name {
   font-size: 0.8rem;
-  color: var(--color-text);
+  color: var(--set-text-body);
   white-space: nowrap;
 }
 
 .dsp__roster-row--linked .dsp__rc--name {
   font-size: 0.76rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
 }
 
 .dsp__rh--prefix {
   font-size: 0.65rem;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
 }
 
 .dsp__rc--prefix,
@@ -262,21 +262,21 @@
   width: 100%;
   min-width: 0;
   padding: 3px 6px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.78rem;
   font-family: inherit;
 }
 
 .dsp__prefix-input:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .dsp__prefix-input::placeholder {
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   opacity: 0.6;
 }
 
@@ -292,17 +292,17 @@
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   opacity: 0.6;
 }
 
 .dsp__time-input {
   width: 72px;
   padding: 3px 6px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.8rem;
   font-family: inherit;
   text-align: center;
@@ -310,12 +310,12 @@
 
 .dsp__time-input:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 
 .dsp__roster-row--linked .dsp__time-input {
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   border-style: dashed;
 }
 
@@ -329,10 +329,10 @@
 
 .dsp__extra-btn {
   padding: 4px 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   font-size: 0.78rem;
   font-family: inherit;
   cursor: pointer;
@@ -341,8 +341,8 @@
 
 .dsp__extra-btn:hover {
   background: #2a3040;
-  border-color: var(--color-accent);
-  color: var(--color-text);
+  border-color: var(--set-accent);
+  color: var(--set-text-body);
 }
 
 .dsp__extra-input-row {
@@ -355,21 +355,21 @@
   flex: 1;
   min-width: 0;
   padding: 4px 8px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
   border-radius: 3px;
-  color: var(--color-text);
+  color: var(--set-text-body);
   font-size: 0.82rem;
   font-family: inherit;
 }
 
 .dsp__extra-input:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--set-accent);
 }
 
 .dsp__extra-input::placeholder {
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   opacity: 0.6;
 }
 
@@ -377,7 +377,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--set-border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -387,8 +387,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 4px 10px;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--set-surface-0);
+  border-bottom: 1px solid var(--set-border);
 }
 
 .dsp__extra-item:last-child {
@@ -397,13 +397,13 @@
 
 .dsp__extra-name {
   font-size: 0.82rem;
-  color: var(--color-text);
+  color: var(--set-text-body);
 }
 
 .dsp__extra-remove {
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--set-text-faint);
   font-size: 0.75rem;
   cursor: pointer;
   padding: 2px 4px;
@@ -446,8 +446,8 @@
   gap:           5px;
   padding:       7px 10px 8px;
   border-radius: 5px;
-  border:        1px solid var(--color-border);
-  background:    var(--color-bg);
+  border:        1px solid var(--set-border);
+  background:    var(--set-surface-0);
   transition:    border-color 0.12s, background 0.12s;
 }
 
@@ -457,7 +457,7 @@
   gap:         6px;
   font-size:   0.92rem;
   font-weight: 700;
-  color:       var(--color-text);
+  color:       var(--set-text-body);
   white-space: nowrap;
 }
 
