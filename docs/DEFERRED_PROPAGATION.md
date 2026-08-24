@@ -69,7 +69,7 @@
 
 | ID | 발생 | 영향 모드 | 관측 내용 | 필요 작업 | 판정 |
 |---|---|---|---|---|---|
-| | | | | | |
+| **P-9** | S-1 (stylelint 도입, D-7) | 훈련(무플) | **유효하지 않은 CSS 2건.** [`ZoneCell.css:48,61`](../src/components/building/ZoneCell.css)의 `outline: 1px solid #7aaccc inset` — `inset`은 `outline` 단축 속성의 값이 아니라 **선언 전체가 무시된다.** 우측·중앙 구역의 hover 외곽선이 지금 전혀 그려지지 않는다. 새로 도입한 stylelint `declaration-property-value-no-unknown`이 잡았다 | `inset`을 빼거나(외곽선 복구) `box-shadow: inset 0 0 0 1px`로 바꾼다. 어느 쪽인지는 원래 의도 확인 필요 — 무플 담당이 판단한다. **설정모드 브랜치에서 고치지 않는다**(D-4) | 필수 |
 
 ---
 
@@ -97,4 +97,5 @@
 | 2026-08-18 | 최초 작성. 착수 시점 확인 항목 P-1 ~ P-7 등록 |
 | 2026-08-18 | MASTER_PLAN.md D-5(무플 레이아웃 재배치) 반영. P-2 범위 확대(지휘절차가 checklistConfig를 완전히 우회하게 됨), P-3·P-7 해소 표시 |
 | 2026-08-24 | **P-5 해소** — 브레이크포인트 3단으로 확정(배율 이식 안 함). **P-6 신설** — 전역 `:root` 토큰 공유. §4 순서 2번은 D-7로 앞당겨져 별도 브랜치에서 진행 중 |
+| 2026-08-24 (3) | **P-9 신설** — S-1 에서 도입한 stylelint 가 훈련모드 CSS 의 무효 선언 2건(`ZoneCell.css` `outline … inset`)을 잡았다. 설정모드 브랜치에서 고치지 않고 기록만 한다 |
 | 2026-08-24 (2) | 위 항목의 번호를 **P-6 → P-8로 정정.** P-6은 이미 분석창 스텁에 쓰이고 있었고([MASTER_PLAN.md](MASTER_PLAN.md) §7.4·[EVENT_LOG_PLAN.md](EVENT_LOG_PLAN.md) LD-4가 그 번호를 참조한다), 그대로 두면 §4 순서표 4행의 `P-1 · P-6`이 어느 쪽을 가리키는지 알 수 없었다 |

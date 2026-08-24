@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "chatgpt:summary": "node scripts/summarize-chatgpt-project.mjs",
-    "test:chatgpt-summary": "node --test scripts/summarize-chatgpt-project.test.mjs"
+    "test:chatgpt-summary": "node --test scripts/summarize-chatgpt-project.test.mjs",
+    "lint:css": "stylelint \"src/**/*.css\""
   },
   "dependencies": {
     "react": "^19.2.4",

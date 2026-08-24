@@ -29,6 +29,14 @@ npx tsc -b --force   # 타입체크만 (빠른 확인용)
 
 **린트 기준선**: 현재 약 56건의 오류가 이미 존재한다(대부분 `react-refresh/only-export-components` — Provider와 훅을 한 파일에 두는 이 코드베이스의 관례 — 와 `react-hooks/set-state-in-effect`). 새 오류만 회귀로 취급하고, 파일 단위로 비교한다.
 
+```bash
+npm run lint:css   # stylelint — 설정모드 토큰 강제
+```
+
+`stylelint-suppressions.json`이 도입 시점 위반 388건의 **기준선**이라 평상시엔 0건으로 통과한다. 이 파일은 줄 번호가 아니라 **파일×규칙별 건수**로 동작하므로, 건수를 넘기면 그 파일의 해당 규칙 위반이 전부 보고된다. 위반을 줄인 뒤에는 `npx stylelint "src/**/*.css" --suppress`로 건수를 다시 조인다 — 줄어드는 숫자가 [SETTINGS_MODE_UI_PLAN.md](docs/SETTINGS_MODE_UI_PLAN.md) S-2의 진척도다.
+
+`stylelint-config-standard` 중 표기 취향 규칙 6종(`alpha-value-notation` 등)은 껐다. 저장소 전체에서 1,362건을 내는데 §9 목표와 무관해 신호를 덮었다.
+
 ## 아키텍처
 
 ### 설정창 / 훈련창 이원 구조 ★

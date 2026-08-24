@@ -3,27 +3,99 @@
    ─────────────────────────────────────────────*/
 
 /*
- * 설정창 전용 치수 토큰.
- * 값을 패널 CSS 마다 흩어 두면 다시 작아지므로 여기 한 곳에 모은다.
- * 훈련창의 --ui-scale / --font-scale 과는 무관하다 — 설정창은 배율 대상이 아니다.
+ * 설정모드 디자인 토큰 — 단일 출처.
+ * 근거와 전체 정의는 docs/SETTINGS_MODE_UI_PLAN.md §5.1.
+ *
+ * 스코프가 `.settings-page` 인 것은 취향이 아니라 격리 조건이다.
+ * 전역 `:root`(src/App.css:12~)를 훈련모드와 공유하므로 그 값을 고치면
+ * 훈련모드가 같이 바뀌어 MASTER_PLAN D-4 를 깬다 — DEFERRED_PROPAGATION P-8.
+ * 설정모드 CSS 는 `:root` 토큰 대신 여기 `--set-*` 를 쓴다.
+ *
+ * 훈련창의 스테이지 배율과는 무관하다 — 설정모드는 배율 대상이 아니다(D-7 · Q-1).
  */
+/* stylelint-disable color-no-hex -- 토큰 정의부. 설정모드에서 hex 가 허용되는 유일한 자리다 */
 .settings-page {
-  --set-font-title: 1.25rem;   /* 18.75px — 화면 제목 */
-  --set-font-nav:   0.93rem;   /* 14px    — 사이드바 항목 */
-  --set-font-label: 0.93rem;   /* 14px    — 폼 라벨 */
-  --set-font-card:  0.90rem;   /* 13.5px  — 카드 제목 */
-  --set-font-body:  0.87rem;   /* 13px    — 안내문 */
-  --set-font-meta:  0.83rem;   /* 12.5px  — 보조 표기 */
-  --set-text-dim:   #8aa8c4;   /* 본문 대비 7.9:1 — 기존 #6a8aaa 는 5.4:1 */
-  --set-text-strong:#e2ecf6;
-  --set-input-h:    32px;
-  --set-nav-w:      200px;
+  /* ── 타입 스케일 — 5단계로 고정. 이 밖의 값은 쓰지 않는다 ── */
+  --set-fs-title: 1.25rem;   /* 18.8px  화면 제목        */
+  --set-fs-lg:    1rem;      /* 15.0px  입력값 · 강조 숫자 */
+  --set-fs-md:    0.93rem;   /* 14.0px  본문 · 라벨 · 내비 */
+  --set-fs-sm:    0.87rem;   /* 13.0px  안내문 · 카드 제목 */
+  --set-fs-xs:    0.8rem;    /* 12.0px  표 머리글 · 보조   */
+  /* 12px 미만은 금지 — 한글이 뭉개진다. 현재 최소 9px, 12px 미만이 11종 */
+
+  /* ── 여백 — 4px 리듬 8단계 ── */
+  --set-sp-1: 4px;
+  --set-sp-2: 8px;
+  --set-sp-3: 12px;
+  --set-sp-4: 16px;
+  --set-sp-5: 20px;
+  --set-sp-6: 24px;
+  --set-sp-8: 32px;
+  --set-sp-10: 40px;
+
+  /* ── 라운드 — 3단계 ── */
+  --set-r-sm: 4px;   /* 입력 · 버튼 · 칩 */
+  --set-r-md: 6px;   /* 카드           */
+  --set-r-lg: 10px;  /* 모달 · 팝오버   */
+
+  /* ── 면 — 3단 elevation ── */
+  --set-surface-0: #080c12;  /* 페이지 바탕    */
+  --set-surface-1: #0e1420;  /* 카드          */
+  --set-surface-2: #141d2c;  /* 카드 안의 카드 */
+
+  /* ── 경계 — 카드 면(--set-surface-1) 대비 실측 ── */
+  --set-border: #54697f;         /* 3.25:1 — 입력 · 카드 경계. WCAG 1.4.11 충족 */
+  --set-border-subtle: #33465a;  /* 1.90:1 — 표 안쪽 구분선. 장식이라 3:1 적용 밖 */
+  --set-border-strong: #6d8299;  /* 4.65:1 — hover · 포커스 직전 */
+
+  /* ── 글자 — 카드 면 대비 실측 ── */
+  --set-text: #e2ecf6;        /* 15.4:1 */
+  --set-text-body: #c8d8e8;   /* 12.7:1 */
+  --set-text-dim: #8aa8c4;    /*  7.4:1 */
+  --set-text-faint: #6a8aaa;  /*  5.1:1 — 12px 이상에서만 */
+
+  /* ── 의미색 — 이 넷 외의 색은 쓰지 않는다 ── */
+  --set-accent: #4488cc;                        /* 4.95:1 선택 · 포커스 · CTA */
+  --set-accent-weak: rgb(68 136 204 / 12%);
+  --set-danger: #e05a5a;                        /* 5.07:1 파괴적 동작 · 오류 */
+  --set-warn: #d9a441;                          /* 8.19:1 미입력 · 주의 */
+  --set-ok: #4fae72;                            /* 6.70:1 저장 완료 · 충족 */
+
+  /* ── 치수 ── */
+  --set-h-input: 32px;
+  --set-h-btn: 32px;
+  --set-h-btn-sm: 26px;  /* 표 안 인라인. 클릭영역은 ::before 로 32px 확보 */
+  --set-aside-w: 360px;  /* 보조 열 — ≥1800px 에서만 (S-4) */
+
+  /*
+   * ── 이관 대기 ──
+   * 아래 셋은 위 스케일과 **값이 다르다.** 지금 갈아끼우면 화면이 바뀌므로
+   * S-1(정의만 · 화면 변화 0)의 완료 조건을 깬다. 값을 바꾸는 단계에서 소진한다.
+   *   --set-font-card → --set-fs-sm  (13.5px → 13.05px)  S-2
+   *   --set-font-meta → --set-fs-xs  (12.45px → 12px)    S-2
+   *   --set-nav-w     → 240px                            S-4
+   */
+  --set-font-card: 0.9rem;
+  --set-font-meta: 0.83rem;
+  --set-nav-w: 200px;
+
+  /* ── 모션 ── */
+  --set-dur: 180ms;
+  --set-ease: cubic-bezier(0.2, 0, 0, 1);
 
   display: flex;
   flex-direction: column;
   height: 100%;
   color: var(--color-text);
   overflow: hidden;
+}
+/* stylelint-enable color-no-hex */
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-page * {
+    transition-duration: 0.01ms !important;
+    animation: none !important;
+  }
 }
 
 /* ── 설정 파일 바 (상단 고정) ── */
@@ -53,10 +125,10 @@
 }
 
 .settings-page__topbar .slp__name-input {
-  height: var(--set-input-h);
+  height: var(--set-h-input);
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--set-text-strong);
+  color: var(--set-text);
 }
 
 .settings-page__topbar .slp__name-group {
@@ -64,9 +136,9 @@
 }
 
 .settings-page__topbar .slp__btn {
-  height: var(--set-input-h);
+  height: var(--set-h-input);
   padding: 0 14px;
-  font-size: var(--set-font-body);
+  font-size: var(--set-fs-sm);
 }
 
 .settings-page__topbar .slp__btn--sm {
@@ -131,7 +203,7 @@
   width: 100%;
   min-height: 36px;
   padding: 8px 16px 8px 21px;
-  font-size: var(--set-font-nav);
+  font-size: var(--set-fs-md);
   font-weight: 400;
   color: var(--set-text-dim);
   background: none;
@@ -146,12 +218,12 @@
 }
 
 .settings-page__nav-item:hover {
-  color: var(--set-text-strong);
+  color: var(--set-text);
   background-color: rgba(255, 255, 255, 0.04);
 }
 
 .settings-page__nav-item--active {
-  color: var(--set-text-strong);
+  color: var(--set-text);
   border-left-color: var(--color-accent, #4a90d9);
   background-color: rgba(68, 136, 204, 0.10);
   font-weight: 600;
@@ -180,16 +252,16 @@
 }
 
 .settings-page__section-title {
-  font-size: var(--set-font-title);
+  font-size: var(--set-fs-title);
   font-weight: 700;
-  color: var(--set-text-strong);
+  color: var(--set-text);
   margin-bottom: 6px;
 }
 
 /* ── 힌트 텍스트 ── */
 
 .settings-page__hint {
-  font-size: var(--set-font-body);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
   line-height: 1.65;
   max-width: 760px;
@@ -213,18 +285,18 @@
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--set-text-dim);
-  font-size: var(--set-font-nav);
+  font-size: var(--set-fs-md);
   font-weight: 500;
   cursor: pointer;
   transition: color 0.1s, border-color 0.1s;
 }
 
 .settings-page__tab:hover {
-  color: var(--set-text-strong);
+  color: var(--set-text);
 }
 
 .settings-page__tab--active {
-  color: var(--set-text-strong);
+  color: var(--set-text);
   font-weight: 600;
   border-bottom-color: var(--color-accent, #4a90d9);
 }
@@ -276,7 +348,7 @@
 }
 
 .settings-page__sub-hint {
-  font-size: var(--set-font-body);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
   margin-bottom: 8px;
   line-height: 1.6;
@@ -294,18 +366,18 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  font-size: var(--set-font-label);
+  font-size: var(--set-fs-md);
   color: var(--color-text);
 }
 
 .settings-page__timing-input {
   width: 96px;
-  height: var(--set-input-h);
+  height: var(--set-h-input);
   padding: 0 10px;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: var(--set-text-strong);
+  color: var(--set-text);
   font-size: 0.95rem;
   font-weight: 600;
   text-align: right;
@@ -319,7 +391,7 @@
 /* ── 플레이스홀더 ── */
 
 .settings-page__placeholder {
-  font-size: var(--set-font-label);
+  font-size: var(--set-fs-md);
   color: var(--set-text-dim);
   padding: 10px 14px;
   border: 1px dashed var(--color-border);
@@ -360,7 +432,7 @@
 .settings-page .dsp__group-hint,
 .settings-page .tag-preset-panel__empty,
 .settings-page .unit-status-panel__empty {
-  font-size: var(--set-font-body);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
 }
 
@@ -370,7 +442,7 @@
 .settings-page .tag-preset-panel__item-text,
 .settings-page .unit-status-panel__message-text,
 .settings-page .hsp__unit {
-  font-size: var(--set-font-label);
+  font-size: var(--set-fs-md);
 }
 
 .settings-page .tag-preset-panel__type-header,
@@ -393,8 +465,8 @@
 .settings-page .bcf__status-select,
 .settings-page .tag-preset-panel__add-input,
 .settings-page .unit-status-panel__add-input {
-  height: var(--set-input-h);
-  font-size: var(--set-font-label);
+  height: var(--set-h-input);
+  font-size: var(--set-fs-md);
 }
 
 .settings-page .dsp__step-btn {

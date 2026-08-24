@@ -1,0 +1,45 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "no-descending-specificity": null,
+    "custom-property-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "comment-empty-line-before": null,
+    "rule-empty-line-before": null,
+    "at-rule-empty-line-before": null,
+    "selector-class-pattern": null,
+    "keyframes-name-pattern": null,
+    "custom-property-pattern": null,
+    "value-keyword-case": null,
+    "declaration-block-no-redundant-longhand-properties": null,
+
+    "alpha-value-notation": null,
+    "color-function-notation": null,
+    "color-function-alias-notation": null,
+    "color-hex-length": null,
+    "comment-whitespace-inside": null,
+    "declaration-block-single-line-max-declarations": null
+  },
+  "overrides": [
+    {
+      "files": ["src/components/settings/**/*.css", "src/pages/SettingsPage.css"],
+      "rules": {
+        "declaration-property-value-allowed-list": [
+          {
+            "font-size": ["/^var\\(--set-fs-/"],
+            "border-radius": ["/^var\\(--set-r-/", "50%"]
+          },
+          {
+            "message": "설정모드는 --set-* 토큰만 쓴다 (docs/SETTINGS_MODE_UI_PLAN.md §5.1)"
+          }
+        ],
+        "color-no-hex": [
+          true,
+          {
+            "message": "설정모드는 hex 를 직접 쓰지 않는다 — --set-* 토큰으로 (§5.1)"
+          }
+        ]
+      }
+    }
+  ]
+}

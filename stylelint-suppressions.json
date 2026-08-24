@@ -1,0 +1,156 @@
+{
+  "src/App.css": {
+    "property-no-vendor-prefix": {
+      "count": 4
+    },
+    "selector-not-notation": {
+      "count": 2
+    }
+  },
+  "src/pages/SettingsPage.css": {
+    "color-no-hex": {
+      "count": 4
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 19
+    }
+  },
+  "src/components/building/BuildingConfigPanel.css": {
+    "property-no-vendor-prefix": {
+      "count": 2
+    }
+  },
+  "src/components/building/ExteriorZone.css": {
+    "shorthand-property-no-redundant-values": {
+      "count": 1
+    }
+  },
+  "src/components/building/FloorRow.css": {
+    "length-zero-no-unit": {
+      "count": 1
+    }
+  },
+  "src/components/building/StandbyColumn.css": {
+    "shorthand-property-no-redundant-values": {
+      "count": 1
+    }
+  },
+  "src/components/building/TacticalArea.css": {
+    "length-zero-no-unit": {
+      "count": 1
+    }
+  },
+  "src/components/building/ZoneCell.css": {
+    "declaration-property-value-no-unknown": {
+      "count": 2
+    }
+  },
+  "src/components/right/CommandProcedureTrainingBox.css": {
+    "no-duplicate-selectors": {
+      "count": 3
+    }
+  },
+  "src/components/overlays/ScenarioModal.css": {
+    "media-feature-range-notation": {
+      "count": 1
+    }
+  },
+  "src/components/settings/BadgePresetManager.css": {
+    "color-no-hex": {
+      "count": 35
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 23
+    }
+  },
+  "src/components/settings/ChecklistSetupPanel.css": {
+    "color-no-hex": {
+      "count": 11
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 49
+    }
+  },
+  "src/components/settings/CommandProcedurePanel.css": {
+    "color-no-hex": {
+      "count": 6
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 27
+    }
+  },
+  "src/components/settings/DispatchSetupPanel.css": {
+    "color-no-hex": {
+      "count": 7
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 37
+    },
+    "property-no-vendor-prefix": {
+      "count": 1
+    }
+  },
+  "src/components/settings/EventSetupPanel.css": {
+    "color-no-hex": {
+      "count": 8
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 25
+    }
+  },
+  "src/components/settings/HydrantSetupPanel.css": {
+    "color-no-hex": {
+      "count": 15
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 8
+    }
+  },
+  "src/components/settings/SettingsLibraryPanel.css": {
+    "color-no-hex": {
+      "count": 25
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 12
+    }
+  },
+  "src/components/settings/TagPresetPanel.css": {
+    "color-no-hex": {
+      "count": 3
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 13
+    }
+  },
+  "src/components/settings/UnitStatusPanel.css": {
+    "color-no-hex": {
+      "count": 2
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 13
+    }
+  },
+  "src/components/settings/VictimSetupPanel.css": {
+    "color-no-hex": {
+      "count": 9
+    },
+    "declaration-property-value-allowed-list": {
+      "count": 15
+    }
+  },
+  "src/components/shared/ErrorBoundary.css": {
+    "declaration-property-value-keyword-no-deprecated": {
+      "count": 1
+    }
+  },
+  "src/components/shared/VictimCard.css": {
+    "shorthand-property-no-redundant-values": {
+      "count": 1
+    }
+  },
+  "src/components/shared/VictimContextMenu.css": {
+    "shorthand-property-no-redundant-values": {
+      "count": 1
+    }
+  }
+}
