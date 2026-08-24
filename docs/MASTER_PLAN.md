@@ -153,6 +153,28 @@ CSV는 사람이 읽는 산출물이라 재현의 근거가 될 수 없다(§7.5
 
 ---
 
+### D-7. 설정모드 UI 재설계를 **무플과 병행**한다 (2026-08-24) ★
+
+사용자 지시로 D-4의 "훈련모드(무플) 하나만"을 **명시적으로 확장한다.** [DEFERRED_PROPAGATION.md](DEFERRED_PROPAGATION.md) §4 반영 순서 2번(설정모드)을 앞당겨 착수하며, 작업은 별도 브랜치 `feat/settings-ui-redesign`에서 진행한다.
+
+**병행이 안전한 근거**는 실측이다 — 설정모드는 `/play`와 컴포넌트를 **하나도 공유하지 않는다**(DEFERRED §1.1). 단 하나의 접점인 상단 `app-nav`(P-4)는 [SETTINGS_MODE_UI_PLAN.md](SETTINGS_MODE_UI_PLAN.md) §10에서 범위 밖으로 뺐다.
+
+다만 **전역 CSS 토큰은 공유한다.** `--color-border` 등 `:root` 토큰(`src/App.css:12~`)을 설정모드가 103건, 훈련모드가 11건 쓴다. 따라서:
+
+> **`:root` 토큰의 값을 바꾸지 않는다.** 설정모드는 `.settings-page` 스코프에 `--set-*`를 세우고 그쪽으로 갈아끼운다. 이 격리가 끝나야 D-4를 깰 방법이 없어진다.
+
+**미결 질문의 답**(SETTINGS_MODE_UI_PLAN §11):
+
+| ID | 답 | 근거 |
+|---|---|---|
+| **Q-1** | **브레이크포인트 3단.** `--ui-scale` 이식은 하지 않는다 | `--ui-scale`은 이미 제거됐고(정의 0건, 죽은 참조 94건), 후속인 스테이지는 [SCREEN_STAGE_PLAN.md](SCREEN_STAGE_PLAN.md) §5가 이미 "설정모드는 쓰지 않는다"로 답했다. 결정적으로 **배율은 F-5(공백 46%)를 못 고친다** — 균일 확대는 열을 늘리지 못한다. 이것이 **DEFERRED P-5의 답**이다 |
+| **Q-3** | 미결 — S-3 착수 시점에 정한다 | |
+| **Q-4** | **B(지금 착수).** 이 결정(D-7)이 그 기록이다 | |
+
+**추가 결정**: 토큰 강제 장치로 `stylelint`을 devDependency에 도입한다. 기존 위반은 baseline으로 무시하고 새 위반만 오류로 본다 — CLAUDE.md의 eslint 기준선 운영과 같은 방식이다. 근거는 §1 재측정에서 **계획서 작성 후 이틀 만에 수치가 악화**된 것이다(hex 121→128, padding 51→59, useState 20→28).
+
+---
+
 ## 2. 현재 진행 상태 — 코드로 검증한 값
 
 전체 로드맵([DUAL_SCREEN_SYNC_PLAN.md §7.0](DUAL_SCREEN_SYNC_PLAN.md)) 기준 **약 35% 지점**이다.
@@ -531,3 +553,4 @@ tactical-board-run-{yymmdd-hhmm}.json
 | 2026-08-18 | **D-4 추가** — 네 모드 구분 + 훈련모드(무플) 우선. 지휘 연동을 §4에서 §7.1로 이동(11.75일 → 8일). [DEFERRED_PROPAGATION.md](DEFERRED_PROPAGATION.md) 신설 |
 | 2026-08-18 | **D-5 추가, W-1 구현 완료** — 무플 레이아웃 재배치(진행상황관리 제거·좌우 반전·지휘절차 우측 패널화). D-2를 대체. X-1·W-0-2 해소. 브라우저 검증 완료(StrictMode 이중 로그 버그 발견·수정 포함) |
 | 2026-08-20 | **D-6 추가** — 모드 전환 기본원칙 M-1~M-5(설정 반영 시점·훈련 중 설정 차단·2단 종료 확인·CSV 파일명 `yymmdd-hhmm`·재현 스냅샷). §7.5 신설. `clearRuntimeSession()`의 equip-msg 누락 발견 |
+| 2026-08-24 | **D-7 추가** — 설정모드 UI 재설계를 무플과 병행(D-4 확장). 브랜치 `feat/settings-ui-redesign`. Q-1을 브레이크포인트로 확정(= DEFERRED P-5의 답), stylelint 도입 확정. 전역 `:root` 토큰 공유(설정 103건/훈련 11건)를 격리 조건으로 명시. `--ui-scale` 제거 사실을 CLAUDE.md에 반영 |

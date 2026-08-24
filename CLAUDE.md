@@ -71,14 +71,17 @@ Context 경계를 넘어 동작을 호출해야 할 때 이 패턴을 쓴다(`Fi
 
 **새로 좌표를 저장하는 코드를 쓸 때 px로 저장하면 안 된다.**
 
-### 반응형 배율 — `--ui-scale` / `--font-scale`
+### 화면 배율 — 스테이지(고정 캔버스 + `transform: scale()`)
 
-`src/hooks/useUiScale.ts`가 기준 화면(**2560×1364 CSS px**) 대비 비율을 계산해 `.play-page`에 두 변수를 심고 `html` 글꼴을 조정한다.
+`src/components/stage/StageRoot.tsx`가 **훈련창의 유일한 배율 지점**이다. 고정 논리 캔버스에 화면을 그리고 뷰포트에 맞춰 `transform: scale()`을 한 번만 건다. 캔버스가 변하지 않으므로 안쪽은 전부 px로 그려도 되고, 그 px들이 서로 다른 속도로 어긋날 방법이 없다.
 
-- 이 코드베이스는 치수를 `rem`으로 쓰는 곳이 많아 **루트 글꼴 하나로 대부분이 따라온다.** px로 박힌 값만 `calc(... * var(--ui-scale, 1))`로 개별 환산한다.
-- 기하(`--ui-scale`)와 글꼴(`--font-scale`)이 분리돼 있다. 글꼴은 하한 0.78이 걸려 작은 화면에서 덜 줄어든다.
-- **기준은 2560이지 3840이 아니다.** 3840은 물리 픽셀이고 Windows 150% 배율에서 CSS 뷰포트는 2560이다.
-- `App.css`에서 `body, #root`는 `font-size: 1rem`이어야 한다. 15px를 다시 박으면 상속이 끊겨 일부 글자만 안 줄어든다.
+- 캔버스 치수는 `src/components/stage/canvas.ts`가 단일 출처다. 높이 `CANVAS_H = 1440` 고정, 가로 폭은 훈련영역 종횡비에서 역산해 **가변**(레터박스가 구조적으로 0이 된다). 세로는 `CANVAS_PORTRAIT` 고정.
+- 패널 폭을 CSS에 다시 적지 않는다 — `StageRoot`가 `--op-panel-w` / `--proc-panel-w`로 심고 `PlayPage.css`가 그걸 읽는다. 양쪽에 숫자를 박으면 어긋날 때 캔버스 폭 클램프가 틀어져 레터박스가 조용히 되살아난다.
+- 가로/세로 전환에는 둔 구간(히스테리시스)이 있다 — `ASPECT_TO_LANDSCAPE 1.15` / `ASPECT_TO_PORTRAIT 0.87`.
+- **`--ui-scale` / `--font-scale` / `useUiScale`은 제거됐다.** 배율을 CSS 선언 1,157곳이 각자 따라가야 했고 px·rem·변수·%가 서로 다른 하한으로 갈라졌기 때문이다. `var(--ui-scale)` 참조가 훈련모드 CSS에 94건 남아 있으나 **정의가 없어 전부 폴백 1로 죽어 있다**(정리 대상). 새 코드에 쓰지 않는다.
+- 근거와 실측은 [docs/SCREEN_STAGE_PLAN.md](docs/SCREEN_STAGE_PLAN.md) §2.1 · §3.1 · §3.10 참고.
+
+**설정모드(`/settings`)는 스테이지를 쓰지 않는다.** 폼과 표라서 고정 캔버스에 넣으면 넓은 화면을 레터박스로 버리고 표가 좁아진다. 리플로우(브레이크포인트) 3단으로 간다 — [SCREEN_STAGE_PLAN.md](docs/SCREEN_STAGE_PLAN.md) §5.
 
 ### 진행상황 관리 — 표시(View)와 효과(Panel) 분리
 
