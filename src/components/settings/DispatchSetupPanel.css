@@ -79,7 +79,7 @@
 .dsp__groups {
   display: flex;
   flex-wrap: wrap;          /* 폭이 모자라면 그룹 단위로 접힌다 */
-  align-items: flex-start;
+  align-items: stretch;     /* 그룹 높이를 서로 맞춘다 — 차량 2행이 그 높이를 나눠 쓴다 */
   gap: var(--set-sp-4);
 }
 
@@ -99,6 +99,9 @@
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-md);
 }
+
+/* 슬롯 묶음이 그룹의 남는 세로를 받는다 — 차량 격자가 그 높이를 나눠 쓴다 */
+.dsp__group > .dsp__slots { flex: 1; }
 
 .dsp__group-title {
   margin: 0;
@@ -123,6 +126,30 @@
   display: flex;
   align-items: flex-start;
   gap: var(--set-sp-2);
+}
+
+/*
+ * 차량 — 3열 × 2행. 세로로 채우므로 TSX 배열을 두 개씩 끊어 읽으면
+ * 화면 배치가 그대로 보인다(고가/굴절, 지휘/배연, 물탱크/구조차).
+ *
+ * `flex: 1` 로 그룹의 남는 세로를 차지하고 두 행이 그것을 반씩 나눈다 —
+ * 활동대 한 칸의 높이에 차량 두 칸이 들어간다. 행 높이를 숫자로 박지 않은
+ * 것은 활동대가 대수에 따라 자라기 때문이다(진압 8대면 그만큼 길어진다).
+ */
+.dsp__slots--grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: column;
+  align-items: stretch;
+  flex: 1;
+}
+
+/* 격자 안에서는 폭을 격자가 정한다 */
+.dsp__slots--grid .dsp__slot {
+  flex: initial;
+  min-width: 0;
+  width: auto;
 }
 
 /*

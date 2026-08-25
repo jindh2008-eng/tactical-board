@@ -32,11 +32,21 @@ const UNIT_SLOTS: (SlotDef & { key: keyof DispatchSetup['units'] })[] = [
   { key: 'ems',         label: '구급대', rosterType: 'ems' },
 ];
 
+/*
+ * 차량은 **3열 × 2행**이다. 배열 순서가 곧 세로쌍이다 — 격자가 세로로
+ * 채워지므로(grid-auto-flow: column) 두 개씩 끊어 읽으면 화면 배치가 보인다.
+ *
+ *   고가차  지휘차  물탱크
+ *   굴절차  배연차  구조차
+ *
+ * 여섯을 한 줄로 늘어놓던 것을 접었다. 가로로 절반이 되어 남는 폭을 활동대가
+ * 가져가고, 세로로는 두 행이 활동대 한 칸과 같은 높이를 나눠 쓴다.
+ */
 const VEHICLE_SLOTS: (SlotDef & { key: keyof DispatchSetup['vehicles'] })[] = [
   { key: 'aerial',        label: '고가차', rosterType: 'aerial' },
   { key: 'ladder',        label: '굴절차', rosterType: 'ladder' },
-  { key: 'smokeExhaust',  label: '배연차', rosterType: 'smokeExhaust' },
   { key: 'command',       label: '지휘차', rosterType: 'command' },
+  { key: 'smokeExhaust',  label: '배연차', rosterType: 'smokeExhaust' },
   { key: 'waterTank',     label: '물탱크', rosterType: 'water_tank' },
   { key: 'rescueVehicle', label: '구조차', rosterType: 'rescue_vehicle' },
 ];
@@ -239,7 +249,7 @@ export function DispatchSetupPanel() {
         {/* ── 차량 ── */}
         <section className="dsp__group">
           <h4 className="dsp__group-title dsp__group-title--vehicle">차량</h4>
-          <div className="dsp__slots">
+          <div className="dsp__slots dsp__slots--grid">
             {VEHICLE_SLOTS.map(s => (
               <Slot
                 key={s.key}
