@@ -24,6 +24,13 @@
    */
   --dsp-list-min: calc(28px * 5 + var(--set-sp-2) * 4);
 
+  /*
+   * 생성칸 하나의 최소 폭. 유관기관·직접입력 그룹도 이 값을 기준으로 잡는다 —
+   * 그래야 네 그룹의 토큰이 같은 크기로 보인다. 예전에는 고정 그룹이
+   * 내용 크기대로만 잡혀(169 / 198px) 그쪽 토큰만 눈에 띄게 작았다.
+   */
+  --dsp-slot-w: 120px;
+
   display: flex;
   flex-direction: column;
   gap: var(--set-sp-4);
@@ -113,8 +120,16 @@
   border-bottom: 1px solid var(--set-border-subtle);
 }
 
-/* 프리셋·입력만 있는 그룹은 늘릴 이유가 없다 — 늘리면 버튼 옆이 빈다 */
-.dsp__group--fixed { flex: 0 0 auto; }
+/*
+ * 프리셋·입력만 있는 그룹은 남는 폭을 나눠 갖지 않는다(늘리면 버튼 옆이 빈다).
+ * 다만 **생성칸 두 개 폭**은 확보한다 — 그래야 그 안의 토큰이 활동대·차량의
+ * 토큰과 같은 크기가 된다. 내용 크기대로만 잡으면 169px 까지 쪼그라들어
+ * 유관기관 토큰만 절반 크기로 보였다.
+ */
+.dsp__group--fixed {
+  flex: 0 0 auto;
+  min-width: calc(var(--dsp-slot-w) * 2 + var(--set-sp-2) + var(--set-sp-3) * 2);
+}
 
 .dsp__group-title--activity { color: var(--set-cat-activity); }
 .dsp__group-title--vehicle  { color: var(--set-cat-vehicle); }
@@ -164,8 +179,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--set-sp-2);
-  flex: 1 1 120px;
-  min-width: 120px;
+  flex: 1 1 var(--dsp-slot-w);
+  min-width: var(--dsp-slot-w);
 }
 
 .dsp__slot-head {
@@ -199,6 +214,9 @@
   gap: var(--set-sp-2);
   min-height: var(--dsp-list-min);   /* 5대분. 넘으면 아래로 자란다 */
 }
+
+/* 고정 그룹의 목록은 두 칸 폭을 쓰므로 토큰도 그만큼 넓다 */
+.dsp__group--fixed .dsp__slot-list { gap: var(--set-sp-2); }
 
 /* ── 스테퍼 ── */
 
@@ -383,11 +401,12 @@
   grid-auto-flow: column;
   align-content: center;
   min-height: var(--dsp-create-h);
-  gap: var(--set-sp-1);
+  gap: var(--set-sp-2);
 }
 
+/* 높이·글자를 활동대 스테퍼 버튼과 맞춘다 — 같은 「만드는 수단」이라 급이 같다 */
 .dsp__preset-btn {
-  min-height: var(--set-h-btn-sm);
+  min-height: var(--set-h-btn);
   padding: 0 var(--set-sp-3);
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
@@ -408,7 +427,7 @@
 
 .dsp__extra-input-row {
   display: flex;
-  gap: var(--set-sp-1);
+  gap: var(--set-sp-2);
   align-items: center;
   min-height: var(--dsp-create-h);   /* 다른 그룹의 생성 부분과 같은 높이 */
 }
@@ -416,8 +435,8 @@
 .dsp__extra-input {
   flex: 1;
   min-width: 0;
-  width: 110px;
-  padding: 4px var(--set-sp-2);
+  height: var(--set-h-btn);   /* 추가 버튼과 같은 높이 */
+  padding: 0 var(--set-sp-2);
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
