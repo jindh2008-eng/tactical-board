@@ -1,56 +1,176 @@
-/* ─────────────────────────────────────────────
-   출동대 생성 설정 패널 (dsp)
-   ─────────────────────────────────────────────*/
-
+/*
+ * 2026-08-25 재배치 — 생성칸을 가로로 늘어놓고, 만들어진 대를 그 칸 **바로 아래**에.
+ * 예전에는 위에서 수량을 정하고 아래 표에서 부대명·착대를 따로 잡아, 방금 만든
+ * 대가 표 어디로 갔는지 눈으로 따라가야 했다.
+ */
 .dsp {
+  /*
+   * 「생성 부분」의 공통 높이.
+   *
+   * 그룹마다 생성 수단이 다르다 — 활동대·차량은 라벨+스테퍼(74px), 유관기관은
+   * 프리셋 3행 격자(86px), 직접입력은 입력 한 줄(30px). 그대로 두면 아래
+   * 토큰 목록이 그룹마다 다른 높이에서 시작해(576 / 588 / 532) 줄이 어긋난다.
+   * 가장 큰 것에 맞춰 셋을 같은 높이로 묶는다.
+   */
+  --dsp-create-h: 86px;
+
+  /*
+   * 토큰 목록의 최소 높이 — **5대분**.
+   *
+   * 출동대 수는 칸마다 다른데(진압 8, 굴절 0) 목록 높이가 내용대로 흐르면
+   * 칸마다 바닥이 달라 들쭉날쭉해 보인다. 5대분을 미리 비워 두면 대부분의
+   * 칸이 같은 크기가 되고, 5대를 넘는 칸만 아래로 자란다.
+   *   유닛 28px × 5 + 사이 여백 8px × 4
+   */
+  --dsp-list-min: calc(28px * 5 + var(--set-sp-2) * 4);
+
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--set-sp-4);
 }
 
-/* ── 그룹 카드 ── */
+/* ── 도착설정 방식 ── */
 
-.dsp__group {
+.dsp__mode-row {
+  display: flex;
+  align-items: center;
+  gap: var(--set-sp-3);
+  padding: var(--set-sp-2) var(--set-sp-3);
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  padding: 10px 14px;
+  border-radius: var(--set-r-md);
+}
+
+.dsp__mode-label {
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  color: var(--set-text-faint);
+}
+
+.dsp__mode-radios {
+  display: flex;
+  gap: var(--set-sp-4);
+}
+
+.dsp__radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-body);
+  cursor: pointer;
+}
+
+.dsp__radio-label input[type="radio"] {
+  accent-color: var(--set-accent);
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.dsp__mode-note {
+  margin-left: auto;
+  font-size: var(--set-fs-xs);
+  color: var(--set-warn);
+}
+
+/* ── 네 그룹을 가로로 ── */
+
+.dsp__groups {
+  display: flex;
+  flex-wrap: wrap;          /* 폭이 모자라면 그룹 단위로 접힌다 */
+  align-items: flex-start;
+  gap: var(--set-sp-4);
+}
+
+/*
+ * 생성칸이 있는 그룹(활동대·차량)은 남는 폭을 나눠 갖는다.
+ * 고정 폭으로 두면 2560 에서 오른쪽에 80px 남짓이 그냥 비었다 — 칸이 아홉이라
+ * 그 폭을 나누면 칸마다 8px 씩 넓어져 토큰 이름이 그만큼 더 보인다.
+ */
+.dsp__group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--set-sp-2);
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: var(--set-sp-3);
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-md);
 }
 
 .dsp__group-title {
-  font-size: var(--set-fs-xs);
+  margin: 0;
+  font-size: var(--set-fs-sm);
   font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--set-text-faint);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--set-border);
+  padding-bottom: var(--set-sp-2);
+  border-bottom: 1px solid var(--set-border-subtle);
 }
 
-.dsp__group-hint {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-faint);
-  margin: -2px 0 2px;
-}
+/* 프리셋·입력만 있는 그룹은 늘릴 이유가 없다 — 늘리면 버튼 옆이 빈다 */
+.dsp__group--fixed { flex: 0 0 auto; }
 
-/* ── 행 ── */
+.dsp__group-title--activity { color: var(--set-cat-activity); }
+.dsp__group-title--vehicle  { color: var(--set-cat-vehicle); }
+.dsp__group-title--agency   { color: var(--set-cat-agency); }
 
-.dsp__row,
-.dsp__auto-row {
+/* ── 생성칸 ── */
+
+.dsp__slots {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 28px;
+  align-items: flex-start;
+  gap: var(--set-sp-2);
 }
 
-.dsp__label {
-  font-size: var(--set-fs-xs);
+/*
+ * 칸 폭 — 토큰과 착대 드롭다운이 **한 줄에 나란히** 서는 폭이다.
+ *
+ * 세로로 쌓았을 때는 92px 이면 됐지만, 옆에 붙이면 드롭다운 44px 이 더 든다.
+ * 네 그룹을 가로로 늘어놓는 배치라 이 값이 곧 전체 폭을 정한다 —
+ * 활동대 3칸 + 차량 6칸 = 9칸이므로 1px 이 9px 이 된다.
+ * 120px 에서 합이 1,584px 이고 2560 화면의 컨테이너가 1,616px 이다.
+ */
+.dsp__slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-2);
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+.dsp__slot-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;   /* 공통 높이 안에서 가운데 */
+  min-height: var(--dsp-create-h);
+  gap: var(--set-sp-1);
+  padding: var(--set-sp-2) var(--set-sp-1);
+  background: var(--set-surface-2);
+  border: 1px solid var(--set-border-subtle);
+  border-radius: var(--set-r-sm);
+}
+
+.dsp__slot-head--on { border-color: var(--set-border-strong); }
+
+.dsp__slot-label {
+  font-size: var(--set-fs-sm);
+  font-weight: 600;
   color: var(--set-text-body);
-  flex: 1;
+  white-space: nowrap;
+}
+
+.dsp__slot-head--activity.dsp__slot-head--on .dsp__slot-label { color: var(--set-cat-activity); }
+.dsp__slot-head--vehicle.dsp__slot-head--on  .dsp__slot-label { color: var(--set-cat-vehicle); }
+
+.dsp__slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-2);
+  min-height: var(--dsp-list-min);   /* 5대분. 넘으면 아래로 자란다 */
 }
 
 /* ── 스테퍼 ── */
@@ -58,17 +178,17 @@
 .dsp__stepper {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--set-sp-1);
 }
 
 .dsp__step-btn {
-  width: 26px;
-  height: 26px;
+  width: var(--set-h-btn-sm);
+  height: var(--set-h-btn-sm);
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: var(--set-fs-lg);
+  font-size: var(--set-fs-md);
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -85,9 +205,9 @@
 }
 
 .dsp__num-input {
-  width: 48px;
+  width: 32px;
   text-align: center;
-  padding: 3px 4px;
+  padding: 2px;
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
@@ -101,247 +221,159 @@
   border-color: var(--set-accent);
 }
 
-/* Chrome 등 스피너 숨김 */
 .dsp__num-input::-webkit-inner-spin-button,
 .dsp__num-input::-webkit-outer-spin-button {
   -webkit-appearance: none;
 }
 
-/* ── 자동 연동 안내 ── */
+/* ── 생성된 출동대 ── */
 
-.dsp__auto-info {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-faint);
-  background: var(--set-surface-0);
-  border: 1px dashed var(--set-border);
-  border-radius: var(--set-r-sm);
-  padding: 3px 12px;
-  min-width: 110px;
-  text-align: right;
-  flex-shrink: 0;
+/*
+ * 토큰 + 착대가 한 줄. 예전에는 세로로 쌓았는데 그러면 목록이 두 배로
+ * 길어지고, 칸을 좁게 유지하려고 토큰 이름까지 줄여야 했다.
+ */
+.dsp__unit {
+  display: flex;
+  align-items: stretch;   /* 드롭다운 높이를 토큰에 맞춘다 */
+  gap: var(--set-sp-1);
+  min-width: 0;
 }
 
-/* ── 출동 목록 ── */
-
-.dsp__roster-empty {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-faint);
-  padding: 12px;
-  text-align: center;
-  border: 1px dashed var(--set-border);
-  border-radius: var(--set-r-sm);
-}
-
-.dsp__roster {
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  overflow: hidden;
-}
-
-/* ── 도착설정 방식 라디오 ── */
-
-.dsp__mode-row {
+/*
+ * 훈련모드 토큰과 같은 색이다(TokenCard.css). 설정에서 만든 것이 훈련 화면에서
+ * 다른 색이면 같은 대인지 알 수 없다. 저쪽은 hex 하드코딩이라 값을 옮겨 적었다 —
+ * 저쪽을 고치면 여기도 같이 고쳐야 한다(P-8 통합 대상).
+ */
+/*
+ * 가로만 줄인다 — 드롭다운이 가져간 만큼 좁아지되 높이는 그대로다.
+ * 세로까지 줄이면 훈련모드 토큰과 덩치가 달라져 같은 것으로 안 읽힌다.
+ */
+.dsp__unit-name {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 0 6px;
-  border-bottom: 1px solid var(--set-border);
-}
-
-.dsp__mode-label {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-faint);
-  flex-shrink: 0;
-}
-
-.dsp__mode-radios {
-  display: flex;
-  gap: 14px;
-}
-
-.dsp__radio-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-body);
-  cursor: pointer;
-}
-
-.dsp__radio-label input[type='radio'] {
-  accent-color: var(--set-accent);
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-}
-
-/* ── 착대 dropdown ── */
-
-.dsp__order-select {
-  width: 78px;
-  padding: 3px 4px;
-  background: var(--set-surface-0);
-  border: 1px solid var(--set-border);
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  padding: 3px var(--set-sp-2);
   border-radius: var(--set-r-sm);
-  color: var(--set-text-body);
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
   font-family: inherit;
   text-align: center;
   cursor: pointer;
-}
-
-.dsp__order-select:focus {
-  outline: none;
-  border-color: var(--set-accent);
-}
-
-/* 3컬럼: [명칭, 부대명입력, 도착시간/착대] */
-.dsp__roster-head,
-.dsp__roster-row {
-  display: grid;
-  grid-template-columns: auto 1fr 90px;
-  gap: 6px;
-  align-items: center;
-  padding: 4px 10px;
-}
-
-.dsp__roster-head {
-  background: var(--set-surface-1);
-  border-bottom: 1px solid var(--set-border);
-}
-
-.dsp__rh {
-  font-size: var(--set-fs-xs);
-  font-weight: 700;
-  color: var(--set-text-faint);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.dsp__rh--time,
-.dsp__rh--order {
-  text-align: right;
-}
-
-.dsp__roster-row {
-  background: var(--set-surface-0);
-  border-bottom: 1px solid var(--set-border);
-}
-
-.dsp__roster-row:last-of-type {
-  border-bottom: none;
-}
-
-/* 연동 차량 행 — 들여쓰기 + 배경 약화 */
-.dsp__roster-row--linked {
-  background: var(--set-surface-1);
-  padding-left: 22px;
-}
-
-.dsp__rc--name {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.dsp__roster-row--linked .dsp__rc--name {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-faint);
+.dsp__unit-name--static { cursor: default; }
+
+.dsp__unit-name:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: 1px;
 }
 
-.dsp__rh--prefix {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-faint);
+.dsp__unit-name--red {
+  background: var(--set-token-red);
+  color: var(--set-token-on-red);
+  border: 1px solid var(--set-token-red-border);
 }
 
-.dsp__rc--prefix,
-.dsp__rc--prefix-empty {
-  display: flex;
-  align-items: center;
+.dsp__unit-name--yellow {
+  background: var(--set-token-yellow);
+  color: var(--set-token-on-yellow);
+  border: 1px solid var(--set-token-yellow-border);
 }
 
-.dsp__prefix-input {
+.dsp__unit-name--green {
+  background: var(--set-token-green);
+  color: var(--set-token-on-green);
+  border: 1px solid var(--set-token-green-border);
+}
+
+.dsp__unit-name--vehicle {
+  background: var(--set-token-vehicle);
+  color: var(--set-token-on-vehicle);
+  border: 1px solid var(--set-token-vehicle-border);
+}
+
+.dsp__unit-name--agency {
+  background: var(--set-token-agency);
+  color: var(--set-token-on-agency);
+  border: 1px solid var(--set-token-agency-border);
+}
+
+.dsp__unit-input {
   width: 100%;
   min-width: 0;
-  padding: 3px 6px;
+  padding: 3px var(--set-sp-2);
   background: var(--set-surface-0);
-  border: 1px solid var(--set-border);
+  border: 1px solid var(--set-accent);
   border-radius: var(--set-r-sm);
-  color: var(--set-text-body);
-  font-size: var(--set-fs-xs);
-  font-family: inherit;
-}
-
-.dsp__prefix-input:focus {
-  outline: none;
-  border-color: var(--set-accent);
-}
-
-.dsp__prefix-input::placeholder {
-  color: var(--set-text-faint);
-  opacity: 0.6;
-}
-
-.dsp__rc--time,
-.dsp__rc--order,
-.dsp__rc--auto {
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* 연동 차량 AUTO 배지 */
-.dsp__rc--auto {
-  font-size: var(--set-fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--set-text-faint);
-  opacity: 0.6;
-}
-
-.dsp__time-input {
-  width: 72px;
-  padding: 3px 6px;
-  background: var(--set-surface-0);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  color: var(--set-text-body);
-  font-size: var(--set-fs-xs);
+  color: var(--set-text);
+  font-size: var(--set-fs-sm);
   font-family: inherit;
   text-align: center;
+  outline: none;
 }
 
-.dsp__time-input:focus {
+/*
+ * 숫자만 담는다. 글자 크기·굵기를 **토큰과 같게** 맞췄다 — 착대순서는 부속
+ * 정보가 아니라 토큰과 같은 급의 값이라, 작고 흐리면 눈이 건너뛴다.
+ * 14px 두 자리("10")가 화살표와 함께 들어가는 폭이 52px 이다.
+ */
+.dsp__unit-order {
+  width: 52px;
+  flex-shrink: 0;
+  padding: 2px;
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-sm);
+  color: var(--set-text);
+  font-weight: 700;
+  font-size: var(--set-fs-sm);
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.dsp__unit-order:focus {
   outline: none;
   border-color: var(--set-accent);
 }
 
+/* ── 유관기관 프리셋 · 직접입력 ── */
 
-.dsp__roster-row--linked .dsp__time-input {
-  color: var(--set-text-faint);
-  border-style: dashed;
+/*
+ * 2열 — 아이콘 자산이 없어 텍스트 칩으로 간다.
+ * **세로로 채운다**(grid-auto-flow: column). 배열 순서가 곧 「왼쪽 열 위에서
+ * 아래로, 그다음 오른쪽 열」이라 TSX 의 목록을 읽으면 화면 배치가 그대로 보인다.
+ * 가로 채움이면 배열이 경찰·시청·한전·보건소… 로 뒤섞여 읽히지 않는다.
+ */
+.dsp__preset-grid {
+  display: grid;
+  grid-template-rows: repeat(3, auto);
+  grid-auto-flow: column;
+  align-content: center;
+  min-height: var(--dsp-create-h);
+  gap: var(--set-sp-1);
 }
 
-/* ── 유관기관·직접입력 ── */
-
-.dsp__extra-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.dsp__extra-btn {
-  padding: 4px 10px;
+.dsp__preset-btn {
+  min-height: var(--set-h-btn-sm);
+  padding: 0 var(--set-sp-3);
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
   color: var(--set-text-faint);
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-family: inherit;
   cursor: pointer;
+  white-space: nowrap;
   transition: background 0.1s, border-color 0.1s, color 0.1s;
 }
 
-.dsp__extra-btn:hover {
+.dsp__preset-btn:hover {
   background: var(--set-surface-hover);
   border-color: var(--set-accent);
   color: var(--set-text-body);
@@ -349,19 +381,21 @@
 
 .dsp__extra-input-row {
   display: flex;
-  gap: 6px;
+  gap: var(--set-sp-1);
   align-items: center;
+  min-height: var(--dsp-create-h);   /* 다른 그룹의 생성 부분과 같은 높이 */
 }
 
 .dsp__extra-input {
   flex: 1;
   min-width: 0;
-  padding: 4px 8px;
+  width: 110px;
+  padding: 4px var(--set-sp-2);
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-family: inherit;
 }
 
@@ -369,119 +403,3 @@
   outline: none;
   border-color: var(--set-accent);
 }
-
-.dsp__extra-input::placeholder {
-  color: var(--set-text-faint);
-  opacity: 0.6;
-}
-
-.dsp__extra-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  overflow: hidden;
-}
-
-.dsp__extra-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 10px;
-  background: var(--set-surface-0);
-  border-bottom: 1px solid var(--set-border);
-}
-
-.dsp__extra-item:last-child {
-  border-bottom: none;
-}
-
-.dsp__extra-name {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-body);
-}
-
-.dsp__extra-remove {
-  background: none;
-  border: none;
-  color: var(--set-text-faint);
-  font-size: var(--set-fs-xs);
-  cursor: pointer;
-  padding: 2px 4px;
-  line-height: 1;
-  border-radius: var(--set-r-sm);
-  transition: color 0.1s, background 0.1s;
-}
-
-.dsp__extra-remove:hover {
-  color: var(--set-danger-strong);
-  background: rgba(255, 80, 80, 0.1);
-}
-
-/* ─────────────────────────────────────────────
-   훈련모드 `출동대 생성` 메뉴와 통일 (2026-08-19)
-
-   훈련 중 쓰는 생성 메뉴(UnitStatus)와 같은 색 박스·칩 배열로 맞춘다.
-   설정창은 "지금 만든다"가 아니라 "몇 대인지 정한다"라서 버튼 하나로 끝낼 수 없고,
-   칩 안에 −/수량/+ 를 둔다. 설정창은 어두운 앱 테마라 색은 그쪽 톤을 쓴다.
-   ─────────────────────────────────────────────*/
-
-.dsp__group--activity { border-color: color-mix(in srgb, var(--set-cat-activity) 70%, transparent); }
-.dsp__group--vehicle  { border-color: color-mix(in srgb, var(--set-cat-vehicle) 70%, transparent); }
-.dsp__group--agency   { border-color: color-mix(in srgb, var(--set-cat-agency) 70%, transparent); }
-
-.dsp__group-title--activity { color: var(--set-cat-activity); border-bottom-color: color-mix(in srgb, var(--set-cat-activity) 45%, transparent); }
-.dsp__group-title--vehicle  { color: var(--set-cat-vehicle); border-bottom-color: color-mix(in srgb, var(--set-cat-vehicle) 45%, transparent); }
-.dsp__group-title--agency   { color: var(--set-cat-agency); border-bottom-color: color-mix(in srgb, var(--set-cat-agency) 45%, transparent); }
-
-/* 칩들을 가로로 흘려 담는다 — 훈련모드 버튼 배열과 같은 리듬 */
-.dsp__chips {
-  display:   flex;
-  flex-wrap: wrap;
-  gap:       8px;
-}
-
-.dsp__chip {
-  display:       flex;
-  flex-direction: column;
-  gap:           5px;
-  padding:       7px 10px 8px;
-  border-radius: var(--set-r-md);
-  border:        1px solid var(--set-border);
-  background:    var(--set-surface-0);
-  transition:    border-color 0.12s, background 0.12s;
-}
-
-.dsp__chip-label {
-  display:     flex;
-  align-items: baseline;
-  gap:         6px;
-  font-size:   var(--set-fs-md);
-  font-weight: 700;
-  color:       var(--set-text-body);
-  white-space: nowrap;
-}
-
-/* 자동 연동 안내 (예: "+ 펌프 2") */
-.dsp__chip-suffix {
-  font-size:   var(--set-fs-xs);
-  font-weight: 600;
-  color:       var(--set-cat-vehicle);
-}
-
-.dsp__chip--activity { border-color: color-mix(in srgb, var(--set-cat-activity) 70%, transparent); }
-.dsp__chip--vehicle  { border-color: color-mix(in srgb, var(--set-cat-vehicle) 70%, transparent); }
-
-/* 수량이 0보다 크면 담겼다는 표시 */
-.dsp__chip--activity.dsp__chip--on {
-  background:   rgba(255, 80, 80, 0.09);
-  border-color: color-mix(in srgb, var(--set-cat-activity) 80%, transparent);
-}
-
-.dsp__chip--vehicle.dsp__chip--on {
-  background:   rgba(255, 180, 0, 0.09);
-  border-color: color-mix(in srgb, var(--set-cat-vehicle) 80%, transparent);
-}
-
-.dsp__chip .dsp__stepper { justify-content: center; }

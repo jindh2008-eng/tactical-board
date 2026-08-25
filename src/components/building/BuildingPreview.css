@@ -1,0 +1,245 @@
+/*
+ * ⚠ BuildingConfigPanel.css 와 같은 사정 — 디렉터리는 `building/` 이지만
+ * **설정모드 전용**이다. 색·치수는 `.settings-page` 스코프의 --set-* 를 쓴다.
+ */
+
+.bpv {
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-3);
+}
+
+/*
+ * 보드 — 훈련 상황판의 크림톤을 그대로 쓴다.
+ * 미리보기가 설정 폼과 같은 어두운 색이면 "지금 편집 중인 값"과
+ * "그 값이 만들 화면"이 구분되지 않는다. 색이 그 경계를 말해 준다.
+ */
+.bpv__board {
+  position: relative;
+  background: var(--set-board-panel-bg);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-md);
+  padding: var(--set-sp-5);
+}
+
+/* ── 면 띠 (C 위 · A 아래) ──
+   B/D 는 표의 열이라 머리글이 라벨을 겸한다. 앞·뒤 면인 C/A 만 띠로 그린다.
+   색은 B/D 열 채움과 같게 맞춘다 — 넷 다 같은 성격(활동 공간)이기 때문이다. */
+
+/*
+ * 띠는 표와 같은 폭이다. 층 라벨 전용 열을 없애면서 왼쪽 여백 보정도 사라졌다 —
+ * 표가 B 열부터 시작하므로 띠도 그냥 100% 면 네 면의 폭이 저절로 맞는다.
+ */
+.bpv__band {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;   /* 라벨은 소화전 유무와 무관하게 가운데 */
+  align-items: center;
+  gap: var(--set-sp-2);
+  padding: var(--set-sp-2);
+  min-height: 52px;   /* 층 행의 2배 — 앞·뒤 면도 활동 공간이라 존재감이 있어야 한다 */
+  background: color-mix(in srgb, var(--set-accent) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--set-accent) 18%, transparent);
+  border-radius: var(--set-r-sm);
+}
+
+.bpv__band-label {
+  font-size: var(--set-fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--set-accent-strong);
+}
+
+/* 소화전 자리 — 비어 있어도 칸은 남는다(라벨이 가운데 고정되도록) */
+.bpv__band-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.bpv__band-slot--right { justify-content: flex-end; }
+
+.bpv__band--c { margin-bottom: var(--set-sp-2); }
+.bpv__band--a { margin-top: var(--set-sp-2); }
+
+/* ── 표 ── */
+
+.bpv__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;   /* colgroup 의 비율 폭이 내용에 밀리지 않게 */
+}
+
+/* 표의 <caption> 이었으나 A면 띠 아래로 내렸다 — 표와 A면 사이에 끼어 있었다 */
+.bpv__caption {
+  margin: var(--set-sp-3) 0 0;
+  font-size: var(--set-fs-xs);
+  color: var(--set-board-text-dim);
+  text-align: left;
+}
+
+.bpv__th {
+  padding: 4px 6px;
+  font-size: var(--set-fs-xs);
+  font-weight: 700;
+  color: var(--set-board-text-dim);
+  text-align: center;
+  border-bottom: 1px solid var(--set-border);
+}
+
+/* 머리글에도 같은 채움을 줘서 어느 열이 어느 면인지 위에서부터 읽히게 한다 */
+.bpv__th--side {
+  background: color-mix(in srgb, var(--set-accent) 10%, transparent);
+  color: var(--set-accent-strong);
+}
+
+.bpv__th--center {
+  background: color-mix(in srgb, var(--set-accent) 24%, transparent);
+  color: var(--set-text);
+}
+
+.bpv__row + .bpv__row .bpv__cell {
+  border-top: 1px solid var(--set-border-subtle);
+}
+
+/*
+ * 층 이름 — 건물 칸 안 왼쪽에 붙는 라벨.
+ * 전용 열이었을 때는 표 바깥이라 그냥 글자였는데, 칸 안으로 들어오면서
+ * 옆의 「옥내」 배지와 섞이지 않도록 최소 폭을 주고 오른쪽에 경계를 세운다.
+ */
+.bpv__floor {
+  flex-shrink: 0;
+  min-width: 3.5rem;
+  padding-right: var(--set-sp-2);
+  border-right: 1px solid var(--set-border-subtle);
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  color: var(--set-board-text);
+  white-space: nowrap;
+}
+
+.bpv__cell {
+  padding: 6px;
+  height: 30px;
+}
+
+/*
+ * ★ <td> 에는 display 를 건드리지 않는다.
+ * flex 를 걸면 그 칸이 표 레이아웃에서 빠져나가 colgroup 의 비율 폭을 잃는다 —
+ * 실제로 소화전 행에서 D면 칸이 건물 칸 자리로 밀려났다. 배치는 안쪽 div 가 한다.
+ */
+.bpv__cell--center { background: var(--set-board-bar-bg); }
+
+.bpv__cell-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  flex-wrap: wrap;
+  min-height: 18px;
+}
+
+.bpv__cell-inner--right { justify-content: flex-end; }
+
+/*
+ * B/D 면에도 채움을 준다.
+ *
+ * 처음엔 `background: none` 이었다 — "활동 공간이라 비어 있는 것이 맞는 표현"
+ * 이라고 봤는데, 보드 바탕이 거의 검정이라 **면이 얼마나 넓은지 아예 안 보였다.**
+ * 비율 설정이 바꾸는 것이 바로 이 폭이므로 보이지 않으면 미리보기의 뜻이 없다.
+ * 건물 칸과는 다른 색으로 채워 경계가 읽히게 한다.
+ */
+.bpv__cell--side {
+  background: color-mix(in srgb, var(--set-accent) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--set-accent) 18%, transparent);
+}
+
+/* 지하층은 지상과 성격이 달라 한 단계 어둡게 눕힌다 */
+.bpv__row--basement .bpv__cell--center { opacity: 0.75; }
+
+/* ── 화재 표시 ── */
+
+/* 오른쪽 끝에 붙인다 — 훈련 상황판이 층 오른쪽 끝에 화재를 표시한다 */
+.bpv__fire {
+  margin-left: auto;
+  padding: 2px 9px;
+  border-radius: var(--set-r-sm);
+  font-size: var(--set-fs-sm);   /* 옥내·송수구와 같은 크기 — 한쪽만 키우면 어긋난다 */
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bpv__fire--hot {
+  background: color-mix(in srgb, var(--set-type-fire) 26%, transparent);
+  border: 1px solid var(--set-type-fire);
+  color: var(--set-type-fire);
+}
+
+.bpv__fire--warm {
+  background: color-mix(in srgb, var(--set-warn) 20%, transparent);
+  border: 1px solid var(--set-warn-border);
+  color: var(--set-warn);
+}
+
+.bpv__fire--cool {
+  background: color-mix(in srgb, var(--set-ok) 18%, transparent);
+  border: 1px solid var(--set-ok-border);
+  color: var(--set-ok);
+}
+
+/* 화재가 있는 행은 배경도 함께 물들여 스캔이 되게 한다 */
+.bpv__row--hot  .bpv__cell--center { background: color-mix(in srgb, var(--set-type-fire) 12%, var(--set-board-bar-bg)); }
+.bpv__row--warm .bpv__cell--center { background: color-mix(in srgb, var(--set-warn) 10%, var(--set-board-bar-bg)); }
+
+/* ── 소방시설 표시 ── */
+
+/*
+ * 소방시설 표시.
+ * 예전에는 점선 테두리 + --set-board-text-dim(#5a5650) 이라 어두운 칸 위에서
+ * 거의 읽히지 않았다. 채움을 주고 글자를 밝게, 크기도 한 단계 올린다.
+ * 화재 배지(적·주황·녹)와 색이 겹치지 않도록 중립 톤을 쓴다 — 시설은
+ * 상태가 아니라 사실이라 의미색을 줄 이유가 없다.
+ */
+.bpv__mark {
+  padding: 2px 8px;
+  border: 1px solid var(--set-border-strong);
+  border-radius: var(--set-r-sm);
+  background: color-mix(in srgb, var(--set-board-text) 16%, transparent);
+  font-size: var(--set-fs-sm);
+  font-weight: 600;
+  color: var(--set-text-body);
+  white-space: nowrap;
+}
+
+/* ── 옥외소화전 — B·D 는 표 마지막 행, A·C 는 띠 안 ── */
+
+/* B·D 소화전은 1층 행의 면 칸 안에 들어간다 — 전용 행을 두지 않는다 */
+
+.bpv__hydrant {
+  padding: 2px 8px;
+  background: var(--set-warn-bg);
+  border: 1px solid var(--set-warn-border);
+  border-radius: var(--set-r-sm);
+  font-size: var(--set-fs-xs);
+  color: var(--set-warn);
+  white-space: nowrap;
+}
+
+/* ── 구조대상자 — 층·면 칸 안의 사람 아이콘 ── */
+
+.bpv__people {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: var(--set-r-sm);
+  background: color-mix(in srgb, var(--set-type-xvr) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--set-type-xvr) 55%, transparent);
+  color: var(--set-type-xvr);
+}
+
+.bpv__people-more {
+  font-size: var(--set-fs-xs);
+  font-weight: 700;
+  margin-left: 1px;
+}

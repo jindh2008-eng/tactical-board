@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSettings } from '../../store/settingsStore';
-import { exportSettings, importSettings } from '../../utils/settingsStorage';
+import { exportSettings, importSettings, exportScenario, importScenario } from '../../utils/settingsStorage';
 import type { SettingsSet } from '../../utils/settingsStorage';
 import {
   SetButton, SetIconButton, SetMenu, SetMenuItem, SetMenuSeparator,
@@ -49,7 +49,10 @@ export function SettingsLibraryPanel() {
   const [showSaveAs,  setShowSaveAs]  = useState(false);
   const [saveAsName,  setSaveAsName]  = useState('');
   const [savedFlash,  setSavedFlash]  = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // 파일 입력을 둘로 나눈다 — 하나를 돌려 쓰면 백업 파일이 시나리오 경로로,
+  // 시나리오 파일이 복원 경로로 들어가 조용히 엉뚱한 일이 벌어진다.
+  const scenarioInputRef = useRef<HTMLInputElement>(null);
+  const backupInputRef   = useRef<HTMLInputElement>(null);
 
   // ── 삭제 되돌리기(§7.4 F-4) ──
   // 확인창을 통과하면 목록에서는 즉시 숨기되, 실제 삭제(deleteSettingsEntry)는
@@ -100,16 +103,50 @@ export function SettingsLibraryPanel() {
     newSettings();
   }
 
-  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+  /** 지금 편집 중인 시나리오를 파일 하나로 내보낸다 */
+  function handleExportScenario() {
+    // 저장된 적 없는 시나리오는 내보낼 실체가 없다 — 먼저 저장하게 한다.
+    const set = activeSettingsId ? settingsList.find(s => s.id === activeSettingsId) : undefined;
+    if (!set) {
+      alert('먼저 저장해 주세요. 저장된 시나리오만 파일로 내보낼 수 있습니다.');
+      return;
+    }
+    if (isDirty && !window.confirm('저장하지 않은 변경사항은 파일에 담기지 않습니다. 계속할까요?')) return;
+    exportScenario(set);
+  }
+
+  async function handleScenarioFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    try {
+      // 덮어쓰지 않고 목록에 새 항목으로 붙인다 — importScenario 주석 참고.
+      const id = await importScenario(file);
+      loadSettings(id);
+      setShowList(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '불러오기 실패');
+    }
+  }
+
+  function handleRestoreClick() {
+    if (!window.confirm(
+      '백업에서 복원하면 저장된 시나리오 전부와 전체 설정이 파일 내용으로 바뀝니다.\n'
+      + '지금 있는 내용은 사라집니다. 계속할까요?'
+    )) return;
+    backupInputRef.current?.click();
+  }
+
+  async function handleBackupFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
     try {
       await importSettings(file);
-      alert('설정을 성공적으로 가져왔습니다.');
+      alert('백업을 복원했습니다.');
       window.location.reload();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '불러오기 실패');
+      alert(err instanceof Error ? err.message : '복원 실패');
     }
   }
 
@@ -154,14 +191,28 @@ export function SettingsLibraryPanel() {
             {showList ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />}
           </SetButton>
 
+          {/*
+            두 종류를 섞지 않는다 — 담는 것이 다르다(settingsStorage.ts «파일 입출력»).
+              시나리오 …  지금 이 시나리오 하나. 남에게 건네주는 단위.
+              백업     …  저장된 시나리오 전부 + 공통 설정. 기기 이전·복구용.
+            예전 "내보내기/가져오기"는 실제로는 백업이었는데 이름이 그렇게 읽히지
+            않아, 시나리오 하나를 주고받으려던 사람이 남의 설정을 통째로 덮었다.
+          */}
           <SetMenu label="설정 파일 더보기">
             {close => (
               <>
-                <SetMenuItem icon={<IconExport />} onClick={() => { close(); exportSettings(); }}>
-                  내보내기 (JSON 파일로 저장)
+                <SetMenuItem icon={<IconExport />} onClick={() => { close(); handleExportScenario(); }}>
+                  이 시나리오 내보내기
                 </SetMenuItem>
-                <SetMenuItem icon={<IconImport />} onClick={() => { close(); fileInputRef.current?.click(); }}>
-                  가져오기 (JSON 파일 불러오기)
+                <SetMenuItem icon={<IconImport />} onClick={() => { close(); scenarioInputRef.current?.click(); }}>
+                  시나리오 가져오기
+                </SetMenuItem>
+                <SetMenuSeparator />
+                <SetMenuItem icon={<IconExport />} onClick={() => { close(); exportSettings(); }}>
+                  전체 백업 (시나리오 전부 + 전체 설정)
+                </SetMenuItem>
+                <SetMenuItem icon={<IconImport />} danger onClick={() => { close(); handleRestoreClick(); }}>
+                  백업에서 복원 (현재 내용 대체)
                 </SetMenuItem>
                 <SetMenuSeparator />
                 <SetMenuItem icon={<IconReset />} danger onClick={() => { close(); handleNew(); }}>
@@ -172,11 +223,18 @@ export function SettingsLibraryPanel() {
           </SetMenu>
 
           <input
-            ref={fileInputRef}
+            ref={scenarioInputRef}
             type="file"
             accept=".json"
             style={{ display: 'none' }}
-            onChange={handleImportFile}
+            onChange={handleScenarioFile}
+          />
+          <input
+            ref={backupInputRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={handleBackupFile}
           />
         </div>
       </div>

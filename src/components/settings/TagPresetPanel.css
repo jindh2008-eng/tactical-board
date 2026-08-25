@@ -11,7 +11,7 @@
 }
 
 .tag-preset-panel__group-label {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 700;
   color: var(--set-text-faint);
   text-transform: uppercase;
@@ -37,14 +37,14 @@
 }
 
 .tag-preset-panel__type-header {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 700;
   color: var(--set-text-body);
   margin-bottom: 2px;
 }
 
 .tag-preset-panel__sub-label {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 600;
   color: var(--set-text-faint);
   text-transform: uppercase;
@@ -65,7 +65,7 @@
 }
 
 .tag-preset-panel__empty {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
 }
 
@@ -87,7 +87,7 @@
 
 .tag-preset-panel__item-text {
   flex: 1;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-body);
   line-height: 1.4;
 }
@@ -103,7 +103,7 @@
   border: none;
   color: var(--set-text-faint);
   cursor: pointer;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   padding: 1px 3px;
   border-radius: var(--set-r-sm);
   line-height: 1;
@@ -126,7 +126,7 @@
   flex: 1;
   min-width: 0;
   padding: 3px 6px;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   background: var(--set-surface-0);
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
@@ -179,7 +179,7 @@
 .tag-preset-panel__add-btn {
   min-height: 24px;
   padding: 3px 8px;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   background: var(--set-accent);
   color: var(--set-on-accent);
   border: none;

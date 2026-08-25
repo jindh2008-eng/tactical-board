@@ -16,10 +16,23 @@ export interface SectionReadiness {
   warning?: string;
 }
 
-export type ReadinessMap = Record<
-  'building' | 'event' | 'victim' | 'dispatch' | 'tagpreset' | 'unitstatus' | 'checklist' | 'commandprocedure',
-  SectionReadiness
->;
+/**
+ * 시나리오에 속하는 화면 — 파일로 저장되고, 준비도 집계 대상이다.
+ * 순서가 사이드바 순서이자 경고 우선순위다.
+ */
+export const SCENARIO_KEYS = ['building', 'event', 'victim', 'dispatch', 'checklist'] as const;
+
+/**
+ * 공통 설정 화면 — 모든 시나리오에 적용되고 파일에 저장되지 않는다.
+ * 배지는 그대로 붙이되(비었는지 보여줄 값어치가 있다) **준비도에서는 뺀다**.
+ * "이 시나리오가 얼마나 준비됐나"에 시나리오 밖 값이 섞이면 숫자가 거짓말이 된다.
+ */
+export const GLOBAL_KEYS = ['tagpreset', 'unitstatus', 'commandprocedure'] as const;
+
+export type ScenarioKey = typeof SCENARIO_KEYS[number];
+export type GlobalKey = typeof GLOBAL_KEYS[number];
+
+export type ReadinessMap = Record<ScenarioKey | GlobalKey, SectionReadiness>;
 
 /** 임무·상태 프리셋: 유닛 타입 5종 중 하나라도 라벨이 있으면 충족으로 본다 */
 function tagPresetFilled(cfg: SettingsContextValue['unitTagPresetConfig']): boolean {
@@ -59,9 +72,14 @@ export function computeReadiness(s: SettingsContextValue): ReadinessMap {
   };
 }
 
-/** 사이드바 하단 요약 — n/총 화면 수, 그리고 첫 번째 미입력 경고 하나 */
+/**
+ * 사이드바 하단 요약 — n/총 화면 수, 그리고 첫 번째 미입력 경고 하나.
+ *
+ * **시나리오 화면만 센다.** 공통 설정은 이 시나리오의 준비 상태가 아니라
+ * 장비 설정에 가까워서, 섞으면 "8/8 인데 정작 출동대가 비어 있는" 상황이 생긴다.
+ */
 export function summarizeReadiness(map: ReadinessMap) {
-  const entries = Object.values(map);
+  const entries = SCENARIO_KEYS.map(k => map[k]);
   const done = entries.filter(e => e.ok).length;
   const total = entries.length;
   const firstWarning = entries.find(e => e.warning)?.warning;

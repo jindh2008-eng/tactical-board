@@ -71,6 +71,7 @@
 |---|---|---|---|---|---|
 | **P-9** | S-1 (stylelint 도입, D-7) | 훈련(무플) | **유효하지 않은 CSS 2건.** [`ZoneCell.css:48,61`](../src/components/building/ZoneCell.css)의 `outline: 1px solid #7aaccc inset` — `inset`은 `outline` 단축 속성의 값이 아니라 **선언 전체가 무시된다.** 우측·중앙 구역의 hover 외곽선이 지금 전혀 그려지지 않는다. 새로 도입한 stylelint `declaration-property-value-no-unknown`이 잡았다 | `inset`을 빼거나(외곽선 복구) `box-shadow: inset 0 0 0 1px`로 바꾼다. 어느 쪽인지는 원래 의도 확인 필요 — 무플 담당이 판단한다. **설정모드 브랜치에서 고치지 않는다**(D-4) | 필수 |
 | **P-10** | S-3 (공용 컴포넌트, D-7) | 훈련 · 분석 | **이름 없는 아이콘 버튼 19건이 [`ScenarioModal`](../src/components/overlays/ScenarioModal.tsx)에 있다** — `scen-cfg-stepper__btn`(◄► 18) · `scen-remove-btn`(× 1). 설정모드의 다른 화면은 S-3 에서 전부 0 이 됐는데 이 화면만 남았다. 이 컴포넌트는 `App.tsx` 도 전역 오버레이로 쓰고, [SETTINGS_MODE_UI_PLAN.md](SETTINGS_MODE_UI_PLAN.md) §10 이 내부를 범위 밖으로 뺐다 | `SetIconButton` 으로 교체하면 `--set-*` 토큰이 필요한데 `.settings-page` 밖에서는 정의가 없다. **토큰을 어디에 둘지 먼저 정해야 한다** — P-8 과 같은 결정이다. `aria-label` 만 다는 것은 토큰 없이도 되지만, 그러면 이 화면만 다른 컴포넌트를 쓰게 된다 | 필수 |
+| **P-12** | 구조대상자 입력 정비 (D-7) | 훈련(무플) | **면과 층이 배타 선택이 됐다.** 설정모드에서 한쪽을 고르면 다른 쪽을 비우고 잠근다 — 이전에는 "3층인데 B면" 같은 값이 만들어졌다. 기존 저장분에는 그런 조합이 남아 있을 수 있다 | 훈련모드의 배치 로직(`computeVictimOffsets`)이 면·층을 동시에 가진 값을 어떻게 다루는지 확인 필요. 설정모드는 새 값이 그렇게 만들어지지 않게만 막았고, **기존 데이터를 고치지는 않았다** | 정합 |
 
 ---
 

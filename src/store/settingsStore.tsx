@@ -255,16 +255,20 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // ── 저장 · 반영 상태 (§7.1 F-3) ──────────────────
   //
-  // "얕은 비교"는 22개 필드를 하나씩 비교하는 대신 저장 대상과 정확히 같은
+  // "얕은 비교"는 필드를 하나씩 비교하는 대신 저장 대상과 정확히 같은
   // 모양으로 직렬화해 문자열로 비교한다 — 이미 autosave 이펙트가 매번 하는
   // 일이라(아래) 별도 디바운스 없이 그 이펙트에 얹는다.
+  //
+  // 공통 설정(commandProcedureConfigs · unitStatusConfig · unitTagPresetConfig)은
+  // **여기 들어가지 않는다.** 그 셋은 시나리오 파일에 저장되지 않으므로,
+  // 넣으면 상태 메시지 하나 고쳤을 뿐인데 시나리오가 "미저장 변경"으로 표시된다.
+  // 각자 자기 키에 즉시 저장된다(아래 saveUnitStatusConfig 등).
   const buildSnapshot = useCallback(() => JSON.stringify({
     building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
     timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
     medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-    fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
-    unitTagPresetConfig,
-  }), [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig]);
+    fireSuppressionConfig, aerialSuppressionConfig, checklistConfig,
+  }), [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig]);
 
   /** "저장됨" 기준선. undefined = 아직 못 정함(마운트 직후) */
   const savedSnapshotRef = useRef<string | undefined>(undefined);
@@ -297,8 +301,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
       timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
-      unitTagPresetConfig,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig,
     });
 
     // 마운트 직후 · loadSettings/newSettings 직후는 "저장됨" 상태로 봉인한다.
@@ -309,7 +312,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
     setIsDirty(snapshot !== savedSnapshotRef.current);
     setIsApplied(appliedSnapshotRef.current !== null && snapshot === appliedSnapshotRef.current);
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig, buildSnapshot]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, buildSnapshot]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -578,8 +581,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
-      unitTagPresetConfig,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig,
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
@@ -588,7 +590,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     savedSnapshotRef.current = buildSnapshot();
     setIsDirty(false);
     setLastSavedAt(Date.now());
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig, buildSnapshot]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, buildSnapshot]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
@@ -598,8 +600,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig,
-      unitTagPresetConfig,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig,
     };
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
@@ -607,7 +608,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     savedSnapshotRef.current = buildSnapshot();
     setIsDirty(false);
     setLastSavedAt(Date.now());
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, commandProcedureConfigs, unitStatusConfig, unitTagPresetConfig, buildSnapshot]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, buildSnapshot]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);

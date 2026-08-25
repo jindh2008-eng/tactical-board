@@ -24,9 +24,12 @@ export interface WorkingPresets {
   fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
   aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
   checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
-  commandProcedureConfigs?: CommandProcedureConfigs;  // 지휘절차 (초급/중급/고급)
-  unitStatusConfig?:        UnitStatusConfig;          // 출동대 상태메세지
-  unitTagPresetConfig?:     UnitTagPresetConfig;       // 임무/상태 태그 프리셋
+  /** @deprecated 공통 설정 — SettingsSet 쪽 주석 참고. 쓰기를 끊었다(2026-08-25) */
+  commandProcedureConfigs?: CommandProcedureConfigs;
+  /** @deprecated 위와 같음 */
+  unitStatusConfig?:        UnitStatusConfig;
+  /** @deprecated 위와 같음 */
+  unitTagPresetConfig?:     UnitTagPresetConfig;
 }
 
 /** 이름을 붙여 저장하는 설정 세트 */
@@ -49,9 +52,37 @@ export interface SettingsSet {
   fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
   aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
   checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
-  commandProcedureConfigs?: CommandProcedureConfigs;  // 지휘절차 (초급/중급/고급)
-  unitStatusConfig?:        UnitStatusConfig;          // 출동대 상태메세지
-  unitTagPresetConfig?:     UnitTagPresetConfig;       // 임무/상태 태그 프리셋
+
+  /**
+   * @deprecated 공통 설정이라 시나리오에 속하지 않는다. 새로 쓰지 않는다.
+   *
+   * 이 셋은 `tacticalBoardCommandProcedure` · `tacticalBoardUnitStatus` ·
+   * `tacticalBoardTagPresets` 키에 따로 살아 있고 앱은 그쪽만 읽는다.
+   * 여기 들어 있던 값은 **저장은 되는데 불러올 때 무시되는** 죽은 데이터였다
+   * (`settingsStore.tsx` 의 `loadSettings` 가 건드리지 않는다).
+   * 2026-08-25 에 쓰기를 끊었고, 구버전 파일을 읽을 때만 남아 있을 수 있어
+   * 필드 자체는 남겨 둔다.
+   */
+  commandProcedureConfigs?: CommandProcedureConfigs;
+  /** @deprecated 위와 같음 */
+  unitStatusConfig?:        UnitStatusConfig;
+  /** @deprecated 위와 같음 */
+  unitTagPresetConfig?:     UnitTagPresetConfig;
+}
+
+/**
+ * 시나리오에서 공통 설정 흔적을 걷어낸다.
+ *
+ * 구버전 저장분·구버전 파일에 남아 있는 죽은 필드를 저장·내보내기 시점에
+ * 정리한다. 남겨 두면 파일이 커지고, 무엇보다 "시나리오 안에 지휘절차가
+ * 들어 있다"는 잘못된 인상을 준다.
+ */
+export function stripGlobalConfigs(set: SettingsSet): SettingsSet {
+  const next: SettingsSet = { ...set };
+  delete next.commandProcedureConfigs;
+  delete next.unitStatusConfig;
+  delete next.unitTagPresetConfig;
+  return next;
 }
 
 // ─────────────────────────────────────────────
@@ -266,7 +297,17 @@ export function saveActiveCommandProcedureLevel(level: CommandProcedureLevel): v
 }
 
 // ─────────────────────────────────────────────
-// 내보내기 / 불러오기
+// 파일 입출력
+//
+// 두 종류가 있고 담는 것이 다르다. 섞으면 안 된다.
+//
+//   백업(SettingsExport)   저장된 시나리오 **전부** + 공통 설정. 기기 이전·복구용.
+//   시나리오(ScenarioFile) 시나리오 **하나만**. 남에게 건네주는 단위.
+//
+// 공통 설정(지휘절차·상태 메시지·임무/상태 프리셋)은 시나리오 파일에 넣지
+// 않는다 — 받는 쪽이 이미 자기 것을 갖고 있고, 시나리오를 불러온다고
+// 그것까지 덮이면 안 되기 때문이다. 앱 안에서도 `loadSettings` 가 이 셋을
+// 건드리지 않는다(settingsStore.tsx).
 // ─────────────────────────────────────────────
 
 export interface SettingsExport {
@@ -280,6 +321,33 @@ export interface SettingsExport {
   unitTagPresetConfig?: UnitTagPresetConfig;
 }
 
+/** 시나리오 한 건. `kind` 로 백업 파일과 구분한다 */
+export interface ScenarioFile {
+  kind: 'tactical-board.scenario';
+  version: 1;
+  exportedAt: string;
+  scenario: SettingsSet;
+}
+
+/** 파일명에 쓸 수 없는 문자를 걷어낸다. 시나리오 이름이 그대로 파일명이 되기 때문 */
+function toSafeFileName(name: string): string {
+  const cleaned = name.replace(/[\\/:*?"<>|]/g, '').trim();
+  return cleaned || '시나리오';
+}
+
+function downloadJson(data: unknown, fileName: string): void {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/** 백업 — 저장된 시나리오 전부 + 공통 설정 */
 export function exportSettings(): void {
   const data: SettingsExport = {
     version: 1,
@@ -291,15 +359,56 @@ export function exportSettings(): void {
     unitStatusConfig: loadUnitStatusConfig(),
     unitTagPresetConfig: loadUnitTagPresetConfig(),
   };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `tactical-board-settings-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  downloadJson(data, `tactical-board-백업-${new Date().toISOString().slice(0, 10)}.json`);
+}
+
+/** 시나리오 한 건만 내보낸다 */
+export function exportScenario(set: SettingsSet): void {
+  const data: ScenarioFile = {
+    kind: 'tactical-board.scenario',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    scenario: stripGlobalConfigs(set),
+  };
+  downloadJson(data, `${toSafeFileName(set.name)}.json`);
+}
+
+/**
+ * 시나리오 파일을 목록에 새 항목으로 추가하고 그 id 를 돌려준다.
+ *
+ * 덮어쓰지 않고 **항상 새로 만든다** — 같은 이름이 이미 있으면 "(2)" 를 붙인다.
+ * 받은 파일이 기존 작업을 조용히 지우는 것이 가장 나쁜 실패라서 그렇다.
+ */
+export function importScenario(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target?.result as string) as Partial<ScenarioFile>;
+        if (data.kind !== 'tactical-board.scenario' || !data.scenario?.building) {
+          reject(new Error('시나리오 파일이 아닙니다. 백업 파일이라면 「백업에서 복원」을 쓰세요.'));
+          return;
+        }
+        const list = loadSettingsList();
+        const taken = new Set(list.map(s => s.name));
+        let name = data.scenario.name || '가져온 시나리오';
+        for (let n = 2; taken.has(name); n += 1) name = `${data.scenario.name} (${n})`;
+
+        const added: SettingsSet = {
+          ...stripGlobalConfigs(data.scenario),
+          id: generateId(),
+          name,
+          updatedAt: '',   // upsertSettingsSet 이 현재 시각으로 채운다
+        };
+        upsertSettingsSet(list, added);
+        resolve(added.id);
+      } catch {
+        reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
+      }
+    };
+    reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+    reader.readAsText(file);
+  });
 }
 
 export function importSettings(file: File): Promise<void> {

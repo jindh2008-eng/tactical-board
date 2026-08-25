@@ -15,13 +15,26 @@
  */
 /* stylelint-disable color-no-hex -- 토큰 정의부. 설정모드에서 hex 가 허용되는 유일한 자리다 */
 .settings-page {
-  /* ── 타입 스케일 — 5단계로 고정. 이 밖의 값은 쓰지 않는다 ── */
-  --set-fs-title: 1.25rem;   /* 18.8px  화면 제목        */
-  --set-fs-lg:    1rem;      /* 15.0px  입력값 · 강조 숫자 */
-  --set-fs-md:    0.93rem;   /* 14.0px  본문 · 라벨 · 내비 */
-  --set-fs-sm:    0.87rem;   /* 13.0px  안내문 · 카드 제목 */
-  --set-fs-xs:    0.8rem;    /* 12.0px  표 머리글 · 보조   */
-  /* 12px 미만은 금지 — 한글이 뭉개진다. 현재 최소 9px, 12px 미만이 11종 */
+  /*
+   * ── 타입 스케일 — 5단계로 고정. 이 밖의 값은 쓰지 않는다 ──
+   *
+   * 2026-08-25 재정의. 이전 스케일은 18.8 / 15 / 14 / 13 / 12 였는데
+   * 가운데 세 단계의 간격이 7~8% 라 눈으로 구분되지 않았고, 실제로는
+   * 가장 작은 12px 가 153곳에 쓰여 사실상 본문이었다. 즉 5단계가 아니라
+   * "전부 12px 언저리"였다 — 내비가 작아 보인다는 지적의 근원이다.
+   *
+   * 새 스케일은 12 / 14 / 16 / 18 / 24 로 단계마다 최소 12% 벌어진다.
+   * 값뿐 아니라 **역할도 옮겼다** — 본문이 xs 에서 sm 으로 내려왔다.
+   *
+   * rem 은 html font-size: 15px(App.css:51) 기준이다. 그 전역값은
+   * 훈련모드와 공유하므로 건드리지 않는다(P-8).
+   */
+  --set-fs-title: 1.6rem;    /* 24px  화면 제목                 */
+  --set-fs-lg:    1.2rem;    /* 18px  섹션 제목 · 강조 숫자      */
+  --set-fs-md:    1.0667rem; /* 16px  내비 · 입력 · 카드 제목    */
+  --set-fs-sm:    0.9333rem; /* 14px  본문 기본 — 가장 많이 쓴다 */
+  --set-fs-xs:    0.8rem;    /* 12px  표 머리글 · 배지 · 단위    */
+  /* 12px 미만은 금지 — 한글이 뭉개진다 */
 
   /* ── 여백 — 4px 리듬 8단계 ── */
   --set-sp-1: 4px;
@@ -101,6 +114,64 @@
   --set-type-xvr: #aa66ff;
   --set-type-incident: #ff6666;
 
+  /*
+   * ── 구조대상자 색 — 성별 · 상태 ──
+   * 훈련모드 [`VictimCard.css`](../components/shared/VictimCard.css) 의 값과
+   * **같아야 한다.** 설정에서 고른 값이 훈련 화면에서 다른 색으로 나오면
+   * 같은 사람인지 알 수 없다. 저쪽은 hex 하드코딩이라 참조할 토큰이 없어
+   * 값을 옮겨 적었다 — 저쪽을 고치면 여기도 같이 고쳐야 한다(P-8 통합 대상).
+   *
+   * 훈련모드는 밝은 보드 위라 원본 값이 맞지만 설정모드는 어두운 배경이라
+   * 그대로 쓰면 파랑·빨강이 가라앉는다. 색상(hue)은 유지하고 명도만 올렸다.
+   */
+  --set-victim-male: #5aa9f0;      /* 훈련 #1976d2 — 어두운 배경용으로 밝힘 */
+  /*
+   * 여성 — 훈련 #e53935 를 최소한만 밝혔다.
+   * 처음엔 #f2726f 로 올렸는데 중상(#f07070)과 거의 같은 색이 되어, 나란히
+   * 놓인 두 칸이 구분되지 않았다. 훈련모드는 성별이 아이콘 · 상태가 툴팁이라
+   * 붙어 있을 일이 없어 드러나지 않던 충돌이다.
+   * 여성은 **채도 높은 빨강**, 중상은 **연어색** 으로 갈라 둔다.
+   */
+  --set-victim-female: #ee4b47;
+  --set-victim-minor: #5cc87c;     /* 훈련과 동일 — 이미 충분히 밝다 */
+  --set-victim-critical: #f07070;  /* 훈련과 동일 */
+  --set-victim-dead: #9aa4ae;      /* 훈련 #aaaaaa */
+
+  /*
+   * ── 출동대 토큰 색 ──
+   * 훈련모드 `TokenCard.css` 의 값 그대로다. 설정에서 만든 대가 훈련 화면에서
+   * 다른 색이면 같은 대인지 알 수 없다. 저쪽은 hex 하드코딩이라 참조할 토큰이
+   * 없어 옮겨 적었다 — 저쪽을 고치면 여기도 같이 고쳐야 한다(P-8 통합 대상).
+   *
+   * 구조대상자 색(--set-victim-*)과 달리 **밝기를 손대지 않았다.** 저쪽은
+   * 글자색이라 어두운 배경 위 대비가 문제였지만, 이건 채움 배경이라 원본
+   * 그대로가 훈련 화면과 같아 보인다.
+   */
+  --set-token-red: #e53935;           /* 진압대 */
+  --set-token-on-red: #fff;
+  --set-token-red-border: #c62828;
+  --set-token-yellow: #fbc02d;        /* 구조대 */
+  --set-token-on-yellow: #000;
+  --set-token-yellow-border: #f9a825;
+  --set-token-green: #43a047;         /* 구급대 */
+  --set-token-on-green: #fff;
+  --set-token-green-border: #2e7d32;
+  /*
+   * 차량 · 유관기관만 밝기를 올렸다.
+   *
+   * 훈련모드 원본(#1c1408 · #140e20)은 밝은 크림색 보드 위라 또렷하지만,
+   * 어두운 설정 배경(#0e1420) 위에서는 배경 대비가 **1.01 : 1** 이라 칩이
+   * 배경에 묻혔다 — 같은 28px 인데도 진압대 칩보다 작아 보였다.
+   * 색상(hue)은 그대로 두고 명도만 올려 덩어리로 읽히게 한다.
+   * 진압·구조·구급은 원본이 이미 4.4~11 : 1 이라 손대지 않았다.
+   */
+  --set-token-vehicle: #3a2c14;       /* 차량 — 훈련 #1c1408 */
+  --set-token-on-vehicle: #e8ce92;
+  --set-token-vehicle-border: #7a5f2c;
+  --set-token-agency: #2a1e46;        /* 유관기관 · 직접입력 — 훈련 #140e20 */
+  --set-token-on-agency: #d5bcf0;
+  --set-token-agency-border: #7259ad;   /* 카드 대비 3:1 — WCAG 1.4.11 */
+
   /* ── 출동대 분류색 — 활동대 · 차량 · 유관기관 ── */
   --set-cat-activity: #f08080;
   --set-cat-vehicle: #e0aa44;
@@ -121,14 +192,63 @@
   --set-h-input: 32px;
   --set-h-btn: 32px;
   --set-h-btn-sm: 26px;  /* 표 안 인라인. 클릭영역은 ::before 로 32px 확보 */
-  --set-aside-w: 360px;  /* 보조 열 — ≥1800px 에서만 */
+  /*
+   * 시나리오 레일 — 체크리스트가 상주하는 우측 열.
+   *
+   * 640 = 손잡이 40 + 본체 600. 처음엔 520(본체 480)이었는데, 체크리스트 행이
+   * `⠿ [메세지] 1착대 도착 (진압1, 구급1, 물탱크1) ✎ ☑ ✕` 처럼 길어서
+   * 항목명이 잘렸다. 레일 안 글자도 한 단계 키웠으므로(아래 --set-fs-* 재정의)
+   * 폭도 같이 올린다.
+   *
+   * 이 폭이 겹침 임계값을 정한다 — 1800px 에서 240(내비)+640(레일)을 빼면
+   * 본문이 920 이라 건물 화면 2열(임계 900)이 겨우 선다. 그 아래에서는
+   * 레일을 레이아웃에서 빼고 겹친다.
+   */
+  /*
+   * 미리보기 표의 「층」 라벨 열 폭.
+   *
+   * .bcf__side 에만 두었다가 구조대상자 화면에서 사고가 났다 — 거기엔 그
+   * 클래스가 없어 변수가 미정의가 되고, 나머지 세 열의 퍼센트 합이 100% 라
+   * 라벨 열 폭이 0 이 되어 층 이름이 옆 칸 위로 겹쳐 그려졌다.
+   * 미리보기를 쓰는 화면이 둘 이상이므로 토큰은 여기 한 곳에 둔다.
+   */
+  --set-preview-label-w: 64px;
+
+  --set-rail-w: 640px;
+  --set-rail-handle-w: 40px;
 
   /*
-   * 사이드바 폭 — 3단 브레이크포인트 중 1280~1799 구간의 값이다(§4.2).
-   * 240px 로 통일하면 이 구간 본문 사용률이 79.4% → 76.3% 로 오히려 나빠진다
-   * (Q-7, 08-24 실측). ≥1800px 에서만 240px 로 넓힌다 — 아래 미디어쿼리.
+   * 사이드바 폭 — 전 구간 240px 로 통일한다.
+   *
+   * Q-7(08-24)에서 한 번 기각한 값이다. 1280~1799 구간 본문 사용률이
+   * 79.4% → 76.3% 로 나빠진다는 이유였는데, 그때는 **내비 글자 크기를
+   * 안 바꾸는 전제**였다. 내비를 16px 로 올린 지금은 200px 에 항목명이
+   * 들어가지 않아 240px 이 선택이 아니라 필요조건이다 — Q-7 재결정(08-25).
+   *
+   * 본문 3.1%p 손실은 아래 --set-row-max 로 어차피 행에 상한을 두므로
+   * 실제 읽는 폭에는 영향이 없다.
    */
-  --set-nav-w: 200px;
+  --set-nav-w: 240px;
+
+  /*
+   * 목록 한 줄의 최대 폭.
+   *
+   * 이게 없으면 grid 의 1fr 칸이 남는 폭을 전부 먹어서, 2560px 에서
+   * 글자 41px 짜리 행이 2234px 로 늘어난다(채움률 2%). 왼쪽에 라벨,
+   * 1600px 건너 오른쪽에 ✕ 만 있는 줄이 만들어진다.
+   *
+   * 34rem ≈ 510px — 가장 긴 실제 항목명이 들어가고도 ✕ 가 손 닿는 거리에 남는다.
+   * 순서가 뜻을 갖는 목록(지휘절차·체크리스트·출동대·구조대상자·현장요소)에만
+   * 쓴다. 순서 없는 목록은 auto-fill 로 접히므로 상한이 필요 없다.
+   */
+  --set-row-max: 34rem;
+
+  /*
+   * 여러 열을 가진 표는 34rem 에 넣을 수 없다 — 구조대상자는 10열이다.
+   * 표에는 별도 상한을 준다. 68rem ≈ 1020px 로, 1280px 구간에서는
+   * 사실상 상한이 걸리지 않고 넓은 화면에서만 늘어남을 멈춘다.
+   */
+  --set-table-max: 68rem;
 
   /* ── 모션 ── */
   --set-dur: 180ms;
@@ -170,7 +290,7 @@
 }
 
 .settings-page__topbar .slp__label {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 700;
   color: var(--set-text-dim);
 }
@@ -229,42 +349,27 @@
   padding-bottom: 12px;
 }
 
-.settings-page__nav-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.settings-page__nav-group-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 16px 6px;
-  font-size: var(--set-fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--set-text-faint);
-}
-
-/* 단계 번호 — "무엇을 정의하는가"가 아니라 "어떤 순서로 하는가"를 드러낸다(§4.1) */
-.settings-page__nav-step {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--set-surface-2);
-  color: var(--set-text-faint);
-  font-size: var(--set-fs-xs);
-  transform: scale(0.85);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
+/*
+ * 그룹 라벨(현장 / 자원 / 진행 / 검토)과 단계 번호는 2026-08-25 에 제거했다.
+ * 공통 설정을 아래 구역으로 내보내고 나니 여섯 항목이 3 / 1 / 1 / 1 로 남아
+ * 한 개짜리 묶음이 셋이었다 — 라벨이 정보를 주지 않고 자리만 먹었다.
+ * 근거는 SETTINGS_MODE_UI_PLAN.md §12-B.
+ */
 
 .settings-page__nav-row {
   display: flex;
   align-items: center;
+}
+
+/*
+ * 성격이 바뀌는 지점에만 긋는다 — 지금은 시나리오 예측 위 한 곳뿐이다.
+ * 위 다섯은 입력 화면이고 준비도 집계 대상이지만 예측은 읽기 전용 검토
+ * 화면이라 집계에서 빠진다. 없앤 그룹 라벨과 달리 이 선은 사실을 담는다.
+ */
+.settings-page__nav-row--divided {
+  margin-top: var(--set-sp-3);
+  padding-top: var(--set-sp-3);
+  border-top: 1px solid var(--set-border-subtle);
 }
 
 .settings-page__nav-item {
@@ -273,10 +378,10 @@
   gap: 8px;
   flex: 1;
   min-width: 0;
-  min-height: 36px;
-  padding: 8px 16px 8px 21px;
+  min-height: 40px;   /* 16px 글자에 맞춘 높이 — 36px 이면 글자가 위아래로 붙는다 */
+  padding: 9px 16px 9px 21px;
   font-size: var(--set-fs-md);
-  font-weight: 400;
+  font-weight: 500;
   color: var(--set-text-dim);
   background: none;
   border: none;
@@ -310,7 +415,7 @@
 .settings-page__nav-badge {
   flex-shrink: 0;
   padding-right: 12px;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
   font-variant-numeric: tabular-nums;
   overflow: hidden;
@@ -333,7 +438,41 @@
   flex-shrink: 0;
 }
 
-/* ── 준비도 요약 (사이드바 하단 고정, §4.1) ── */
+/* ─────────────────────────────────────────────
+   공통 설정 구역 — 사이드바 하단
+   시나리오 화면들과 **위치로** 갈라 놓는다. 파일 바 아래 = 이 파일에
+   저장됨, 이 구분선 아래 = 저장 안 됨. 설명 문구 없이 구조로 전달한다.
+   ─────────────────────────────────────────────*/
+
+.settings-page__nav-global {
+  flex-shrink: 0;
+  padding: var(--set-sp-3) 0 var(--set-sp-4);
+
+  /* 그룹 사이 경계(--set-border-subtle)보다 진하게 — 성격이 다른 구역이다 */
+  border-top: 1px solid var(--set-border);
+  background: var(--set-surface-0);
+}
+
+.settings-page__nav-global-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--set-sp-2) var(--set-sp-4) var(--set-sp-2);
+  font-size: var(--set-fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--set-text-faint);
+}
+
+.settings-page__nav-global-note {
+  font-size: var(--set-fs-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--set-text-faint);
+  opacity: 0.75;
+}
+
+/* ── 준비도 요약 (§4.1) ── */
 
 .settings-page__readiness {
   flex-shrink: 0;
@@ -348,10 +487,13 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+
+  /* 가로 탭 레이아웃(<1280)에서는 space-between 이 안 벌려 준다 — 라벨과 숫자가 붙는다 */
+  gap: var(--set-sp-2);
 }
 
 .settings-page__readiness-label {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--set-text-faint);
@@ -382,7 +524,7 @@
 }
 
 .settings-page__readiness-warn {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-warn);
   line-height: 1.5;
 }
@@ -411,6 +553,13 @@
 .settings-page__main-body {
   flex: 1;
   padding: 22px 32px 32px;
+
+  /*
+   * 컨테이너 쿼리 기준점. 안쪽 패널(BuildingConfigPanel)이 뷰포트가 아니라
+   * **여기 실제 폭**을 보고 열 수를 정한다 — 시나리오 레일을 접었다 펴면
+   * 같은 뷰포트에서도 남는 폭이 520px 달라지기 때문이다.
+   */
+  container: settings-body / inline-size;
 }
 
 /* 시나리오 예측: 패딩 없이 전체 활용, sticky 헤더도 없다(§10 범위 밖) */
@@ -460,66 +609,164 @@
   margin-bottom: 0;
 }
 
-/* ── 보조 열 (§4.2) — ≥1800px 에서만 렌더된다. 없는 화면은 컴포넌트가 null 을 반환한다 */
+/* ─────────────────────────────────────────────
+   시나리오 레일 (체크리스트) — 우측 고정
 
-.settings-page__aside {
-  display: none; /* ≥1800px 미디어쿼리에서 뒤집는다 — 아래 브레이크포인트 블록 */
-  width: var(--set-aside-w);
+   예전 「보조 열」(도착 순서 · 층별 분포 · 항목 타입)이 있던 자리다.
+   그쪽은 8개 화면 중 3개에서만 떠서 본문 오른쪽 경계가 화면마다 360px씩
+   움직였는데, 레일은 **항상 같은 자리에 같은 폭으로** 있다.
+
+   ★ 접기를 display:none 으로 하지 않는다.
+     display:none 은 스크롤 컨테이너의 scrollTop 을 날린다. 체크리스트를
+     쓰다가 다른 화면을 확인하고 돌아왔을 때 보던 자리가 유지되는 것이
+     이 레일의 존재 이유라, 바깥 폭만 줄이고 overflow 로 잘라 낸다.
+     안쪽(--body)은 접힌 상태에서도 원래 폭 그대로 살아 있다.
+   ─────────────────────────────────────────────*/
+
+.settings-page__rail {
+  /*
+   * 레일 안은 글자를 **한 단계씩 올린다.**
+   *
+   * 새 값을 만들지 않고 기존 5단계 스케일에서 한 칸씩 밀었다 — 레일은
+   * 별도 타입 체계가 아니라 "같은 스케일의 한 단계 위"다. 시나리오를 쓰는
+   * 동안 계속 보는 면이라 본문(14px)으로는 눈이 빨리 피로해진다.
+   *
+   *   xs 12 → 14 (sm)   배지 · 단위
+   *   sm 14 → 16 (md)   본문 · 항목명
+   *   md 16 → 18 (lg)   제목 · 입력
+   *
+   * 행 상한도 푼다 — --set-row-max(510px)는 본문 열에서 줄이 화면 끝까지
+   * 늘어나는 것을 막으려던 값인데, 레일은 폭 자체가 600으로 묶여 있어
+   * 상한이 이중으로 걸리면 오른쪽에 쓸데없는 여백만 남는다.
+   */
+  --set-fs-xs: 0.9333rem;
+  --set-fs-sm: 1.0667rem;
+  --set-fs-md: 1.2rem;
+  --set-row-max: none;
+
+  display: flex;
   flex-shrink: 0;
-  overflow-y: auto;
+  width: var(--set-rail-w);
+  overflow: hidden;           /* 접혔을 때 --body 를 잘라 낸다 */
   border-left: 1px solid var(--set-border);
   background: var(--set-surface-nav);
-  padding: var(--set-sp-5);
+  transition: width var(--set-dur) var(--set-ease);
 }
 
-.settings-page__aside-title {
-  font-size: var(--set-fs-sm);
-  font-weight: 700;
-  color: var(--set-text);
-  margin-bottom: var(--set-sp-4);
+.settings-page__rail--collapsed {
+  width: var(--set-rail-handle-w);
 }
 
-/* ── 탭 (건물 · 소방시설) ── */
+/* ── 손잡이 — 접혀도 항상 보이는 세로 띠 ── */
 
-.settings-page__tabs {
+.settings-page__rail-toggle {
+  flex-shrink: 0;
+  width: var(--set-rail-handle-w);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  border-bottom: 1px solid var(--set-border);
-  margin-bottom: 18px;
-}
-
-.settings-page__tab {
-  padding: 9px 16px;
-  margin-bottom: -1px;
+  gap: var(--set-sp-3);
+  padding: var(--set-sp-3) 0;
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--set-text-dim);
-  font-size: var(--set-fs-md);
-  font-weight: 500;
+  border-right: 1px solid var(--set-border-subtle);
+  color: var(--set-text-faint);
+  font-family: inherit;
   cursor: pointer;
-  transition: color 0.1s, border-color 0.1s;
+  transition: background-color 0.1s, color 0.1s;
 }
 
-.settings-page__tab:hover {
+.settings-page__rail-toggle:hover:not(:disabled) {
+  background-color: var(--set-surface-hover);
   color: var(--set-text);
 }
 
-.settings-page__tab--active {
+.settings-page__rail-toggle:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.settings-page__rail-toggle:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: -2px;
+}
+
+.settings-page__rail-toggle-icon {
+  font-size: var(--set-fs-md);
+  line-height: 1;
+}
+
+/*
+ * 세로쓰기 — 접힌 40px 안에서 무슨 패널인지 알려주는 유일한 단서다.
+ * 펼치면 머리줄에 같은 제목이 있으므로 감춘다.
+ */
+.settings-page__rail-toggle-label {
+  writing-mode: vertical-rl;
+  font-size: var(--set-fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.settings-page__rail:not(.settings-page__rail--collapsed) .settings-page__rail-toggle-label {
+  display: none;
+}
+
+/* ── 본체 — 폭이 고정이라 접혀도 안쪽 배치가 흔들리지 않는다 ── */
+
+.settings-page__rail-body {
+  width: calc(var(--set-rail-w) - var(--set-rail-handle-w));
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.settings-page__rail-head {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--set-sp-4) var(--set-sp-4) var(--set-sp-3);
+  border-bottom: 1px solid var(--set-border);
+}
+
+.settings-page__rail-title {
+  font-size: var(--set-fs-md);
+  font-weight: 700;
   color: var(--set-text);
-  font-weight: 600;
-  border-bottom-color: var(--set-accent);
+}
+
+.settings-page__rail-meta {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* scrollTop 이 살아 있어야 하는 바로 그 요소 */
+.settings-page__rail-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--set-sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-4);
 }
 
 /* ── 페이지가 직접 그리는 카드 ── */
 
+/*
+ * 카드도 폭 상한을 받는다 — 패널 바깥에 있어서 패널 루트 상한이 닿지 않는다.
+ * 출동대 화면의 "행동 시간" 카드가 여기 해당하며, 상한 전에는 머리줄이
+ * 1,862px 로 늘어나 제목과 오른쪽 컨트롤 사이가 1,750px 비어 있었다.
+ */
 .settings-page__card {
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-md);
   padding: 14px 16px;
   margin-bottom: 16px;
+  max-width: var(--set-table-max);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -535,20 +782,20 @@
 }
 
 .settings-page__card-title {
-  font-size: var(--set-fs-sm);
+  font-size: var(--set-fs-md);
   font-weight: 700;
   color: var(--set-text-body);
 }
 
 .settings-page__card-meta {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
 }
 
 /* ── 서브 타이틀 ── */
 
 .settings-page__sub-title {
-  font-size: var(--set-fs-sm);
+  font-size: var(--set-fs-md);
   font-weight: 700;
   color: var(--set-text-body);
   margin-bottom: 6px;
@@ -652,8 +899,9 @@
 .settings-page .bcf__label,
 .settings-page .tag-preset-panel__item-text,
 .settings-page .unit-status-panel__message-text,
+/* 거리 단위("m") — 값이 아니라 꼬리표라 본문보다 한 단계 작게 둔다 */
 .settings-page .hsp__unit {
-  font-size: var(--set-fs-md);
+  font-size: var(--set-fs-xs);
 }
 
 .settings-page .tag-preset-panel__type-header,
@@ -662,7 +910,7 @@
 }
 
 .settings-page .tag-preset-panel__sub-label {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -690,7 +938,7 @@
 .settings-page .dsp__rh,
 .settings-page .dsp__rh--prefix,
 .settings-page .esp__lh {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   text-transform: none;
   letter-spacing: 0;
   color: var(--set-text-dim);
@@ -705,32 +953,45 @@
   color: var(--set-text-body);
 }
 
-/* 출동대 화면은 폭이 남으면 2열로 흐른다 — 목록은 전체 폭 */
-.settings-page .dsp {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
-  gap: 16px;
-  align-items: start;
-}
-
-.settings-page .dsp > .dsp__group:last-child {
-  grid-column: 1 / -1;
-}
-
 /* ─────────────────────────────────────────────
-   브레이크포인트 3단 (SETTINGS_MODE_UI_PLAN.md §4.2 · Q-1)
-   1280 은 하한, 1800 은 보조 열이 등장하는 지점, 그 사이는 지금 규칙 그대로다.
-   균일 배율(--ui-scale)을 이식하지 않는 이유는 CLAUDE.md·DEFERRED P-5 참고 —
-   열을 늘리지 못해 F-5(공백)를 못 고친다.
+   브레이크포인트 (SETTINGS_MODE_UI_PLAN.md §4.2 · §12-C)
+   1280 이 하한이다. 예전의 1800(보조 열 등장) 분기는 없어졌다 —
+   레일은 전 구간 같은 자리에 있고, 좁은 화면에서만 본문 위로 겹친다.
+   균일 배율(--ui-scale)을 이식하지 않는 이유는 CLAUDE.md·DEFERRED P-5 참고.
    ─────────────────────────────────────────────*/
 
-@media (width >= 1800px) {
-  .settings-page {
-    --set-nav-w: 240px;
+/*
+ * < 1850px — 레일이 폭을 뺏으면 편집 화면이 너무 좁아진다.
+ *
+ * 임계값을 실측으로 잡았다. 레일이 자리를 차지하는 구간에서는 **건물 화면이
+ * 항상 2열 이상**이어야 한다는 것이 기준이다. 2열 임계는 컨테이너 900px 이고,
+ * 컨테이너는 본문의 콘텐츠 박스(좌우 패딩 32씩 제외)라
+ *   필요 뷰포트 = 900 + 64(패딩) + 240(내비) + 640(레일) = 1844
+ * 1800 에서는 컨테이너가 856 뿐이라 1열로 무너졌다.
+ * 레이아웃에서 빼고 본문 위에 겹쳐 띄운다(기본 접힘 — railOpen 초기값이
+ * 같은 1600 을 matchMedia 로 본다). 손잡이만 늘 오른쪽 끝에 남는다.
+ */
+@media (width <= 1849px) {
+  .settings-page__rail {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
   }
 
-  .settings-page__aside {
-    display: block;
+  .settings-page__rail:not(.settings-page__rail--collapsed) {
+    box-shadow: -8px 0 24px rgb(0 0 0 / 45%);
+  }
+
+  /* 겹침 기준점 — 레일이 layout 밖으로 나가므로 부모가 기준을 잡아야 한다 */
+  .settings-page__layout {
+    position: relative;
+  }
+
+  /* 손잡이가 본문 오른쪽 끝을 가리지 않도록 자리를 비워 둔다 */
+  .settings-page__main {
+    padding-right: var(--set-rail-handle-w);
   }
 }
 
@@ -757,26 +1018,16 @@
     padding: var(--set-sp-2) var(--set-sp-3);
   }
 
-  .settings-page__nav-group {
-    flex-direction: row;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  /* 그룹 라벨은 세로 여백을 두고 있었다 — 가로 탭 줄에서는 구분선으로 축소 */
-  .settings-page__nav-group-label {
-    padding: 0 var(--set-sp-2);
-    border-right: 1px solid var(--set-border-subtle);
-    margin-right: var(--set-sp-1);
-    white-space: nowrap;
-  }
-
-  .settings-page__nav-group:first-child .settings-page__nav-group-label {
-    display: none;
-  }
-
   .settings-page__nav-row {
     flex-shrink: 0;
+  }
+
+  /* 세로에서 가로선이던 구분을 세로선으로 돌린다 */
+  .settings-page__nav-row--divided {
+    margin: 0 0 0 var(--set-sp-2);
+    padding: 0 0 0 var(--set-sp-2);
+    border-top: none;
+    border-left: 1px solid var(--set-border-subtle);
   }
 
   .settings-page__nav-item {
@@ -799,6 +1050,34 @@
   }
 
   .settings-page__nav-badge:not(.settings-page__nav-badge--warn) {
+    display: none;
+  }
+
+  /*
+   * 공통 설정도 가로 탭 줄이 된다. 세로 배치에서는 "아래쪽"이 구분이었지만
+   * 가로에서는 그게 안 되므로, 별도 줄 + 앞머리 라벨로 경계를 유지한다.
+   */
+  .settings-page__nav-global {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--set-sp-1);
+    overflow-x: auto;
+    padding: var(--set-sp-2) var(--set-sp-4);
+  }
+
+  .settings-page__nav-global-label {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--set-sp-2);
+    padding: 0 var(--set-sp-2) 0 0;
+    border-right: 1px solid var(--set-border);
+    margin-right: var(--set-sp-1);
+    white-space: nowrap;
+  }
+
+  /* 좁은 폭에서는 부연이 자리를 너무 먹는다 — 라벨만 남긴다 */
+  .settings-page__nav-global-note {
     display: none;
   }
 
@@ -827,4 +1106,63 @@
   .settings-page__main-body {
     padding: 16px 20px 24px;
   }
+}
+
+/* ─────────────────────────────────────────────
+   2열 화면 골격 (구조대상자 등)
+   건물 · 소방시설의 .bcf 와 같은 규칙이다 — 좌: 입력 / 우: 요약 + 미리보기.
+   같은 성격의 화면끼리 골격이 달라 보이지 않게 임계값·좌열 폭을 맞춘다.
+   ─────────────────────────────────────────────*/
+
+.settings-page__section--split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--set-sp-4);
+  align-items: start;
+}
+
+.settings-page__split-main,
+.settings-page__split-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-4);
+  min-width: 0;
+}
+
+/*
+ * 폭 배분 — 좌열(구조대상자 표)은 10열이라 넓어야 하고, 우열(미리보기)은
+ * 소화전 칩과 사람 아이콘이 셀 안에 들어갈 만큼은 돼야 한다.
+ *
+ * 480px 로 뒀더니 미리보기의 B/D 칸이 100px 남짓이라 칩이 셀 밖으로 넘쳤다.
+ * 680px 이면 B/D 칸이 ~170px 이 되어 칩 하나는 들어간다. 좌열은 그만큼 줄지만
+ * 구조대상자 표의 실측 자연 폭이 840px 이라 여유가 남는다.
+ */
+@container settings-body (min-width: 1200px) {
+  .settings-page__section--split {
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 680px);
+  }
+}
+
+/* ── 도착 순서 카드의 방식 선택 ── */
+
+.settings-page__arrival-mode {
+  margin-left: auto;
+  display: flex;
+  gap: var(--set-sp-4);
+}
+
+.settings-page__arrival-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-dim);
+  cursor: pointer;
+}
+
+.settings-page__arrival-radio input[type="radio"] {
+  accent-color: var(--set-accent);
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
 }

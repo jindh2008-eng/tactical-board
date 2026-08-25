@@ -1,334 +1,344 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSettings } from '../../store/settingsStore';
-import type { DispatchSetup } from '../../types/settings';
-import { secsToMmss, mmssToSecs, computeRosterDisplayName } from '../../utils/dispatchRoster';
+import type { DispatchSetup, DispatchRosterItem } from '../../types/settings';
+import { computeRosterDisplayName } from '../../utils/dispatchRoster';
 import { SetIconButton, IconClose } from './ui';
+import { unitTone } from './ui/unitTone';
 import './DispatchSetupPanel.css';
 
-const AGENCY_PRESETS = ['지휘차', '시청', '경찰', '보건소', '군부대', '한전', '가스'];
-
-// ── 활동대 행 정의 ──────────────────────────────
-const UNIT_ROWS: { key: keyof DispatchSetup['units']; label: string }[] = [
-  { key: 'suppression', label: '진압대' },
-  { key: 'rescue',      label: '구조대' },
-  { key: 'ems',         label: '구급대' },
-];
-
-// ── 별도 입력 차량 ──────────────────────────────
-const VEHICLE_ROWS: { key: keyof DispatchSetup['vehicles']; label: string }[] = [
-  { key: 'aerial',       label: '고가차' },
-  { key: 'ladder',       label: '굴절차' },
-  { key: 'smokeExhaust', label: '배연차' },
-  { key: 'command',      label: '지휘차' },
-  { key: 'waterTank',    label: '물탱크' },
-  { key: 'rescueVehicle', label: '구조차' },
-];
-
-// 착대 옵션 (1~10)
-const ORDER_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
-
-// ── 수량 칩 ─────────────────────────────────────
+/*
+ * 유관기관 프리셋 — 2열로 **세로 채움**이라 배열 순서가 곧 왼쪽 열 → 오른쪽 열이다.
+ * '지휘차' 를 뺐다: 차량 그룹에 이미 지휘차 칸이 있어 같은 것을 두 곳에서
+ * 만들 수 있었고, 어느 쪽으로 만들었는지에 따라 토큰 색이 달라졌다
+ * (차량이면 vehicle, 유관기관이면 agency).
+ */
+const AGENCY_PRESETS = ['경찰', '한전', '가스', '시청', '보건소', '군부대'];
 
 /**
- * CountChip — 훈련모드 출동대 생성 버튼과 같은 모양의 수량 칩.
+ * 생성칸 정의 — 「무엇을 몇 대」를 정하는 칸 하나.
  *
- * 설정창은 "지금 만든다"가 아니라 "몇 대인지 정한다"라서 버튼 하나로는 줄일 수 없다.
- * 그래서 생김새(색 박스·버튼 톤·크기)는 훈련모드에 맞추고, 안에 −/수량/+ 를 둔다.
+ * `rosterType` 은 그 칸이 만들어 낸 로스터 항목을 되찾는 열쇠다. 칸 아래에
+ * 자기가 만든 출동대만 보여야 하는데, 로스터는 한 배열이라 unitType 으로 가른다.
+ * buildRoster 의 unitType 과 **반드시 같아야 한다**(utils/dispatchRoster.ts).
  */
-interface CountChipProps {
+interface SlotDef {
+  label:      string;
+  rosterType: string;
+}
+
+const UNIT_SLOTS: (SlotDef & { key: keyof DispatchSetup['units'] })[] = [
+  { key: 'suppression', label: '진압대', rosterType: 'suppression' },
+  { key: 'rescue',      label: '구조대', rosterType: 'rescue' },
+  { key: 'ems',         label: '구급대', rosterType: 'ems' },
+];
+
+const VEHICLE_SLOTS: (SlotDef & { key: keyof DispatchSetup['vehicles'] })[] = [
+  { key: 'aerial',        label: '고가차', rosterType: 'aerial' },
+  { key: 'ladder',        label: '굴절차', rosterType: 'ladder' },
+  { key: 'smokeExhaust',  label: '배연차', rosterType: 'smokeExhaust' },
+  { key: 'command',       label: '지휘차', rosterType: 'command' },
+  { key: 'waterTank',     label: '물탱크', rosterType: 'water_tank' },
+  { key: 'rescueVehicle', label: '구조차', rosterType: 'rescue_vehicle' },
+];
+
+/** 착대 옵션 (1~10) */
+const ORDER_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
+
+// ── 생성된 출동대 칩 ────────────────────────────
+
+interface UnitChipProps {
+  item:     DispatchRosterItem;
+  onPrefix: (id: string, prefix: string) => void;
+  onOrder:  (id: string, order: number) => void;
+}
+
+/**
+ * 생성된 출동대 하나.
+ *
+ * 이름을 클릭하면 그 자리에서 **부대명 접두사**를 입력한다 — "거진" 을 넣으면
+ * "거진진압" 이 된다. 접두사인 이유는 연동 펌프가 같은 이름을 물려받아야 해서다
+ * (settingsStore.updateRosterPrefix 가 linkedTo 항목에 자동 전파한다).
+ *
+ * 색은 훈련모드 토큰과 같은 계열이다. 설정에서 만든 것이 훈련 화면에서 다른
+ * 색으로 나오면 같은 대인지 알 수 없다.
+ */
+function UnitChip({ item, onPrefix, onOrder }: UnitChipProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  const display = computeRosterDisplayName(item);
+
+  function begin() {
+    setDraft(item.unitPrefix ?? '');
+    setEditing(true);
+  }
+
+  function commit() {
+    onPrefix(item.id, draft.trim());
+    setEditing(false);
+  }
+
+  return (
+    <div className="dsp__unit">
+      {editing ? (
+        <input
+          className="dsp__unit-input"
+          type="text"
+          autoFocus
+          maxLength={10}
+          placeholder="부대명"
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+        />
+      ) : (
+        <button
+          className={`dsp__unit-name dsp__unit-name--${unitTone(item.unitType)}`}
+          type="button"
+          onClick={begin}
+          title="클릭해 부대명 입력 (예: 거진 → 거진진압)"
+        >
+          {display}
+        </button>
+      )}
+
+      {/*
+        착대순서 — 토큰 **오른쪽**에 붙는다. "N착대" 가 아니라 숫자만 적는데,
+        열 제목 없이도 옆에 늘어선 값들이 서로 순서라는 것이 읽히고, 글자를
+        빼는 만큼 토큰이 이름을 더 보여줄 수 있기 때문이다.
+
+        **도착설정 방식과 무관하게 항상 보인다.** 착대는 도착 편성 그 자체이고,
+        시간설정은 "그 착대가 몇 분 뒤에 오는가" 를 더 정하는 것이라 착대를
+        먼저 정해야 성립한다. 예전에는 시간모드에서 이걸 숨겨서, 모드를 바꾸면
+        편성이 사라진 것처럼 보였다.
+      */}
+      <select
+        className="dsp__unit-order"
+        value={item.arrivalOrder}
+        onChange={e => onOrder(item.id, Number(e.target.value))}
+        aria-label={`${display} 착대순서`}
+      >
+        {ORDER_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
+      </select>
+    </div>
+  );
+}
+
+// ── 생성칸 ──────────────────────────────────────
+
+interface SlotProps {
   label:    string;
   tone:     'activity' | 'vehicle';
   value:    number;
   onChange: (n: number) => void;
-  /** 라벨 아래 보조 설명 (예: 자동 연동되는 펌프 수) */
-  suffix?:  string;
+  children: React.ReactNode;
 }
 
-function CountChip({ label, tone, value, onChange, suffix }: CountChipProps) {
+function Slot({ label, tone, value, onChange, children }: SlotProps) {
   return (
-    <div className={`dsp__chip dsp__chip--${tone}${value > 0 ? ' dsp__chip--on' : ''}`}>
-      <span className="dsp__chip-label">
-        {label}
-        {suffix && <span className="dsp__chip-suffix">{suffix}</span>}
-      </span>
-      <div className="dsp__stepper">
-        <button
-          className="dsp__step-btn"
-          type="button"
-          onClick={() => onChange(Math.max(0, value - 1))}
-          aria-label={`${label} 줄이기`}
-        >−</button>
-        <input
-          className="dsp__num-input"
-          type="number"
-          min={0}
-          value={value}
-          onChange={e => onChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
-        />
-        <button
-          className="dsp__step-btn"
-          type="button"
-          onClick={() => onChange(value + 1)}
-          aria-label={`${label} 늘리기`}
-        >+</button>
+    <div className="dsp__slot">
+      <div className={`dsp__slot-head dsp__slot-head--${tone}${value > 0 ? ' dsp__slot-head--on' : ''}`}>
+        <span className="dsp__slot-label">{label}</span>
+        <div className="dsp__stepper">
+          <button
+            className="dsp__step-btn"
+            type="button"
+            onClick={() => onChange(Math.max(0, value - 1))}
+            aria-label={`${label} 줄이기`}
+          >−</button>
+          <input
+            className="dsp__num-input"
+            type="number"
+            min={0}
+            value={value}
+            onChange={e => onChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
+            aria-label={`${label} 수량`}
+          />
+          <button
+            className="dsp__step-btn"
+            type="button"
+            onClick={() => onChange(value + 1)}
+            aria-label={`${label} 늘리기`}
+          >+</button>
+        </div>
       </div>
+      <div className="dsp__slot-list">{children}</div>
     </div>
   );
 }
 
 // ── 메인 컴포넌트 ───────────────────────────────
 
+/**
+ * 출동대 생성 설정.
+ *
+ * 2026-08-25 재배치 — 「생성칸을 가로로 늘어놓고, 만들어진 대는 그 칸 바로
+ * 아래에」 로 바꿨다. 예전에는 위에서 수량을 정하고 아래 표에서 부대명·착대를
+ * 따로 잡아, 방금 만든 대가 표 어디로 갔는지 눈으로 따라가야 했다.
+ *
+ * 연동 펌프는 목록에 그리지 않는다. 진압대 1대에 펌프 1대가 딸려 생성되는데
+ * (buildRoster), 칸에는 "진압대 1" 이라고 적혀 있으니 아래에 둘이 보이면
+ * 숫자가 어긋난 것처럼 읽힌다. 펌프는 부대명·착대순서가 진압대를 그대로
+ * 따라가므로(updateRosterPrefix·updateRosterOrder 가 linkedTo 에 전파) 숨겨도
+ * 정할 것이 남지 않는다. 훈련모드에는 그대로 넘어간다.
+ */
 export function DispatchSetupPanel() {
   const {
-    arrivalMode, updateArrivalMode,
     dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
     addDispatchExtraUnit, removeDispatchExtraUnit,
-    dispatchRoster, updateRosterArrival, updateRosterOrder, updateRosterPrefix,
+    dispatchRoster, updateRosterOrder, updateRosterPrefix,
   } = useSettings();
-  const { units, vehicles, extraUnits = [] } = dispatchSetup;
+  // extraUnits 는 직접 읽지 않는다 — 로스터가 이미 그것들을 담고 있고,
+  // 착대순서는 로스터에만 있어서 로스터 쪽을 봐야 한 곳에서 다 나온다.
+  const { units, vehicles } = dispatchSetup;
 
   const [customInput, setCustomInput] = useState('');
 
-  // 로스터 도착시간 로컬 입력 상태 (MM:SS 문자열) — 시간모드 전용
-  const [arrivalInputs, setArrivalInputs] = useState<Record<string, string>>(() =>
-    Object.fromEntries(dispatchRoster.map(r => [r.id, secsToMmss(r.arrivalSec)]))
-  );
+  /** 그 칸이 만든 출동대만 — 연동 차량(펌프)은 뺀다 */
+  const unitsOf = (rosterType: string) =>
+    dispatchRoster.filter(r => r.linkedTo === null && r.unitType === rosterType);
 
-  // 로스터가 재생성되면 로컬 입력값 동기화
-  useEffect(() => {
-    setArrivalInputs(prev => {
-      const next: Record<string, string> = {};
-      for (const r of dispatchRoster) {
-        next[r.id] = prev[r.id] ?? secsToMmss(r.arrivalSec);
-      }
-      return next;
-    });
-  }, [dispatchRoster]);
+  const chipProps = { onPrefix: updateRosterPrefix, onOrder: updateRosterOrder };
 
-  function handleArrivalChange(id: string, raw: string) {
-    setArrivalInputs(prev => ({ ...prev, [id]: raw }));
+  function addCustom() {
+    const t = customInput.trim();
+    if (!t) return;
+    addDispatchExtraUnit(t, 'general');
+    setCustomInput('');
   }
-
-  function handleArrivalCommit(id: string, linkedTo: string | null) {
-    const raw  = arrivalInputs[id] ?? '';
-    const prev = dispatchRoster.find(r => r.id === id)?.arrivalSec ?? 0;
-    const secs = mmssToSecs(raw, prev);
-    const formatted = secsToMmss(secs);
-    setArrivalInputs(p => ({ ...p, [id]: formatted }));
-    updateRosterArrival(id, secs, linkedTo === null);
-  }
-
-  const hasRoster = dispatchRoster.length > 0;
 
   return (
     <div className="dsp">
 
-      {/* 활동대 — 훈련모드 출동대 생성 메뉴와 같은 색 박스·버튼 배열 */}
-      <div className="dsp__group dsp__group--activity">
-        <div className="dsp__group-title dsp__group-title--activity">활동대</div>
-        <p className="dsp__group-hint">진압대를 넣으면 펌프가 함께 생성됩니다. 구조대·구급대는 차량 연동 없음.</p>
-        <div className="dsp__chips">
-          {UNIT_ROWS.map(row => (
-            <CountChip
-              key={row.key}
-              label={row.label}
-              tone="activity"
-              value={units[row.key]}
-              onChange={n => updateDispatchUnits({ [row.key]: n })}
-              suffix={row.key === 'suppression' && units.suppression > 0
-                ? `+ 펌프 ${units.suppression}`
-                : undefined}
-            />
-          ))}
-        </div>
-      </div>
+      <div className="dsp__groups">
 
-      {/* 차량 */}
-      <div className="dsp__group dsp__group--vehicle">
-        <div className="dsp__group-title dsp__group-title--vehicle">차량</div>
-        <div className="dsp__chips">
-          {VEHICLE_ROWS.map(row => (
-            <CountChip
-              key={row.key}
-              label={row.label}
-              tone="vehicle"
-              value={vehicles[row.key]}
-              onChange={n => updateDispatchVehicles({ [row.key]: n })}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* 유관기관 및 직접입력 */}
-      <div className="dsp__group dsp__group--agency">
-        <div className="dsp__group-title dsp__group-title--agency">유관기관 및 직접입력</div>
-
-        {/* 유관기관 프리셋 버튼 */}
-        <div className="dsp__extra-presets">
-          {AGENCY_PRESETS.map(name => (
-            <button
-              key={name}
-              className="dsp__extra-btn"
-              type="button"
-              onClick={() => addDispatchExtraUnit(name, 'agency')}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-
-        {/* 직접입력 */}
-        <div className="dsp__extra-input-row">
-          <input
-            className="dsp__extra-input"
-            type="text"
-            placeholder="직접입력..."
-            maxLength={16}
-            value={customInput}
-            onChange={e => setCustomInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                const t = customInput.trim();
-                if (t) { addDispatchExtraUnit(t, 'general'); setCustomInput(''); }
-              }
-            }}
-          />
-          <button
-            className="dsp__extra-btn"
-            type="button"
-            onClick={() => {
-              const t = customInput.trim();
-              if (t) { addDispatchExtraUnit(t, 'general'); setCustomInput(''); }
-            }}
-          >
-            추가
-          </button>
-        </div>
-
-        {/* 추가된 항목 목록 */}
-        {extraUnits.length > 0 && (
-          <div className="dsp__extra-list">
-            {extraUnits.map(u => (
-              <div key={u.id} className="dsp__extra-item">
-                <span className="dsp__extra-name">{u.name}</span>
-                <SetIconButton
-                  size="sm"
-                  variant="danger"
-                  label={`${u.name} 제거`}
-                  icon={<IconClose size={13} />}
-                  onClick={() => removeDispatchExtraUnit(u.id)}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 출동대 목록 및 도착설정 */}
-      <div className="dsp__group">
-        <div className="dsp__group-title">출동대 목록 및 도착설정</div>
-
-        {/* 도착설정 방식 선택 */}
-        <div className="dsp__mode-row">
-          <span className="dsp__mode-label">도착설정 방식</span>
-          <div className="dsp__mode-radios">
-            <label className="dsp__radio-label">
-              <input
-                type="radio"
-                name="arrivalMode"
-                value="time"
-                checked={arrivalMode === 'time'}
-                onChange={() => updateArrivalMode('time')}
-              />
-              시간설정
-            </label>
-            <label className="dsp__radio-label">
-              <input
-                type="radio"
-                name="arrivalMode"
-                value="order"
-                checked={arrivalMode === 'order'}
-                onChange={() => updateArrivalMode('order')}
-              />
-              착대설정
-            </label>
-          </div>
-        </div>
-
-        {!hasRoster ? (
-          <div className="dsp__roster-empty">위에서 출동대를 추가하면 목록이 표시됩니다.</div>
-        ) : (
-          <div className="dsp__roster">
-
-            {/* 헤더 */}
-            <div className={`dsp__roster-head dsp__roster-head--${arrivalMode}`}>
-              <span className="dsp__rh dsp__rh--name">명칭</span>
-              <span className="dsp__rh dsp__rh--prefix">부대명</span>
-              {arrivalMode === 'time'
-                ? <span className="dsp__rh dsp__rh--time">도착시간</span>
-                : <span className="dsp__rh dsp__rh--order">착대순서</span>
-              }
-            </div>
-
-            {/* 행 */}
-            {dispatchRoster.map(item => (
-              <div
-                key={item.id}
-                className={`dsp__roster-row dsp__roster-row--${arrivalMode}${item.linkedTo ? ' dsp__roster-row--linked' : ''}`}
+        {/* ── 활동대 ── */}
+        <section className="dsp__group">
+          <h4 className="dsp__group-title dsp__group-title--activity">활동대</h4>
+          <div className="dsp__slots">
+            {UNIT_SLOTS.map(s => (
+              <Slot
+                key={s.key}
+                label={s.label}
+                tone="activity"
+                value={units[s.key]}
+                onChange={n => updateDispatchUnits({ [s.key]: n })}
               >
-                <span className="dsp__rc dsp__rc--name">
-                  {computeRosterDisplayName(item)}
-                </span>
-
-                {/* 부대명 입력 (비연동 행만) */}
-                {item.linkedTo ? (
-                  <span className="dsp__rc dsp__rc--prefix-empty" />
-                ) : (
-                  <span className="dsp__rc dsp__rc--prefix">
-                    <input
-                      className="dsp__prefix-input"
-                      type="text"
-                      placeholder="부대명"
-                      value={item.unitPrefix ?? ''}
-                      onChange={e => updateRosterPrefix(item.id, e.target.value)}
-                    />
-                  </span>
-                )}
-
-                {/* 연동 차량: 설정 불가 — AUTO 표시만 */}
-                {item.linkedTo ? (
-                  <span className="dsp__rc dsp__rc--auto">AUTO</span>
-                ) : arrivalMode === 'time' ? (
-                  <span className="dsp__rc dsp__rc--time">
-                    <input
-                      className="dsp__time-input"
-                      type="text"
-                      placeholder="00:00"
-                      value={arrivalInputs[item.id] ?? ''}
-                      onChange={e => handleArrivalChange(item.id, e.target.value)}
-                      onBlur={() => handleArrivalCommit(item.id, item.linkedTo)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleArrivalCommit(item.id, item.linkedTo); }}
-                    />
-                  </span>
-                ) : (
-                  <span className="dsp__rc dsp__rc--order">
-                    <select
-                      className="dsp__order-select"
-                      value={item.arrivalOrder ?? 1}
-                      onChange={e => updateRosterOrder(item.id, parseInt(e.target.value, 10))}
-                    >
-                      {ORDER_OPTIONS.map(n => (
-                        <option key={n} value={n}>{n}착대</option>
-                      ))}
-                    </select>
-                  </span>
-                )}
-              </div>
+                {unitsOf(s.rosterType).map(item => (
+                  <UnitChip key={item.id} item={item} {...chipProps} />
+                ))}
+              </Slot>
             ))}
           </div>
-        )}
-      </div>
+        </section>
 
+        {/* ── 차량 ── */}
+        <section className="dsp__group">
+          <h4 className="dsp__group-title dsp__group-title--vehicle">차량</h4>
+          <div className="dsp__slots">
+            {VEHICLE_SLOTS.map(s => (
+              <Slot
+                key={s.key}
+                label={s.label}
+                tone="vehicle"
+                value={vehicles[s.key]}
+                onChange={n => updateDispatchVehicles({ [s.key]: n })}
+              >
+                {unitsOf(s.rosterType).map(item => (
+                  <UnitChip key={item.id} item={item} {...chipProps} />
+                ))}
+              </Slot>
+            ))}
+          </div>
+        </section>
+
+        {/* ── 유관기관 ── */}
+        <section className="dsp__group dsp__group--fixed">
+          <h4 className="dsp__group-title dsp__group-title--agency">유관기관</h4>
+          {/* 아이콘 자산이 없어 텍스트 칩 2열로 간다 */}
+          <div className="dsp__preset-grid">
+            {AGENCY_PRESETS.map(name => (
+              <button
+                key={name}
+                className="dsp__preset-btn"
+                type="button"
+                onClick={() => addDispatchExtraUnit(name, 'agency')}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+          <div className="dsp__slot-list">
+            {unitsOf('agency').map(item => (
+              <ExtraChip key={item.id} item={item} onRemove={removeDispatchExtraUnit} {...chipProps} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── 직접입력 ── */}
+        <section className="dsp__group dsp__group--fixed">
+          <h4 className="dsp__group-title dsp__group-title--custom">직접입력</h4>
+          <div className="dsp__extra-input-row">
+            <input
+              className="dsp__extra-input"
+              type="text"
+              placeholder="이름 입력"
+              maxLength={16}
+              value={customInput}
+              onChange={e => setCustomInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addCustom()}
+            />
+            <button className="dsp__preset-btn" type="button" onClick={addCustom}>추가</button>
+          </div>
+          <div className="dsp__slot-list">
+            {unitsOf('general').map(item => (
+              <ExtraChip key={item.id} item={item} onRemove={removeDispatchExtraUnit} {...chipProps} />
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 유관기관·직접입력 항목.
+ *
+ * 활동대·차량과 달리 **수량이 아니라 개별 추가**라 지울 수 있어야 한다.
+ * 부대명 접두사는 붙이지 않는다 — "시청" 은 그 자체가 이름이다.
+ */
+function ExtraChip({
+  item, onOrder, onRemove,
+}: {
+  item: DispatchRosterItem;
+  onPrefix: (id: string, prefix: string) => void;
+  onOrder: (id: string, order: number) => void;
+  onRemove: (id: string) => void;
+}) {
+  return (
+    <div className="dsp__unit">
+      <span className={`dsp__unit-name dsp__unit-name--${unitTone(item.unitType)} dsp__unit-name--static`}>
+        {item.name}
+      </span>
+      <select
+        className="dsp__unit-order"
+        value={item.arrivalOrder}
+        onChange={e => onOrder(item.id, Number(e.target.value))}
+        aria-label={`${item.name} 착대순서`}
+      >
+        {ORDER_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
+      </select>
+      <SetIconButton
+        size="sm"
+        variant="danger"
+        label={`${item.name} 제거`}
+        icon={<IconClose size={13} />}
+        onClick={() => onRemove(item.id)}
+      />
     </div>
   );
 }

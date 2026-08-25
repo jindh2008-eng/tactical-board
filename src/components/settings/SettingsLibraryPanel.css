@@ -30,7 +30,7 @@
 }
 
 .slp__label {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
   white-space: nowrap;
   flex-shrink: 0;
@@ -43,7 +43,7 @@
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   outline: none;
   min-width: 0;
 }
@@ -89,7 +89,7 @@
 }
 
 .slp__empty {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
   padding: 14px;
   text-align: center;
@@ -120,7 +120,7 @@
 }
 
 .slp__item-name {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 600;
   color: var(--set-text-body);
   white-space: nowrap;
@@ -129,7 +129,7 @@
 }
 
 .slp__item-date {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
 }
 

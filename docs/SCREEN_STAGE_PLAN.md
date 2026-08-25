@@ -445,7 +445,7 @@ grid-template-columns: 1fr 1.744fr 1fr;
 
 | 항목 | 내용 |
 |---|---|
-| 설정 위치 | 「건물 · 소방시설」 → **「건물 구조」 탭**에 "상황판 구역 비율" 카드 |
+| 설정 위치 | 「건물 · 소방시설」 화면의 "상황판 구역 비율" 카드 (2026-08-24 탭 통합으로 하위 탭 없이 한 화면) |
 | UI | 슬라이더 1개 + 비율 미리보기 바 (`B ▏████ 건물 ████▕ D`) + 숫자 표시 |
 | 저장 | `SettingsExport`에 `boardColumnRatio?: number` 추가. **선택 필드로 두고 없으면 1.744** — 기존 저장 파일이 안 깨진다 |
 | 적용 | `.tactical-area`에 `style={{ '--board-col-ratio': N }}`, CSS는 `grid-template-columns: 1fr var(--board-col-ratio, 1.744)fr 1fr` |

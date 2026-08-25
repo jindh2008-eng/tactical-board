@@ -27,7 +27,7 @@
 }
 
 .bpm__panel-title {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 700;
   color: var(--set-text-faint);
   letter-spacing: 0.08em;
@@ -35,7 +35,7 @@
 }
 
 .bpm__count-badge {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   background: var(--set-surface-2);
   color: var(--set-text-dim);
   padding: 1px 7px;
@@ -69,7 +69,7 @@
 .bpm__icon-btn--sm {
   width: 18px;
   height: 18px;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
 }
 
 .bpm__icon-btn--danger:hover {
@@ -114,7 +114,7 @@
   border: 1px solid var(--set-border-subtle);
   border-radius: var(--set-r-lg);
   color: var(--set-text-faint);
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   cursor: pointer;
   transition: background 0.1s, border-color 0.1s, color 0.1s;
 }
@@ -173,7 +173,7 @@
 }
 
 .bpm__group-label {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 600;
   color: var(--set-text-body);
   white-space: nowrap;
@@ -188,7 +188,7 @@
 }
 
 .bpm__group-key {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
   white-space: nowrap;
   overflow: hidden;
@@ -197,7 +197,7 @@
 }
 
 .bpm__group-count {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   background: var(--set-surface-2);
   color: var(--set-text-faint);
   padding: 0 5px;
@@ -280,13 +280,13 @@
 }
 
 .bpm__preview-line1 {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 700;
   color: var(--set-text-body);
 }
 
 .bpm__preview-line2 {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
 }
 
@@ -316,7 +316,7 @@
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   outline: none;
 }
 
@@ -329,7 +329,7 @@
 }
 
 .bpm__input--sm {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
 }
 
 .bpm__input--flex {
@@ -346,7 +346,7 @@
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-sm);
   color: var(--set-text-body);
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -386,7 +386,7 @@
 
 .bpm__btn--xs {
   padding: 2px 8px;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
 }
 
 .bpm__form-actions {
@@ -397,7 +397,7 @@
 /* ── 빈 상태 ── */
 
 .bpm__empty {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
   padding: 14px 10px;
   text-align: center;

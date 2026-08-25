@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import { EVENT_ICON_FILES, EVENT_TYPE_LABELS, type EventType } from '../../types/events';
+import { SetCard } from './ui';
+import { EventTypeLegendAside } from './ui/AsideContent';
 import './EventSetupPanel.css';
 
 const EVENT_TYPES: EventType[] = ['fire', 'gas', 'electric'];
@@ -46,77 +48,56 @@ export function EventSetupPanel() {
   return (
     <div className="esp">
 
-      {/* ── 새 이벤트 추가 영역 ── */}
-      <div className="esp__add-section">
-        <p className="esp__add-title">아이콘 선택</p>
+      {/* ── 좌: 추가 폼 + 등록 목록 ────────────────────── */}
+      <div className="esp__col">
+        <SetCard title="현장요소 추가">
+          <div className="esp__add-row">
+            {/* 선택한 이미지 미리보기 — 격자는 오른쪽 열에 있다 */}
+            <div className="esp__add-preview" title={newIcon ? baseName(newIcon) : '이미지 미선택'}>
+              {newIcon
+                ? <img src={`/event-icon/${newIcon}`} alt={newIcon} className="esp__add-preview-img" draggable={false} />
+                : <span className="esp__add-preview-placeholder">?</span>
+              }
+            </div>
 
-        {/* 아이콘 그리드 */}
-        <div className="esp__add-icon-grid">
-          {EVENT_ICON_FILES.map(filename => (
+            <input
+              className="esp__add-input"
+              type="text"
+              placeholder="이름"
+              value={newLabel}
+              onChange={e => setNewLabel(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAdd()}
+              maxLength={20}
+            />
+
+            <div className="esp__type-seg">
+              {EVENT_TYPES.map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  className={[
+                    'esp__type-btn',
+                    `esp__type-btn--${t}`,
+                    newType === t ? 'esp__type-btn--active' : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => setNewType(t)}
+                  title={EVENT_TYPE_LABELS[t]}
+                >
+                  {EVENT_TYPE_LABELS[t]}
+                </button>
+              ))}
+            </div>
+
             <button
-              key={filename}
+              className="esp__add-btn"
               type="button"
-              className={['esp__icon-cell', newIcon === filename ? 'esp__icon-cell--active' : ''].filter(Boolean).join(' ')}
-              onClick={() => handleSelectNewIcon(filename)}
-              title={baseName(filename)}
+              onClick={handleAdd}
+              disabled={!newLabel.trim()}
             >
-              <img src={`/event-icon/${filename}`} alt={filename} className="esp__icon-cell-img" draggable={false} />
-              <span className="esp__icon-cell-name">{baseName(filename)}</span>
+              추가
             </button>
-          ))}
-        </div>
-
-        {/* 이름 + 종류 + 추가 버튼 행 */}
-        <div className="esp__add-row">
-          {/* 선택된 아이콘 미리보기 */}
-          <div className="esp__add-preview" title={newIcon ? baseName(newIcon) : '아이콘 미선택'}>
-            {newIcon
-              ? <img src={`/event-icon/${newIcon}`} alt={newIcon} className="esp__add-preview-img" draggable={false} />
-              : <span className="esp__add-preview-placeholder">?</span>
-            }
           </div>
-
-          {/* 이름 입력 */}
-          <input
-            className="esp__add-input"
-            type="text"
-            placeholder="이름"
-            value={newLabel}
-            onChange={e => setNewLabel(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            maxLength={20}
-          />
-
-          {/* 종류 선택 */}
-          <div className="esp__type-seg">
-            {EVENT_TYPES.map(t => (
-              <button
-                key={t}
-                type="button"
-                className={[
-                  'esp__type-btn',
-                  `esp__type-btn--${t}`,
-                  newType === t ? 'esp__type-btn--active' : '',
-                ].filter(Boolean).join(' ')}
-                onClick={() => setNewType(t)}
-                title={EVENT_TYPE_LABELS[t]}
-              >
-                {EVENT_TYPE_LABELS[t]}
-              </button>
-            ))}
-          </div>
-
-          {/* 추가 버튼 */}
-          <button
-            className="esp__add-btn"
-            type="button"
-            onClick={handleAdd}
-            disabled={!newLabel.trim()}
-          >
-            추가
-          </button>
-        </div>
-      </div>
+        </SetCard>
 
       {/* ── 등록된 이벤트 목록 ── */}
       {eventSetup.length === 0 ? (
@@ -128,7 +109,7 @@ export function EventSetupPanel() {
             <span className="esp__lh esp__lh--check">표시</span>
             <span className="esp__lh esp__lh--label">이름</span>
             <span className="esp__lh esp__lh--type">종류</span>
-            <span className="esp__lh esp__lh--icon">아이콘</span>
+            <span className="esp__lh esp__lh--icon">이미지</span>
             <span className="esp__lh esp__lh--del" />
           </div>
 
@@ -209,7 +190,7 @@ export function EventSetupPanel() {
                       className={['esp__icon-cell', !item.icon ? 'esp__icon-cell--active' : ''].filter(Boolean).join(' ')}
                       type="button"
                       onClick={() => { updateEventSetupItem(item.id, { icon: '' }); setPickerOpenId(null); }}
-                      title="아이콘 없음"
+                      title="이미지 없음"
                     >
                       <span className="esp__icon-cell-none">없음</span>
                     </button>
@@ -234,9 +215,39 @@ export function EventSetupPanel() {
         </div>
       )}
 
-      <p className="esp__hint">
-        체크된 항목만 실행창에 표시됩니다. 종류에 따라 세부 상태 메뉴가 달라집니다.
-      </p>
+        <p className="esp__hint">
+          체크된 항목만 실행창에 표시됩니다. 종류에 따라 세부 상태 메뉴가 달라집니다.
+        </p>
+      </div>
+
+      {/* ── 우: 이미지 격자 + 종류별 세부 상태 ──────────── */}
+      <div className="esp__col">
+        <SetCard title="이미지" meta={`${EVENT_ICON_FILES.length}개`}>
+          {/*
+            한 줄에 4개. 파일명이 잘리지 않을 만큼 칸을 넓힌 결과다 —
+            "쓰레기더미" · "페인트,신너" 같은 이름이 예전 52px 칸에서는
+            "쓰레…" 로 잘려서 무엇인지 알 수 없었다.
+          */}
+          <div className="esp__add-icon-grid">
+            {EVENT_ICON_FILES.map(filename => (
+              <button
+                key={filename}
+                type="button"
+                className={['esp__icon-cell', newIcon === filename ? 'esp__icon-cell--active' : ''].filter(Boolean).join(' ')}
+                onClick={() => handleSelectNewIcon(filename)}
+                title={baseName(filename)}
+              >
+                <img src={`/event-icon/${filename}`} alt={filename} className="esp__icon-cell-img" draggable={false} />
+                <span className="esp__icon-cell-name">{baseName(filename)}</span>
+              </button>
+            ))}
+          </div>
+        </SetCard>
+
+        <SetCard title="종류별 세부 상태" meta="훈련 중 우클릭 메뉴">
+          <EventTypeLegendAside />
+        </SetCard>
+      </div>
     </div>
   );
 }

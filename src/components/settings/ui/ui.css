@@ -95,7 +95,7 @@
 .set-btn--sm {
   height: var(--set-h-btn-sm);
   padding: 0 var(--set-sp-3);
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
 }
 
 /* ─────────────────────────────────────────────
@@ -159,10 +159,36 @@
    SetCard
    ─────────────────────────────────────────────*/
 
-.set-card {
+/*
+ * 카드 상자 — 설정모드에서 "카드"의 생김새를 정하는 **유일한 자리**.
+ *
+ * 08-25 이전에는 같은 개념에 라운드가 두 가지(4px · 6px), 안쪽 여백이
+ * 네 가지(없음 · 8/10 · 10/14 · 14/16)였다. 개별로 보면 다 그럴듯한데
+ * 화면을 옮기면 어긋난 게 보였다 — "디자이너가 만든 것 같지 않다"는
+ * 인상의 상당 부분이 여기서 왔다.
+ *
+ * S-3 에서 SetCard 를 만들었지만 실제로 쓰는 곳은 건물 화면 한 곳뿐이라
+ * 나머지 다섯은 각자 상자를 그리고 있었다. TSX 를 한꺼번에 갈아엎으면
+ * 회귀를 잡기 어려우므로, 먼저 **생김새만** 여기로 모은다.
+ * 각 패널의 클래스는 그대로 두고 이 목록에 이름만 얹는다.
+ *
+ * 카드를 새로 만들면 여기 목록에 추가한다. 자기 파일에서 상자를 다시
+ * 그리면 안 된다 — 그게 6종으로 갈라진 경위다.
+ */
+.set-card,
+.settings-page .dsp__group,
+.settings-page .checklist-setup__section,
+.settings-page .cp-panel__category,
+.settings-page .esp__add-section,
+.settings-page .esp__list,
+.settings-page .dsp__roster,
+.settings-page .vsp__table {
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
   border-radius: var(--set-r-md);
+}
+
+.set-card {
   padding: var(--set-sp-4) var(--set-sp-5);
   display: flex;
   flex-direction: column;
@@ -178,14 +204,14 @@
 }
 
 .set-card__title {
-  font-size: var(--set-fs-sm);
+  font-size: var(--set-fs-md);
   font-weight: 700;
   color: var(--set-text);
 }
 
 .set-card__meta {
   margin-left: auto;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
   font-variant-numeric: tabular-nums;
 }
@@ -251,13 +277,13 @@
 }
 
 .set-field__hint {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
   line-height: 1.5;
 }
 
 .set-field__error {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-danger);
   line-height: 1.5;
 }
@@ -270,8 +296,13 @@
    SetTable — 얼룩 없음. 행 구분은 선 하나로
    ─────────────────────────────────────────────*/
 
+/*
+ * 폭 상한 — 공용 표는 열 수가 적어 단순 목록 상한을 쓴다.
+ * width:100% 만 있으면 컨테이너가 넓어지는 만큼 무한정 늘어난다.
+ */
 .set-table {
   width: 100%;
+  max-width: var(--set-table-max);
   border-collapse: collapse;
 }
 
@@ -414,105 +445,161 @@
 
 /* 도착 순서 타임라인 (출동대) */
 
-.set-aside__timeline {
+/* ─────────────────────────────────────────────
+   도착 순서 — 착대별 토큰 목록
+
+   이름을 `·` 로 잇던 것을 실제 토큰 색 칩으로 바꿨다. 훈련 화면에 나올 모습
+   그대로라 어느 대가 언제 오는지를 글자가 아니라 색 덩어리로 읽는다.
+   색은 DispatchSetupPanel 의 생성 칩과 같은 --set-token-* 를 쓴다.
+   ─────────────────────────────────────────────*/
+
+.set-arrival {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.set-aside__timeline-row {
   display: flex;
+  flex-direction: column;
   gap: var(--set-sp-3);
 }
 
-.set-aside__timeline-dot {
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  margin-top: var(--set-sp-1);
-  border-radius: 50%;
-  background: var(--set-accent);
-}
-
-.set-aside__timeline-dot--dim {
-  background: var(--set-border-subtle);
-}
-
-.set-aside__timeline-row:not(:last-child) {
-  padding-bottom: var(--set-sp-4);
-  position: relative;
-}
-
-.set-aside__timeline-row:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  left: 3.5px;
-  top: 14px;
-  bottom: 0;
-  width: 1px;
-  background: var(--set-border-subtle);
-}
-
-.set-aside__timeline-title {
-  font-size: var(--set-fs-sm);
-  font-weight: 600;
-  color: var(--set-text);
-}
-
-.set-aside__timeline-desc {
-  font-size: var(--set-fs-xs);
-  color: var(--set-text-dim);
-  line-height: 1.5;
-}
-
-.set-aside__timeline-row--more .set-aside__timeline-desc {
-  padding-top: 1px;
-}
-
-/* 층별 분포 막대 (구조대상자) */
-
-.set-aside__bars {
+/*
+ * 착대마다 구분선을 긋는다. 예전에는 줄 사이 여백만 있어서, 한 착대에 여덟
+ * 대가 붙는 경우 어디까지가 같은 착대인지 세어 봐야 했다.
+ */
+.set-arrival__row {
   display: flex;
-  flex-direction: column;
-  gap: var(--set-sp-2);
+  align-items: flex-start;
+  gap: var(--set-sp-3);
+  padding: var(--set-sp-2) 0;
 }
 
-.set-aside__bar-row {
-  display: grid;
-  grid-template-columns: 44px 1fr 24px;
+.set-arrival__row + .set-arrival__row {
+  border-top: 1px solid var(--set-border-subtle);
+}
+
+/* 착대 라벨과 시간 선택 — 폭을 고정해 오른쪽 토큰들이 같은 x 에서 시작한다 */
+.set-arrival__head {
+  display: flex;
   align-items: center;
   gap: var(--set-sp-2);
+  flex-shrink: 0;
+  min-width: 5rem;
+  min-height: 26px;
 }
 
-.set-aside__bar-label {
-  font-size: var(--set-fs-xs);
+/* 착대 번호를 칩으로 — 오른쪽 토큰 덩어리와 같은 급으로 읽히게 한다 */
+.set-arrival__order {
+  padding: 2px var(--set-sp-2);
+  background: var(--set-accent-bg);
+  border: 1px solid var(--set-accent);
+  border-radius: var(--set-r-sm);
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  color: var(--set-accent-strong);
+  white-space: nowrap;
+}
+
+.set-arrival__time {
+  padding: 2px var(--set-sp-1);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-sm);
+  color: var(--set-text);
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.set-arrival__time:focus {
+  outline: none;
+  border-color: var(--set-accent);
+}
+
+.set-arrival__units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--set-sp-2);
+  min-width: 0;
+}
+
+.set-arrival__unit {
+  padding: 3px var(--set-sp-2);
+  border-radius: var(--set-r-sm);
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.set-arrival__unit--red {
+  background: var(--set-token-red);
+  color: var(--set-token-on-red);
+  border: 1px solid var(--set-token-red-border);
+}
+
+.set-arrival__unit--yellow {
+  background: var(--set-token-yellow);
+  color: var(--set-token-on-yellow);
+  border: 1px solid var(--set-token-yellow-border);
+}
+
+.set-arrival__unit--green {
+  background: var(--set-token-green);
+  color: var(--set-token-on-green);
+  border: 1px solid var(--set-token-green-border);
+}
+
+.set-arrival__unit--vehicle {
+  background: var(--set-token-vehicle);
+  color: var(--set-token-on-vehicle);
+  border: 1px solid var(--set-token-vehicle-border);
+}
+
+.set-arrival__unit--agency {
+  background: var(--set-token-agency);
+  color: var(--set-token-on-agency);
+  border: 1px solid var(--set-token-agency-border);
+}
+
+.set-aside__people-row {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: var(--set-sp-2);
+  min-height: 26px;
+}
+
+.set-aside__people-label {
+  font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
-  text-align: right;
+  white-space: nowrap;
 }
 
-.set-aside__bar-track {
-  height: 8px;
-  border-radius: var(--set-r-sm);
-  background: var(--set-surface-2);
-  overflow: hidden;
+.set-aside__people-icons {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  color: var(--set-accent-strong);
 }
 
-.set-aside__bar-fill {
-  height: 100%;
-  background: var(--set-accent);
-  border-radius: var(--set-r-sm);
-}
-
-.set-aside__bar-num {
+.set-aside__people-more {
   font-size: var(--set-fs-xs);
-  color: var(--set-text-body);
+  font-weight: 700;
+  color: var(--set-text-dim);
+  margin-left: 2px;
+}
+
+.set-aside__people-num {
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  color: var(--set-text);
+  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-/* 항목 타입 범례 (체크리스트) */
-
 .set-aside__legend-summary {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
   margin-bottom: var(--set-sp-3);
 }
@@ -548,7 +635,7 @@
 }
 
 .set-aside__legend-desc {
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
   line-height: 1.5;
 }
@@ -631,7 +718,7 @@
   border-radius: var(--set-r-sm);
   color: var(--set-accent-strong);
   font-family: inherit;
-  font-size: var(--set-fs-xs);
+  font-size: var(--set-fs-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background-color var(--set-dur) var(--set-ease);
@@ -644,4 +731,84 @@
 .set-toast__action:focus-visible {
   outline: 2px solid var(--set-accent);
   outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────
+   현장요소 — 종류별 세부 상태 범례
+
+   목록·색을 여기 다시 적지 않는다. AsideContent 가 EVENT_TYPE_STATUSES 를
+   그대로 읽어 그리므로, 상태를 추가하면 범례가 저절로 따라온다.
+   ─────────────────────────────────────────────*/
+
+.set-aside__evt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--set-sp-4);
+}
+
+.set-aside__evt-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--set-sp-2);
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  color: var(--set-text);
+  padding-bottom: var(--set-sp-2);
+  border-bottom: 1px solid var(--set-border-subtle);
+  margin-bottom: var(--set-sp-2);
+}
+
+.set-aside__evt-count {
+  margin-left: auto;
+  font-size: var(--set-fs-xs);
+  font-weight: 400;
+  color: var(--set-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.set-aside__evt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--set-sp-2);
+}
+
+/* 상태 하나가 칩 하나 — 훈련 중 원형 메뉴의 버튼 하나에 대응한다 */
+.set-aside__evt-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  padding: 3px var(--set-sp-2) 3px 3px;
+  background: var(--set-surface-2);
+  border: 1px solid var(--set-border-subtle);
+  border-radius: var(--set-r-sm);
+}
+
+/* 훈련 중 토큰 배경에 실제로 쓰이는 색이다 — 같은 출처(EVENT_TYPE_STATUSES) */
+.set-aside__evt-swatch {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border-radius: var(--set-r-sm);
+  border: 1px solid var(--set-border);
+}
+
+.set-aside__evt-icon {
+  font-size: var(--set-fs-sm);
+  line-height: 1;
+}
+
+.set-aside__evt-label {
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-body);
+  white-space: nowrap;
+}
+
+.set-aside__evt-note {
+  margin: 0;
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-faint);
+  line-height: 1.6;
 }
