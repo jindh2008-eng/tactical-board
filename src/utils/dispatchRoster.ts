@@ -56,6 +56,29 @@ interface RosterEntry {
  * 진압대만 차량(펌프)을 자동 연동한다.
  * 구조대·구급대는 연동하지 않는다 — 구조차가 필요하면 차량 항목에서 따로 넣는다.
  */
+/**
+ * 새로 만든 대에 줄 착대 번호 — **같은 종류 중 최대 + 1**.
+ *
+ * 진압 5대가 1~5착대에 있으면 진압6은 6착대다. 진압5를 4착대로 옮겼다면
+ * 최대가 4 이므로 진압6은 5착대가 된다.
+ *
+ * 빈 번호를 메우지 않는 이유는 압축(compactArrivalOrders)이 빈 번호를 없애기
+ * 때문이다 — 1..max 가 항상 꽉 차 있어서 "최대+1" 과 "가장 작은 빈 번호"가
+ * 같은 값이 된다. 둘 중 무엇으로 적어도 결과가 같다면 읽기 쉬운 쪽을 쓴다.
+ *
+ * 유관기관(agency)·직접입력(general)은 각자 별도 계수기다 — unitType 이
+ * 다르므로 이 함수가 자연히 갈라 센다.
+ */
+function nextOrderFor(unitType: string, assigned: DispatchRosterItem[]): number {
+  let max = 0;
+  for (const r of assigned) {
+    if (r.unitType !== unitType) continue;
+    if (r.linkedTo !== null) continue;      // 연동 차량은 부모를 따르므로 세지 않는다
+    max = Math.max(max, r.arrivalOrder ?? 1);
+  }
+  return max + 1;
+}
+
 export function buildRoster(
   setup: DispatchSetup,
   prevRoster: DispatchRosterItem[],
@@ -96,7 +119,8 @@ export function buildRoster(
       linkedTo:     null,
       unitPrefix:   prefix,
       arrivalSec:   prevUnit?.arrivalSec   ?? 0,
-      arrivalOrder: prevUnit?.arrivalOrder ?? 1,
+      // 이미 있던 대는 그 값을 지킨다 — 사용자가 도착순서에서 옮겨 둔 것이다
+      arrivalOrder: prevUnit?.arrivalOrder ?? nextOrderFor(unitEntry.unitType, [...prevRoster, ...result]),
     });
 
     if (vehEntry) {
@@ -134,7 +158,7 @@ export function buildRoster(
         linkedTo:     null,
         unitPrefix:   prev?.unitPrefix,
         arrivalSec:   prev?.arrivalSec   ?? 0,
-        arrivalOrder: prev?.arrivalOrder ?? 1,
+        arrivalOrder: prev?.arrivalOrder ?? nextOrderFor(def.unitType, [...prevRoster, ...result]),
       });
     }
   }
@@ -149,9 +173,47 @@ export function buildRoster(
       unitType:     extra.unitType,
       linkedTo:     null,
       arrivalSec:   prev?.arrivalSec   ?? 0,
-      arrivalOrder: prev?.arrivalOrder ?? 1,
+      arrivalOrder: prev?.arrivalOrder ?? nextOrderFor(extra.unitType, [...prevRoster, ...result]),
     });
   }
 
   return result;
+}
+
+
+/**
+ * 빈 착대를 걷어내고 위를 당긴다.
+ *
+ * 4착대가 비면 5착대가 4착대가 된다. 도착순서 목록에 빈 줄이 남지 않게 하려는
+ * 것인데, **번호가 밀리는 부작용이 있다** — 체크리스트의 도착 항목이
+ * `arrivalOrder` 를 저장하고 있어서(types/settings.ts ChecklistItem), 압축 뒤에는
+ * 그 항목이 다른 편성을 가리킨다. 그래서 호출부가 경고를 띄운다.
+ *
+ * 체크리스트를 여기서 같이 고치지 않는 것은 의도다 — 설정모드가 다른 화면의
+ * 데이터를 조용히 바꾸기 시작하면 되돌릴 방법이 없다. 몇 개가 영향을 받는지
+ * 알리고 판단은 사람이 한다.
+ *
+ * @returns 바뀐 항목이 담긴 새 배열과, 옛 번호 → 새 번호 대응(바뀐 것만)
+ */
+export function compactArrivalOrders(
+  roster: DispatchRosterItem[],
+): { roster: DispatchRosterItem[]; remap: Map<number, number> } {
+  const used = [...new Set(roster.map(r => r.arrivalOrder ?? 1))].sort((a, b) => a - b);
+
+  const remap = new Map<number, number>();
+  used.forEach((old, i) => {
+    const next = i + 1;
+    if (old !== next) remap.set(old, next);
+  });
+
+  if (remap.size === 0) return { roster, remap };
+
+  return {
+    roster: roster.map(r => {
+      const old = r.arrivalOrder ?? 1;
+      const next = remap.get(old);
+      return next === undefined ? r : { ...r, arrivalOrder: next };
+    }),
+    remap,
+  };
 }

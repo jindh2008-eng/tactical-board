@@ -30,7 +30,7 @@ import {
   resolveHasSiamesePipe,
   saveUnitTagPresetConfig,
 } from '../utils/settingsStorage';
-import { buildRoster } from '../utils/dispatchRoster';
+import { buildRoster, compactArrivalOrders } from '../utils/dispatchRoster';
 import { DEFAULT_BUILDING_CONFIG } from '../data/buildingData';
 
 // ─────────────────────────────────────────────
@@ -81,6 +81,13 @@ export interface SettingsContextValue {
   dispatchRoster:          DispatchRosterItem[];
   updateRosterArrival:     (id: string, secs: number, syncLinked?: boolean) => void;
   updateRosterOrder:       (id: string, order: number) => void;
+  /**
+   * 착대 이동 — 도착순서 카드의 드래그드롭 전용.
+   *
+   * 옮긴 뒤 빈 착대를 압축하고, **밀린 번호 대응을 돌려준다.** 호출부가 그걸로
+   * 체크리스트 영향 건수를 세어 경고한다(utils/dispatchRoster compactArrivalOrders).
+   */
+  moveRosterToOrder:       (id: string, order: number) => Map<number, number>;
   updateRosterPrefix:      (id: string, prefix: string) => void;
 
   // ── 구조대상자 생성 설정 ──────────────────────
@@ -373,6 +380,21 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (item.linkedTo === id)   return { ...item, arrivalOrder: order }; // 연동 차량 자동 동기화
       return item;
     }));
+  }, []);
+
+  const moveRosterToOrder = useCallback((id: string, order: number) => {
+    let remap = new Map<number, number>();
+    setDispatchRoster(prev => {
+      const moved = prev.map(item => {
+        if (item.id === id)       return { ...item, arrivalOrder: order };
+        if (item.linkedTo === id) return { ...item, arrivalOrder: order };  // 연동 차량 동반
+        return item;
+      });
+      const r = compactArrivalOrders(moved);
+      remap = r.remap;
+      return r.roster;
+    });
+    return remap;
   }, []);
 
   const updateRosterPrefix = useCallback((id: string, prefix: string) => {
@@ -720,7 +742,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       eventSetup, addEventSetupItem, updateEventSetupItem, removeEventSetupItem,
       dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
       addDispatchExtraUnit, removeDispatchExtraUnit,
-      dispatchRoster, updateRosterArrival, updateRosterOrder, updateRosterPrefix,
+      dispatchRoster, updateRosterArrival, updateRosterOrder, updateRosterPrefix, moveRosterToOrder,
       victimSetup, addVictimSetupItem, updateVictimSetupItem, removeVictimSetupItem,
       hydrantSetup, addHydrantSetupItem, updateHydrantSetupItem, removeHydrantSetupItem,
       fireSuppressionConfig, updateFireSuppressionConfig,

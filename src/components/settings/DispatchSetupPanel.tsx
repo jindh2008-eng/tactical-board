@@ -51,15 +51,11 @@ const VEHICLE_SLOTS: (SlotDef & { key: keyof DispatchSetup['vehicles'] })[] = [
   { key: 'rescueVehicle', label: '구조차', rosterType: 'rescue_vehicle' },
 ];
 
-/** 착대 옵션 (1~10) */
-const ORDER_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
-
 // ── 생성된 출동대 칩 ────────────────────────────
 
 interface UnitChipProps {
   item:     DispatchRosterItem;
   onPrefix: (id: string, prefix: string) => void;
-  onOrder:  (id: string, order: number) => void;
 }
 
 /**
@@ -72,7 +68,7 @@ interface UnitChipProps {
  * 색은 훈련모드 토큰과 같은 계열이다. 설정에서 만든 것이 훈련 화면에서 다른
  * 색으로 나오면 같은 대인지 알 수 없다.
  */
-function UnitChip({ item, onPrefix, onOrder }: UnitChipProps) {
+function UnitChip({ item, onPrefix }: UnitChipProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
 
@@ -116,24 +112,6 @@ function UnitChip({ item, onPrefix, onOrder }: UnitChipProps) {
         </button>
       )}
 
-      {/*
-        착대순서 — 토큰 **오른쪽**에 붙는다. "N착대" 가 아니라 숫자만 적는데,
-        열 제목 없이도 옆에 늘어선 값들이 서로 순서라는 것이 읽히고, 글자를
-        빼는 만큼 토큰이 이름을 더 보여줄 수 있기 때문이다.
-
-        **도착설정 방식과 무관하게 항상 보인다.** 착대는 도착 편성 그 자체이고,
-        시간설정은 "그 착대가 몇 분 뒤에 오는가" 를 더 정하는 것이라 착대를
-        먼저 정해야 성립한다. 예전에는 시간모드에서 이걸 숨겨서, 모드를 바꾸면
-        편성이 사라진 것처럼 보였다.
-      */}
-      <select
-        className="dsp__unit-order"
-        value={item.arrivalOrder}
-        onChange={e => onOrder(item.id, Number(e.target.value))}
-        aria-label={`${display} 착대순서`}
-      >
-        {ORDER_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
-      </select>
     </div>
   );
 }
@@ -200,7 +178,7 @@ export function DispatchSetupPanel() {
   const {
     dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
     addDispatchExtraUnit, removeDispatchExtraUnit,
-    dispatchRoster, updateRosterOrder, updateRosterPrefix,
+    dispatchRoster, updateRosterPrefix,
   } = useSettings();
   // extraUnits 는 직접 읽지 않는다 — 로스터가 이미 그것들을 담고 있고,
   // 착대순서는 로스터에만 있어서 로스터 쪽을 봐야 한 곳에서 다 나온다.
@@ -212,7 +190,7 @@ export function DispatchSetupPanel() {
   const unitsOf = (rosterType: string) =>
     dispatchRoster.filter(r => r.linkedTo === null && r.unitType === rosterType);
 
-  const chipProps = { onPrefix: updateRosterPrefix, onOrder: updateRosterOrder };
+  const chipProps = { onPrefix: updateRosterPrefix };
 
   function addCustom() {
     const t = customInput.trim();
@@ -322,11 +300,10 @@ export function DispatchSetupPanel() {
  * 부대명 접두사는 붙이지 않는다 — "시청" 은 그 자체가 이름이다.
  */
 function ExtraChip({
-  item, onOrder, onRemove,
+  item, onRemove,
 }: {
   item: DispatchRosterItem;
   onPrefix: (id: string, prefix: string) => void;
-  onOrder: (id: string, order: number) => void;
   onRemove: (id: string) => void;
 }) {
   return (
@@ -334,14 +311,6 @@ function ExtraChip({
       <span className={`dsp__unit-name dsp__unit-name--${unitTone(item.unitType)} dsp__unit-name--static`}>
         {item.name}
       </span>
-      <select
-        className="dsp__unit-order"
-        value={item.arrivalOrder}
-        onChange={e => onOrder(item.id, Number(e.target.value))}
-        aria-label={`${item.name} 착대순서`}
-      >
-        {ORDER_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
-      </select>
       <SetIconButton
         size="sm"
         variant="danger"

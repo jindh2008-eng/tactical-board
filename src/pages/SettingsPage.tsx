@@ -2,7 +2,7 @@ import { useEffect, useState }   from 'react';
 import { useSettings }           from '../store/settingsStore';
 import { BuildingConfigPanel }   from '../components/building/BuildingConfigPanel';
 import { BuildingPreview }       from '../components/building/BuildingPreview';
-import { SetCard }               from '../components/settings/ui';
+import { SetCard, SetToast }     from '../components/settings/ui';
 import { SettingsLibraryPanel }  from '../components/settings/SettingsLibraryPanel';
 import { HydrantSetupPanel }     from '../components/settings/HydrantSetupPanel';
 import { DispatchSetupPanel }    from '../components/settings/DispatchSetupPanel';
@@ -142,6 +142,9 @@ export function SettingsPage() {
    * 뜨므로 처음부터 펼쳐 두면 편집 화면을 가린다. 이펙트로 처리하지 않는 이유는
    * 첫 렌더에 펼쳐졌다가 접히는 깜빡임을 만들지 않기 위해서다.
    */
+  /** 착대 압축 알림 — 번호가 밀렸을 때만 뜬다 */
+  const [compactNotice, setCompactNotice] = useState<string | null>(null);
+
   const [railOpen, setRailOpen] = useState(
     () => typeof window === 'undefined' || window.matchMedia('(min-width: 1850px)').matches,
   );
@@ -164,6 +167,7 @@ export function SettingsPage() {
     arrivalMode,
     updateArrivalMode,
     updateRosterArrival,
+    moveRosterToOrder,
     victimSetup,
     checklistConfig,
     isDirty,
@@ -181,6 +185,34 @@ export function SettingsPage() {
   const { done, total, firstWarning } = summarizeReadiness(readiness);
   const meta = SECTION_META[section];
   const checklistItemCount = checklistConfig.sections.reduce((n, s) => n + s.items.length, 0);
+
+  /*
+   * 착대 이동 — 옮긴 뒤 빈 착대가 압축되면 번호가 밀린다.
+   *
+   * 체크리스트의 도착 항목은 착대 **번호**를 저장하므로(ChecklistItem.arrivalOrder),
+   * 밀리면 그 항목이 다른 편성을 가리키게 된다. 체크리스트를 자동으로 고치지는
+   * 않는다 — 설정모드가 다른 화면의 데이터를 조용히 바꾸면 되돌릴 수 없다.
+   * 대신 **몇 개가 영향을 받는지 알리고** 판단은 사람이 한다.
+   */
+  const handleMoveOrder = (id: string, order: number) => {
+    const remap = moveRosterToOrder(id, order);
+    if (remap.size === 0) { setCompactNotice(null); return; }
+
+    const affected = checklistConfig.sections
+      .flatMap(sec => sec.items)
+      .filter(it => it.arrivalOrder != null && remap.has(it.arrivalOrder))
+      .length;
+
+    const shifted = [...remap.entries()]
+      .map(([from, to]) => `${from}→${to}`)
+      .join(' · ');
+
+    setCompactNotice(
+      affected > 0
+        ? `빈 착대를 정리했습니다 (${shifted}). 체크리스트 도착 항목 ${affected}개가 이전과 다른 편성을 가리킵니다 — 확인이 필요합니다.`
+        : `빈 착대를 정리했습니다 (${shifted}).`
+    );
+  };
 
   const renderItem = (item: NavItem) => {
     const r = READINESS_KEY[item.key] && readiness[READINESS_KEY[item.key]!];
@@ -385,9 +417,17 @@ export function SettingsPage() {
                       ))}
                     </div>
                   </div>
+                  {compactNotice && (
+                    <SetToast
+                      text={compactNotice}
+                      actionLabel="닫기"
+                      onAction={() => setCompactNotice(null)}
+                    />
+                  )}
                   <DispatchArrivalAside
                     roster={dispatchRoster}
                     arrivalMode={arrivalMode}
+                    onMoveOrder={handleMoveOrder}
                     onOrderTime={(order, minutes) => {
                       // 같은 착대는 함께 오는 것이 정의라 그 착대 전부에 같은 값을 쓴다
                       for (const item of dispatchRoster) {

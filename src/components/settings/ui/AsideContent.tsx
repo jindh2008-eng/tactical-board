@@ -6,6 +6,7 @@
  * 열을 안 그리는 쪽이 낫다. 건물의 "단면 축소 미리보기"는 BuildingConfigPanel의
  * SVG 렌더를 그대로 복제해야 해서 규모가 크다 — S-5 이후로 남겨 둔다.
  */
+import { useState } from 'react';
 import type { DispatchRosterItem, VictimSetupItem } from '../../../types/settings';
 import type { VictimFace } from '../../../types/victim';
 import { VICTIM_FACES } from '../../../types/victim';
@@ -31,13 +32,17 @@ import { PersonIcon } from './PersonIcon';
 const ARRIVAL_MINUTES = Array.from({ length: 30 }, (_, i) => i + 1);
 
 export function DispatchArrivalAside({
-  roster, arrivalMode = 'order', onOrderTime,
+  roster, arrivalMode = 'order', onOrderTime, onMoveOrder,
 }: {
   roster: DispatchRosterItem[];
   arrivalMode?: ArrivalMode;
   /** 착대 하나의 시간을 정한다(분). 시간설정 모드에서만 쓴다 */
   onOrderTime?: (order: number, minutes: number) => void;
+  /** 대 하나를 다른 착대로 옮긴다. 없으면 드래그가 꺼진다 */
+  onMoveOrder?: (id: string, order: number) => void;
 }) {
+  const [overOrder, setOverOrder] = useState<number | null>(null);
+
   if (roster.length === 0) {
     return <p className="set-aside__empty">등록된 출동대가 없습니다.</p>;
   }
@@ -52,43 +57,86 @@ export function DispatchArrivalAside({
     if (bucket) bucket.push(item);
     else groups.set(order, [item]);
   }
-  const orders = [...groups.keys()].sort((a, b) => a - b);
+
+  /*
+   * 1..max 를 **연속으로** 그린다. 있는 착대만 그리면 빈 착대가 목록에서
+   * 사라져 끌어다 놓을 자리가 없어진다. 압축이 빈 착대를 없애 주므로
+   * 보통은 빈 줄이 생기지 않지만, 연동 펌프만 남은 착대처럼 예외가 있다.
+   */
+  const maxOrder = Math.max(0, ...groups.keys());
+  const orders = Array.from({ length: maxOrder }, (_, i) => i + 1);
 
   /** 그 착대의 대표 시간(분) — 같은 착대는 값이 같으므로 첫 항목을 본다 */
-  const minutesOf = (order: number) =>
-    Math.max(1, Math.round((groups.get(order)![0].arrivalSec || 60) / 60));
+  const minutesOf = (order: number) => {
+    const first = groups.get(order)?.[0];
+    return Math.max(1, Math.round((first?.arrivalSec || 60) / 60));
+  };
 
-  return (
-    <ol className="set-arrival">
-      {orders.map(order => (
-        <li key={order} className="set-arrival__row">
-          <div className="set-arrival__head">
-            <span className="set-arrival__order">{order}착대</span>
-            {arrivalMode === 'time' && onOrderTime && (
-              <select
-                className="set-arrival__time"
-                value={minutesOf(order)}
-                onChange={e => onOrderTime(order, Number(e.target.value))}
-                aria-label={`${order}착대 도착 시간`}
-              >
-                {ARRIVAL_MINUTES.map(m => (
-                  <option key={m} value={m}>{m}분후</option>
-                ))}
-              </select>
-            )}
-          </div>
-          <div className="set-arrival__units">
-            {groups.get(order)!.map(item => (
+  const dropProps = (order: number) => onMoveOrder && {
+    onDragOver: (e: React.DragEvent) => {
+      e.preventDefault();                    // 없으면 drop 이 조용히 안 걸린다
+      e.dataTransfer.dropEffect = 'move';
+      setOverOrder(order);
+    },
+    onDragLeave: () => setOverOrder(o => (o === order ? null : o)),
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      setOverOrder(null);
+      const id = e.dataTransfer.getData('text/plain');
+      if (id) onMoveOrder(id, order);
+    },
+  };
+
+  const row = (order: number, isNew = false) => (
+    <li
+      key={isNew ? 'new' : order}
+      className={[
+        'set-arrival__row',
+        isNew ? 'set-arrival__row--new' : '',
+        overOrder === order ? 'set-arrival__row--over' : '',
+      ].filter(Boolean).join(' ')}
+      {...dropProps(order)}
+    >
+      <div className="set-arrival__head">
+        <span className="set-arrival__order">{order}착대</span>
+        {!isNew && arrivalMode === 'time' && onOrderTime && (
+          <select
+            className="set-arrival__time"
+            value={minutesOf(order)}
+            onChange={e => onOrderTime(order, Number(e.target.value))}
+            aria-label={`${order}착대 도착 시간`}
+          >
+            {ARRIVAL_MINUTES.map(m => <option key={m} value={m}>{m}분후</option>)}
+          </select>
+        )}
+      </div>
+      <div className="set-arrival__units">
+        {isNew
+          ? <span className="set-arrival__hint">여기로 끌어다 놓으면 착대가 하나 늘어납니다</span>
+          : (groups.get(order) ?? []).map(item => (
               <span
                 key={item.id}
                 className={`set-arrival__unit set-arrival__unit--${unitTone(item.unitType)}`}
+                draggable={Boolean(onMoveOrder)}
+                onDragStart={e => {
+                  e.dataTransfer.setData('text/plain', item.id);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragEnd={() => setOverOrder(null)}
+                title={onMoveOrder ? '끌어서 다른 착대로 옮깁니다' : undefined}
               >
                 {computeRosterDisplayName(item)}
               </span>
             ))}
-          </div>
-        </li>
-      ))}
+      </div>
+    </li>
+  );
+
+  return (
+    <ol className="set-arrival">
+      {orders.map(o => row(o))}
+      {/* 착대 추가 — 마지막 다음 자리. 끌어다 놓으면 그 번호가 생긴다 */}
+      {onMoveOrder && row(maxOrder + 1, true)}
     </ol>
   );
 }
