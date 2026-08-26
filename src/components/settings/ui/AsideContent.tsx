@@ -32,9 +32,11 @@ import { PersonIcon } from './PersonIcon';
 const ARRIVAL_MINUTES = Array.from({ length: 30 }, (_, i) => i + 1);
 
 export function DispatchArrivalAside({
-  roster, arrivalMode = 'order', onOrderTime, onMoveOrder,
+  roster, arrivalMode = 'order', onOrderTime, onMoveOrder, showPumps = false,
 }: {
   roster: DispatchRosterItem[];
+  /** 진단용 — 연동 펌프를 착대 목록에 함께 그린다 */
+  showPumps?: boolean;
   arrivalMode?: ArrivalMode;
   /** 착대 하나의 시간을 정한다(분). 시간설정 모드에서만 쓴다 */
   onOrderTime?: (order: number, minutes: number) => void;
@@ -51,7 +53,7 @@ export function DispatchArrivalAside({
   for (const item of roster) {
     // 연동 펌프는 그리지 않는다 — 생성 칸과 같은 규칙이다. 진압대를 따라
     // 같은 착대로 오므로 여기 적어도 정할 것이 없고, 줄만 두 배로 길어진다.
-    if (item.linkedTo !== null) continue;
+    if (!showPumps && item.linkedTo !== null) continue;
     const order = item.arrivalOrder ?? 1;
     const bucket = groups.get(order);
     if (bucket) bucket.push(item);

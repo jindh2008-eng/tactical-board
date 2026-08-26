@@ -112,6 +112,14 @@ export function buildRoster(
     const prevUnit = prevByName.get(unitEntry.name);
     const unitId   = prevUnit?.id ?? generateId();
     const prefix   = prevUnit?.unitPrefix;
+    /*
+     * 이 대의 착대를 먼저 확정한다. 딸린 펌프가 이 값을 물려받아야 하는데,
+     * 예전에는 펌프가 `prevUnit?.arrivalOrder ?? 1` 을 봤다 — 새로 만드는
+     * 순간에는 prevUnit 이 없으므로 **항상 1** 로 떨어졌다. 진압3 은 3착대인데
+     * 펌프3 은 1착대가 되는 식이다. 방금 계산한 이 값을 쓰면 맞는다.
+     */
+    const unitOrder = prevUnit?.arrivalOrder
+      ?? nextOrderFor(unitEntry.unitType, [...prevRoster, ...result]);
     result.push({
       id:           unitId,
       name:         unitEntry.name,
@@ -120,7 +128,7 @@ export function buildRoster(
       unitPrefix:   prefix,
       arrivalSec:   prevUnit?.arrivalSec   ?? 0,
       // 이미 있던 대는 그 값을 지킨다 — 사용자가 도착순서에서 옮겨 둔 것이다
-      arrivalOrder: prevUnit?.arrivalOrder ?? nextOrderFor(unitEntry.unitType, [...prevRoster, ...result]),
+      arrivalOrder: unitOrder,
     });
 
     if (vehEntry) {
@@ -132,7 +140,7 @@ export function buildRoster(
         linkedTo:     unitId,
         unitPrefix:   prefix,  // 부모와 동기화
         arrivalSec:   prevVeh?.arrivalSec   ?? (prevUnit?.arrivalSec ?? 0),
-        arrivalOrder: prevVeh?.arrivalOrder ?? (prevUnit?.arrivalOrder ?? 1),
+        arrivalOrder: prevVeh?.arrivalOrder ?? unitOrder,
       });
     }
   }

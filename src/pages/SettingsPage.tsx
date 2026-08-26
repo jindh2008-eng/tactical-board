@@ -146,6 +146,18 @@ export function SettingsPage() {
   /** 착대 압축 알림 — 번호가 밀렸을 때만 뜬다 */
   const [compactNotice, setCompactNotice] = useState<string | null>(null);
 
+  /*
+   * 진단용 — 연동 펌프를 생성 목록과 착대 목록에 함께 그린다.
+   *
+   * 평상시엔 숨긴다. 진압대 1대에 펌프 1대가 딸려 생성되므로 칸에 "진압대 1"
+   * 이라 적혀 있는데 아래에 둘이 보이면 숫자가 어긋난 것처럼 읽힌다.
+   * 켜는 이유는 펌프의 착대 번호가 진압대와 맞는지 눈으로 확인하기 위해서다.
+   *
+   * 지금은 **기본 켜짐**이다 — 펌프 착대가 진압대와 갈라지는 문제를 확인하는
+   * 중이라 그렇다. 확인이 끝나면 false 로 되돌리거나 토글째 걷어낸다.
+   */
+  const [showPumps, setShowPumps] = useState(true);
+
   const [railOpen, setRailOpen] = useState(
     () => typeof window === 'undefined' || window.matchMedia('(min-width: 1850px)').matches,
   );
@@ -394,7 +406,7 @@ export function SettingsPage() {
                   </div>
                 </div>
 
-                <DispatchSetupPanel />
+                <DispatchSetupPanel showPumps={showPumps} />
 
                 {/*
                   도착 순서 — 방식 선택을 이 카드 머리에 둔다.
@@ -418,6 +430,14 @@ export function SettingsPage() {
                           {m === 'order' ? '착대설정' : '시간설정'}
                         </label>
                       ))}
+                      <label className="settings-page__arrival-radio">
+                        <input
+                          type="checkbox"
+                          checked={showPumps}
+                          onChange={e => setShowPumps(e.target.checked)}
+                        />
+                        펌프 표시
+                      </label>
                     </div>
                   </div>
                   {compactNotice && (
@@ -430,6 +450,7 @@ export function SettingsPage() {
                   <DispatchArrivalAside
                     roster={dispatchRoster}
                     arrivalMode={arrivalMode}
+                    showPumps={showPumps}
                     onMoveOrder={handleMoveOrder}
                     onOrderTime={(order, minutes) => {
                       // 같은 착대는 함께 오는 것이 정의라 그 착대 전부에 같은 값을 쓴다

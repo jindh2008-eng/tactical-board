@@ -174,7 +174,7 @@ function Slot({ label, tone, value, onChange, children }: SlotProps) {
  * 따라가므로(updateRosterPrefix·moveRosterToOrder 가 linkedTo 에 전파) 숨겨도
  * 정할 것이 남지 않는다. 훈련모드에는 그대로 넘어간다.
  */
-export function DispatchSetupPanel() {
+export function DispatchSetupPanel({ showPumps = false }: { showPumps?: boolean }) {
   const {
     dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
     addDispatchExtraUnit, removeDispatchExtraUnit,
@@ -186,9 +186,19 @@ export function DispatchSetupPanel() {
 
   const [customInput, setCustomInput] = useState('');
 
-  /** 그 칸이 만든 출동대만 — 연동 차량(펌프)은 뺀다 */
-  const unitsOf = (rosterType: string) =>
-    dispatchRoster.filter(r => r.linkedTo === null && r.unitType === rosterType);
+  /**
+   * 그 칸이 만든 출동대만 — 연동 차량(펌프)은 뺀다.
+   *
+   * showPumps 는 **진단용**이다. 펌프를 자기 부대 바로 뒤에 끼워 넣어
+   * 착대 번호가 부대와 맞는지 눈으로 볼 수 있게 한다. 평상시엔 꺼 둔다 —
+   * 칸에 "진압대 1" 이라 적혀 있는데 아래에 둘이 보이면 숫자가 어긋난
+   * 것처럼 읽힌다.
+   */
+  const unitsOf = (rosterType: string) => {
+    const own = dispatchRoster.filter(r => r.linkedTo === null && r.unitType === rosterType);
+    if (!showPumps) return own;
+    return own.flatMap(u => [u, ...dispatchRoster.filter(r => r.linkedTo === u.id)]);
+  };
 
   const chipProps = { onPrefix: updateRosterPrefix };
 
