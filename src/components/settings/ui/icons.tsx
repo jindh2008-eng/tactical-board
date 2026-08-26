@@ -128,6 +128,25 @@ export function IconTrash({ size = 16 }: IconProps) {
   );
 }
 
+/**
+ * 채워진 휴지통 — 삭제 **확인 대기** 상태에만 쓴다.
+ *
+ * 같은 자리에서 윤곽선 → 채움으로 바뀌는 것이 「한 번 더 누르면 지워진다」를
+ * 말한다. 아이콘을 다른 그림으로 바꾸면 무엇을 하는 버튼인지 다시 읽어야 한다.
+ */
+export function IconTrashFilled({ size = 16 }: IconProps) {
+  return (
+    <svg {...svgProps(size)}>
+      <path d="M2.75 4.25h10.5" />
+      <path d="M6.25 4.25V2.75h3.5v1.5" />
+      <path
+        d="M4.25 4.25l.55 8.5a.5.5 0 0 0 .5.5h5.4a.5.5 0 0 0 .5-.5l.55-8.5z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 export function IconEdit({ size = 16 }: IconProps) {
   return (
     <svg {...svgProps(size)}>

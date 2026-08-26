@@ -399,6 +399,7 @@ export {
   IconMinus,
   IconClose,
   IconTrash,
+  IconTrashFilled,
   IconEdit,
   IconCheck,
   IconReset,

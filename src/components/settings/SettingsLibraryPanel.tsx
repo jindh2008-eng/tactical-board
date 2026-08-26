@@ -6,7 +6,7 @@ import {
   SetButton, SetMenu, SetMenuItem, SetMenuSeparator,
   SetStatusChip, SetToast, resolveSaveStatus,
   IconSave, IconCheck, IconChevronDown, IconChevronUp,
-  IconExport, IconImport, IconTrash, IconReset,
+  IconExport, IconImport, IconTrash, IconTrashFilled, IconReset,
 } from './ui';
 import './SettingsLibraryPanel.css';
 
@@ -57,6 +57,8 @@ export function SettingsLibraryPanel() {
 
   const [showList,    setShowList]    = useState(restoredCount !== null);
   const [listQuery,   setListQuery]   = useState('');
+  /** 삭제 확인 대기 중인 행. 한 번 더 눌러야 실제로 지운다 */
+  const [armedId,     setArmedId]     = useState<string | null>(null);
   const switcherRef = useRef<HTMLDivElement>(null);
   const [showSaveAs,  setShowSaveAs]  = useState(false);
   const [saveAsName,  setSaveAsName]  = useState('');
@@ -106,8 +108,12 @@ export function SettingsLibraryPanel() {
     };
   }, [showList]);
 
+  /*
+   * 확인 대화상자를 쓰지 않는다. 부르는 쪽이 이미 2단계로 확인을 받았고
+   * (휴지통 → 채워진 휴지통), 실수는 5초 되돌리기가 받는다. 대화상자는
+   * 흐름만 끊고 정작 사람은 읽지 않고 누른다.
+   */
   function requestDelete(set: SettingsSet) {
-    if (!window.confirm(`"${set.name}" 설정을 삭제하겠습니까?`)) return;
     setPendingDeletes(prev => new Map(prev).set(set.id, set));
     const timer = setTimeout(() => {
       deleteSettingsEntry(set.id);
@@ -251,17 +257,27 @@ export function SettingsLibraryPanel() {
                   <span className="slp__row-name">{set.name}</span>
                   <span className="slp__row-date">{set.updatedAt}</span>
                 </button>
-                <SetMenu label={`"${set.name}" 더보기`}>
-                  {close => (
-                    <SetMenuItem
-                      icon={<IconTrash size={14} />}
-                      danger
-                      onClick={() => { close(); requestDelete(set); }}
-                    >
-                      삭제
-                    </SetMenuItem>
-                  )}
-                </SetMenu>
+                {/*
+                  삭제는 **제자리 2단계**다. 메뉴를 띄우면 그 높이만큼 목록이
+                  밀려 스크롤이 생기고, 지우려던 행이 눈에서 사라진다.
+                  한 번 누르면 윤곽선 휴지통이 채워진 휴지통 + 위험색으로 바뀌고,
+                  그 상태에서 다시 눌러야 지워진다. 확인 대화상자를 쓰지 않는
+                  이유는 흐름을 끊기 때문이고, 실수는 뒤따르는 되돌리기 토스트가 받는다.
+                */}
+                <button
+                  type="button"
+                  className={`slp__row-del${armedId === set.id ? ' slp__row-del--armed' : ''}`}
+                  title={armedId === set.id ? '한 번 더 누르면 삭제됩니다' : '삭제'}
+                  aria-label={armedId === set.id
+                    ? `"${set.name}" 삭제 — 한 번 더 누르면 삭제됩니다`
+                    : `"${set.name}" 삭제`}
+                  onClick={() => {
+                    if (armedId === set.id) { setArmedId(null); requestDelete(set); }
+                    else setArmedId(set.id);
+                  }}
+                >
+                  {armedId === set.id ? <IconTrashFilled size={15} /> : <IconTrash size={15} />}
+                </button>
               </div>
             );
           })}
@@ -319,7 +335,7 @@ export function SettingsLibraryPanel() {
               aria-haspopup="listbox"
               aria-label={showList ? '시나리오 목록 닫기' : '시나리오 목록 열기'}
               title="다른 시나리오 열기"
-              onClick={() => { setShowList(v => !v); setListQuery(''); }}
+              onClick={() => { setShowList(v => !v); setListQuery(''); setArmedId(null); }}
             >
               {/*
                 개수를 함께 보인다. 라벨 없는 ▾ 하나만으로는 "뒤에 목록이 있다"가

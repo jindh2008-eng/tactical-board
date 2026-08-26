@@ -260,6 +260,45 @@
 
 .slp__row--active .slp__row-dot { background: var(--set-accent); }
 
+/*
+ * 행 삭제 — 제자리 2단계.
+ *
+ * 평소에는 본문색 휴지통이라 「지운다」가 바로 읽힌다(⋯ 은 무엇이 나올지
+ * 눌러 봐야 알았다). 확인 대기 상태에서 채워진 휴지통 + 위험색으로 바뀐다.
+ * 자리·크기는 두 상태가 같아야 한다 — 바뀌면 두 번째 클릭이 빗나간다.
+ */
+.slp__row-del {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--set-r-sm);
+  color: var(--set-text-body);
+  cursor: pointer;
+  transition: color 0.1s, background-color 0.1s, border-color 0.1s;
+}
+
+.slp__row-del:hover {
+  color: var(--set-danger);
+  background-color: color-mix(in srgb, var(--set-danger) 12%, transparent);
+}
+
+.slp__row-del:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: -2px;
+}
+
+/* 확인 대기 — 한 번 더 누르면 지워진다 */
+.slp__row-del--armed {
+  color: var(--set-danger);
+  background-color: color-mix(in srgb, var(--set-danger) 18%, transparent);
+  border-color: var(--set-danger);
+}
+
 .slp__row-name {
   flex: 1;
   min-width: 0;
