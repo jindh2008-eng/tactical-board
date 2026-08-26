@@ -2,6 +2,13 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+
+  /*
+   * 폭 상한 — 없으면 2560px 에서 줄이 늘어나 채움률이 40% 대로 떨어진다.
+   * 이 화면은 「이름 한 줄 + 버튼」 목록이라 표(--set-table-max)가 아니라
+   * 단순 목록 자를 쓴다. 근거는 SETTINGS_MODE_UX_PLAN.md §11.
+   */
+  max-width: var(--set-row-max);
 }
 
 .tag-preset-panel__group {
@@ -139,15 +146,27 @@
   border-color: var(--set-accent);
 }
 
+/*
+ * 간격 8px — 클릭 판정 때문이다.
+ *
+ * ::before 로 판정을 넓혀도 **이웃이 먼저 먹는다.** 간격 3px 이던 때 실측하면
+ * 세로 판정은 26px 인데 가로는 12px 였다 — 옆 스와치의 ::before 와 겹쳐
+ * 절반씩 잘렸다. 중심 간 거리가 17px 이라 WCAG 2.5.8 의 간격 예외
+ * (24px 원이 서로 겹치지 않을 것)도 못 넘겼다.
+ *
+ * 점 크기를 키우는 대신 간격을 벌린다 — 팔레트 생김새는 그대로 두고
+ * 중심 간 거리를 24px 로 만든다. 점이 14px 이므로 간격은 10px 이다
+ * (8px 로는 22px 이 되어 모자랐다 — 실측으로 확인했다).
+ */
 .tag-preset-panel__color-swatches {
   display: flex;
-  gap: 3px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
 /*
  * 14px 원형 그대로 둔다 — 5색 스와치를 24px 원으로 키우면 팔레트가 아니라
- * 점 무더기가 된다. 대신 ::before 로 클릭 판정 영역만 24×24 로 넓힌다
+ * 점 무더기가 된다. 대신 ::before 로 클릭 판정 영역만 넓힌다
  * (--set-h-btn-sm 의 표 안 인라인 버튼과 같은 패턴, §5.1).
  */
 .tag-preset-panel__swatch-btn {
@@ -161,10 +180,14 @@
   transition: border-color 0.12s, transform 0.1s;
 }
 
+/*
+ * 가로는 -5px 다. 간격이 10px 이므로 이웃과 정확히 5px 씩 나눠 가져
+ * 겹치지 않는다 — 더 넓히면 다시 서로 먹는다. 세로는 이웃이 없어 -6px.
+ */
 .tag-preset-panel__swatch-btn::before {
   content: "";
   position: absolute;
-  inset: -6px;
+  inset: -6px -5px;
 }
 
 .tag-preset-panel__swatch-btn:hover {

@@ -10,6 +10,13 @@
   flex-direction: column;
   gap: 18px;
 
+  /*
+   * 폭 상한 — 없으면 2560px 에서 줄이 늘어나 채움률이 40% 대로 떨어진다.
+   * 이 화면은 「이름 한 줄 + 버튼」 목록이라 표(--set-table-max)가 아니라
+   * 단순 목록 자를 쓴다. 근거는 SETTINGS_MODE_UX_PLAN.md §11.
+   */
+  max-width: var(--set-row-max);
+
   /* 훈련모드에서 새어 들어오는 --ctr-* 값을 명시적으로 되돌린다 */
   background-color: transparent;
   border: none;

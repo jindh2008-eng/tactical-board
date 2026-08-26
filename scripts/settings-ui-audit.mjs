@@ -158,6 +158,19 @@ function measure({ minTargetPx }) {
         return { w: r.width - l - rt, h: r.height - t - b, raw: r };
       }
     }
+    /*
+     * <label> 이 감싼 체크박스·라디오는 **라벨 전체가 타깃**이다.
+     * 네이티브 체크박스는 어느 브라우저에서나 13×13 이라, input 상자만 재면
+     * 라벨을 아무리 키워도 영원히 위반으로 남는다 — 실제로는 글자를 눌러도
+     * 켜진다. WCAG 2.5.8 이 재는 것은 「활성화되는 영역」이다.
+     */
+    if (el.tagName === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) {
+      const label = el.closest('label');
+      if (label) {
+        const lr = label.getBoundingClientRect();
+        if (lr.width > 0 && lr.height > 0) return { w: lr.width, h: lr.height, raw: lr };
+      }
+    }
     return { w: r.width, h: r.height, raw: r };
   };
 

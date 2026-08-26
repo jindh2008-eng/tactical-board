@@ -1,6 +1,6 @@
 {
   "url": "http://localhost:5174",
-  "at": "2026-08-26T01:04:17.577Z",
+  "at": "2026-08-26T06:35:49.217Z",
   "widths": [
     1280,
     1800,
@@ -25,9 +25,9 @@
     "건물 · 소방시설": {
       "1280": {
         "fontSizes": {
-          "14.00": 172,
-          "12.00": 14,
-          "16.00": 148,
+          "14.00": 170,
+          "12.00": 15,
+          "16.00": 89,
           "18.00": 7,
           "24.00": 1
         },
@@ -63,12 +63,12 @@
         "minRowFillPct": 22.6,
         "medianRowFillPct": 94.5,
         "distinctFontSizes": 5,
-        "controls": 208,
+        "controls": 207,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 216,
+            "count": 209,
             "minRatio": 3.13,
             "maxRatio": 3.46
           },
@@ -123,50 +123,50 @@
       },
       "1800": {
         "fontSizes": {
-          "14.00": 172,
-          "12.00": 14,
-          "16.00": 148,
+          "14.00": 170,
+          "12.00": 15,
+          "16.00": 89,
           "18.00": 7,
           "24.00": 1
         },
         "minFontPx": 12,
-        "rowCount": 20,
+        "rowCount": 14,
         "worstRows": [
-          {
-            "sel": ".bcf__ratio-row",
-            "w": 918,
-            "pct": 14.4
-          },
-          {
-            "sel": ".set-card__head",
-            "w": 918,
-            "pct": 16.9
-          },
           {
             "sel": ".set-card__head",
             "w": 438,
             "pct": 22.6
           },
           {
-            "sel": ".bpv__cell-inner",
-            "w": 396,
-            "pct": 24.3
+            "sel": ".set-card__head",
+            "w": 438,
+            "pct": 26.7
           },
           {
-            "sel": ".bpv__cell-inner",
-            "w": 396,
-            "pct": 24.3
+            "sel": ".bcf__ratio-row",
+            "w": 482,
+            "pct": 27.4
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 482,
+            "pct": 32.2
+          },
+          {
+            "sel": ".bcf__toggle",
+            "w": 438,
+            "pct": 33.4
           }
         ],
-        "minRowFillPct": 14.4,
-        "medianRowFillPct": 42.4,
+        "minRowFillPct": 22.6,
+        "medianRowFillPct": 94.5,
         "distinctFontSizes": 5,
-        "controls": 208,
+        "controls": 207,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 216,
+            "count": 209,
             "minRatio": 3.13,
             "maxRatio": 3.46
           },
@@ -221,50 +221,50 @@
       },
       "2560": {
         "fontSizes": {
-          "14.00": 171,
-          "12.00": 14,
-          "16.00": 148,
+          "14.00": 169,
+          "12.00": 15,
+          "16.00": 89,
           "18.00": 7,
           "24.00": 1
         },
         "minFontPx": 12,
-        "rowCount": 20,
+        "rowCount": 14,
         "worstRows": [
           {
-            "sel": ".bcf__ratio-row",
-            "w": 1078,
-            "pct": 12.3
+            "sel": ".set-card__head",
+            "w": 438,
+            "pct": 22.6
           },
           {
             "sel": ".set-card__head",
-            "w": 1078,
-            "pct": 14.4
+            "w": 438,
+            "pct": 26.7
           },
           {
-            "sel": ".bpv__cell-inner",
-            "w": 470.6,
-            "pct": 20.5
+            "sel": ".bcf__ratio-row",
+            "w": 482,
+            "pct": 27.4
           },
           {
-            "sel": ".bpv__cell-inner",
-            "w": 470.6,
-            "pct": 20.5
+            "sel": ".set-card__head",
+            "w": 482,
+            "pct": 32.2
           },
           {
-            "sel": ".bpv__cell-inner",
-            "w": 470.6,
-            "pct": 20.5
+            "sel": ".bcf__toggle",
+            "w": 438,
+            "pct": 33.4
           }
         ],
-        "minRowFillPct": 12.3,
-        "medianRowFillPct": 35.6,
+        "minRowFillPct": 22.6,
+        "medianRowFillPct": 94.5,
         "distinctFontSizes": 5,
-        "controls": 208,
+        "controls": 207,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 216,
+            "count": 209,
             "minRatio": 3.13,
             "maxRatio": 3.46
           },
@@ -321,9 +321,9 @@
     "현장요소": {
       "1280": {
         "fontSizes": {
-          "14.00": 189,
-          "12.00": 7,
-          "16.00": 145,
+          "14.00": 187,
+          "12.00": 8,
+          "16.00": 86,
           "18.00": 9,
           "24.00": 1
         },
@@ -359,12 +359,12 @@
         "minRowFillPct": 8.1,
         "medianRowFillPct": 95.3,
         "distinctFontSizes": 5,
-        "controls": 213,
+        "controls": 212,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 290,
+            "count": 283,
             "minRatio": 2.98,
             "maxRatio": 3.48
           },
@@ -394,9 +394,9 @@
       },
       "1800": {
         "fontSizes": {
-          "14.00": 189,
-          "12.00": 7,
-          "16.00": 145,
+          "14.00": 187,
+          "12.00": 8,
+          "16.00": 86,
           "18.00": 9,
           "24.00": 1
         },
@@ -432,12 +432,12 @@
         "minRowFillPct": 10.7,
         "medianRowFillPct": 93.9,
         "distinctFontSizes": 5,
-        "controls": 213,
+        "controls": 212,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 290,
+            "count": 283,
             "minRatio": 2.98,
             "maxRatio": 3.48
           },
@@ -467,9 +467,9 @@
       },
       "2560": {
         "fontSizes": {
-          "14.00": 188,
-          "12.00": 7,
-          "16.00": 145,
+          "14.00": 186,
+          "12.00": 8,
+          "16.00": 86,
           "18.00": 9,
           "24.00": 1
         },
@@ -505,12 +505,12 @@
         "minRowFillPct": 9.6,
         "medianRowFillPct": 94.5,
         "distinctFontSizes": 5,
-        "controls": 213,
+        "controls": 212,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 290,
+            "count": 283,
             "minRatio": 2.98,
             "maxRatio": 3.48
           },
@@ -542,9 +542,9 @@
     "구조대상자": {
       "1280": {
         "fontSizes": {
-          "14.00": 190,
-          "12.00": 9,
-          "16.00": 144,
+          "14.00": 188,
+          "12.00": 10,
+          "16.00": 85,
           "18.00": 18,
           "24.00": 1,
           "15.00": 2
@@ -581,12 +581,12 @@
         "minRowFillPct": 3.5,
         "medianRowFillPct": 94.4,
         "distinctFontSizes": 6,
-        "controls": 290,
+        "controls": 289,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 449,
+            "count": 442,
             "minRatio": 3.13,
             "maxRatio": 3.46
           },
@@ -636,9 +636,9 @@
       },
       "1800": {
         "fontSizes": {
-          "14.00": 190,
-          "12.00": 9,
-          "16.00": 144,
+          "14.00": 188,
+          "12.00": 10,
+          "16.00": 85,
           "18.00": 18,
           "24.00": 1,
           "15.00": 2
@@ -675,12 +675,12 @@
         "minRowFillPct": 5.2,
         "medianRowFillPct": 93.1,
         "distinctFontSizes": 6,
-        "controls": 290,
+        "controls": 289,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 449,
+            "count": 442,
             "minRatio": 3.13,
             "maxRatio": 3.46
           },
@@ -730,9 +730,9 @@
       },
       "2560": {
         "fontSizes": {
-          "14.00": 189,
-          "12.00": 9,
-          "16.00": 144,
+          "14.00": 187,
+          "12.00": 10,
+          "16.00": 85,
           "18.00": 18,
           "24.00": 1,
           "15.00": 2
@@ -769,12 +769,12 @@
         "minRowFillPct": 5.2,
         "medianRowFillPct": 94.3,
         "distinctFontSizes": 6,
-        "controls": 290,
+        "controls": 289,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 449,
+            "count": 442,
             "minRatio": 3.13,
             "maxRatio": 3.46
           },
@@ -826,14 +826,14 @@
     "출동대": {
       "1280": {
         "fontSizes": {
-          "14.00": 223,
-          "12.00": 4,
-          "16.00": 164,
+          "14.00": 238,
+          "12.00": 5,
+          "16.00": 105,
           "18.00": 7,
           "24.00": 1
         },
         "minFontPx": 12,
-        "rowCount": 27,
+        "rowCount": 31,
         "worstRows": [
           {
             "sel": ".settings-page__card-head",
@@ -848,28 +848,28 @@
           {
             "sel": ".set-arrival__row",
             "w": 902,
-            "pct": 14.1
+            "pct": 20.7
+          },
+          {
+            "sel": ".settings-page__timing-row",
+            "w": 902,
+            "pct": 24.1
           },
           {
             "sel": ".set-arrival__row",
             "w": 902,
-            "pct": 20.7
-          },
-          {
-            "sel": ".set-arrival__row",
-            "w": 902,
-            "pct": 20.7
+            "pct": 27.4
           }
         ],
         "minRowFillPct": 12.4,
-        "medianRowFillPct": 53.2,
+        "medianRowFillPct": 88.3,
         "distinctFontSizes": 5,
-        "controls": 257,
+        "controls": 265,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 327,
+            "count": 320,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -893,6 +893,11 @@
             "minRatio": 3.28,
             "maxRatio": 3.28
           },
+          "rgb(122, 95, 44)": {
+            "count": 112,
+            "minRatio": 3.07,
+            "maxRatio": 3.07
+          },
           "rgb(249, 168, 37)": {
             "count": 8,
             "minRatio": 9.35,
@@ -902,11 +907,6 @@
             "count": 48,
             "minRatio": 3.59,
             "maxRatio": 3.59
-          },
-          "rgb(122, 95, 44)": {
-            "count": 48,
-            "minRatio": 3.07,
-            "maxRatio": 3.07
           },
           "rgb(114, 89, 173)": {
             "count": 56,
@@ -929,14 +929,14 @@
       },
       "1800": {
         "fontSizes": {
-          "14.00": 223,
-          "12.00": 4,
-          "16.00": 164,
+          "14.00": 238,
+          "12.00": 5,
+          "16.00": 105,
           "18.00": 7,
           "24.00": 1
         },
         "minFontPx": 12,
-        "rowCount": 27,
+        "rowCount": 31,
         "worstRows": [
           {
             "sel": ".settings-page__card-head",
@@ -951,28 +951,28 @@
           {
             "sel": ".set-arrival__row",
             "w": 986,
-            "pct": 12.9
+            "pct": 19
+          },
+          {
+            "sel": ".settings-page__timing-row",
+            "w": 986,
+            "pct": 22
           },
           {
             "sel": ".set-arrival__row",
             "w": 986,
-            "pct": 19
-          },
-          {
-            "sel": ".set-arrival__row",
-            "w": 986,
-            "pct": 19
+            "pct": 25.1
           }
         ],
         "minRowFillPct": 11.4,
-        "medianRowFillPct": 48.7,
+        "medianRowFillPct": 88.3,
         "distinctFontSizes": 5,
-        "controls": 257,
+        "controls": 265,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 327,
+            "count": 320,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -996,6 +996,11 @@
             "minRatio": 3.28,
             "maxRatio": 3.28
           },
+          "rgb(122, 95, 44)": {
+            "count": 112,
+            "minRatio": 3.07,
+            "maxRatio": 3.07
+          },
           "rgb(249, 168, 37)": {
             "count": 8,
             "minRatio": 9.35,
@@ -1005,11 +1010,6 @@
             "count": 48,
             "minRatio": 3.59,
             "maxRatio": 3.59
-          },
-          "rgb(122, 95, 44)": {
-            "count": 48,
-            "minRatio": 3.07,
-            "maxRatio": 3.07
           },
           "rgb(114, 89, 173)": {
             "count": 56,
@@ -1032,14 +1032,14 @@
       },
       "2560": {
         "fontSizes": {
-          "14.00": 222,
-          "12.00": 4,
-          "16.00": 164,
+          "14.00": 237,
+          "12.00": 5,
+          "16.00": 105,
           "18.00": 7,
           "24.00": 1
         },
         "minFontPx": 12,
-        "rowCount": 27,
+        "rowCount": 31,
         "worstRows": [
           {
             "sel": ".settings-page__card-head",
@@ -1054,28 +1054,28 @@
           {
             "sel": ".set-arrival__row",
             "w": 986,
-            "pct": 12.9
+            "pct": 19
+          },
+          {
+            "sel": ".settings-page__timing-row",
+            "w": 986,
+            "pct": 22
           },
           {
             "sel": ".set-arrival__row",
             "w": 986,
-            "pct": 19
-          },
-          {
-            "sel": ".set-arrival__row",
-            "w": 986,
-            "pct": 19
+            "pct": 25.1
           }
         ],
         "minRowFillPct": 11.4,
-        "medianRowFillPct": 48.7,
+        "medianRowFillPct": 88.3,
         "distinctFontSizes": 5,
-        "controls": 257,
+        "controls": 265,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 327,
+            "count": 320,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -1099,6 +1099,11 @@
             "minRatio": 3.28,
             "maxRatio": 3.28
           },
+          "rgb(122, 95, 44)": {
+            "count": 112,
+            "minRatio": 3.07,
+            "maxRatio": 3.07
+          },
           "rgb(249, 168, 37)": {
             "count": 8,
             "minRatio": 9.35,
@@ -1108,11 +1113,6 @@
             "count": 48,
             "minRatio": 3.59,
             "maxRatio": 3.59
-          },
-          "rgb(122, 95, 44)": {
-            "count": 48,
-            "minRatio": 3.07,
-            "maxRatio": 3.07
           },
           "rgb(114, 89, 173)": {
             "count": 56,
@@ -1137,9 +1137,9 @@
     "시나리오 예측": {
       "1280": {
         "fontSizes": {
-          "14.00": 132,
-          "12.00": 7,
-          "16.00": 142,
+          "14.00": 130,
+          "12.00": 8,
+          "16.00": 83,
           "18.00": 7,
           "10.20": 53,
           "10.80": 7,
@@ -1183,7 +1183,7 @@
         "minRowFillPct": 9.5,
         "medianRowFillPct": 95.6,
         "distinctFontSizes": 13,
-        "controls": 220,
+        "controls": 219,
         "smallTargets": [
           {
             "tag": "button",
@@ -1418,7 +1418,7 @@
         ],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 153,
+            "count": 146,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -1453,9 +1453,9 @@
       },
       "1800": {
         "fontSizes": {
-          "14.00": 132,
-          "12.00": 7,
-          "16.00": 142,
+          "14.00": 130,
+          "12.00": 8,
+          "16.00": 83,
           "18.00": 7,
           "10.20": 53,
           "10.80": 7,
@@ -1499,7 +1499,7 @@
         "minRowFillPct": 5.3,
         "medianRowFillPct": 97.6,
         "distinctFontSizes": 13,
-        "controls": 220,
+        "controls": 219,
         "smallTargets": [
           {
             "tag": "button",
@@ -1734,7 +1734,7 @@
         ],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 153,
+            "count": 146,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -1769,9 +1769,9 @@
       },
       "2560": {
         "fontSizes": {
-          "14.00": 132,
-          "12.00": 7,
-          "16.00": 142,
+          "14.00": 130,
+          "12.00": 8,
+          "16.00": 83,
           "18.00": 7,
           "10.20": 53,
           "10.80": 7,
@@ -1815,7 +1815,7 @@
         "minRowFillPct": 3.2,
         "medianRowFillPct": 98.5,
         "distinctFontSizes": 13,
-        "controls": 220,
+        "controls": 219,
         "smallTargets": [
           {
             "tag": "button",
@@ -2050,7 +2050,7 @@
         ],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 153,
+            "count": 146,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2087,9 +2087,9 @@
     "지휘절차": {
       "1280": {
         "fontSizes": {
-          "14.00": 195,
-          "12.00": 26,
-          "16.00": 146,
+          "14.00": 193,
+          "12.00": 27,
+          "16.00": 87,
           "18.00": 7,
           "24.00": 1
         },
@@ -2125,12 +2125,12 @@
         "minRowFillPct": 35.1,
         "medianRowFillPct": 96.3,
         "distinctFontSizes": 5,
-        "controls": 261,
+        "controls": 260,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 242,
+            "count": 235,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2160,9 +2160,9 @@
       },
       "1800": {
         "fontSizes": {
-          "14.00": 195,
-          "12.00": 26,
-          "16.00": 146,
+          "14.00": 193,
+          "12.00": 27,
+          "16.00": 87,
           "18.00": 7,
           "24.00": 1
         },
@@ -2198,12 +2198,12 @@
         "minRowFillPct": 35.1,
         "medianRowFillPct": 96.3,
         "distinctFontSizes": 5,
-        "controls": 261,
+        "controls": 260,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 242,
+            "count": 235,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2233,9 +2233,9 @@
       },
       "2560": {
         "fontSizes": {
-          "14.00": 194,
-          "12.00": 26,
-          "16.00": 146,
+          "14.00": 192,
+          "12.00": 27,
+          "16.00": 87,
           "18.00": 7,
           "24.00": 1
         },
@@ -2271,12 +2271,12 @@
         "minRowFillPct": 35.1,
         "medianRowFillPct": 96.3,
         "distinctFontSizes": 5,
-        "controls": 261,
+        "controls": 260,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 242,
+            "count": 235,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2308,9 +2308,9 @@
     "상태 메시지": {
       "1280": {
         "fontSizes": {
-          "14.00": 183,
-          "12.00": 13,
-          "16.00": 142,
+          "14.00": 181,
+          "12.00": 14,
+          "16.00": 83,
           "18.00": 7,
           "24.00": 1
         },
@@ -2319,29 +2319,29 @@
         "worstRows": [
           {
             "sel": ".unit-status-panel__types",
-            "w": 936,
-            "pct": 72.6
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".unit-status-panel__types",
-            "w": 936,
-            "pct": 72.6
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".unit-status-panel__types",
-            "w": 936,
+            "w": 510,
             "pct": 100
           }
         ],
-        "minRowFillPct": 72.6,
-        "medianRowFillPct": 72.6,
+        "minRowFillPct": 100,
+        "medianRowFillPct": 100,
         "distinctFontSizes": 5,
-        "controls": 226,
+        "controls": 225,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 260,
+            "count": 253,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2371,9 +2371,9 @@
       },
       "1800": {
         "fontSizes": {
-          "14.00": 183,
-          "12.00": 13,
-          "16.00": 142,
+          "14.00": 181,
+          "12.00": 14,
+          "16.00": 83,
           "18.00": 7,
           "24.00": 1
         },
@@ -2382,29 +2382,29 @@
         "worstRows": [
           {
             "sel": ".unit-status-panel__types",
-            "w": 1456,
-            "pct": 48.3
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".unit-status-panel__types",
-            "w": 1456,
-            "pct": 48.3
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".unit-status-panel__types",
-            "w": 1456,
+            "w": 510,
             "pct": 100
           }
         ],
-        "minRowFillPct": 48.3,
-        "medianRowFillPct": 48.3,
+        "minRowFillPct": 100,
+        "medianRowFillPct": 100,
         "distinctFontSizes": 5,
-        "controls": 226,
+        "controls": 225,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 260,
+            "count": 253,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2434,9 +2434,9 @@
       },
       "2560": {
         "fontSizes": {
-          "14.00": 182,
-          "12.00": 13,
-          "16.00": 142,
+          "14.00": 180,
+          "12.00": 14,
+          "16.00": 83,
           "18.00": 7,
           "24.00": 1
         },
@@ -2445,29 +2445,29 @@
         "worstRows": [
           {
             "sel": ".unit-status-panel__types",
-            "w": 1616,
-            "pct": 41.3
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".unit-status-panel__types",
-            "w": 1616,
-            "pct": 41.3
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".unit-status-panel__types",
-            "w": 1616,
-            "pct": 96.3
+            "w": 510,
+            "pct": 100
           }
         ],
-        "minRowFillPct": 41.3,
-        "medianRowFillPct": 41.3,
+        "minRowFillPct": 100,
+        "medianRowFillPct": 100,
         "distinctFontSizes": 5,
-        "controls": 226,
+        "controls": 225,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 260,
+            "count": 253,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2499,9 +2499,9 @@
     "임무 · 상태 프리셋": {
       "1280": {
         "fontSizes": {
-          "14.00": 211,
-          "12.00": 21,
-          "16.00": 142,
+          "14.00": 209,
+          "12.00": 22,
+          "16.00": 83,
           "18.00": 7,
           "24.00": 1
         },
@@ -2510,24 +2510,24 @@
         "worstRows": [
           {
             "sel": ".tag-preset-panel__types",
-            "w": 936,
-            "pct": 72.6
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".tag-preset-panel__types",
-            "w": 936,
+            "w": 510,
             "pct": 100
           }
         ],
-        "minRowFillPct": 72.6,
+        "minRowFillPct": 100,
         "medianRowFillPct": 100,
         "distinctFontSizes": 5,
-        "controls": 348,
+        "controls": 347,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 275,
+            "count": 268,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2562,9 +2562,9 @@
       },
       "1800": {
         "fontSizes": {
-          "14.00": 211,
-          "12.00": 21,
-          "16.00": 142,
+          "14.00": 209,
+          "12.00": 22,
+          "16.00": 83,
           "18.00": 7,
           "24.00": 1
         },
@@ -2573,24 +2573,24 @@
         "worstRows": [
           {
             "sel": ".tag-preset-panel__types",
-            "w": 1456,
-            "pct": 48.3
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".tag-preset-panel__types",
-            "w": 1456,
+            "w": 510,
             "pct": 100
           }
         ],
-        "minRowFillPct": 48.3,
+        "minRowFillPct": 100,
         "medianRowFillPct": 100,
         "distinctFontSizes": 5,
-        "controls": 348,
+        "controls": 347,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 275,
+            "count": 268,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2625,9 +2625,9 @@
       },
       "2560": {
         "fontSizes": {
-          "14.00": 210,
-          "12.00": 21,
-          "16.00": 142,
+          "14.00": 208,
+          "12.00": 22,
+          "16.00": 83,
           "18.00": 7,
           "24.00": 1
         },
@@ -2636,24 +2636,24 @@
         "worstRows": [
           {
             "sel": ".tag-preset-panel__types",
-            "w": 1616,
-            "pct": 41.3
+            "w": 510,
+            "pct": 100
           },
           {
             "sel": ".tag-preset-panel__types",
-            "w": 1616,
-            "pct": 96.3
+            "w": 510,
+            "pct": 100
           }
         ],
-        "minRowFillPct": 41.3,
-        "medianRowFillPct": 96.3,
+        "minRowFillPct": 100,
+        "medianRowFillPct": 100,
         "distinctFontSizes": 5,
-        "controls": 348,
+        "controls": 347,
         "smallTargets": [],
         "unnamedIconButtons": [],
         "borders": {
           "rgb(84, 105, 127)": {
-            "count": 275,
+            "count": 268,
             "minRatio": 3.25,
             "maxRatio": 3.46
           },
@@ -2734,16 +2734,16 @@
     },
     "행채움률_중앙값": {
       "1280": {
-        "최소": 53.2,
+        "최소": 88.3,
         "화면": "출동대"
       },
       "1800": {
-        "최소": 42.4,
-        "화면": "건물 · 소방시설"
+        "최소": 88.3,
+        "화면": "출동대"
       },
       "2560": {
-        "최소": 35.6,
-        "화면": "건물 · 소방시설"
+        "최소": 88.3,
+        "화면": "출동대"
       }
     },
     "본문_사용률_최악_참고": {

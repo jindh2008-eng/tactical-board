@@ -1150,6 +1150,11 @@
   font-size: var(--set-fs-sm);
   color: var(--set-text-dim);
   cursor: pointer;
+  /*
+   * 클릭 타깃 — 맨 <input type="checkbox"> 는 13×13 이라 WCAG 2.5.8 에 못 미친다.
+   * 라벨 전체를 24px 로 만들어 글자까지 눌리게 한다(감사에서 잡힌 1건).
+   */
+  min-height: 24px;
 }
 
 .settings-page__arrival-radio input[type="radio"] {
