@@ -51,6 +51,39 @@
   letter-spacing: 0.06em;
 }
 
+/*
+ * 로그 내용 글자 크기 — 지휘절차 항목(CommandProcedureTrainingBox)과 같은
+ * 1.22rem 으로 맞춘다. 시간·내보내기 버튼·빈 상태 문구는 메타 정보라 제외했다.
+ *
+ * 굵기는 손대지 않는다 — 각 항목이 이미 진행(600/700) vs 해제·완료(400)를
+ * 굵기로 구분해 쓰고 있다(예: .log-panel__fire-status--release). 크기만 맞춘다.
+ */
+.log-panel__token,
+.log-panel__route,
+.log-panel__note,
+.log-panel__rescue-note,
+.log-panel__fire-floor,
+.log-panel__fire-status,
+.log-panel__water-prefix,
+.log-panel__water-note,
+.log-panel__door-name,
+.log-panel__door-state,
+.log-panel__smoke-label,
+.log-panel__smoke-note,
+.log-panel__status-tag,
+.log-panel__event-name,
+.log-panel__event-status,
+.log-panel__checklist-note,
+.log-panel__training-note,
+.log-panel__dispatch-note,
+.log-panel__search-name,
+.log-panel__search-note,
+.log-panel__found-name,
+.log-panel__found-note,
+.log-panel__post-note {
+  font-size: 1.22rem;
+}
+
 .log-panel__entry {
   display: flex;
   flex-direction: row;
@@ -69,7 +102,6 @@
 }
 
 .log-panel__token {
-  font-size: 0.80rem;
   color: #aabbcc;
   font-weight: 600;
   flex-shrink: 0;
@@ -85,20 +117,17 @@
 .log-panel__token--agency { color: #bb99dd; }
 
 .log-panel__route {
-  font-size: 0.78rem;
   color: #6a9a9a;
   flex: 1;
 }
 
 .log-panel__note {
-  font-size: 0.72rem;
   color: #5a7a7a;
   width: 100%;
   padding-left: 2px;
 }
 
 .log-panel__rescue-note {
-  font-size: 0.78rem;
   color: #f4c870;
   flex: 1;
 }
@@ -113,14 +142,12 @@
 }
 
 .log-panel__fire-floor {
-  font-size: 0.80rem;
   font-weight: 600;
   color: #f0a070;
   flex-shrink: 0;
 }
 
 .log-panel__fire-status {
-  font-size: 0.80rem;
   font-weight: 700;
   color: #ff7744;
   flex-shrink: 0;
@@ -144,14 +171,12 @@
 }
 
 .log-panel__water-prefix {
-  font-size:   0.74rem;
   font-weight: 700;
   color:       #4499cc;
   flex-shrink: 0;
 }
 
 .log-panel__water-note {
-  font-size: 0.78rem;
   color:     #5ab0dd;
   flex:      1;
 }
@@ -173,13 +198,11 @@
 }
 
 .log-panel__door-name {
-  font-size:   0.78rem;
   color:       #7abba0;
   flex-shrink: 0;
 }
 
 .log-panel__door-state {
-  font-size:   0.78rem;
   font-weight: 600;
   color:       #66cc88;
   flex-shrink: 0;
@@ -203,13 +226,11 @@
 }
 
 .log-panel__smoke-label {
-  font-size:   0.78rem;
   color:       #c07858;
   flex-shrink: 0;
 }
 
 .log-panel__smoke-note {
-  font-size:   0.78rem;
   font-weight: 600;
   color:       #dd8855;
   flex:        1;
@@ -229,7 +250,6 @@
 }
 
 .log-panel__status-tag {
-  font-size: 0.78rem;
   font-weight: 600;
   color: #88ccff;
   flex-shrink: 0;
@@ -253,13 +273,11 @@
 }
 
 .log-panel__event-name {
-  font-size:   0.78rem;
   color:       #c8a060;
   flex-shrink: 0;
 }
 
 .log-panel__event-status {
-  font-size:   0.78rem;
   font-weight: 600;
   color:       #e8b844;
   flex:        1;
@@ -279,7 +297,6 @@
 }
 
 .log-panel__checklist-note {
-  font-size:   0.78rem;
   color:       #6aaa80;
   flex:        1;
 }
@@ -291,7 +308,6 @@
 }
 
 .log-panel__training-note {
-  font-size:   0.8rem;
   font-weight: 700;
   color:       #d8a94a;
   flex:        1;
@@ -304,7 +320,6 @@
 }
 
 .log-panel__dispatch-note {
-  font-size:   0.8rem;
   font-weight: 600;
   color:       #6f9ede;
   flex:        1;
@@ -317,12 +332,10 @@
 }
 
 .log-panel__search-name {
-  font-size: 0.78rem;
   color:     #9fd6d6;
 }
 
 .log-panel__search-note {
-  font-size: 0.78rem;
   color:     #63b3b3;
   flex:      1;
 }
@@ -334,13 +347,11 @@
 }
 
 .log-panel__found-name {
-  font-size:   0.8rem;
   font-weight: 700;
   color:       #e879b0;
 }
 
 .log-panel__found-note {
-  font-size: 0.78rem;
   color:     #c76a97;
   flex:      1;
 }
@@ -352,7 +363,6 @@
 }
 
 .log-panel__post-note {
-  font-size:   0.8rem;
   font-weight: 600;
   color:       #6fce93;
   flex:        1;
