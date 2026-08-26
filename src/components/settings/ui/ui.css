@@ -176,12 +176,9 @@
  * 그리면 안 된다 — 그게 6종으로 갈라진 경위다.
  */
 .set-card,
-.settings-page .dsp__group,
 .settings-page .checklist-setup__section,
 .settings-page .cp-panel__category,
-.settings-page .esp__add-section,
 .settings-page .esp__list,
-.settings-page .dsp__roster,
 .settings-page .vsp__table {
   background: var(--set-surface-1);
   border: 1px solid var(--set-border);
@@ -220,6 +217,31 @@
   display: flex;
   flex-direction: column;
   gap: var(--set-sp-3);
+}
+
+/*
+ * dense — 카드를 가로로 늘어놓는 곳용. 출동대 화면이 아홉 칸을 한 줄에
+ * 넣으므로 기본 여백(sp-4/sp-5)을 그대로 쓰면 칸마다 토큰 이름이 잘린다.
+ * 값은 이관 전 .dsp__group 이 쓰던 것과 같다 — 배치가 변하지 않아야 한다.
+ */
+.set-card--dense {
+  padding: var(--set-sp-3);
+  gap: var(--set-sp-2);
+}
+
+.set-card--dense > .set-card__head {
+  padding-bottom: var(--set-sp-2);
+}
+
+/*
+ * 자간은 주지 않는다. 이관 전 .dsp__group-title 이 0.06em 을 갖고 있었지만
+ * SettingsPage.css 의 [class*="__group-title"] 규칙이 0 으로 덮고 있었다 —
+ * 한글에 자간을 벌리면 판독만 나빠진다는 그쪽 결정이 실제로 적용된 값이다.
+ * 그 값을 그대로 가져온다.
+ */
+.set-card--dense .set-card__title {
+  font-size: var(--set-fs-sm);
+  color: var(--set-text-faint);
 }
 
 /* ─────────────────────────────────────────────

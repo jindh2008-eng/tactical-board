@@ -868,8 +868,14 @@
   font-size: var(--set-fs-sm);
 }
 
-/* 카드·그룹 제목 */
-.settings-page .dsp__group-title,
+/*
+ * 카드·그룹 제목.
+ *
+ * .dsp__group-title 은 뺐다 — 출동대 그룹이 SetCard 로 가면서 사라진
+ * 클래스다. 그리고 이 규칙이 정확히 그 이관의 이유였다: (0,2,0) 이라
+ * .dsp__group-title--activity (0,1,0) 를 눌러 **분류 색이 렌더되지
+ * 않고 있었다.** 색을 지정한 쪽이 조용히 진 것이다.
+ */
 .settings-page .tag-preset-panel__group-label,
 .settings-page .unit-status-panel__group-label {
   font-size: var(--set-fs-sm);

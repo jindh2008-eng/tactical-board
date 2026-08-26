@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import type { DispatchSetup, DispatchRosterItem } from '../../types/settings';
 import { computeRosterDisplayName } from '../../utils/dispatchRoster';
-import { SetIconButton, IconClose } from './ui';
+import { SetCard, SetIconButton, IconClose } from './ui';
 import { unitTone } from './ui/unitTone';
 import './DispatchSetupPanel.css';
 
@@ -205,8 +205,7 @@ export function DispatchSetupPanel() {
       <div className="dsp__groups">
 
         {/* ── 활동대 ── */}
-        <section className="dsp__group">
-          <h4 className="dsp__group-title dsp__group-title--activity">활동대</h4>
+        <SetCard title="활동대" dense className="dsp__group dsp__group--activity">
           <div className="dsp__slots">
             {UNIT_SLOTS.map(s => (
               <Slot
@@ -222,11 +221,10 @@ export function DispatchSetupPanel() {
               </Slot>
             ))}
           </div>
-        </section>
+        </SetCard>
 
         {/* ── 차량 ── */}
-        <section className="dsp__group">
-          <h4 className="dsp__group-title dsp__group-title--vehicle">차량</h4>
+        <SetCard title="차량" dense className="dsp__group dsp__group--vehicle">
           <div className="dsp__slots dsp__slots--grid">
             {VEHICLE_SLOTS.map(s => (
               <Slot
@@ -242,11 +240,10 @@ export function DispatchSetupPanel() {
               </Slot>
             ))}
           </div>
-        </section>
+        </SetCard>
 
         {/* ── 유관기관 ── */}
-        <section className="dsp__group dsp__group--fixed">
-          <h4 className="dsp__group-title dsp__group-title--agency">유관기관</h4>
+        <SetCard title="유관기관" dense className="dsp__group dsp__group--fixed dsp__group--agency">
           {/* 아이콘 자산이 없어 텍스트 칩 2열로 간다 */}
           <div className="dsp__preset-grid">
             {AGENCY_PRESETS.map(name => (
@@ -265,11 +262,10 @@ export function DispatchSetupPanel() {
               <ExtraChip key={item.id} item={item} onRemove={removeDispatchExtraUnit} {...chipProps} />
             ))}
           </div>
-        </section>
+        </SetCard>
 
         {/* ── 직접입력 ── */}
-        <section className="dsp__group dsp__group--fixed">
-          <h4 className="dsp__group-title dsp__group-title--custom">직접입력</h4>
+        <SetCard title="직접입력" dense className="dsp__group dsp__group--fixed dsp__group--custom">
           <div className="dsp__extra-input-row">
             <input
               className="dsp__extra-input"
@@ -287,7 +283,7 @@ export function DispatchSetupPanel() {
               <ExtraChip key={item.id} item={item} onRemove={removeDispatchExtraUnit} {...chipProps} />
             ))}
           </div>
-        </section>
+        </SetCard>
       </div>
     </div>
   );

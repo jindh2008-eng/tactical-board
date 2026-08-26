@@ -74,13 +74,18 @@ interface SetCardProps {
   meta?: ReactNode;
   /** 제목 왼쪽 분류 표시. 색은 호출부가 인라인으로 준다 */
   marker?: ReactNode;
+  /**
+   * 여백과 제목을 한 단계 줄인다. 카드를 가로로 여러 개 늘어놓아
+   * 폭이 빠듯한 곳에서 쓴다 — 출동대 생성칸이 그렇다.
+   */
+  dense?: boolean;
   children: ReactNode;
   className?: string;
 }
 
-export function SetCard({ title, meta, marker, children, className = '' }: SetCardProps) {
+export function SetCard({ title, meta, marker, dense, children, className = '' }: SetCardProps) {
   return (
-    <section className={`set-card ${className}`.trim()}>
+    <section className={`set-card ${dense ? 'set-card--dense' : ''} ${className}`.trim()}>
       {(title || meta) && (
         <header className="set-card__head">
           {marker}

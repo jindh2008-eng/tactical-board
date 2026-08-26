@@ -51,29 +51,25 @@
  * 그 폭을 나누면 칸마다 8px 씩 넓어져 토큰 이름이 그만큼 더 보인다.
  */
 .dsp__group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--set-sp-2);
   min-width: 0;
   flex: 1 1 auto;
-  padding: var(--set-sp-3);
-  background: var(--set-surface-1);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-md);
 }
 
-/* 슬롯 묶음이 그룹의 남는 세로를 받는다 — 차량 격자가 그 높이를 나눠 쓴다 */
-.dsp__group > .dsp__slots { flex: 1; }
+/*
+ * 슬롯 묶음이 그룹의 남는 세로를 받는다 — 차량 격자가 그 높이를 나눠 쓴다.
+ *
+ * SetCard 로 옮기면서 사이에 .set-card__body 가 하나 끼었다. 본문이 먼저
+ * 남는 높이를 받아야 그 안의 슬롯이 받을 것이 생긴다 — 본문에 flex 를
+ * 주지 않으면 차량 3×2 격자가 내용 높이로 쪼그라들어 활동대와 아랫줄이
+ * 어긋난다. 두 줄이 한 쌍이므로 같이 둔다.
+ */
+.dsp__group > .set-card__body { flex: 1; }
+.dsp__group .set-card__body > .dsp__slots { flex: 1; }
 
-.dsp__group-title {
-  margin: 0;
-  font-size: var(--set-fs-sm);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--set-text-faint);
-  padding-bottom: var(--set-sp-2);
-  border-bottom: 1px solid var(--set-border-subtle);
-}
+/*
+ * 분류 색만 남긴다. 상자·제목 크기·머리글 구분선은 이제 SetCard(dense) 가
+ * 그린다 — 여기서 다시 그리면 갈라진다.
+ */
 
 /*
  * 프리셋·입력만 있는 그룹은 남는 폭을 나눠 갖지 않는다(늘리면 버튼 옆이 빈다).
@@ -82,13 +78,14 @@
  * 유관기관 토큰만 절반 크기로 보였다.
  */
 .dsp__group--fixed {
+  /* sp-3 * 2 는 SetCard(dense) 의 좌우 여백이다. dense 값이 바뀌면 여기도 바뀐다 */
   flex: 0 0 auto;
   min-width: calc(var(--dsp-slot-w) * 2 + var(--set-sp-2) + var(--set-sp-3) * 2);
 }
 
-.dsp__group-title--activity { color: var(--set-cat-activity); }
-.dsp__group-title--vehicle  { color: var(--set-cat-vehicle); }
-.dsp__group-title--agency   { color: var(--set-cat-agency); }
+.dsp__group--activity .set-card__title { color: var(--set-cat-activity); }
+.dsp__group--vehicle .set-card__title  { color: var(--set-cat-vehicle); }
+.dsp__group--agency .set-card__title   { color: var(--set-cat-agency); }
 
 /* ── 생성칸 ── */
 
