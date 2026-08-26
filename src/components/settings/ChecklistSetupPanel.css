@@ -61,52 +61,6 @@
   font-size: var(--set-fs-xs);
 }
 
-.checklist-setup__section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  background-color: var(--set-surface-nav);
-  border-bottom: 1px solid var(--set-border);
-  gap: 8px;
-}
-
-.checklist-setup__section-title {
-  /* <button> 리셋 — 버튼으로 바꾼 이유는 클릭만 되던 <span> 이 키보드로 닿지 않아서다 */
-  background: none;
-  border: none;
-  text-align: left;
-  font-family: inherit;
-  min-height: 24px;
-  font-size: var(--set-fs-md);
-  font-weight: 700;
-  color: var(--set-text-body);
-  cursor: pointer;
-  flex: 1;
-}
-
-.checklist-setup__section-title:focus-visible {
-  outline: 2px solid var(--set-accent);
-  outline-offset: 1px;
-  border-radius: var(--set-r-sm);
-}
-
-.checklist-setup__section-title:hover {
-  color: var(--set-accent);
-}
-
-.checklist-setup__section-title-input {
-  flex: 1;
-  font-size: var(--set-fs-md);
-  font-weight: 700;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--set-accent);
-  color: var(--set-text-body);
-  padding: 0 2px;
-  outline: none;
-}
-
 .checklist-setup__items {
   display: flex;
   flex-direction: column;
@@ -657,4 +611,12 @@
  * 제거된 규칙 — 2026-08-25
  *   .checklist-setup__import-level-*  가져오기 레벨 탭. 이제 시나리오 레벨을
  *   따르므로 고를 수단이 없다(.checklist-setup__import-scope 가 알린다).
+ */
+
+/*
+ * 제거된 규칙 — 2026-08-26
+ *   __section-header · __section-title · __section-title-input
+ *   섹션 머리글이 SetSortableHead 로 갔다. 지휘절차 카테고리 머리글과
+ *   글자 단위로 같은 CSS 였다 — 다른 점은 무의미한 justify-content 하나뿐.
+ *   드래그 핸들과 삭제 버튼 규칙은 남긴다(항목 단위에서 아직 쓴다).
  */

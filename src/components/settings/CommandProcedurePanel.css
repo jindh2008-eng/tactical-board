@@ -73,51 +73,6 @@
   outline-offset: -1px;
 }
 
-.cp-panel__category-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background-color: var(--set-surface-nav);
-  border-bottom: 1px solid var(--set-border);
-}
-
-.cp-panel__category-title {
-  /* <button> 리셋 — 버튼으로 바꾼 이유는 클릭만 되던 <span> 이 키보드로 닿지 않아서다 */
-  background: none;
-  border: none;
-  text-align: left;
-  font-family: inherit;
-  min-height: 24px;
-  flex: 1;
-  font-size: var(--set-fs-md);
-  font-weight: 700;
-  color: var(--set-text-body);
-  cursor: pointer;
-}
-
-.cp-panel__category-title:focus-visible {
-  outline: 2px solid var(--set-accent);
-  outline-offset: 1px;
-  border-radius: var(--set-r-sm);
-}
-
-.cp-panel__category-title:hover {
-  color: var(--set-accent);
-}
-
-.cp-panel__category-title-input {
-  flex: 1;
-  font-size: var(--set-fs-md);
-  font-weight: 700;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--set-accent);
-  color: var(--set-text-body);
-  padding: 0 2px;
-  outline: none;
-}
-
 /* ── 드래그 핸들 ─────────────────────────────── */
 
 .cp-panel__drag-handle {
@@ -339,4 +294,11 @@
  * 제거된 규칙 — 2026-08-25
  *   .cp-panel__active-level*  훈련 표시 레벨은 시나리오 값이라 레일 머리로
  *   옮겼다(.settings-page__rail-level). §12-B-2 참고.
+ */
+
+/*
+ * 제거된 규칙 — 2026-08-26
+ *   __category-header · __category-title · __category-title-input
+ *   카테고리 머리글이 SetSortableHead 로 갔다. 근거는 ChecklistSetupPanel.css
+ *   끝의 같은 주석 참고.
  */

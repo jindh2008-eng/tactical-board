@@ -6,7 +6,7 @@
  *
  * 스타일은 ui.css 하나에 모여 있고 값은 전부 `.settings-page` 의 --set-* 토큰이다.
  */
-import { useEffect, useId, useRef, useState, type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttributes } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode, type ButtonHTMLAttributes, type DragEvent, type InputHTMLAttributes } from 'react';
 import { IconMore, IconCheck } from './icons';
 import './ui.css';
 
@@ -95,6 +95,80 @@ export function SetCard({ title, meta, marker, dense, children, className = '' }
       )}
       <div className="set-card__body">{children}</div>
     </section>
+  );
+}
+
+/* ── SetSortableHead ─────────────────────────────────────── */
+
+interface SetSortableHeadProps {
+  title: string;
+  /** true 면 제목이 입력칸으로 바뀐다. 상태는 호출부가 갖는다 */
+  editing: boolean;
+  editValue: string;
+  onEditChange: (value: string) => void;
+  /** blur 와 Enter 양쪽에서 불린다 — 둘 다 "편집 끝" 이다 */
+  onEditCommit: () => void;
+  onStartEdit: () => void;
+  onDelete: () => void;
+  onDragStart: (e: DragEvent<HTMLElement>) => void;
+  onDragEnd: (e: DragEvent<HTMLElement>) => void;
+  /** 삭제 버튼 툴팁 — "섹션 삭제" 처럼 무엇을 지우는지 말한다 */
+  deleteLabel: string;
+  /** 제목과 삭제 버튼 사이. 배지 같은 것을 넣는다 */
+  children?: ReactNode;
+}
+
+/**
+ * 드래그로 순서를 바꾸고 이름을 고칠 수 있는 묶음의 머리글.
+ *
+ * 드롭 대상 컨테이너는 **호출부가 그대로 갖는다** — onDragOver/onDrop 은
+ * 여기로 오지 않는다. 드래그 소스(핸들)만 이쪽이고, 그래야 패널마다
+ * 다른 드롭 판정을 건드리지 않는다.
+ */
+export function SetSortableHead({
+  title, editing, editValue, onEditChange, onEditCommit, onStartEdit,
+  onDelete, onDragStart, onDragEnd, deleteLabel, children,
+}: SetSortableHeadProps) {
+  return (
+    <div className="set-sechead">
+      <span
+        className="set-sechead__handle"
+        draggable
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        title="드래그하여 순서 변경"
+      >⠿</span>
+
+      {editing ? (
+        <input
+          className="set-sechead__input"
+          value={editValue}
+          onChange={e => onEditChange(e.target.value)}
+          onBlur={onEditCommit}
+          onKeyDown={e => { if (e.key === 'Enter') onEditCommit(); }}
+          autoFocus
+        />
+      ) : (
+        <button
+          type="button"
+          className="set-sechead__title"
+          onClick={onStartEdit}
+          title="클릭하여 수정"
+        >
+          {title}
+        </button>
+      )}
+
+      {children}
+
+      <button
+        type="button"
+        className="set-sechead__del"
+        onClick={onDelete}
+        title={deleteLabel}
+        aria-label={deleteLabel}
+      >✕</button>
+    </div>
   );
 }
 

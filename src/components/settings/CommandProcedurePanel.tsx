@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import type { CommandProcedureItemType, CommandProcedureLevel, CommandProcedureCategory } from '../../types/settings';
 import { generateId } from '../../utils/settingsStorage';
+import { SetSortableHead } from './ui';
 import './CommandProcedurePanel.css';
 
 const LEVELS: CommandProcedureLevel[] = ['beginner', 'intermediate', 'advanced'];
@@ -222,45 +223,18 @@ export function CommandProcedurePanel() {
               onDrop={e => onCategoryDrop(e, catIndex)}
             >
               {/* 카테고리 헤더 */}
-              <div className="cp-panel__category-header">
-                <span
-                  className="cp-panel__drag-handle"
-                  draggable
-                  onDragStart={e => onCategoryDragStart(e, catIndex)}
-                  onDragEnd={onDragEnd}
-                  title="드래그하여 순서 변경"
-                >
-                  ⠿
-                </span>
-
-                {editingCategoryId === category.id ? (
-                  <input
-                    className="cp-panel__category-title-input"
-                    value={editingCategoryTitle}
-                    onChange={e => setEditingCategoryTitle(e.target.value)}
-                    onBlur={commitEditCategory}
-                    onKeyDown={e => { if (e.key === 'Enter') commitEditCategory(); }}
-                    autoFocus
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    className="cp-panel__category-title"
-                    onClick={() => startEditCategory(category.id, category.categoryTitle)}
-                    title="클릭하여 수정"
-                  >
-                    {category.categoryTitle}
-                  </button>
-                )}
-
-                <button
-                  className="cp-panel__delete-btn"
-                  onClick={() => removeCategory(category.id)}
-                  title="카테고리 삭제"
-                >
-                  ✕
-                </button>
-              </div>
+              <SetSortableHead
+                title={category.categoryTitle}
+                editing={editingCategoryId === category.id}
+                editValue={editingCategoryTitle}
+                onEditChange={setEditingCategoryTitle}
+                onEditCommit={commitEditCategory}
+                onStartEdit={() => startEditCategory(category.id, category.categoryTitle)}
+                onDelete={() => removeCategory(category.id)}
+                onDragStart={e => onCategoryDragStart(e, catIndex)}
+                onDragEnd={onDragEnd}
+                deleteLabel="카테고리 삭제"
+              />
 
               {/* 항목 목록 */}
               <div className="cp-panel__items">

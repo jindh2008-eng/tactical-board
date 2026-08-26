@@ -6,6 +6,7 @@ import { EVENT_TYPE_STATUSES, resolveEventType } from '../../types/events';
 import { generateId } from '../../utils/settingsStorage';
 import { computeRosterDisplayName } from '../../utils/dispatchRoster';
 import { downloadChecklistMarkdown } from '../../utils/exportChecklistMarkdown';
+import { SetSortableHead } from './ui';
 import './ChecklistSetupPanel.css';
 
 const TYPE_LABELS: Record<ChecklistItemType, string> = {
@@ -529,36 +530,18 @@ export function ChecklistSetupPanel() {
             onDrop={e => onSectionDrop(e, sectionIndex)}
           >
             {/* 섹션 헤더 */}
-            <div className="checklist-setup__section-header">
-              <span
-                className="checklist-setup__drag-handle"
-                draggable
-                onDragStart={e => onSectionDragStart(e, sectionIndex)}
-                onDragEnd={onDragEnd}
-                title="드래그하여 순서 변경"
-              >⠿</span>
-
-              {editingSectionId === section.id ? (
-                <input
-                  className="checklist-setup__section-title-input"
-                  value={editingSectionTitle}
-                  onChange={e => setEditingSectionTitle(e.target.value)}
-                  onBlur={commitEditSection}
-                  onKeyDown={e => { if (e.key === 'Enter') commitEditSection(); }}
-                  autoFocus
-                />
-              ) : (
-                <button
-                  type="button"
-                  className="checklist-setup__section-title"
-                  onClick={() => startEditSection(section.id, section.title)}
-                  title="클릭하여 수정"
-                >
-                  {section.title}
-                </button>
-              )}
-              <button className="checklist-setup__delete-btn" onClick={() => removeChecklistSection(section.id)} title="섹션 삭제">✕</button>
-            </div>
+            <SetSortableHead
+              title={section.title}
+              editing={editingSectionId === section.id}
+              editValue={editingSectionTitle}
+              onEditChange={setEditingSectionTitle}
+              onEditCommit={commitEditSection}
+              onStartEdit={() => startEditSection(section.id, section.title)}
+              onDelete={() => removeChecklistSection(section.id)}
+              onDragStart={e => onSectionDragStart(e, sectionIndex)}
+              onDragEnd={onDragEnd}
+              deleteLabel="섹션 삭제"
+            />
 
             {/* 항목 목록 */}
             <div className="checklist-setup__items">
