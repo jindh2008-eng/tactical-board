@@ -114,6 +114,13 @@ interface SetSortableHeadProps {
   onDragEnd: (e: DragEvent<HTMLElement>) => void;
   /** 삭제 버튼 툴팁 — "섹션 삭제" 처럼 무엇을 지우는지 말한다 */
   deleteLabel: string;
+  /**
+   * 삭제 버튼 글리프를 갈아 끼운다. 없으면 ✕.
+   * 지우면 딸린 것까지 날아가는 묶음에서 휴지통을 쓴다 — 체크리스트 섹션이 그렇다.
+   */
+  deleteIcon?: ReactNode;
+  /** 삭제 확인 대기. 위험색으로 강조된다 */
+  deleteArmed?: boolean;
   /** 제목과 삭제 버튼 사이. 배지 같은 것을 넣는다 */
   children?: ReactNode;
 }
@@ -127,7 +134,7 @@ interface SetSortableHeadProps {
  */
 export function SetSortableHead({
   title, editing, editValue, onEditChange, onEditCommit, onStartEdit,
-  onDelete, onDragStart, onDragEnd, deleteLabel, children,
+  onDelete, onDragStart, onDragEnd, deleteLabel, deleteIcon, deleteArmed, children,
 }: SetSortableHeadProps) {
   return (
     <div className="set-sechead">
@@ -163,11 +170,11 @@ export function SetSortableHead({
 
       <button
         type="button"
-        className="set-sechead__del"
+        className={`set-sechead__del${deleteArmed ? ' set-sechead__del--armed' : ''}`}
         onClick={onDelete}
         title={deleteLabel}
         aria-label={deleteLabel}
-      >✕</button>
+      >{deleteIcon ?? '✕'}</button>
     </div>
   );
 }

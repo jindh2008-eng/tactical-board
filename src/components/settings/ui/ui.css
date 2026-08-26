@@ -974,3 +974,13 @@
   color: var(--set-danger);
   background-color: color-mix(in srgb, var(--set-danger) 12%, transparent);
 }
+
+/*
+ * 삭제 확인 대기. 자리·크기는 평소와 같아야 두 번째 클릭이 빗나가지 않는다 —
+ * 색과 아이콘 채움만 바뀐다.
+ */
+.set-sechead__del--armed {
+  color: var(--set-danger);
+  background-color: color-mix(in srgb, var(--set-danger) 18%, transparent);
+  box-shadow: inset 0 0 0 1px var(--set-danger);
+}

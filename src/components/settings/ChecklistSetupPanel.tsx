@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import type { ChecklistItem, ChecklistItemType, CommandProcedureLevel, CommandProcedureItemType, TagPreset, VictimSetupItem } from '../../types/settings';
 import type { FireStatus } from '../../types';
@@ -6,7 +6,7 @@ import { EVENT_TYPE_STATUSES, resolveEventType } from '../../types/events';
 import { generateId } from '../../utils/settingsStorage';
 import { computeRosterDisplayName } from '../../utils/dispatchRoster';
 import { downloadChecklistMarkdown } from '../../utils/exportChecklistMarkdown';
-import { SetSortableHead } from './ui';
+import { SetSortableHead, SetToast, IconTrash, IconTrashFilled } from './ui';
 import './ChecklistSetupPanel.css';
 
 const TYPE_LABELS: Record<ChecklistItemType, string> = {
@@ -100,6 +100,39 @@ export function ChecklistSetupPanel() {
 
   // 메세지 항목 인라인 편집 상태
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+
+  /*
+   * 삭제 되돌리기 — 저장 목록(SettingsLibraryPanel)과 같은 방식이다.
+   * 목록에서는 즉시 감추되 실제 삭제는 5초 뒤로 미룬다. 「되돌리기」는
+   * 타이머만 취소하므로 checklistConfig 는 그동안 한 번도 바뀌지 않는다 —
+   * 되살릴 자리를 따로 기억할 필요가 없다.
+   *
+   * 체크리스트에만 넣는다. 섹션을 지우면 **딸린 항목이 통째로** 날아가고,
+   * 다른 화면의 삭제는 한 줄짜리라 다시 쓰면 그만이다.
+   */
+  const [pendingKeys, setPendingKeys] = useState<Map<string, string>>(new Map());
+  const deleteTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  /** 삭제 확인 대기 중인 섹션. 한 번 더 눌러야 지워진다 */
+  const [armedSectionId, setArmedSectionId] = useState<string | null>(null);
+
+  useEffect(() => () => { for (const t of deleteTimers.current.values()) clearTimeout(t); }, []);
+
+  function scheduleDelete(key: string, label: string, run: () => void) {
+    setPendingKeys(prev => new Map(prev).set(key, label));
+    const timer = setTimeout(() => {
+      run();
+      deleteTimers.current.delete(key);
+      setPendingKeys(prev => { const next = new Map(prev); next.delete(key); return next; });
+    }, 5000);
+    deleteTimers.current.set(key, timer);
+  }
+
+  function undoDelete(key: string) {
+    const t = deleteTimers.current.get(key);
+    if (t) clearTimeout(t);
+    deleteTimers.current.delete(key);
+    setPendingKeys(prev => { const next = new Map(prev); next.delete(key); return next; });
+  }
   const [editTitle,     setEditTitle]     = useState('');
   const [editBody,      setEditBody]      = useState('');
 
@@ -514,7 +547,9 @@ export function ChecklistSetupPanel() {
       )}
 
       {/* 섹션 목록 */}
-      {checklistConfig.sections.map((section, sectionIndex) => {
+      {checklistConfig.sections
+        .filter(sec => !pendingKeys.has(`sec:${sec.id}`))
+        .map((section, sectionIndex) => {
         const curItemType       = getNewItemType(section.id);
         const curOrder          = getNewItemOrder(section.id);
         const curFireFloor      = getFireFloor(section.id);
@@ -537,15 +572,29 @@ export function ChecklistSetupPanel() {
               onEditChange={setEditingSectionTitle}
               onEditCommit={commitEditSection}
               onStartEdit={() => startEditSection(section.id, section.title)}
-              onDelete={() => removeChecklistSection(section.id)}
+              onDelete={() => {
+                if (armedSectionId === section.id) {
+                  setArmedSectionId(null);
+                  scheduleDelete(`sec:${section.id}`, `섹션 "${section.title}"`,
+                    () => removeChecklistSection(section.id));
+                } else setArmedSectionId(section.id);
+              }}
               onDragStart={e => onSectionDragStart(e, sectionIndex)}
               onDragEnd={onDragEnd}
-              deleteLabel="섹션 삭제"
+              deleteArmed={armedSectionId === section.id}
+              deleteIcon={armedSectionId === section.id
+                ? <IconTrashFilled size={15} />
+                : <IconTrash size={15} />}
+              deleteLabel={armedSectionId === section.id
+                ? `섹션 "${section.title}" 삭제 — 한 번 더 누르면 항목까지 지워집니다`
+                : '섹션 삭제'}
             />
 
             {/* 항목 목록 */}
             <div className="checklist-setup__items">
-              {section.items.map((item, itemIndex) => {
+              {section.items
+                .filter(it => !pendingKeys.has(`item:${it.id}`))
+                .map((item, itemIndex) => {
                 const itemKey          = `${section.id}:${itemIndex}`;
                 const isReadonly       = item.itemType === 'arrival' || item.itemType === 'fire' || item.itemType === 'message' || item.itemType === 'incident' || item.itemType === 'unit' || item.itemType === 'victim';
                 const isEditingThisMsg = item.itemType === 'message' && editingItemId === item.id;
@@ -637,7 +686,17 @@ export function ChecklistSetupPanel() {
                           }}
                         />
                       )}
-                      <button className="checklist-setup__delete-btn" onClick={() => removeChecklistItem(section.id, item.id)} title="항목 삭제">✕</button>
+                      {/*
+                        항목은 한 번에 지운다. 한 줄짜리라 다시 쓰면 그만이고,
+                        되돌리기가 뒤를 받으므로 확인을 한 번 더 받을 이유가 없다.
+                      */}
+                      <button
+                        className="checklist-setup__delete-btn"
+                        onClick={() => scheduleDelete(`item:${item.id}`, `항목 "${item.text}"`,
+                          () => removeChecklistItem(section.id, item.id))}
+                        title="항목 삭제"
+                        aria-label={`항목 "${item.text}" 삭제`}
+                      ><IconTrash size={14} /></button>
                     </div>
 
                     {/* 메세지 인라인 편집 패널 */}
@@ -1013,6 +1072,23 @@ export function ChecklistSetupPanel() {
           + 섹션 추가
         </button>
       </div>
+
+      {/*
+        삭제 되돌리기. 연속으로 지우면 아래에서부터 쌓인다 —
+        Map 인 이유는 먼저 지운 것의 타이머를 잃지 않기 위해서다.
+      */}
+      {pendingKeys.size > 0 && (
+        <div className="checklist-setup__toast-stack">
+          {[...pendingKeys.entries()].map(([key, label]) => (
+            <SetToast
+              key={key}
+              text={`${label} 삭제됨`}
+              actionLabel="되돌리기"
+              onAction={() => undoDelete(key)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
