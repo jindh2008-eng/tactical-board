@@ -486,7 +486,7 @@ function checkReadiness(settings): Check[]
 | **S-2** | **경계·대비 교정** — 하드코딩 hex 121개를 토큰으로 치환 (F-2) | 설정 CSS 11개 | M | ✅ |
 | **S-3** | **공용 컴포넌트 6종 + 아이콘** — 만들고 상단 바부터 적용 (F-4) | `components/settings/ui/*`, `SettingsLibraryPanel` | M | ✅ |
 | **S-4** | **레이아웃·내비** — 3단 브레이크포인트, sticky 헤더, 사이드바 배지, 준비도 (F-5, §7.2) | `SettingsPage.tsx/css`, `utils/scenarioReadiness.ts` | L | ✅ |
-| **S-5** | **패널 이관** — 9개 화면을 공용 컴포넌트로. 체크리스트(§7.3)가 절반 | `components/settings/*` 전부 | **XL** | ◐ **부분** — 화면 재설계는 전부 끝났으나 `SetCard` 를 실제로 쓰는 패널은 `BuildingConfigPanel` · `EventSetupPanel` 둘뿐이다. 나머지 9개 패널이 각자 카드 마크업을 갖고 있다(§S-5a) |
+| **S-5** | **패널 이관** — 9개 화면을 공용 컴포넌트로. 체크리스트(§7.3)가 절반 | `components/settings/*` 전부 | **XL** | ✅ **(2026-08-26 마감)** — §9-B 참고. 「9개 패널 미이관」은 잘못 센 것이었다 |
 | **S-6** | **저장 상태 모델** — dirty/applied, 상태 칩, beforeunload, 되돌리기 (F-3) | `settingsStore.tsx`, `SettingsLibraryPanel` | M | ✅ |
 
 **권장 실행 묶음**
@@ -897,6 +897,45 @@ S-1이 남긴 `--set-font-card`·`--set-font-meta`도 `--set-fs-sm`·`--set-fs-x
 ### 스크립트 수정
 
 `SECTIONS` 에서 체크리스트를 뺐다. §12-C 로 우측 상주 레일이 되어 사이드바 항목이 아니게 됐고, 스크립트가 그 버튼을 못 찾아 타임아웃으로 죽었다.
+
+---
+
+## 9-B. S-5 마감 — 실제로 남아 있던 것 (2026-08-26)
+
+「패널 9개가 카드 마크업을 갖고 있다」는 잘못 센 것이었다. 클래스 이름을 정규식으로 센 것이라 `__group-label` · `__section-title` 같은 라벨·구분선까지 카드로 계상했다.
+
+`set-card` 의 실체를 보면 S-3 이 이미 절반을 끝냈다 — **생김새는** `ui.css` 의 셀렉터 목록 한 곳에 모여 있고, 패널들은 자기 클래스로 거기 얹혀 있었다. 실제로 남아 있던 것은 그 목록에 얹힌 **7개 클래스**다.
+
+| 클래스 | 처리 | 근거 |
+|---|---|---|
+| `.dsp__roster` · `.esp__add-section` | **삭제** | tsx 참조 0건. 죽은 셀렉터였다 |
+| `.dsp__group` | **`SetCard` 로 이관** | 진짜 카드였다(제목 + 본문) |
+| `.checklist-setup__section` · `.cp-panel__category` | **머리글만 이관** | 컨테이너는 드롭 대상이다 |
+| `.vsp__table` · `.esp__list` | **목록에 남긴다** | 카드가 아니라 CSS 그리드 표다 |
+
+### `.dsp__group` — 목록에 있으면서 자기가 또 그리고 있었다
+
+`ui.css` 목록에 이름을 얹어 놓고 `DispatchSetupPanel.css` 에서 `background` · `border` · `border-radius` 를 다시 선언하고 있었다. 목록 주석이 경고한 바로 그 divergence 가 목록 안에서 일어나 있었다.
+
+이관 전후를 1800px 에서 실측해 배치가 변하지 않았음을 확인했다 — 상단 386px · 높이 603px(넷 다 동일) · 폭 435/405/272/292 · 슬롯 131px. 여백·제목 크기를 지키려고 `SetCard` 에 `dense` 를 더했다.
+
+### 분류 색은 원래 죽어 있었다
+
+이관 전 실측에서 「활동대」 제목이 `#f08080` 이 아니라 본문색으로 나왔다. `SettingsPage.css` 의 `.settings-page .dsp__group-title` (0,2,0) 이 `.dsp__group-title--activity` (0,1,0) 를 누르고 있었다 — **색을 지정한 쪽이 조용히 진 것이다.** 이관으로 선택자가 (0,2,0) 이 되면서 복구됐다.
+
+측정하지 않았으면 못 찾았을 종류의 결함이다. 화면을 눈으로 보면 「원래 그런 색인가 보다」로 지나간다.
+
+### `SetSortableHead` — 실제 중복은 머리글이었다
+
+체크리스트 섹션 머리글과 지휘절차 카테고리 머리글이 다섯 규칙 모두 **글자 단위로 같았다**. 다른 점은 체크리스트 쪽 `justify-content: space-between` 하나인데, 제목에 `flex: 1` 이 있어 효과가 없는 선언이었다. JSX 구조도 같다 — 핸들 · 제목(입력↔버튼 토글) · 삭제.
+
+드롭 대상 컨테이너는 옮기지 않았다. `onDragOver`/`onDrop` 이 공용 컴포넌트로 가면 패널마다 다른 드롭 판정을 프롭으로 실어 날라야 하고, 그때부터 그 컴포넌트는 잡동사니가 된다. 드래그 **소스**인 핸들만 공유한다.
+
+삭제 버튼에 `aria-label` 이 붙었다 — 이관 전에는 `title` 만 있어 ✕ 하나뿐인 버튼에 접근성 이름이 없었다.
+
+### 죽은 컴포넌트
+
+`BadgePresetManager` 는 `return null` 스텁이고 참조가 0건, CSS 413행은 저장소에서 **유일한 고아**였다(전수 조사). S-2 에서 이 파일의 hex 를 토큰으로 바꾸는 데 시간을 썼으므로 **S-2 수치는 그만큼 부풀려져 있었다.**
 
 ---
 
