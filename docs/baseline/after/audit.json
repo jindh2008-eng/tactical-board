@@ -1,6 +1,6 @@
 {
   "url": "http://localhost:5174",
-  "at": "2026-08-26T06:35:49.217Z",
+  "at": "2026-08-26T06:42:27.802Z",
   "widths": [
     1280,
     1800,
@@ -130,36 +130,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
-        "rowCount": 14,
+        "rowCount": 20,
         "worstRows": [
+          {
+            "sel": ".bcf__ratio-row",
+            "w": 858,
+            "pct": 15.4
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 858,
+            "pct": 18.1
+          },
           {
             "sel": ".set-card__head",
             "w": 438,
             "pct": 22.6
           },
           {
-            "sel": ".set-card__head",
-            "w": 438,
-            "pct": 26.7
+            "sel": ".bpv__cell-inner",
+            "w": 368.1,
+            "pct": 26.1
           },
           {
-            "sel": ".bcf__ratio-row",
-            "w": 482,
-            "pct": 27.4
-          },
-          {
-            "sel": ".set-card__head",
-            "w": 482,
-            "pct": 32.2
-          },
-          {
-            "sel": ".bcf__toggle",
-            "w": 438,
-            "pct": 33.4
+            "sel": ".bpv__cell-inner",
+            "w": 368.1,
+            "pct": 26.1
           }
         ],
-        "minRowFillPct": 22.6,
-        "medianRowFillPct": 94.5,
+        "minRowFillPct": 15.4,
+        "medianRowFillPct": 44.7,
         "distinctFontSizes": 5,
         "controls": 207,
         "smallTargets": [],
@@ -228,36 +228,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
-        "rowCount": 14,
+        "rowCount": 20,
         "worstRows": [
+          {
+            "sel": ".bcf__ratio-row",
+            "w": 858,
+            "pct": 15.4
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 858,
+            "pct": 18.1
+          },
           {
             "sel": ".set-card__head",
             "w": 438,
             "pct": 22.6
           },
           {
-            "sel": ".set-card__head",
-            "w": 438,
-            "pct": 26.7
+            "sel": ".bpv__cell-inner",
+            "w": 368.1,
+            "pct": 26.1
           },
           {
-            "sel": ".bcf__ratio-row",
-            "w": 482,
-            "pct": 27.4
-          },
-          {
-            "sel": ".set-card__head",
-            "w": 482,
-            "pct": 32.2
-          },
-          {
-            "sel": ".bcf__toggle",
-            "w": 438,
-            "pct": 33.4
+            "sel": ".bpv__cell-inner",
+            "w": 368.1,
+            "pct": 26.1
           }
         ],
-        "minRowFillPct": 22.6,
-        "medianRowFillPct": 94.5,
+        "minRowFillPct": 15.4,
+        "medianRowFillPct": 44.7,
         "distinctFontSizes": 5,
         "controls": 207,
         "smallTargets": [],
@@ -2738,12 +2738,12 @@
         "화면": "출동대"
       },
       "1800": {
-        "최소": 88.3,
-        "화면": "출동대"
+        "최소": 44.7,
+        "화면": "건물 · 소방시설"
       },
       "2560": {
-        "최소": 88.3,
-        "화면": "출동대"
+        "최소": 44.7,
+        "화면": "건물 · 소방시설"
       }
     },
     "본문_사용률_최악_참고": {
