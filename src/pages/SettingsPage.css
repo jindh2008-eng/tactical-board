@@ -296,8 +296,18 @@
   flex: 0 1 380px;
 }
 
-/* 저장 목록 · 다른 이름으로 저장은 바 아래로 겹쳐 띄운다 — 본문을 밀지 않는다 */
-.settings-page__topbar .slp__list,
+/*
+ * 「다른 이름으로 저장」 줄은 바 아래로 겹쳐 띄운다 — 본문을 밀지 않는다.
+ *
+ * `.slp__list` 를 여기서 뺐다(2026-08-26). U-1 이 목록을 이름칸 아래로 옮겼는데
+ * 이 규칙이 **(0,2,0) 으로 새 규칙 (0,1,0) 을 이겨** 목록을 다시
+ * `position: absolute; right: 20px; width: 520px` 으로 끌어냈다. 그 결과 목록이
+ * 팝업 상자 **밖으로** 나가고, 팝업은 `overflow: hidden` 이라 통째로 잘려
+ * 「시나리오가 하나도 안 보이는」 증상이 됐다.
+ *
+ * 팝업 모양은 이제 `SettingsLibraryPanel.css` 의 `.slp__list-pop` 이 혼자 그린다.
+ * 여기서 다시 그리면 안 된다.
+ */
 .settings-page__topbar .slp__save-as-row {
   position: absolute;
   top: calc(100% + 4px);
