@@ -484,10 +484,10 @@ function checkReadiness(settings): Check[]
 | **S-0** | 기준선 기록 — 현재 화면 스크린샷 9장, 린트/타입 기준선 | `docs/` | XS | ✅ |
 | **S-1** | **토큰 정의** — §5.1 전체 + stylelint 규칙 | `SettingsPage.css` | S | ✅ |
 | **S-2** | **경계·대비 교정** — 하드코딩 hex 121개를 토큰으로 치환 (F-2) | 설정 CSS 11개 | M | ✅ |
-| **S-3** | **공용 컴포넌트 6종 + 아이콘** — 만들고 상단 바부터 적용 (F-4) | `components/settings/ui/*`, `SettingsLibraryPanel` | M | — |
-| **S-4** | **레이아웃·내비** — 3단 브레이크포인트, sticky 헤더, 사이드바 배지, 준비도 (F-5, §7.2) | `SettingsPage.tsx/css`, `utils/scenarioReadiness.ts` | L | — |
-| **S-5** | **패널 이관** — 9개 화면을 공용 컴포넌트로. 체크리스트(§7.3)가 절반 | `components/settings/*` 전부 | **XL** | — |
-| **S-6** | **저장 상태 모델** — dirty/applied, 상태 칩, beforeunload, 되돌리기 (F-3) | `settingsStore.tsx`, `SettingsLibraryPanel` | M | — |
+| **S-3** | **공용 컴포넌트 6종 + 아이콘** — 만들고 상단 바부터 적용 (F-4) | `components/settings/ui/*`, `SettingsLibraryPanel` | M | ✅ |
+| **S-4** | **레이아웃·내비** — 3단 브레이크포인트, sticky 헤더, 사이드바 배지, 준비도 (F-5, §7.2) | `SettingsPage.tsx/css`, `utils/scenarioReadiness.ts` | L | ✅ |
+| **S-5** | **패널 이관** — 9개 화면을 공용 컴포넌트로. 체크리스트(§7.3)가 절반 | `components/settings/*` 전부 | **XL** | ◐ **부분** — 화면 재설계는 전부 끝났으나 `SetCard` 를 실제로 쓰는 패널은 `BuildingConfigPanel` · `EventSetupPanel` 둘뿐이다. 나머지 9개 패널이 각자 카드 마크업을 갖고 있다(§S-5a) |
+| **S-6** | **저장 상태 모델** — dirty/applied, 상태 칩, beforeunload, 되돌리기 (F-3) | `settingsStore.tsx`, `SettingsLibraryPanel` | M | ✅ |
 
 **권장 실행 묶음**
 
