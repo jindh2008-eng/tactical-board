@@ -3,6 +3,7 @@ import { useVictims } from '../../context/VictimContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { MedicalPostBox } from './StandbyColumn';
+import { RescueBoard } from './RescueBoard';
 import { computeDropCenter } from '../../utils/dragDrop';
 import './AFaceBottomZones.css';
 
@@ -103,6 +104,7 @@ export function AFaceBottomZones() {
       <SubZone zoneKey={ZONE_KEY_RIT}      label="RIT"        modifier="rit"      taggedAsRit={true}  />
       <SubZone zoneKey={ZONE_KEY_COMMAND}  label="현장지휘소" modifier="command"  taggedAsRit={false} />
       <MedicalPostBox />
+      <RescueBoard />
     </div>
   );
 }

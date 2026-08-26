@@ -1,0 +1,105 @@
+/* ─────────────────────────────────────────────
+   구조 현황판 — A면 밴드 오른쪽 끝
+
+   색은 훈련모드 A면 팔레트(--ctr-*) 위에서 고른다.
+   설정모드의 --set-* 는 .settings-page 밖에서 정의가 없어 쓰면 색이 죽는다.
+   ─────────────────────────────────────────────*/
+
+.a-face-band__zone--rescue {
+  --zone-tint: rgba(66, 62, 96, 0.08);
+  --zone-bar:  rgba(52, 48, 72, 0.90);
+}
+
+.rescue-board__head {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  padding:     3px 8px 2px;
+  flex-shrink: 0;
+}
+
+.rescue-board__title {
+  font-size:   0.78rem;
+  font-weight: 700;
+  color:       var(--ctr-border-hard);
+}
+
+/* 구조/전체 — 숫자가 바뀌어도 자리가 흔들리지 않게 tabular */
+.rescue-board__count {
+  margin-left:          auto;
+  font-size:            0.78rem;
+  font-weight:          700;
+  color:                var(--ctr-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.rescue-board__body {
+  flex:       1;
+  min-height: 0;
+  overflow-y: auto;
+  display:    grid;
+  /* 좌: 건물(층수가 늘면 이쪽만 길어진다) / 우: 방면 4줄 고정 */
+  grid-template-columns: 1fr 1fr;
+  gap:        0 8px;
+  padding:    0 8px 4px;
+}
+
+.rescue-board__col {
+  display:        flex;
+  flex-direction: column;
+  gap:            1px;
+  min-width:      0;
+}
+
+.rescue-board__row {
+  display:     flex;
+  align-items: center;
+  gap:         5px;
+  min-height:  15px;
+}
+
+/* 이름 폭을 고정해 아이콘 시작점이 세로로 정렬된다 */
+.rescue-board__row-label {
+  flex-shrink:   0;
+  width:         28px;
+  font-size:     0.72rem;
+  font-weight:   700;
+  color:         var(--ctr-text-dim);
+  text-align:    right;
+  letter-spacing: -0.02em;
+}
+
+.rescue-board__row-icons {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       1px;
+  min-width: 0;
+}
+
+/*
+ * 사람 하나.
+ *
+ * 기본은 흐린 회색 — 「아직 못 구했다」가 한눈에 읽혀야 한다.
+ * 구조되면 남=파랑 / 여=빨강으로 켜진다. 이 두 색은 VictimCard 가 쓰는
+ * 성별 색과 같은 계열이라 화면 안에서 따로 놀지 않는다.
+ */
+.rescue-board__person {
+  display:     inline-flex;
+  color:       rgba(122, 118, 112, 0.45);
+  transition:  color 0.15s;
+}
+
+.rescue-board__person--rescued.rescue-board__person--male   { color: #2f6fb5; }
+.rescue-board__person--rescued.rescue-board__person--female { color: #c23b46; }
+
+.rescue-board__person-svg {
+  width:  7px;
+  height: 13px;
+  display: block;
+}
+
+.rescue-board__empty {
+  font-size: 0.72rem;
+  color:     var(--ctr-text-dim);
+  margin:    2px 0 0 4px;
+}

@@ -84,6 +84,18 @@ export interface VictimToken {
   carriedBy?:      string;
   /** 최초 배치 위치 표시 스냅샷 — 이동 후에도 유지. 카드 위치 표시 기준. */
   originDisplayBottom?: string;
+  /**
+   * 최초 배치 **구역 키** 스냅샷 — 이동해도 바뀌지 않는다.
+   *
+   * 구조대상자는 훈련 중 자리를 옮긴다. 특히 건물 내부에서 방면으로
+   * 「추락」하는 개념이 있어, 옥상에 둔 사람이 A면으로 내려간 뒤 구조되는
+   * 흐름이 흔하다. 이때 구조 현황은 **원래 있던 옥상** 기준으로 세어야 한다
+   * (zoneKey 는 이미 medical-post 로 바뀌어 있고, 그 전에도 face-A 였다).
+   *
+   * originDisplayBottom 은 사람이 읽는 문자열이라 집계에 못 쓴다.
+   * 이쪽은 parseZoneKey() 로 floorId·face 를 그대로 뽑을 수 있는 원본 키다.
+   */
+  originZoneKey?: string;
   zoneKey:      string | null;
 }
 

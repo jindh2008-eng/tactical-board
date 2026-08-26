@@ -157,6 +157,8 @@ export function victimSetupToToken(item: VictimSetupItem): VictimToken {
     face:                item.face,
     subLocation:         item.detailLocation.trim(),
     originDisplayBottom,
+    // 집계 기준이 되는 최초 배치 구역 — 이후 어디로 옮겨도 이 값은 그대로다
+    originZoneKey:       zoneKey ?? undefined,
     zoneKey,
   };
 }

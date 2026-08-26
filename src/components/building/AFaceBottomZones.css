@@ -28,9 +28,10 @@
 
   z-index: 6;
   display: grid;
-  /* 직전대기 : RIT : 현장지휘소 : 임시의료소.
-     RIT 는 한두 대만 서는 예비대라 가장 좁고, 직전대기와 임시의료소가 넓다. */
-  grid-template-columns: 3.5fr 1.2fr 2.5fr 3fr;
+  /* 직전대기 : RIT : 현장지휘소 : 임시의료소 : 구조 현황.
+     RIT 는 한두 대만 서는 예비대라 가장 좁다. 임시의료소는 구조대상자가
+     빠지고 출동대만 서게 되어 예전(3fr)보다 좁아도 된다. */
+  grid-template-columns: 3fr 1.1fr 2.2fr 2.2fr 2.5fr;
   border-top: 1px solid var(--ctr-border-mid);
   overflow: hidden;
 }

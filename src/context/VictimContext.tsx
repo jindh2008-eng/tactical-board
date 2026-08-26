@@ -522,11 +522,17 @@ export function VictimProvider({
         v.originDisplayBottom ??
         (isSpecialZone ? undefined : buildVictimDisplayLine({ ...v, zoneKey: toZoneKey }));
 
+      // 최초 배치 구역 — 한 번 잡히면 끝까지 유지한다(구조 현황 집계 기준).
+      // 로스터 배치분은 생성 시점에 이미 있고(victimSetupToToken), 훈련 중
+      // 손으로 만든 구조대상자는 처음 상황판에 놓이는 이 순간이 최초 배치다.
+      // 대기·임시의료소 같은 특수 구역은 「있던 자리」가 아니라 제외한다.
+      const originZoneKey = v.originZoneKey ?? (isSpecialZone ? undefined : toZoneKey ?? undefined);
+
       // 사용자가 직접 옮기면 이송 연결이 끊긴다(연결 해제 수단).
       // 연결된 출동대를 따라가는 이동만 keepCarrier 로 연결을 유지한다.
       const carriedBy = opts?.keepCarrier ? v.carriedBy : undefined;
 
-      return { ...v, zoneKey: toZoneKey, rescueLocation, triage, carriedBy, originDisplayBottom };
+      return { ...v, zoneKey: toZoneKey, rescueLocation, triage, carriedBy, originDisplayBottom, originZoneKey };
     }));
 
     setVictimPositions(prev => {

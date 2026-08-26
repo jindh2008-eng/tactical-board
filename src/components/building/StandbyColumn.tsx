@@ -6,7 +6,6 @@ import { useMedicalPost } from '../../context/MedicalPostContext';
 import { useUIOverlay } from '../../context/UIOverlayContext';
 import { TokenCard } from '../shared/TokenCard';
 import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
-import { VictimCard } from '../shared/VictimCard';
 import { RescueStats } from './RescueStats';
 import { ArrivedGroupRow } from '../shared/ArrivedGroupRow';
 import { splitArrivalGroup } from '../../utils/arrivalGroup';
@@ -67,7 +66,8 @@ function ChiefSelector({ value, onChange, zoneKey }: ChiefSelectorProps) {
 
 export function MedicalPostBox() {
   const { tokens, moveToken, addLog } = useTokens();
-  const { victims, moveVictim } = useVictims();
+  // moveVictim 만 쓴다 — 구조대상자를 그리지는 않지만 드롭(=구조 처리)은 받는다
+  const { moveVictim } = useVictims();
   const {
     isInstalled, setIsInstalled,
     assignedTokenId, setAssignedTokenId,
@@ -98,8 +98,6 @@ export function MedicalPostBox() {
 
   const zoneKey     = 'medical-post';
   const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
-  // 이송 연결된 구조대상자는 출동대 토큰 우측에 붙어 렌더된다(TokenCard) — 구역 배치에서 제외.
-  const zoneVictims = victims.filter(v => v.zoneKey === zoneKey && !v.carriedBy);
 
   // 담당 토큰이 구역을 벗어나면 담당자만 자동 해제 (설치 상태는 유지)
   useEffect(() => {
@@ -165,7 +163,11 @@ export function MedicalPostBox() {
         onDragOver={onDragOver}
         onDrop={onDrop}
       >
-        {zoneVictims.map(v => <VictimCard key={v.id} victim={v} />)}
+        {/*
+          구조대상자는 여기 그리지 않는다 — 임시의료소에는 출동대만 선다.
+          드롭은 그대로 받는다(아래 onDrop): 구조 처리가 바로 그 경로이고,
+          구조 결과는 오른쪽 구조 현황판(RescueBoard)에서 색으로 나타난다.
+        */}
         {zoneTokens.map(t => (
           <div
             key={t.id}
