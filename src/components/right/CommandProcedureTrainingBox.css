@@ -62,7 +62,8 @@
 }
 
 .command-procedure-box .checklist-panel__item-text {
-  font-size: 1.12rem;
+  font-size: 1.22rem;
+  font-weight: 600;
   line-height: 1.45;
   color: var(--ctr-border-hard);
 }
