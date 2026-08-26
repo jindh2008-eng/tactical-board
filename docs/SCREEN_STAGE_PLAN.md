@@ -40,7 +40,7 @@
 
 ### 1.1 결함 A: 글꼴 하한과 기하 하한이 **의도적으로 어긋나 있다**
 
-[`useUiScale.ts`](../src/hooks/useUiScale.ts)의 두 하한:
+`useUiScale.ts`(**삭제됨** — 이 문서 §2.1 이 그 근거다)의 두 하한이었다:
 
 ```
 UI_SCALE_MIN   = 0.50   ← 기하(패딩·아이콘·px 토큰)

@@ -1,5 +1,12 @@
 # TODO_ROADMAP.md — 작업 목록 및 주의사항
 
+> ## ⚠ 낙후 (2026-05-05 기준)
+>
+> 작업 순서는 [MASTER_PLAN.md](MASTER_PLAN.md) §4가 단일 출처다. 이 문서와 어긋나면 그쪽을 따른다.
+> 여기 적힌 항목 중 이미 해소된 것이 있다 — 예컨대 「에러 바운더리 없음」은 `RouteErrorBoundary`로
+> 구현됐다. 현재 상태는 [FEATURE_STATUS.md](FEATURE_STATUS.md)를 본다.
+
+
 > 최종 업데이트: 2026-05-05
 
 > 문서 역할: 과거 작업 목록 보존용. 현재 제품 우선순위는 [`PROJECT_PLAN.md`](./PROJECT_PLAN.md), 기술 안정화와 반복 장애는 [`TECHNICAL_IMPROVEMENT_PLAN.md`](./TECHNICAL_IMPROVEMENT_PLAN.md)를 기준으로 관리한다.

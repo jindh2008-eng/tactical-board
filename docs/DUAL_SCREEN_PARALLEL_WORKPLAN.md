@@ -1,5 +1,11 @@
 # DUAL_SCREEN_PARALLEL_WORKPLAN.md — Phase M 병렬 작업 분담 계획
 
+> ## ⏸ 착수 전
+>
+> Phase M(화면 분리)은 아직 시작하지 않았다. 이 문서는 **그때 파일 소유권을 나누는 방법**을 적어 둔 것이다.
+> 선행 단계는 [MASTER_PLAN.md](MASTER_PLAN.md) §7.1 훈련모드(지휘) 신설이다.
+
+
 > 작성일: 2026-08-14
 > 대상: [DUAL_SCREEN_SYNC_PLAN.md](DUAL_SCREEN_SYNC_PLAN.md) §7 Phase M(최소 구현)을 **Claude Code + Codex 2개 에이전트로 동시 진행**
 > 전제: 파일 소유권을 배타적으로 나눠 머지 충돌을 원천 차단한다

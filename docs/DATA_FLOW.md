@@ -1,320 +1,211 @@
-# DATA_FLOW.md — 데이터 흐름
+# DATA_FLOW.md — 저장소와 데이터 흐름
 
-> 최종 업데이트: 2026-05-05
-
----
-
-## 1. 전체 데이터 계층
-
-```
-설정 데이터 (localStorage, 영구)
-  └── SettingsProvider (settingsStore.tsx)
-        └── 설정창에서 편집
-              └── 훈련 세팅 시 → 런타임 초기화에 사용
-
-런타임 데이터 (sessionStorage, 탭 생명주기)
-  ├── TokenContext     → KEY_TOKENS
-  ├── VictimContext    → KEY_VICTIMS
-  ├── TrainingContext  → KEY_TRAINING
-  └── EventContext     → KEY_EVENTS
-```
+> 최종 갱신: 2026-08-26 · **코드를 읽어 다시 쓴 것이다**(이전 판은 2026-05-06 기준)
+> 여기 적힌 목록·순서·개수는 전부 실측이다. 코드를 바꾸면 여기도 바꾼다.
 
 ---
 
-## 2. 설정창 → 훈련창 데이터 흐름
+## 1. 두 저장소
 
 ```
-[설정창] BuildingConfigPanel
-  → settingsStore.updateBuilding()
-    → localStorage 'tacticalBoardWorkingPresets'
-
-[훈련 세팅 버튼 클릭]
-  → TrainingContext.loadSettings()
-    → clearRuntimeSession()          // sessionStorage 초기화
-    → 설정값을 훈련창 컨텍스트에 주입:
-        building.config   → BuildingBoard (층 구조)
-        building.fireFloor → BuildingBoard (화점층)
-        building.fireStatus → BuildingStateContext (초기 화재상태)
-        dispatchRoster    → TokenContext (출동대 토큰 생성)
-        victimSetup       → VictimContext (구조대상자 초기 배치)
-        hydrantSetup      → TacticalArea (소화전 아이콘 렌더)
-        eventSetup        → EventContext (이벤트 토큰 활성화)
-    → runKey 증가 (EventProvider, TokenProvider, VictimProvider 재마운트)
+        설정모드 /settings                    훈련모드 /play
+  ┌──────────────────────────┐        ┌──────────────────────────┐
+  │  localStorage            │        │  sessionStorage          │
+  │  키 6종                  │        │  키 13종                 │
+  │  영구 · 자유 편집        │        │  탭 생명주기 · 읽기 전용 │
+  └───────────┬──────────────┘        └──────────▲───────────────┘
+              │                                  │
+              └────────── [훈련 세팅] ───────────┘
+                 sessionStorage 를 비우고 설정을 적용한다
 ```
+
+**두 저장소가 만나는 곳은 `훈련 세팅` 버튼 하나뿐이다.** 설정모드에서 값을 바꿔도 훈련 화면에 자동으로 반영되지 않는다 — 이 점이 자주 오해된다.
+
+각 저장소에는 **단일 창구 모듈**이 있다. 다른 곳에서 `localStorage`/`sessionStorage`를 직접 만지지 않는다.
+
+| 저장소 | 창구 |
+|---|---|
+| localStorage | `src/utils/settingsStorage.ts` |
+| sessionStorage | `src/utils/runtimeSession.ts` |
 
 ---
 
-## 3. localStorage 구조
+## 2. localStorage — 설정모드
+
+| 키 | 내용 |
+|---|---|
+| `tacticalBoardSettingsList` | 시나리오 세트 목록 (건물·출동대·구조대상자·현장요소·체크리스트) |
+| `tacticalBoardWorkingPresets` | 작업 중 프리셋 |
+| `tacticalBoardCommandProcedure` | 지휘절차 (등급별) |
+| `tacticalBoardActiveCommandProcedureLevel` | 선택된 훈련 표시 레벨 — **시나리오 값이다** |
+| `tacticalBoardUnitStatus` | 출동대 상태 메시지 |
+| `tacticalBoardTagPresets` | 임무·상태 배지 프리셋 |
+
+### 내보내기 형식
+
+`SettingsExport` 인터페이스가 전체 번들 형식이다.
 
 ```
-Key: 'tacticalBoardSettingsList'
-Value: SettingsSet[] (JSON)
-  SettingsSet {
-    id:               string       // generateId()
-    name:             string       // 설정 세트 이름
-    updatedAt:        string       // ISO 날짜
-    building: {
-      config:         BuildingConfig  // aboveGroundFloors, basementFloors
-      fireFloor:      number
-      fireStatus:     FireStatus | null
-      targetName:     string
-    }
-    timing:           TimingSettings
-    dispatchSetup:    DispatchSetup
-    dispatchRoster:   DispatchRosterItem[]
-    arrivalMode:      ArrivalMode     // 'time' | 'order'
-    victimSetup:      VictimSetupItem[]
-    hydrantSetup:     HydrantSetupItem[]
-    eventSetup:       EventSetupItem[]
-    medicalPostChief: string
-    stagingAreaChief: string
-  }
-
-Key: 'tacticalBoardWorkingPresets'
-Value: WorkingPresets (JSON) — 자동 저장 (설정 변경마다)
-  {
-    timing, dispatchSetup, dispatchRoster, arrivalMode,
-    victimSetup, hydrantSetup, eventSetup,
-    medicalPostChief, stagingAreaChief,
-    sharedBadgePresets: SharedBadgePreset[]
-    unitBadgePresets:   UnitSpecificBadgePreset[]
-  }
+version · exportedAt · settingsList · workingPresets
+commandProcedureConfigs · activeCommandProcedureLevel
+unitStatusConfig · unitTagPresetConfig
 ```
+
+시나리오 하나만 내보내는 형식은 따로 있다 — `kind: 'tactical-board.scenario'`. 전체 번들은 **백업**, 단일 시나리오는 **공유**용이다.
 
 ---
 
-## 4. sessionStorage 구조
+## 3. sessionStorage — 훈련모드 (13종)
 
-```
-Key: 'tactical-board.runtime.tokens'
-Value: TokenSessionState {
-  tokens:           UnitToken[]
-  logs:             LogEntry[]
-  positions:        Record<tokenId, Pos>
-  arrivalTargetAt:  Record<tokenId, number>  // 절대 ms 타임스탬프
-  moveTargetAt:     Record<tokenId, number>
-  counters:         Record<baseKey, number>  // 수동 생성 번호 중복 방지
-}
+| 키 | 쓰는 Context |
+|---|---|
+| `…runtime.tokens` | `TokenContext` |
+| `…runtime.victims` | `VictimContext` |
+| `…runtime.victim-search` | `VictimContext` |
+| `…runtime.training` | `TrainingContext` |
+| `…runtime.events` | `EventContext` |
+| `…runtime.building` | `BuildingStateContext` |
+| `…runtime.waterconn` | `WaterConnectionContext` |
+| `…runtime.hydrant` | `HydrantStateContext` |
+| `…runtime.equip-msg` | `HydrantStateContext` |
+| `…runtime.waterlevels` | `WaterLevelContext` |
+| `…runtime.checklist` | `ChecklistProgressContext` |
+| `…runtime.logs` | `LogContext` |
+| `…runtime.posts` | `MedicalPostContext` (읽기: `ResourceStatusContext`) |
 
-Key: 'tactical-board.runtime.victims'
-Value: VictimSessionState {
-  victims:         VictimToken[]
-  victimPositions: Record<victimId, Pos>
-}
+**새 런타임 상태를 영속화할 때는 반드시 `runtimeSession.ts`에 `save*`/`load*` 쌍을 추가한다.**
 
-Key: 'tactical-board.runtime.training'
-Value: TrainingSessionState {
-  status:    'idle' | 'running' | 'ended'
-  startedAt: number | null   // Date.now()
-  endedAt:   number | null
-}
+> ⚠ 하이픈이 든 키가 둘 있다(`equip-msg` · `victim-search`). 키를 정규식으로 세는 스크립트가 `[a-z]+`만 쓰면 이 둘을 빠뜨린다 — 오래도록 "11종"으로 잘못 적혀 있었다.
 
-Key: 'tactical-board.runtime.events'
-Value: EventSessionState {
-  positions: Record<eventId, {x, y}>
-  statuses:  Record<eventId, EventStatus>
-}
-```
+### 저장은 디바운스된다
+
+`saveLogSession`을 비롯한 여러 Context가 **500ms 디바운스**로 쓴다(`LogContext.tsx:81`, `TokenContext.tsx:462`). 조작 직후에 sessionStorage를 읽으면 이전 값이 나온다. 브라우저에서 상태를 확인할 때는 충분히 기다리거나 DOM을 직접 본다.
 
 ---
 
-## 5. 출동대 토큰 생성 흐름
+## 4. Provider 중첩 순서 ★
+
+**순서에 의미가 있다.** 잘못 배치하면 훅이 throw 한다.
+
+### App.tsx — 모드 공통
 
 ```
-[설정창] DispatchSetupPanel
-  → 수량 설정 (suppression: 3, rescue: 2 ...)
-  → dispatchRoster: DispatchRosterItem[] 자동 생성 (buildRoster())
-      DispatchRosterItem {
-        id, name, unitType, linkedTo(차량 연결),
-        arrivalSec, arrivalOrder
-      }
-
-[훈련 세팅] TrainingContext.loadSettings()
-  → TokenContext: rosterItemToToken(item) 으로 UnitToken 생성
-      UnitToken {
-        id, label, type, color, unitType,
-        zoneKey: null (pool에서 시작),
-        source: 'roster'
-      }
-  → 도착 카운트다운 등록 (arrivalTargetAt = Date.now() + arrivalSec*1000)
-
-[훈련 시작] status: 'idle' → 'running'
-  → 1초 인터벌 시작
-  → 매 틱: arrivalTargetAt 초과 토큰 → standby-standby1으로 자동 이동
-
-[수동 추가] UnitAddDrawer
-  → TokenContext.createToken()
-      source: 'manual', zoneKey: null
+SettingsProvider
+└ TrainingProvider
+  └ UIOverlayProvider
+    └ NavSlotProvider
 ```
+
+### PlayPage.tsx — 훈련모드
+
+```
+ 1 FireLineProvider
+ 2 LogProvider
+ 3 EventProvider              ← TokenProvider 바깥이다
+ 4 ChecklistProgressProvider
+ 5 ResourceStatusProvider
+ 6 MedicalPostProvider
+ 7 TokenProvider
+ 8 VictimProvider
+ 9 ActionModeProvider
+10 DrawingProvider
+11 WaterConnectionProvider
+12 FireCommandProvider
+13 ChecklistCommandProvider
+14 WaterLevelProvider
+15 HydrantStateProvider
+```
+
+**함정: `EventProvider`가 `TokenProvider` 바깥이라 `EventContext` 안에서 `useTokens()`를 쓸 수 없다.** 이벤트 로그를 `EventLayer` 컴포넌트에서 처리하는 이유가 이것이다.
+
+새 Provider나 컴포넌트를 넣을 때 어떤 Context가 필요한지 먼저 확인한다.
 
 ---
 
-## 6. 토큰 이동 흐름
+## 5. runKey — 재마운트로 상태를 초기화한다
 
-```
-[드래그 앤 드롭]
-  사용자 → ZoneCell.onDrop / ExteriorZone.onDrop
-    → TokenContext.moveToken(tokenId, toZoneKey, pos?)
-        1. 이동 카운트다운 시작 (30초)
-        2. token.zoneKey 업데이트
-        3. token.lastMovedAt = Date.now()
-        4. addLog({ logType: 'move', fromZoneId, toZoneId })
-        5. sessionStorage 저장 (500ms 디바운스)
+`TrainingContext`의 `runKey`가 바뀌면 `PlayPage`의 Provider 다수가 `key={runKey}`로 **재마운트**되어 런타임 상태가 통째로 리셋된다.
 
-[자동 도착]
-  TrainingContext 틱 → moveToken(id, 'standby-standby1', undefined, { suppressMoveCountdown: true })
-    → 이동 카운트다운 없이 즉시 이동
-```
+상태 초기화 로직을 각 Context에 따로 쓰지 않는 것이 이 코드베이스의 방식이다. 초기화가 필요하면 `runKey`를 바꾼다.
 
 ---
 
-## 7. 구조 처리 흐름
+## 6. Context 경계를 넘는 호출 — register/call
+
+Context 바깥에서 안쪽 동작을 불러야 할 때 쓴다(`FireCommandContext`, `ChecklistCommandContext`).
 
 ```
-[1단계] 구조대 우클릭 → '구조 시작' 선택
-  → ActionModeContext.enterMode({ type: 'rescue', sourceId: tokenId })
-
-[2단계] 피해자 클릭
-  → TokenContext.rescueUnit(tokenId, victimLabel)
-      → victim.zoneKey = 'medical-post'
-      → 구조중 배지 추가 (line1: '구조중')
-      → 의료 카운트다운 시작 (30초)
-      → addLog({ logType: 'rescue', note: '구조: [victim]' })
-
-[3단계] 30초 경과
-  → 구조중 배지 제거
-  → victim.zoneKey = 'standby-imminent' (직전대기)
-  → rescueLocation 스냅샷 저장
+컴포넌트가 마운트되며 자신의 처리기를 register
+        ↓
+바깥에서 call* 로 호출
 ```
+
+기존 분기 로직을 건드리지 않고 외부 진입점을 만들 때 유용하다.
 
 ---
 
-## 8. 건물 상태 (화재·연기·문) 흐름
+## 7. 좌표는 전부 0~1 정규화
 
-```
-BuildingStateContext 내부 상태:
-  doorStates:         Record<floorId, 'open'|'closed'>
-  fireStates:         Record<floorId, FireStatus|null>
-  stairSmokeFloor:    number | null   // 연기 유입 최저 층번호
-  smokeConcentration: number          // 0/50/100
+| 대상 | 기준 |
+|---|---|
+| 출동대 · 구조대상자 | **구역** 대비 |
+| 이벤트 토큰 | **보드** 대비 |
 
-연기 계산 규칙:
-  화재층 문 열림 + 활성 화재상태 → smokeConcentration = RF열림?50:100
-  RF 열림 + 유입경로 있음 → smokeConcentration = 50 (배연 중)
-  RF 열림 + 유입경로 없음 → smokeConcentration = 0, stairSmokeFloor = null
-  RF 닫힘 + 연기 있음 → smokeConcentration = 100
+렌더는 `left`/`top` 퍼센트로 넘긴다. 해상도가 바뀌어도 CSS가 따라가므로 재계산 코드가 없다.
 
-SmokeLevel 파생:
-  stairSmokeFloor === null → 'none'
-  concentration === 0      → 'none'
-  concentration < 67       → 'weak'
-  concentration >= 67      → 'full'
+- 생산: `utils/dragDrop.ts`의 `computeDropCenter`, `utils/victimPlacement.ts`의 `computeVictimOffsets`
+- 세션에 `posFormat: 'norm'` 필드가 있다. 없으면 구버전 px 저장분으로 보고 좌표를 폐기한다(로드 시점엔 구역 크기를 몰라 환산이 불가능하다).
 
-로그 발생 시점:
-  setDoorState()   → onDoorChange() → BuildingBoard.handleDoorChange() → addLog('door')
-  setFireStatus()  → onFireChange() → BuildingBoard.handleFireChange() → addLog('fire-status')
-  globalSmokeLevel 변경 감지 → onSmokeChange() → addLog('smoke')
-  (초기화 시 prevSmokeLevelRef로 중복 로그 방지)
-```
+**새로 좌표를 저장하는 코드를 px로 쓰면 안 된다.**
 
 ---
 
-## 9. 이벤트 토큰 흐름
+## 8. 출동대 로스터 — 파생 데이터
+
+`dispatchRoster`는 `dispatchSetup`에서 **파생된다**. 수량이 바뀌면 `buildRoster(setup, prevRoster)`가 다시 돈다(`settingsStore.tsx:299`).
 
 ```
-[설정창] EventSetupPanel
-  → settingsStore.addEventSetupItem / updateEventSetupItem
-    → localStorage 저장
-
-[훈련세팅]
-  → EventProvider 재마운트 (runKey 증가)
-    → enabledEvents = eventSetup.filter(e.enabled)
-    → sessionStorage에서 positions/statuses 복원 (없으면 빈 객체)
-    → 위치 미지정 항목 → EventLayer 초기 배치 (좌하단 격자)
-
-[우클릭] 상태 변경
-  → EventLayer.handleStatusChange(id, status)
-    → addLog({ logType: 'event-status', tokenName: label, note: statusLabel })
-    → EventContext.setEventStatus(id, status)
-      → sessionStorage 저장
+dispatchSetup  ──buildRoster(setup, prev)──▶  dispatchRoster
+ (수량·추가항목)                              (개별 대 + 착대 + 부대명)
 ```
+
+이전 값을 **이름으로** 찾아 지킨다(`prevByName`). 그래서 수량을 늘려도 기존 대의 착대·부대명이 보존된다. 유관기관·직접입력만 **id로** 찾는다.
+
+### 착대 규칙
+
+| 상황 | 결과 |
+|---|---|
+| 새 대 생성 | 같은 종류의 최대 착대 + 1 |
+| 연동 펌프 | **부대의 착대를 물려받는다** (2026-08-26 수정, P-13) |
+| 드래그로 이동 | `linkedTo` 항목에 전파 |
+| 이동 후 빈 착대 | `compactArrivalOrders`가 번호를 당겨 붙인다 |
+
+**압축은 드래그 경로에만 걸려 있다.** 수량을 줄여 착대가 비면 구멍이 남는다. 체크리스트 도착 항목은 착대 **번호**를 저장하므로 그런 항목은 `(편성없음)`으로 표시된다 — 데이터는 자동으로 고치지 않는다.
 
 ---
 
-## 10. 송수 연결 흐름
+## 9. 진행상황 관리 — 표시와 효과의 분리
 
-```
-[소화전/펌프 우클릭] → '송수' 버튼
-  → ActionModeContext.enterMode({
-      type: 'water-connect',
-      sourceId: id,
-      sourceType: 'hydrant' | 'pump' | 'water_tank',
-      sourceName: name  // 소화전은 이름 직접 전달 (토큰 아님)
-    })
+| 컴포넌트 | 역할 |
+|---|---|
+| `ChecklistView` | **표시 전용.** 설정만 읽고 런타임 Context에 의존하지 않는다 |
+| `ChecklistPanel` | **부수효과.** 항목 타입별 분기와 하위 항목 연쇄를 실행 |
 
-[대상 토큰 클릭] TokenCard.handleClick
-  → WaterConnectionContext.addConnection(
-      fromId, toId, fromType, toType, fromNameOverride?
-    )
-      1. 중복 연결 방지 (fromId+toId 조합 확인)
-      2. fromName = fromNameOverride ?? tokens.find(fromId)?.label ?? fromId
-      3. toName   = tokens.find(toId)?.label ?? toId
-      4. addLog({ logType: 'water-relay', note: 'fromName → toName' })
-      5. connections 배열에 추가
+`applyItemToggle(item, checking)`이 로컬 클릭과 원격 명령의 공통 진입점이며 멱등하다.
 
-[SVG 렌더링]
-  WaterConnectionOverlay
-    → connections 배열 순회
-    → 각 fromId·toId의 DOM 요소 위치를 getBoundingClientRect()로 계산
-    → SVG polyline 그리기
-
-[연결 해제]
-  → WaterConnectionContext.removeConnection(id)
-    → addLog({ note: 'fromName → toName 해제' })
-    → connections에서 제거
-```
+> **현재 `/play`에는 둘 다 렌더되지 않는다.** D-5로 무플 화면에서 빠졌고(`PlayPage.tsx:455`), 지휘절차 항목은 우측 `CommandProcedureTrainingBox`가 대신한다. `ChecklistDrawer`도 호출부가 없지만 **의도적으로 남긴 것**이다 — 향후 훈련모드(지휘) 화면용이다.
+>
+> 설정모드에서는 `ChecklistSetupPanel`(편집용)이 우측 상주 레일에 있다. 이쪽은 살아 있다.
 
 ---
 
-## 11. 로그 생성 → 표시 → 내보내기 흐름
+## 10. 화면 배율
 
-```
-[생성] TokenContext.addLog(entry)
-  → id = generateId()
-  → timestamp = nowHHMM() (HH:MM 형식)
-  → logs 배열 앞에 추가 (최신순)
-  → sessionStorage 저장
+훈련창은 `src/components/stage/StageRoot.tsx`가 **유일한 배율 지점**이다. 고정 논리 캔버스에 그리고 뷰포트에 맞춰 `transform: scale()`을 한 번 건다.
 
-[표시] LogPanel.tsx
-  → logs.map(entry => <LogEntryRow key={entry.id} entry={entry} />)
-  → logType별 렌더링 분기
-  → 최신 항목이 상단에 표시
+- 캔버스 치수는 `stage/canvas.ts`가 단일 출처. 높이 `CANVAS_H = 1440` 고정, 가로 폭은 훈련영역 종횡비에서 역산해 가변
+- 패널 폭은 `StageRoot`가 `--op-panel-w`/`--proc-panel-w`로 심고 `PlayPage.css`가 읽는다. **CSS에 숫자를 다시 적으면 안 된다**
+- 가로/세로 전환에 히스테리시스가 있다 (`ASPECT_TO_LANDSCAPE 1.15` / `ASPECT_TO_PORTRAIT 0.87`)
+- `--ui-scale`·`--font-scale`·`useUiScale`은 **제거됐다.** 훈련모드 CSS에 `var(--ui-scale)` 참조가 남아 있으나 정의가 없어 전부 폴백 1로 죽어 있다(정리 대상)
 
-[CSV 내보내기]
-  → exportLogsAsCsv(logs, targetName)
-    → logs.reverse() (시간순)
-    → 각 항목: timestamp, LOG_TYPE_LABELS[logType], entryContent(entry)
-    → UTF-8 BOM + CSV 문자열
-    → 파일명: 이벤트로그_{targetName}_{YYYYMMDD}.csv
-```
-
----
-
-## 12. Provider 중첩 순서 (PlayPage)
-
-```
-EventProvider (key={runKey})
-  └── TokenProvider (key={runKey})
-        └── VictimProvider (key={runKey})
-              └── ActionModeProvider
-                    └── WaterConnectionProvider
-                          └── HydrantStateProvider
-                                └── [UI 컴포넌트들]
-                                      └── TacticalArea
-                                            └── BuildingBoard
-                                                  └── BuildingStateProvider
-```
-
-**주의**: `EventProvider`가 `TokenProvider` 바깥에 있다.  
-→ `EventContext` 내부에서 `useTokens()` 사용 불가.  
-→ 이벤트 로그는 `EventLayer` 컴포넌트(TokenProvider 안쪽)에서 처리.
+설정모드는 스테이지를 쓰지 않는다 — 리플로우 3단. 근거는 [SCREEN_STAGE_PLAN.md](SCREEN_STAGE_PLAN.md) §2.1 · §5.

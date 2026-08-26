@@ -81,7 +81,7 @@
                                     └→ D면 CommandProcedureStatusBox 에 ✓ (읽기 전용)
 ```
 
-[`CommandProcedureStatusBox.tsx`](../src/components/building/CommandProcedureStatusBox.tsx)가 `sourceCommandProcedureItemId`가 붙은 체크리스트 항목만 골라 표시한다.
+`CommandProcedureStatusBox.tsx`(**삭제됨** — D-5 로 우측 [`CommandProcedureTrainingBox`](../src/components/right/CommandProcedureTrainingBox.tsx) 가 대체했다)가 `sourceCommandProcedureItemId`가 붙은 체크리스트 항목만 골라 표시한다.
 
 **변경 방향**: 이 연결을 끊고, D면이 `commandProcedureConfigs`(지휘절차 관리)를 직접 읽어 **무플이 그 자리에서 체크**한다. 진행상황관리에서는 해당 절차 항목을 뺀다.
 

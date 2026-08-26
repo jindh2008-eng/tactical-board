@@ -132,7 +132,7 @@ saveTokenSession({ tokens, logs, positions, arrivalTargetAt, moveTargetAt, count
 | 대상 | 파일 | 방식 |
 |---|---|---|
 | 우측 탭 패널 | [`components/right/LogPanel.tsx`](../src/components/right/LogPanel.tsx) | `logType`별 렌더 분기 8종 |
-| 드로어 | [`components/overlays/LogDrawer.tsx`](../src/components/overlays/LogDrawer.tsx) | `LogPanel` 재사용 |
+| 드로어 | `components/overlays/LogDrawer.tsx` — **삭제됨**(D-5 무플 UI 개편). 링크를 끊어 둔다 | `LogPanel` 재사용이었다 |
 | CSV | [`utils/exportLog.ts`](../src/utils/exportLog.ts) | 시간·유형·내용 3열, UTF-8 BOM |
 | PDF | 동일 파일 | `window.open` + `print()` |
 | 모달 | `components/overlays/LogModal.tsx` | 스텁(4행, `return null`) |
