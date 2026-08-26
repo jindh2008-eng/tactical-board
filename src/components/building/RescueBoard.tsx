@@ -27,6 +27,9 @@ import './RescueBoard.css';
 const MEDICAL_POST = 'medical-post';
 const FACES = ['A', 'B', 'C', 'D'] as const;
 
+/** 왼쪽 열이 담는 줄 수. 넘치는 층은 오른쪽 열 위로 흘러간다 */
+const LEFT_COL_ROWS = 4;
+
 /** 이 사람은 구조됐는가 — 임시의료소에 도착했으면 구조 완료 */
 function isRescued(v: VictimToken): boolean {
   return v.zoneKey === MEDICAL_POST;
@@ -107,29 +110,44 @@ export function RescueBoard() {
 
   const floors = [...byFloor.entries()].sort((a, b) => floorRank(b[0]) - floorRank(a[0]));
 
+  /*
+   * 두 열에 나눠 담는다.
+   *
+   *   왼쪽  층 — 위에서부터 최대 4줄
+   *   오른쪽 남은 층 + 구조대상자가 있는 면
+   *
+   * 층수는 시나리오마다 다르고 방면은 최대 4개뿐이라, 층이 많으면 왼쪽만
+   * 길어지고 오른쪽은 비었다. 넘치는 층을 오른쪽으로 흘려 두 열을 고르게 쓴다.
+   * 면은 **구조대상자가 있는 면만** 그린다 — 빈 A~D 네 줄이 늘 자리를
+   * 차지하면 정작 층이 밀린다.
+   */
+  const faceRows: [string, VictimToken[]][] =
+    FACES.filter(f => (byFace.get(f)?.length ?? 0) > 0).map(f => [f, byFace.get(f)!]);
+
+  const allRows: [string, VictimToken[]][] = [
+    ...floors.map(([id, people]) => [floorLabel(id), people] as [string, VictimToken[]]),
+    ...faceRows,
+  ];
+  const leftRows  = allRows.slice(0, LEFT_COL_ROWS);
+  const rightRows = allRows.slice(LEFT_COL_ROWS);
+
   const total    = victims.length;
   const rescued  = victims.filter(isRescued).length;
 
   return (
     <div className="a-face-band__zone a-face-band__zone--rescue">
       <div className="rescue-board__body" hidden={!open}>
-        {/* 건물 — 구조대상자가 있는 층만. 층수는 시나리오마다 다르다 */}
         <div className="rescue-board__col">
-          {floors.length === 0
+          {leftRows.length === 0
             ? <p className="rescue-board__empty">—</p>
-            : floors.map(([floorId, people]) => (
-                <Row key={floorId} label={floorLabel(floorId)} people={people} />
+            : leftRows.map(([label, people]) => (
+                <Row key={label} label={label} people={people} />
               ))}
         </div>
 
-        {/*
-          방면 — A~D 네 줄 고정.
-          층과 달리 「없는 면」이라는 것이 없어서, 빈 줄이 곧 「그 면엔 아무도
-          없다」는 정보가 된다. 설정모드의 배치 현황과 같은 규칙이다.
-        */}
-        <div className="rescue-board__col rescue-board__col--face">
-          {FACES.map(f => (
-            <Row key={f} label={f} people={byFace.get(f) ?? []} />
+        <div className="rescue-board__col">
+          {rightRows.map(([label, people]) => (
+            <Row key={label} label={label} people={people} />
           ))}
         </div>
       </div>
