@@ -14,12 +14,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width:  calc(22px * var(--ui-scale, 1));
-  height: calc(16px * var(--ui-scale, 1));
-  padding: 0 calc(2px * var(--ui-scale, 1));
+  width:  22px;
+  height: 16px;
+  padding: 0 2px;
 
   border: 1px solid #2255aa;
-  border-radius: calc(4px * var(--ui-scale, 1));
+  border-radius: 4px;
   background: #0d2a52;
   cursor: grab;
   touch-action: none;
@@ -52,7 +52,7 @@
 .nozzle-handle--active {
   border-color: #66ccff;
   background: #1a5da8;
-  box-shadow: 0 0 calc(8px * var(--ui-scale, 1)) rgba(102, 204, 255, 0.65);
+  box-shadow: 0 0 8px rgba(102, 204, 255, 0.65);
 }
 
 .nozzle-handle--active svg { fill: #ffffff; }

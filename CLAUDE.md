@@ -94,7 +94,7 @@ Context 경계를 넘어 동작을 호출해야 할 때 이 패턴을 쓴다(`Fi
 - 캔버스 치수는 `src/components/stage/canvas.ts`가 단일 출처다. 높이 `CANVAS_H = 1440` 고정, 가로 폭은 훈련영역 종횡비에서 역산해 **가변**(레터박스가 구조적으로 0이 된다). 세로는 `CANVAS_PORTRAIT` 고정.
 - 패널 폭을 CSS에 다시 적지 않는다 — `StageRoot`가 `--op-panel-w` / `--proc-panel-w`로 심고 `PlayPage.css`가 그걸 읽는다. 양쪽에 숫자를 박으면 어긋날 때 캔버스 폭 클램프가 틀어져 레터박스가 조용히 되살아난다.
 - 가로/세로 전환에는 둔 구간(히스테리시스)이 있다 — `ASPECT_TO_LANDSCAPE 1.15` / `ASPECT_TO_PORTRAIT 0.87`.
-- **`--ui-scale` / `--font-scale` / `useUiScale`은 제거됐다.** 배율을 CSS 선언 1,157곳이 각자 따라가야 했고 px·rem·변수·%가 서로 다른 하한으로 갈라졌기 때문이다. `var(--ui-scale)` 참조가 훈련모드 CSS에 94건 남아 있으나 **정의가 없어 전부 폴백 1로 죽어 있다**(정리 대상). 새 코드에 쓰지 않는다.
+- **`--ui-scale` / `--font-scale` / `useUiScale`은 제거됐다.** 배율을 CSS 선언 1,157곳이 각자 따라가야 했고 px·rem·변수·%가 서로 다른 하한으로 갈라졌기 때문이다. `var(--ui-scale, 1)`·`var(--font-scale, 1)` 참조가 훈련모드 CSS에 100건 남아 있었으나 **2026-08-26에 전부 지웠다**(값은 폴백이 항상 1이었으므로 하나도 안 바뀐다). 새 코드에 쓰지 않는다.
 - 근거와 실측은 [docs/SCREEN_STAGE_PLAN.md](docs/SCREEN_STAGE_PLAN.md) §2.1 · §3.1 · §3.10 참고.
 
 **설정모드(`/settings`)는 스테이지를 쓰지 않는다.** 폼과 표라서 고정 캔버스에 넣으면 넓은 화면을 레터박스로 버리고 표가 좁아진다. 리플로우(브레이크포인트) 3단으로 간다 — [SCREEN_STAGE_PLAN.md](docs/SCREEN_STAGE_PLAN.md) §5.

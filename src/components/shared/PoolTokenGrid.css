@@ -17,7 +17,7 @@
 
 .ptg__column {
   flex:        1;
-  min-width:   calc(44px * var(--ui-scale, 1));
+  min-width:   44px;
   min-height:  0;
   overflow-y:  auto;
   display:     flex;
@@ -32,7 +32,7 @@
 .ptg__column .token-card {
   min-width:     0;
   height:        auto;
-  padding:       calc(7px * var(--ui-scale, 1)) calc(9px * var(--ui-scale, 1));
-  border-radius: calc(5px * var(--ui-scale, 1));
+  padding:       7px 9px;
+  border-radius: 5px;
   font-size:     1.06rem;
 }

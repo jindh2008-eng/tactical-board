@@ -104,10 +104,10 @@
 .siamese-pipe-wrap {
   position:    absolute;
   left:        50%;
-  bottom:      calc(1px * var(--ui-scale, 1));
+  bottom:      1px;
   transform:   translateX(-50%);
-  width:       calc(38px * var(--ui-scale, 1));
-  height:      calc(38px * var(--ui-scale, 1));
+  width:       38px;
+  height:      38px;
   z-index:     6;   /* 층 번호 글자 위 */
   user-select: none;
 }
@@ -178,11 +178,16 @@
 .exterior-zone--a {
   /* 경찰통제선 띠(15px)가 A면 최하단에 깔린다 — 켜져 있든 아니든 자리를 비운다 */
   --a-face-band-bottom: 21px;
-  /* 종전 임시의료소 높이(198px)로 네 칸을 통일한다.
-     --ui-scale(기하)이 아니라 --font-scale 을 쓰는 이유는 안에 담기는 것이
-     글자·토큰이라서다. 기하 배율로 줄이면 글꼴 하한(0.78) 때문에 내용만
-     남고 상자가 모자란다. */
-  --a-face-band-h: max(198px, calc(198px * var(--font-scale, 1)));
+  /*
+   * 종전 임시의료소 높이(198px)로 네 칸을 통일한다.
+   *
+   * `max(198px, 198px)` — 두 값이 같은 것은 오타가 아니다. 예전에는
+   * `max(198px, 198px * var(--font-scale, 1))` 로 배율에 따라 자라는 식이었는데,
+   * `--font-scale` 이 어디에도 정의되지 않아(2026-08-26 확인, 저장소 전체 검색으로
+   * 정의 0건) 폴백 1로 늘 198px 이었다. `max()` 만 남기고 배율 항을 지운다 —
+   * 값은 바뀌지 않는다.
+   */
+  --a-face-band-h: 198px;
   /* 소화전이 밴드 위에 앉으므로 아이콘 자리를 미리 뺀다.
      넉넉한 화면에서는 밴드가 어차피 198px 라 이 값이 걸리지 않고,
      A면이 낮은 태블릿에서만 밴드를 눌러 소화전이 화면 밖으로 밀리는 것을 막는다.
@@ -270,14 +275,17 @@
    토큰 카드 "바깥 왼쪽"에 절대배치(right: 100% + 4px)된다. 토큰이 좌측 정렬이라
    여백이 없으면 첫 열 토큰의 뱃지가 구역 경계(overflow:hidden)에 잘려 안 보인다.
 
-   상수항 10px 을 더하는 이유 — 뱃지 글자는 --font-scale(하한 0.78)을 따르므로
-   --ui-scale 에 비례해 줄지 않는다. 순수 비례식으로 잡으면 작은 화면에서 모자란다.
-   실측: ui-scale 0.5 에서 뱃지+간격 14.6px 필요 → 이 식은 17px 확보. */
+   좌측 24px = 10px(여백) + 14px(뱃지 폭 실측치). 예전엔 `--ui-scale` 에 비례해
+   줄어드는 식이었다(뱃지가 --font-scale 을 따로 따라 완전 비례는 아니었다).
+   `--ui-scale` 이 정의 없이 폴백 1로 죽어 있어(2026-08-26 확인, 저장소 전체
+   검색으로 정의 0건) 어차피 이 식은 늘 24px 이었다 — 고정값으로 정리한다.
+   화면 배율이 필요해지면 StageRoot 의 stage-level transform: scale() 을 쓴다
+   (§DATA_FLOW.md §10) — 이 변수 체계는 재도입하지 않는다. */
 .a-face-zone__body {
   flex:          1;
   min-height:    0;
   overflow-y:    auto;
-  padding:       2px 5px 4px calc(10px + 14px * var(--ui-scale, 1));
+  padding:       2px 5px 4px 24px;
   display:       flex;
   flex-wrap:     wrap;
   align-content: flex-start;
@@ -296,20 +304,20 @@
    ─────────────────────────────────────────────*/
 .ctrl-line-toggles {
   position:       absolute;
-  top:            calc(6px * var(--ui-scale, 1));
-  left:           calc(6px * var(--ui-scale, 1));
+  top:            6px;
+  left:           6px;
   z-index:        4;   /* 통제선 띠(zIndex:2)·토큰 위에 뜬다 */
   display:        flex;
   flex-direction: column;
   align-items:    flex-start;
-  gap:            calc(4px * var(--ui-scale, 1));
+  gap:            4px;
 }
 
 /* 버튼 한 줄 — 담당 출동대가 정해지면 옆에 이름이 붙는다("연결송수구 펌프1호") */
 .ctrl-line-toggle-row {
   display:     flex;
   align-items: center;
-  gap:         calc(5px * var(--ui-scale, 1));
+  gap:         5px;
   max-width:   100%;
 }
 
@@ -320,7 +328,7 @@
   white-space:    nowrap;
   overflow:       hidden;
   text-overflow:  ellipsis;
-  max-width:      calc(120px * var(--ui-scale, 1));
+  max-width:      120px;
   pointer-events: none;
 }
 
@@ -331,7 +339,7 @@
 .ctrl-line-toggle {
   /* A면 토큰(.face-general-zone .token-card)과 같은 계산식 → 높이가 일치한다.
      글자를 키운 만큼(1.13→1.22rem) 좌우 여백을 줄여 버튼 크기는 그대로 둔다 */
-  padding:       calc(8px * var(--ui-scale, 1)) calc(8px * var(--ui-scale, 1));
+  padding:       8px 8px;
   font-size:     1.22rem;
   line-height:   1;
 

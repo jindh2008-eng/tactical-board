@@ -114,7 +114,7 @@
   font-size: 1.0rem;
   line-height: 1;
   font-weight: 900;
-  min-width: calc(22px * var(--ui-scale, 1));
+  min-width: 22px;
   text-align: center;
 }
 

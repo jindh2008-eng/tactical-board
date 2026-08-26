@@ -8,17 +8,17 @@
   left: 100%;
   top: 50%;
   transform: translateY(-50%);
-  margin-left: calc(4px * var(--ui-scale, 1));
+  margin-left: 4px;
   z-index: 7;
 
   display: flex;
   align-items: center;
   justify-content: center;
-  width:  calc(20px * var(--ui-scale, 1));
-  height: calc(20px * var(--ui-scale, 1));
+  width:  20px;
+  height: 20px;
 
   border: 1px solid #aa7700;
-  border-radius: calc(4px * var(--ui-scale, 1));
+  border-radius: 4px;
   background: #2a1e00;
   cursor: grab;
   touch-action: none;
@@ -30,7 +30,7 @@
 
 .ladder-handle:hover {
   border-color: #ffcc44;
-  box-shadow: 0 0 calc(7px * var(--ui-scale, 1)) rgba(255, 204, 68, 0.6);
+  box-shadow: 0 0 7px rgba(255, 204, 68, 0.6);
 }
 
 .ladder-handle svg {
@@ -52,7 +52,7 @@
 .ladder-handle--boom { border-color: #aa5500; }
 .ladder-handle--boom:hover {
   border-color: #ff9944;
-  box-shadow: 0 0 calc(7px * var(--ui-scale, 1)) rgba(255, 153, 68, 0.6);
+  box-shadow: 0 0 7px rgba(255, 153, 68, 0.6);
 }
 
 .ladder-handle__boom {

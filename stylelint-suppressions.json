@@ -24,11 +24,6 @@
       "count": 1
     }
   },
-  "src/components/building/ZoneCell.css": {
-    "declaration-property-value-no-unknown": {
-      "count": 2
-    }
-  },
   "src/components/right/CommandProcedureTrainingBox.css": {
     "no-duplicate-selectors": {
       "count": 3

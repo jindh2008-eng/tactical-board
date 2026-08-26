@@ -244,7 +244,7 @@
 
 .usp-arrival-list__label {
   flex-shrink:    0;
-  min-width:      calc(30px * var(--ui-scale, 1));
+  min-width:      30px;
   padding-top:    7px;
   font-size:      0.88rem;
   font-weight:    700;

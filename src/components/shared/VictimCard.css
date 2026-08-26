@@ -13,7 +13,7 @@
   touch-action: none;
   display: inline-flex;
   align-items: center;
-  border-radius: calc(9px * var(--ui-scale, 1));
+  border-radius: 9px;
   cursor: grab;
   user-select: none;
   transition: opacity 0.1s, transform 0.1s;
@@ -35,8 +35,8 @@
 .victim-card--person {
   flex-direction: row;
   align-items: center;
-  gap: calc(4px * var(--ui-scale, 1));
-  padding: calc(7px * var(--ui-scale, 1)) calc(7px * var(--ui-scale, 1));
+  gap: 4px;
+  padding: 7px 7px;
   background: #ffffff;
   color: #222;
   position: relative;
@@ -49,8 +49,8 @@
 /* 성별 아이콘 */
 .victim-gender-icon {
   flex-shrink: 0;
-  width: calc(14px * var(--ui-scale, 1));
-  height: calc(26px * var(--ui-scale, 1));
+  width: 14px;
+  height: 26px;
   display: block;
 }
 
@@ -65,7 +65,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: calc(70px * var(--ui-scale, 1));
+  max-width: 70px;
 }
 
 /* ─────────────────────────────────────────────
@@ -114,26 +114,26 @@
   flex-direction: column;
   align-items: center;
   padding:
-    calc(8px * var(--ui-scale, 1))
-    calc(7px * var(--ui-scale, 1))
-    calc(7px * var(--ui-scale, 1));
-  gap: calc(4px * var(--ui-scale, 1));
+    8px
+    7px
+    7px;
+  gap: 4px;
   background: #ffffff;
   border: 1.5px solid #90bfe0;
   color: #1976d2;
-  min-width: calc(56px * var(--ui-scale, 1));
+  min-width: 56px;
 }
 
 .group-icons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: calc(4px * var(--ui-scale, 1));
+  gap: 4px;
   width: 100%;
 }
 
 .group-person-icon {
-  width: calc(13px * var(--ui-scale, 1));
-  height: calc(17px * var(--ui-scale, 1));
+  width: 13px;
+  height: 17px;
   display: block;
   color: inherit;
 }
@@ -141,7 +141,7 @@
 .group-info {
   display: flex;
   align-items: center;
-  gap: calc(5px * var(--ui-scale, 1));
+  gap: 5px;
 }
 
 .group-info__count {
@@ -161,13 +161,13 @@
 .victim-card--custom {
   flex-direction: column;
   padding:
-    calc(4px * var(--ui-scale, 1))
-    calc(7px * var(--ui-scale, 1))
-    calc(3px * var(--ui-scale, 1));
+    4px
+    7px
+    3px;
   background: #0e1218;
   color: #88aacc;
   border: 1px solid #2a4060;
-  min-width: calc(58px * var(--ui-scale, 1));
+  min-width: 58px;
 }
 
 .victim-card__top {
@@ -195,11 +195,11 @@
 .zone-cell .victim-card--person,
 .face-general-zone .victim-card--person {
   padding:
-    calc(4px * var(--ui-scale, 1))
-    calc(5px * var(--ui-scale, 1))
-    calc(3px * var(--ui-scale, 1))
-    calc(4px * var(--ui-scale, 1));
-  gap: calc(4px * var(--ui-scale, 1));
+    4px
+    5px
+    3px
+    4px;
+  gap: 4px;
 }
 
 .zone-cell .victim-card__top {
@@ -217,32 +217,32 @@
    ─────────────────────────────────────────────*/
 
 .victim-card--attached.victim-card--person {
-  padding: calc(3px * var(--ui-scale, 1)) calc(4px * var(--ui-scale, 1));
+  padding: 3px 4px;
   gap: 0;
 }
 
 .victim-card--attached .victim-gender-icon {
-  width:  calc(13px * var(--ui-scale, 1));
-  height: calc(24px * var(--ui-scale, 1));
+  width:  13px;
+  height: 24px;
 }
 
 .victim-card--attached.victim-card--group {
-  padding: calc(3px * var(--ui-scale, 1)) calc(4px * var(--ui-scale, 1));
+  padding: 3px 4px;
   gap: 0;
   min-width: 0;
 }
 
 .victim-card--attached .group-icons {
-  gap: calc(2px * var(--ui-scale, 1));
+  gap: 2px;
 }
 
 .victim-card--attached .group-person-icon {
-  width:  calc(11px * var(--ui-scale, 1));
-  height: calc(15px * var(--ui-scale, 1));
+  width:  11px;
+  height: 15px;
 }
 
 .victim-card--attached.victim-card--custom {
-  padding: calc(3px * var(--ui-scale, 1)) calc(5px * var(--ui-scale, 1));
+  padding: 3px 5px;
   min-width: 0;
 }
 
