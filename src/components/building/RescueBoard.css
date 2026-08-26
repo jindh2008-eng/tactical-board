@@ -18,13 +18,13 @@
 .rescue-board__toggle {
   display:     flex;
   align-items: center;
-  gap:         6px;
+  justify-content: center;   /* 명칭은 띠 한가운데 */
   width:       100%;
   border:      none;
   cursor:      pointer;
   font-family: inherit;
-  /* 명칭이 가운데, 인원이 오른쪽 끝 — 가운데 정렬을 유지하려고 좌우를 같이 민다 */
-  justify-content: center;
+  /* 인원 표시를 오른쪽 끝에 띄우기 위한 기준점 */
+  position:    relative;
 }
 
 .rescue-board__toggle:hover { filter: brightness(1.15); }
@@ -34,8 +34,15 @@
   outline-offset: -2px;
 }
 
+/*
+ * 인원은 오른쪽 끝에 **띄워** 둔다.
+ *
+ * margin-left: auto 로 밀면 그 여백이 명칭까지 왼쪽으로 밀어 가운데 정렬이
+ * 깨진다. 흐름에서 빼내면 명칭은 띠 한가운데 그대로 있고 인원만 끝에 붙는다.
+ */
 .rescue-board__count {
-  margin-left:          auto;
+  position:             absolute;
+  right:                8px;
   font-size:            0.92rem;
   font-weight:          700;
   font-variant-numeric: tabular-nums;
@@ -119,7 +126,14 @@
 /* 이름 폭을 고정해 아이콘 시작점이 세로로 정렬된다 */
 .rescue-board__row-label {
   flex-shrink:    0;
-  width:          34px;
+  /*
+   * 폭을 글자 크기에 묶는다(em) — px 로 34 를 박아 뒀더니 글자가 커지는
+   * 큰 판에서 「옥상」이 두 줄로 접혔다. 세 글자(「10층」)까지 한 줄에
+   * 들어가는 3.2em 로 잡고 nowrap 으로 못 박는다.
+   * 폭이 고정이라 줄이 달라도 아이콘 시작점이 세로로 정렬된다.
+   */
+  width:          3.2em;
+  white-space:    nowrap;
   /* 줄이 정한 크기를 그대로 쓴다 */
   font-size:      1em;
   /* 한글은 line-height: normal 이 1.5배로 부푼다 — 12.75px 글자가 19px 줄이 돼
