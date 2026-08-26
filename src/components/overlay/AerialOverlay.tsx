@@ -4,7 +4,7 @@ import { useTokens } from '../../context/TokenContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import {
-  resolveAerialDeployFloor, maxDeployHeight, overHeightMessage,
+  resolveAerialDeployFloor, maxDeployHeight, overHeightMessage, isAerialRetractZone,
 } from '../../utils/aerialDeploy';
 import { useDisplayOptions } from '../../context/DisplayOptionsContext';
 import { canStartSpray } from '../../utils/waterSupply';
@@ -294,7 +294,7 @@ function TipPopup({ tokenId, x, y, hasWater, isSpray, onClose }: TipPopupProps) 
 // ─────────────────────────────────────────────
 
 export function AerialOverlay() {
-  const { tokens, moveAerialTarget, setStatusTag } = useTokens();
+  const { tokens, moveAerialTarget, setAerialTarget, setStatusTag } = useTokens();
   const { connections } = useWaterConnections();
   const { showWaterSupply } = useDisplayOptions();
   const waterLevel          = useWaterLevel();
@@ -384,8 +384,17 @@ export function AerialOverlay() {
       const target = resolveAerialDeployFloor(ev.clientX, ev.clientY);
       const tk     = tokensRef.current.find(t => t.id === tokenId);
 
-      // 층 미감지(지하층·A/C면·판 밖)면 원위치로 스냅백
-      if (!target || !tk?.aerialTarget) { cleanup(); return; }
+      if (!tk?.aerialTarget) { cleanup(); return; }
+
+      if (!target) {
+        // A면(또는 그 아래)까지 내려오면 회수 — 그 외 무효 지점(판 밖 등)은 스냅백.
+        // setAerialTarget(null) 이 aerialSprayTarget 도 함께 지우고 "전개 해제" 로그를 남긴다.
+        if (isAerialRetractZone(ev.clientX, ev.clientY)) {
+          setAerialTarget(tokenId, null);
+        }
+        cleanup();
+        return;
+      }
 
       const { floorId: newFloorId, floorHeight, displayLabel } = target;
       // 높이 초과 시 스냅백
@@ -405,7 +414,7 @@ export function AerialOverlay() {
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup',   onMouseUp);
-  }, [moveAerialTarget, setStatusTag]);
+  }, [moveAerialTarget, setAerialTarget, setStatusTag]);
 
   // rAF 루프: 토큰·층 위치를 매 프레임 추적
   useEffect(() => {

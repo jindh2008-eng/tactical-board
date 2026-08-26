@@ -44,6 +44,32 @@ export function overHeightMessage(unitType: string): string {
 /** 사다리를 세로로 걸 수 있는 방면 — 건물과 같은 그리드 row 를 쓰는 좌·우 열 */
 const LADDER_FACE_KEYS = new Set(['face-B', 'face-D']);
 
+/**
+ * 전개 끝단을 A면(또는 그 아래)까지 끌어내리면 회수로 본다.
+ *
+ * A면은 건물 하단에 눕힌 가로 띠라 층 판정이 안 되고(resolveAerialDeployFloor
+ * 가 null 을 돌려준다), 그래서 지금까지는 "무효 지점 → 스냅백"으로만 처리돼
+ * 한 번 전개하면 끝단을 다시 A면으로 끌어도 원래 층으로 튕겨 돌아갔다 —
+ * 완전히 회수할 방법이 없었다.
+ *
+ * A면은 항상 건물 하단이다(AFaceBottomZones 주석 "A면 하단 밴드" 참고, C면에만
+ * DisplayOptionsBar 가 뜨는 것도 C 가 상단이라는 방증). 그래서 "A면 이하"는
+ * A면 밴드의 위쪽 경계보다 아래(cy 가 더 큼)인지로 판정한다 — 밴드 안이든
+ * 그보다 더 아래(화면 하단 여백)든 전부 회수로 다룬다.
+ */
+export function isAerialRetractZone(cx: number, cy: number): boolean {
+  const board = document.getElementById('tactical-area');
+  const boardRect = board?.getBoundingClientRect();
+  // 보드 가로 범위 밖이면 다른 패널(로그 등) 위일 수 있으니 회수로 보지 않는다.
+  if (!boardRect || cx < boardRect.left || cx > boardRect.right) return false;
+
+  const faceA = document.querySelector('[data-zone-key="face-A"]');
+  const faceARect = faceA?.getBoundingClientRect();
+  if (!faceARect) return false;
+
+  return cy >= faceARect.top;
+}
+
 function readFloor(el: Element): AerialDeployFloor {
   const floorId = el.getAttribute('data-floor-id')!;
   return {
