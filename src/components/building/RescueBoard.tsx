@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useVictims } from '../../context/VictimContext';
 import { parseZoneKey } from '../../utils/logLabels';
 import { MaleIcon, FemaleIcon } from '../shared/victimIcons';
@@ -82,6 +83,9 @@ function Row({ label, people }: { label: string; people: VictimToken[] }) {
 
 export function RescueBoard() {
   const { victims } = useVictims();
+  // 하단 명칭 띠가 곧 여닫는 버튼이다 — 다른 네 구역의 띠와 같은 자리라
+  // 별도 버튼을 위에 두지 않는다(그 자리는 표가 쓴다).
+  const [open, setOpen] = useState(true);
 
   // 최초 배치 위치로 묶는다. originZoneKey 가 없는 옛 저장분은 현재 위치로 대신한다.
   const byFloor = new Map<string, VictimToken[]>();
@@ -108,12 +112,7 @@ export function RescueBoard() {
 
   return (
     <div className="a-face-band__zone a-face-band__zone--rescue">
-      <div className="rescue-board__head">
-        <span className="rescue-board__title">구조 현황</span>
-        <span className="rescue-board__count">{rescued} / {total}</span>
-      </div>
-
-      <div className="rescue-board__body">
+      <div className="rescue-board__body" hidden={!open}>
         {/* 건물 — 구조대상자가 있는 층만. 층수는 시나리오마다 다르다 */}
         <div className="rescue-board__col">
           {floors.length === 0
@@ -135,7 +134,20 @@ export function RescueBoard() {
         </div>
       </div>
 
-      <span className="a-face-zone__label a-face-zone__label--bottom">구조 현황</span>
+      {/*
+        명칭 띠 = 여닫기 버튼 + 인원 표시.
+        구조/전체를 여기 붙여, 접어 둔 상태에서도 진척이 보인다.
+      */}
+      <button
+        type="button"
+        className="a-face-zone__label a-face-zone__label--bottom rescue-board__toggle"
+        aria-expanded={open}
+        title={open ? '구조 현황 접기' : '구조 현황 펼치기'}
+        onClick={() => setOpen(v => !v)}
+      >
+        구조 현황
+        <span className="rescue-board__count">{rescued} / {total}</span>
+      </button>
     </div>
   );
 }
