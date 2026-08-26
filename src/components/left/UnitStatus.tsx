@@ -23,8 +23,12 @@ interface VehicleItem {
   unitType: string;
 }
 
+/*
+ * 펌프는 여기 없다 — makeActivity() 가 진압대를 만들 때 자동으로 짝지어
+ * 만든다(설정모드 buildRoster 의 자동 연동과 같은 규칙). 여기 목록에도 있으면
+ * 진압대 하나에 펌프가 두 대(자동 1 + 수동 1) 생기는 경로가 열린다.
+ */
 const VEHICLE_ITEMS: VehicleItem[] = [
-  { name: '펌프',      unitType: 'pump'           },
   { name: '물탱크',    unitType: 'water_tank'     },
   { name: '구조차',    unitType: 'rescue_vehicle' },
   { name: '고가차',    unitType: 'aerial'         },
