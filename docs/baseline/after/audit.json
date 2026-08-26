@@ -1,0 +1,2105 @@
+{
+  "url": "http://localhost:5174",
+  "at": "2026-08-26T00:32:11.050Z",
+  "widths": [
+    1280,
+    1800,
+    2560
+  ],
+  "minTargetPx": 24,
+  "fixture": {
+    "file": "tactical-board-settings-2026-08-06.json",
+    "exportedAt": "2026-08-06T08:55:01.951Z",
+    "settingsList": 11,
+    "dispatchRoster": 37,
+    "victimSetup": 11,
+    "keys": [
+      "tacticalBoardSettingsList",
+      "tacticalBoardWorkingPresets",
+      "tacticalBoardCommandProcedure",
+      "tacticalBoardUnitStatus",
+      "tacticalBoardTagPresets"
+    ]
+  },
+  "sections": {
+    "건물 · 소방시설": {
+      "1280": {
+        "fontSizes": {
+          "14.00": 172,
+          "12.00": 14,
+          "16.00": 148,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 208,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 216,
+            "minRatio": 3.13,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 123,
+            "minRatio": 1.55,
+            "maxRatio": 2.02
+          },
+          "rgb(176, 80, 80)": {
+            "count": 12,
+            "minRatio": 3.61,
+            "maxRatio": 3.83
+          },
+          "rgb(154, 117, 48)": {
+            "count": 16,
+            "minRatio": 4.19,
+            "maxRatio": 4.35
+          },
+          "rgb(74, 138, 74)": {
+            "count": 4,
+            "minRatio": 4.41,
+            "maxRatio": 4.41
+          },
+          "rgb(109, 130, 153)": {
+            "count": 28,
+            "minRatio": 3.8,
+            "maxRatio": 4.48
+          },
+          "rgb(224, 92, 92)": {
+            "count": 8,
+            "minRatio": 4.94,
+            "maxRatio": 4.94
+          }
+        },
+        "minBorderRatio": 1.55,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 240,
+          "mainW": 1040,
+          "sectionW": 936,
+          "contentW": 936,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 73.1
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "14.00": 172,
+          "12.00": 14,
+          "16.00": 148,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 208,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 216,
+            "minRatio": 3.13,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 123,
+            "minRatio": 1.55,
+            "maxRatio": 2.02
+          },
+          "rgb(176, 80, 80)": {
+            "count": 12,
+            "minRatio": 3.61,
+            "maxRatio": 3.83
+          },
+          "rgb(154, 117, 48)": {
+            "count": 16,
+            "minRatio": 4.19,
+            "maxRatio": 4.35
+          },
+          "rgb(74, 138, 74)": {
+            "count": 4,
+            "minRatio": 4.41,
+            "maxRatio": 4.41
+          },
+          "rgb(109, 130, 153)": {
+            "count": 28,
+            "minRatio": 3.8,
+            "maxRatio": 4.48
+          },
+          "rgb(224, 92, 92)": {
+            "count": 8,
+            "minRatio": 4.94,
+            "maxRatio": 4.94
+          }
+        },
+        "minBorderRatio": 1.55,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 240,
+          "mainW": 1560,
+          "sectionW": 1456,
+          "contentW": 1456,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 80.9
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "14.00": 171,
+          "12.00": 14,
+          "16.00": 148,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 208,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 216,
+            "minRatio": 3.13,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 123,
+            "minRatio": 1.55,
+            "maxRatio": 2.02
+          },
+          "rgb(176, 80, 80)": {
+            "count": 12,
+            "minRatio": 3.61,
+            "maxRatio": 3.83
+          },
+          "rgb(154, 117, 48)": {
+            "count": 16,
+            "minRatio": 4.19,
+            "maxRatio": 4.35
+          },
+          "rgb(74, 138, 74)": {
+            "count": 4,
+            "minRatio": 4.41,
+            "maxRatio": 4.41
+          },
+          "rgb(109, 130, 153)": {
+            "count": 28,
+            "minRatio": 3.8,
+            "maxRatio": 4.48
+          },
+          "rgb(224, 92, 92)": {
+            "count": 8,
+            "minRatio": 4.94,
+            "maxRatio": 4.94
+          }
+        },
+        "minBorderRatio": 1.55,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 240,
+          "mainW": 1680,
+          "sectionW": 1616,
+          "contentW": 1616,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 75,
+          "contentUsagePct": 63.1
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "현장요소": {
+      "1280": {
+        "fontSizes": {
+          "14.00": 189,
+          "12.00": 7,
+          "16.00": 145,
+          "18.00": 9,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 213,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 290,
+            "minRatio": 2.98,
+            "maxRatio": 3.48
+          },
+          "rgb(68, 136, 204)": {
+            "count": 13,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 146,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 240,
+          "mainW": 1040,
+          "sectionW": 936,
+          "contentW": 936,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 73.1
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "14.00": 189,
+          "12.00": 7,
+          "16.00": 145,
+          "18.00": 9,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 213,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 290,
+            "minRatio": 2.98,
+            "maxRatio": 3.48
+          },
+          "rgb(68, 136, 204)": {
+            "count": 13,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 146,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 240,
+          "mainW": 1560,
+          "sectionW": 1456,
+          "contentW": 1456,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 80.9
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "14.00": 188,
+          "12.00": 7,
+          "16.00": 145,
+          "18.00": 9,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 213,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 290,
+            "minRatio": 2.98,
+            "maxRatio": 3.48
+          },
+          "rgb(68, 136, 204)": {
+            "count": 13,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 146,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 240,
+          "mainW": 1680,
+          "sectionW": 1616,
+          "contentW": 1616,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 75,
+          "contentUsagePct": 63.1
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "구조대상자": {
+      "1280": {
+        "fontSizes": {
+          "14.00": 190,
+          "12.00": 9,
+          "16.00": 144,
+          "18.00": 18,
+          "24.00": 1,
+          "15.00": 2
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 6,
+        "controls": 290,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 449,
+            "minRatio": 3.13,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 111,
+            "minRatio": 1.55,
+            "maxRatio": 2.02
+          },
+          "rgb(74, 138, 74)": {
+            "count": 4,
+            "minRatio": 4.69,
+            "maxRatio": 4.69
+          },
+          "rgb(176, 80, 80)": {
+            "count": 44,
+            "minRatio": 3.61,
+            "maxRatio": 3.83
+          },
+          "rgb(109, 130, 153)": {
+            "count": 28,
+            "minRatio": 3.8,
+            "maxRatio": 4.48
+          },
+          "rgb(224, 92, 92)": {
+            "count": 8,
+            "minRatio": 4.94,
+            "maxRatio": 4.94
+          }
+        },
+        "minBorderRatio": 1.55,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 240,
+          "mainW": 1040,
+          "sectionW": 936,
+          "contentW": 936,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 73.1
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "14.00": 190,
+          "12.00": 9,
+          "16.00": 144,
+          "18.00": 18,
+          "24.00": 1,
+          "15.00": 2
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 6,
+        "controls": 290,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 449,
+            "minRatio": 3.13,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 111,
+            "minRatio": 1.55,
+            "maxRatio": 2.02
+          },
+          "rgb(74, 138, 74)": {
+            "count": 4,
+            "minRatio": 4.69,
+            "maxRatio": 4.69
+          },
+          "rgb(176, 80, 80)": {
+            "count": 44,
+            "minRatio": 3.61,
+            "maxRatio": 3.83
+          },
+          "rgb(109, 130, 153)": {
+            "count": 28,
+            "minRatio": 3.8,
+            "maxRatio": 4.48
+          },
+          "rgb(224, 92, 92)": {
+            "count": 8,
+            "minRatio": 4.94,
+            "maxRatio": 4.94
+          }
+        },
+        "minBorderRatio": 1.55,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 240,
+          "mainW": 1560,
+          "sectionW": 1456,
+          "contentW": 1456,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 80.9
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "14.00": 189,
+          "12.00": 9,
+          "16.00": 144,
+          "18.00": 18,
+          "24.00": 1,
+          "15.00": 2
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 6,
+        "controls": 290,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 449,
+            "minRatio": 3.13,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 111,
+            "minRatio": 1.55,
+            "maxRatio": 2.02
+          },
+          "rgb(74, 138, 74)": {
+            "count": 4,
+            "minRatio": 4.69,
+            "maxRatio": 4.69
+          },
+          "rgb(176, 80, 80)": {
+            "count": 44,
+            "minRatio": 3.61,
+            "maxRatio": 3.83
+          },
+          "rgb(109, 130, 153)": {
+            "count": 28,
+            "minRatio": 3.8,
+            "maxRatio": 4.48
+          },
+          "rgb(224, 92, 92)": {
+            "count": 8,
+            "minRatio": 4.94,
+            "maxRatio": 4.94
+          }
+        },
+        "minBorderRatio": 1.55,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 240,
+          "mainW": 1680,
+          "sectionW": 1616,
+          "contentW": 1616,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 75,
+          "contentUsagePct": 63.1
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "출동대": {
+      "1280": {
+        "fontSizes": {
+          "14.00": 223,
+          "12.00": 4,
+          "16.00": 164,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 257,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 327,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 53,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 110,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          },
+          "rgb(109, 130, 153)": {
+            "count": 24,
+            "minRatio": 4.65,
+            "maxRatio": 4.65
+          },
+          "rgb(198, 40, 40)": {
+            "count": 64,
+            "minRatio": 3.28,
+            "maxRatio": 3.28
+          },
+          "rgb(249, 168, 37)": {
+            "count": 8,
+            "minRatio": 9.35,
+            "maxRatio": 9.35
+          },
+          "rgb(46, 125, 50)": {
+            "count": 48,
+            "minRatio": 3.59,
+            "maxRatio": 3.59
+          },
+          "rgb(122, 95, 44)": {
+            "count": 48,
+            "minRatio": 3.07,
+            "maxRatio": 3.07
+          },
+          "rgb(114, 89, 173)": {
+            "count": 56,
+            "minRatio": 3.29,
+            "maxRatio": 3.29
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 240,
+          "mainW": 1040,
+          "sectionW": 936,
+          "contentW": 936,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 73.1
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "14.00": 223,
+          "12.00": 4,
+          "16.00": 164,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 257,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 327,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 53,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 110,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          },
+          "rgb(109, 130, 153)": {
+            "count": 24,
+            "minRatio": 4.65,
+            "maxRatio": 4.65
+          },
+          "rgb(198, 40, 40)": {
+            "count": 64,
+            "minRatio": 3.28,
+            "maxRatio": 3.28
+          },
+          "rgb(249, 168, 37)": {
+            "count": 8,
+            "minRatio": 9.35,
+            "maxRatio": 9.35
+          },
+          "rgb(46, 125, 50)": {
+            "count": 48,
+            "minRatio": 3.59,
+            "maxRatio": 3.59
+          },
+          "rgb(122, 95, 44)": {
+            "count": 48,
+            "minRatio": 3.07,
+            "maxRatio": 3.07
+          },
+          "rgb(114, 89, 173)": {
+            "count": 56,
+            "minRatio": 3.29,
+            "maxRatio": 3.29
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 240,
+          "mainW": 1560,
+          "sectionW": 1456,
+          "contentW": 1456,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 80.9
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "14.00": 222,
+          "12.00": 4,
+          "16.00": 164,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 257,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 327,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 53,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 110,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          },
+          "rgb(109, 130, 153)": {
+            "count": 24,
+            "minRatio": 4.65,
+            "maxRatio": 4.65
+          },
+          "rgb(198, 40, 40)": {
+            "count": 64,
+            "minRatio": 3.28,
+            "maxRatio": 3.28
+          },
+          "rgb(249, 168, 37)": {
+            "count": 8,
+            "minRatio": 9.35,
+            "maxRatio": 9.35
+          },
+          "rgb(46, 125, 50)": {
+            "count": 48,
+            "minRatio": 3.59,
+            "maxRatio": 3.59
+          },
+          "rgb(122, 95, 44)": {
+            "count": 48,
+            "minRatio": 3.07,
+            "maxRatio": 3.07
+          },
+          "rgb(114, 89, 173)": {
+            "count": 56,
+            "minRatio": 3.29,
+            "maxRatio": 3.29
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 240,
+          "mainW": 1680,
+          "sectionW": 1616,
+          "contentW": 1616,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 75,
+          "contentUsagePct": 63.1
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "시나리오 예측": {
+      "1280": {
+        "fontSizes": {
+          "14.00": 132,
+          "12.00": 7,
+          "16.00": 142,
+          "18.00": 7,
+          "10.20": 53,
+          "10.80": 7,
+          "11.40": 10,
+          "9.90": 2,
+          "13.50": 1,
+          "11.70": 16,
+          "12.30": 45,
+          "9.00": 5,
+          "11.10": 20
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 13,
+        "controls": 220,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-remove-btn",
+            "text": "×",
+            "w": 15.9,
+            "h": 19
+          }
+        ],
+        "unnamedIconButtons": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-remove-btn",
+            "text": "×"
+          }
+        ],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 153,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 17,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 83,
+            "minRatio": 1.9,
+            "maxRatio": 1.97
+          },
+          "rgb(42, 58, 74)": {
+            "count": 693,
+            "minRatio": 1.68,
+            "maxRatio": 1.68
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 240,
+          "mainW": 1040,
+          "sectionW": 0,
+          "contentW": 1040,
+          "hasSectionWrapper": false,
+          "frameUsagePct": 100,
+          "contentUsagePct": 81.3
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "14.00": 132,
+          "12.00": 7,
+          "16.00": 142,
+          "18.00": 7,
+          "10.20": 53,
+          "10.80": 7,
+          "11.40": 10,
+          "9.90": 2,
+          "13.50": 1,
+          "11.70": 16,
+          "12.30": 45,
+          "9.00": 5,
+          "11.10": 20
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 13,
+        "controls": 220,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-remove-btn",
+            "text": "×",
+            "w": 15.9,
+            "h": 19
+          }
+        ],
+        "unnamedIconButtons": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-remove-btn",
+            "text": "×"
+          }
+        ],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 153,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 17,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 83,
+            "minRatio": 1.9,
+            "maxRatio": 1.97
+          },
+          "rgb(42, 58, 74)": {
+            "count": 693,
+            "minRatio": 1.68,
+            "maxRatio": 1.68
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 240,
+          "mainW": 1560,
+          "sectionW": 0,
+          "contentW": 1560,
+          "hasSectionWrapper": false,
+          "frameUsagePct": 100,
+          "contentUsagePct": 86.7
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "14.00": 132,
+          "12.00": 7,
+          "16.00": 142,
+          "18.00": 7,
+          "10.20": 53,
+          "10.80": 7,
+          "11.40": 10,
+          "9.90": 2,
+          "13.50": 1,
+          "11.70": 16,
+          "12.30": 45,
+          "9.00": 5,
+          "11.10": 20
+        },
+        "minFontPx": 9,
+        "distinctFontSizes": 13,
+        "controls": 220,
+        "smallTargets": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►",
+            "w": 24.1,
+            "h": 16.2
+          },
+          {
+            "tag": "button",
+            "cls": "scen-remove-btn",
+            "text": "×",
+            "w": 15.9,
+            "h": 19
+          }
+        ],
+        "unnamedIconButtons": [
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "◄"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-cfg-stepper__btn",
+            "text": "►"
+          },
+          {
+            "tag": "button",
+            "cls": "scen-remove-btn",
+            "text": "×"
+          }
+        ],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 153,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 17,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 83,
+            "minRatio": 1.9,
+            "maxRatio": 1.97
+          },
+          "rgb(42, 58, 74)": {
+            "count": 693,
+            "minRatio": 1.68,
+            "maxRatio": 1.68
+          }
+        },
+        "minBorderRatio": 1.68,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 240,
+          "mainW": 2280,
+          "sectionW": 0,
+          "contentW": 2280,
+          "hasSectionWrapper": false,
+          "frameUsagePct": 98.4,
+          "contentUsagePct": 89.1
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "지휘절차": {
+      "1280": {
+        "fontSizes": {
+          "14.00": 195,
+          "12.00": 26,
+          "16.00": 146,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 261,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 242,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 13,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 176,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 240,
+          "mainW": 1040,
+          "sectionW": 936,
+          "contentW": 936,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 73.1
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "14.00": 195,
+          "12.00": 26,
+          "16.00": 146,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 261,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 242,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 13,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 176,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 240,
+          "mainW": 1560,
+          "sectionW": 1456,
+          "contentW": 1456,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 80.9
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "14.00": 194,
+          "12.00": 26,
+          "16.00": 146,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 261,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 242,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 13,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 176,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 240,
+          "mainW": 1680,
+          "sectionW": 1616,
+          "contentW": 1616,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 75,
+          "contentUsagePct": 63.1
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "상태 메시지": {
+      "1280": {
+        "fontSizes": {
+          "14.00": 183,
+          "12.00": 13,
+          "16.00": 142,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 226,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 260,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 84,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 240,
+          "mainW": 1040,
+          "sectionW": 936,
+          "contentW": 936,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 73.1
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "14.00": 183,
+          "12.00": 13,
+          "16.00": 142,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 226,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 260,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 84,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 240,
+          "mainW": 1560,
+          "sectionW": 1456,
+          "contentW": 1456,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 80.9
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "14.00": 182,
+          "12.00": 13,
+          "16.00": 142,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 226,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 260,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 84,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 240,
+          "mainW": 1680,
+          "sectionW": 1616,
+          "contentW": 1616,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 75,
+          "contentUsagePct": 63.1
+        },
+        "horizontalOverflow": false
+      }
+    },
+    "임무 · 상태 프리셋": {
+      "1280": {
+        "fontSizes": {
+          "14.00": 211,
+          "12.00": 21,
+          "16.00": 142,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 348,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 275,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 84,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          },
+          "rgb(255, 255, 255)": {
+            "count": 80,
+            "minRatio": 16.91,
+            "maxRatio": 16.91
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1280,
+          "sidebarW": 240,
+          "mainW": 1040,
+          "sectionW": 936,
+          "contentW": 936,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 73.1
+        },
+        "horizontalOverflow": false
+      },
+      "1800": {
+        "fontSizes": {
+          "14.00": 211,
+          "12.00": 21,
+          "16.00": 142,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 348,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 275,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 84,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          },
+          "rgb(255, 255, 255)": {
+            "count": 80,
+            "minRatio": 16.91,
+            "maxRatio": 16.91
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 1800,
+          "sidebarW": 240,
+          "mainW": 1560,
+          "sectionW": 1456,
+          "contentW": 1456,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 100,
+          "contentUsagePct": 80.9
+        },
+        "horizontalOverflow": false
+      },
+      "2560": {
+        "fontSizes": {
+          "14.00": 210,
+          "12.00": 21,
+          "16.00": 142,
+          "18.00": 7,
+          "24.00": 1
+        },
+        "minFontPx": 12,
+        "distinctFontSizes": 5,
+        "controls": 348,
+        "smallTargets": [],
+        "unnamedIconButtons": [],
+        "borders": {
+          "rgb(84, 105, 127)": {
+            "count": 275,
+            "minRatio": 3.25,
+            "maxRatio": 3.46
+          },
+          "rgb(68, 136, 204)": {
+            "count": 9,
+            "minRatio": 4.95,
+            "maxRatio": 5.26
+          },
+          "rgb(51, 70, 90)": {
+            "count": 84,
+            "minRatio": 1.9,
+            "maxRatio": 2.02
+          },
+          "rgb(255, 255, 255)": {
+            "count": 80,
+            "minRatio": 16.91,
+            "maxRatio": 16.91
+          }
+        },
+        "minBorderRatio": 1.9,
+        "layout": {
+          "viewport": 2560,
+          "sidebarW": 240,
+          "mainW": 1680,
+          "sectionW": 1616,
+          "contentW": 1616,
+          "hasSectionWrapper": true,
+          "frameUsagePct": 75,
+          "contentUsagePct": 63.1
+        },
+        "horizontalOverflow": false
+      }
+    }
+  },
+  "summary": {
+    "실데이터_주입": "tactical-board-settings-2026-08-06.json (시나리오 11건 · 출동대 37건 · 구조대상자 11명)",
+    "최소_글자px": 9,
+    "글자크기_종류": 15,
+    "최소_경계대비": 1.55,
+    "작은_클릭타깃_폭별": {
+      "1280": 19,
+      "1800": 19,
+      "2560": 19
+    },
+    "작은_클릭타깃_최악폭": 19,
+    "이름없는_아이콘버튼_폭별": {
+      "1280": 19,
+      "1800": 19,
+      "2560": 19
+    },
+    "이름없는_아이콘버튼_최악폭": 19,
+    "가로스크롤_발생": [],
+    "작은_클릭타깃_화면별": {
+      "시나리오 예측": 19
+    },
+    "이름없는_아이콘버튼_화면별": {
+      "시나리오 예측": 19
+    },
+    "최소대비_경계색": {
+      "color": "rgb(51, 70, 90)",
+      "ratio": 1.55,
+      "count": 123,
+      "at": "건물 · 소방시설@1280"
+    },
+    "본문_사용률_최악": {
+      "1280": {
+        "최소": 73.1,
+        "화면": "건물 · 소방시설"
+      },
+      "1800": {
+        "최소": 80.9,
+        "화면": "건물 · 소방시설"
+      },
+      "2560": {
+        "최소": 63.1,
+        "화면": "건물 · 소방시설"
+      }
+    },
+    "프레임_사용률_최악": {
+      "1280": {
+        "최소": 100,
+        "화면": "건물 · 소방시설"
+      },
+      "1800": {
+        "최소": 100,
+        "화면": "건물 · 소방시설"
+      },
+      "2560": {
+        "최소": 75,
+        "화면": "건물 · 소방시설"
+      }
+    }
+  }
+}

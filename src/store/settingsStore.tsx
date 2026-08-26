@@ -80,7 +80,6 @@ export interface SettingsContextValue {
   // ── 출동대 로스터 ─────────────────────────────
   dispatchRoster:          DispatchRosterItem[];
   updateRosterArrival:     (id: string, secs: number, syncLinked?: boolean) => void;
-  updateRosterOrder:       (id: string, order: number) => void;
   /**
    * 착대 이동 — 도착순서 카드의 드래그드롭 전용.
    *
@@ -376,14 +375,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setDispatchRoster(prev => prev.map(item => {
       if (item.id === id) return { ...item, arrivalSec: secs };
       if (syncLinked && item.linkedTo === id) return { ...item, arrivalSec: secs };
-      return item;
-    }));
-  }, []);
-
-  const updateRosterOrder = useCallback((id: string, order: number) => {
-    setDispatchRoster(prev => prev.map(item => {
-      if (item.id === id)         return { ...item, arrivalOrder: order };
-      if (item.linkedTo === id)   return { ...item, arrivalOrder: order }; // 연동 차량 자동 동기화
       return item;
     }));
   }, []);
@@ -751,7 +742,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       eventSetup, addEventSetupItem, updateEventSetupItem, removeEventSetupItem,
       dispatchSetup, updateDispatchUnits, updateDispatchVehicles,
       addDispatchExtraUnit, removeDispatchExtraUnit,
-      dispatchRoster, updateRosterArrival, updateRosterOrder, updateRosterPrefix, moveRosterToOrder,
+      dispatchRoster, updateRosterArrival, updateRosterPrefix, moveRosterToOrder,
       victimSetup, addVictimSetupItem, updateVictimSetupItem, removeVictimSetupItem,
       hydrantSetup, addHydrantSetupItem, updateHydrantSetupItem, removeHydrantSetupItem,
       fireSuppressionConfig, updateFireSuppressionConfig,

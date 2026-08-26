@@ -36,51 +36,6 @@
   gap: var(--set-sp-4);
 }
 
-/* ── 도착설정 방식 ── */
-
-.dsp__mode-row {
-  display: flex;
-  align-items: center;
-  gap: var(--set-sp-3);
-  padding: var(--set-sp-2) var(--set-sp-3);
-  background: var(--set-surface-1);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-md);
-}
-
-.dsp__mode-label {
-  font-size: var(--set-fs-sm);
-  font-weight: 700;
-  color: var(--set-text-faint);
-}
-
-.dsp__mode-radios {
-  display: flex;
-  gap: var(--set-sp-4);
-}
-
-.dsp__radio-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--set-sp-2);
-  font-size: var(--set-fs-sm);
-  color: var(--set-text-body);
-  cursor: pointer;
-}
-
-.dsp__radio-label input[type="radio"] {
-  accent-color: var(--set-accent);
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-}
-
-.dsp__mode-note {
-  margin-left: auto;
-  font-size: var(--set-fs-xs);
-  color: var(--set-warn);
-}
-
 /* ── 네 그룹을 가로로 ── */
 
 .dsp__groups {
@@ -362,31 +317,6 @@
   outline: none;
 }
 
-/*
- * 숫자만 담는다. 글자 크기·굵기를 **토큰과 같게** 맞췄다 — 착대순서는 부속
- * 정보가 아니라 토큰과 같은 급의 값이라, 작고 흐리면 눈이 건너뛴다.
- * 14px 두 자리("10")가 화살표와 함께 들어가는 폭이 52px 이다.
- */
-.dsp__unit-order {
-  width: 52px;
-  flex-shrink: 0;
-  padding: 2px;
-  background: var(--set-surface-0);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  color: var(--set-text);
-  font-weight: 700;
-  font-size: var(--set-fs-sm);
-  font-family: inherit;
-  text-align: center;
-  cursor: pointer;
-}
-
-.dsp__unit-order:focus {
-  outline: none;
-  border-color: var(--set-accent);
-}
-
 /* ── 유관기관 프리셋 · 직접입력 ── */
 
 /*
@@ -449,3 +379,10 @@
   outline: none;
   border-color: var(--set-accent);
 }
+
+/*
+ * 제거된 규칙 — 2026-08-25
+ *   .dsp__unit-order  착대 드롭다운이 도착순서 카드로 넘어갔다
+ *   .dsp__mode-*      도착설정 방식 선택도 그 카드 머리로 옮겼다
+ *                     (지금은 .settings-page__arrival-* 가 그린다)
+ */

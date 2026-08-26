@@ -171,7 +171,7 @@ function Slot({ label, tone, value, onChange, children }: SlotProps) {
  * 연동 펌프는 목록에 그리지 않는다. 진압대 1대에 펌프 1대가 딸려 생성되는데
  * (buildRoster), 칸에는 "진압대 1" 이라고 적혀 있으니 아래에 둘이 보이면
  * 숫자가 어긋난 것처럼 읽힌다. 펌프는 부대명·착대순서가 진압대를 그대로
- * 따라가므로(updateRosterPrefix·updateRosterOrder 가 linkedTo 에 전파) 숨겨도
+ * 따라가므로(updateRosterPrefix·moveRosterToOrder 가 linkedTo 에 전파) 숨겨도
  * 정할 것이 남지 않는다. 훈련모드에는 그대로 넘어간다.
  */
 export function DispatchSetupPanel() {

@@ -410,28 +410,6 @@
   background: var(--set-surface-1);
 }
 
-.checklist-setup__import-level-tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.checklist-setup__import-level-tab {
-  font-size: var(--set-fs-sm);
-  padding: 3px 12px;
-  background: transparent;
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  color: var(--set-text-faint);
-  cursor: pointer;
-  transition: background-color 0.1s, color 0.1s, border-color 0.1s;
-}
-
-.checklist-setup__import-level-tab--active {
-  background-color: var(--set-surface-nav);
-  border-color: var(--set-accent);
-  color: var(--set-accent);
-}
-
 .checklist-setup__import-empty {
   font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
@@ -674,3 +652,9 @@
   gap: 6px;
   justify-content: flex-end;
 }
+
+/*
+ * 제거된 규칙 — 2026-08-25
+ *   .checklist-setup__import-level-*  가져오기 레벨 탭. 이제 시나리오 레벨을
+ *   따르므로 고를 수단이 없다(.checklist-setup__import-scope 가 알린다).
+ */

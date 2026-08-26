@@ -42,11 +42,16 @@ const URL_BASE = args.url ?? 'http://localhost:5173';
 const OUT      = args.out ?? 'docs/baseline/before';
 const FIXTURE  = args.empty === true ? null : (args.fixture ?? 'tactical-board-settings-2026-08-06.json');
 
-/** 사이드바 항목 순서와 같다 — SettingsPage.tsx 의 NAV_GROUPS */
+/**
+ * 사이드바 항목 순서와 같다 — SettingsPage.tsx 의 SCENARIO_ITEMS + GLOBAL_ITEMS.
+ *
+ * 체크리스트는 여기 없다. 2026-08-25 에 우측 상주 레일로 옮겨서 사이드바
+ * 항목이 아니게 됐다(§12-C). 레일은 어느 화면에서든 떠 있으므로 화면을
+ * 옮겨 가며 재는 이 목록의 대상이 아니다.
+ */
 const SECTIONS = [
-  '건물 · 소방시설', '현장요소', '구조대상자',
-  '출동대', '임무 · 상태 프리셋', '상태 메시지',
-  '체크리스트', '지휘절차', '시나리오 예측',
+  '건물 · 소방시설', '현장요소', '구조대상자', '출동대', '시나리오 예측',
+  '지휘절차', '상태 메시지', '임무 · 상태 프리셋',
 ];
 
 /** §9 검증 폭. 1280 은 하한, 2560 은 훈련장 PC */

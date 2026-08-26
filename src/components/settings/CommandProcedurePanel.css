@@ -15,34 +15,6 @@
   gap: 16px;
 }
 
-/* ── 훈련 중 표시할 레벨 (편집 탭과 별개) ────── */
-
-.cp-panel__active-level {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  background-color: var(--set-surface-nav);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-}
-
-.cp-panel__active-level-label {
-  font-size: var(--set-fs-sm);
-  font-weight: 600;
-  color: var(--set-text-body);
-}
-
-.cp-panel__active-level-select {
-  font-size: var(--set-fs-sm);
-  padding: 3px 8px;
-  background-color: var(--set-surface-1);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  color: var(--set-accent);
-  font-weight: 600;
-}
-
 /* ── 레벨 탭 ────────────────────────────────── */
 
 .cp-panel__level-tabs {
@@ -362,3 +334,9 @@
   color: var(--set-type-fire);
   border: 1px solid color-mix(in srgb, var(--set-type-fire) 45%, transparent);
 }
+
+/*
+ * 제거된 규칙 — 2026-08-25
+ *   .cp-panel__active-level*  훈련 표시 레벨은 시나리오 값이라 레일 머리로
+ *   옮겼다(.settings-page__rail-level). §12-B-2 참고.
+ */
