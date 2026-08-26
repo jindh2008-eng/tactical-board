@@ -137,7 +137,7 @@ src/
 
 | 문서 | 성격 |
 |---|---|
-| [MASTER_PLAN.md](MASTER_PLAN.md) | ★ **작업 순서의 단일 출처.** 다른 문서와 어긋나면 이쪽 |
+| [MASTER_PLAN.md](MASTER_PLAN.md) | ★ **작업 순서의 단일 출처.** 다른 문서와 어긋나면 이쪽. **다음에 할 일은 §7-A** |
 | [DEFERRED_PROPAGATION.md](DEFERRED_PROPAGATION.md) | ★ 범위 밖 파급 기록부 (P-n) |
 | [DATA_FLOW.md](DATA_FLOW.md) | 저장소·Provider·데이터 흐름 |
 | [FEATURE_STATUS.md](FEATURE_STATUS.md) | 기능별 구현 상태 (네 모드 기준) |

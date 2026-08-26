@@ -66,7 +66,7 @@ npm run lint:css
 | 문서 | 내용 |
 |---|---|
 | [docs/PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | 프로그램 목적 · 화면 · 폴더 구조 |
-| [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) | ★ 작업 순서의 단일 출처 |
+| [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) | ★ 작업 순서의 단일 출처. **다음에 이어서 할 일은 §7-A** |
 | [docs/DATA_FLOW.md](docs/DATA_FLOW.md) | 저장소 · Provider 순서 · 데이터 흐름 |
 | [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md) | 기능별 구현 상태 |
 | [docs/DEFERRED_PROPAGATION.md](docs/DEFERRED_PROPAGATION.md) | 범위 밖 파급 기록부 |
