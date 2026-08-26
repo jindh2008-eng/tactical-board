@@ -1,14 +1,6 @@
 {
   "src/App.css": {
-    "property-no-vendor-prefix": {
-      "count": 4
-    },
     "selector-not-notation": {
-      "count": 2
-    }
-  },
-  "src/components/building/BuildingConfigPanel.css": {
-    "property-no-vendor-prefix": {
       "count": 2
     }
   },
@@ -44,16 +36,6 @@
   },
   "src/components/overlays/ScenarioModal.css": {
     "media-feature-range-notation": {
-      "count": 1
-    }
-  },
-  "src/components/settings/DispatchSetupPanel.css": {
-    "property-no-vendor-prefix": {
-      "count": 1
-    }
-  },
-  "src/components/shared/ErrorBoundary.css": {
-    "declaration-property-value-keyword-no-deprecated": {
       "count": 1
     }
   },

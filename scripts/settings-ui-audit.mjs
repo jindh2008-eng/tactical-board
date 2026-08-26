@@ -240,9 +240,49 @@ function measure({ minTargetPx }) {
   // 시나리오 예측 화면은 .settings-page__section 없이 main 이 곧 본문이다
   const contentW = sectionW || mainW;
 
+  // ── 행 채움률 ──
+  //
+  // §12-A 가 실제로 쓴 자다. 본문(section) 폭 기준 사용률은 2026-08-26 부로
+  // 뜻을 잃었다 — 폭 상한을 섹션이 아니라 패널 루트에 걸어서 화면이 전부
+  // 같은 값을 낸다.
+  //
+  // 재는 것은 **잉크**지 걸친 폭이 아니다. 왼쪽 끝에 글자, 오른쪽 끝에 ✕,
+  // 그 사이가 통째로 빈 줄은 걸친 폭으로는 100% 지만 실제로 읽을 것은 2% 다.
+  // 자식들의 폭을 더해 컨테이너 폭으로 나눈다.
+  const rows = [...document.querySelectorAll('.settings-page__main *')].filter(el => {
+    const cs = getComputedStyle(el);
+    if (cs.display !== 'flex' && cs.display !== 'grid') return false;
+    if (cs.display === 'flex' && cs.flexDirection.startsWith('column')) return false;
+    const kids = [...el.children].filter(k => {
+      const kr = k.getBoundingClientRect();
+      return kr.width > 0 && kr.height > 0;
+    });
+    if (kids.length < 2) return false;
+    const r = el.getBoundingClientRect();
+    // 아주 좁은 줄은 채움률이 의미 없다. 카드 한 칸 폭을 하한으로 둔다.
+    return r.width >= 240 && r.height > 0;
+  });
+
+  const rowFills = rows.map(el => {
+    const w = el.getBoundingClientRect().width;
+    const ink = [...el.children].reduce((a, k) => a + k.getBoundingClientRect().width, 0);
+    return {
+      sel: el.className && typeof el.className === 'string'
+        ? '.' + el.className.trim().split(/\s+/)[0] : el.tagName.toLowerCase(),
+      w: +w.toFixed(1),
+      pct: +(Math.min(ink / w, 1) * 100).toFixed(1),
+    };
+  }).sort((a, b) => a.pct - b.pct);
+
   return {
     fontSizes,
     minFontPx: Math.min(...Object.keys(fontSizes).map(Number)),
+    rowCount: rowFills.length,
+    // 최악 5줄만 남긴다 — 전부 실으면 audit.json 이 다시 만 줄이 된다
+    worstRows: rowFills.slice(0, 5),
+    minRowFillPct: rowFills.length ? rowFills[0].pct : null,
+    medianRowFillPct: rowFills.length
+      ? rowFills[Math.floor(rowFills.length / 2)].pct : null,
     distinctFontSizes: Object.keys(fontSizes).length,
     controls: controls.length,
     smallTargets,
@@ -348,6 +388,14 @@ const worstUsage = key => Object.fromEntries(WIDTHS.map(w => {
   return [w, { 최소: worst.m.layout[key], 화면: worst.s }];
 }));
 
+/** 폭별로 채움률이 가장 낮은 화면. layout 이 아니라 측정 루트에 있어 자를 따로 둔다 */
+const worstRowFill = key => Object.fromEntries(WIDTHS.map(w => {
+  const rows = ok.filter(x => x.w === w && x.m[key] != null);
+  if (!rows.length) return [w, null];
+  const worst = rows.reduce((a, b) => (b.m[key] < a.m[key] ? b : a));
+  return [w, { 최소: worst.m[key], 화면: worst.s }];
+}));
+
 /** 화면별 최댓값 — 폭이 달라도 같은 화면이므로 합치지 않는다 */
 const worstPerSection = pick => Object.fromEntries(
   [...new Set(ok.map(x => x.s))]
@@ -379,8 +427,20 @@ const summary = {
     }
     return worst;
   })(),
-  본문_사용률_최악: worstUsage('contentUsagePct'),
-  프레임_사용률_최악: worstUsage('frameUsagePct'),
+  /*
+   * 행 채움률 — §12-A 의 자.
+   * 최소는 한 줄이라도 심하게 빈 곳을 잡고, 중앙값은 화면 전체가
+   * 성긴지를 잡는다. 최소만 보면 아이콘 두 개짜리 줄에 끌려간다.
+   */
+  행채움률_최소: worstRowFill('minRowFillPct'),
+  행채움률_중앙값: worstRowFill('medianRowFillPct'),
+  /*
+   * 아래 둘은 참고값이다. 2026-08-26 부로 화면을 가르지 못한다 —
+   * 폭 상한이 섹션이 아니라 패널 루트에 걸려 여덟 화면이 같은 값을 낸다.
+   * 지우지 않는 것은 before 기록과 이어 보기 위해서다.
+   */
+  본문_사용률_최악_참고: worstUsage('contentUsagePct'),
+  프레임_사용률_최악_참고: worstUsage('frameUsagePct'),
 };
 report.summary = summary;
 
@@ -395,8 +455,8 @@ const md = [
   '## 요약',
   '',
   '건수는 **폭별**로 낸다 — 폭 3개를 합치면 같은 결함이 3배로 계상된다.',
-  '사용률은 화면 9개 중 **가장 나쁜 화면**의 값이다 — 평균을 내면 설계상 전체폭인',
-  '시나리오 예측이 수치를 끌어올린다.',
+  '채움률은 화면 중 **가장 나쁜 화면**의 값이다 — 평균을 내면 설계상',
+  '전체폭인 시나리오 예측이 수치를 끌어올린다.',
   '',
   '| 지표 | 값 | 목표(§9) |',
   '|---|---|---|',
@@ -406,17 +466,28 @@ const md = [
   `| ${MIN_TARGET_PX}px 미만 클릭 타깃 (최악 폭) | **${summary.작은_클릭타깃_최악폭}건** | 0 |`,
   `| 이름 없는 아이콘 버튼 (최악 폭) | **${summary.이름없는_아이콘버튼_최악폭}건** | 0 |`,
   `| 가로 스크롤 | **${summary.가로스크롤_발생.length}건** | 0 |`,
-  ...WIDTHS.map(w => `| 본문 사용률 @${w}px | **${summary.본문_사용률_최악[w].최소}%** (${summary.본문_사용률_최악[w].화면}) | ≥80% |`),
+  ...WIDTHS.map(w => `| 행 채움률 중앙값 @${w}px | **${summary.행채움률_중앙값[w]?.최소 ?? '—'}%** (${summary.행채움률_중앙값[w]?.화면 ?? '—'}) | ≥60% **(잠정)** |`),
   '',
-  '## 화면별 본문 사용률',
+  '## 화면별 행 채움률',
   '',
-  '`.settings-page__section` 기준. 시나리오 예측만 이 래퍼가 없어 `main` 폭을 쓴다(설계상 전체폭).',
+  '가로로 놓인 줄(flex row · grid, 폭 240px 이상)에서 **자식들의 폭 합 ÷ 줄 폭**.',
+  '걸친 폭이 아니라 잉크를 잰다 — 왼쪽에 글자, 오른쪽 끝에 ✕, 사이가 통째로 빈',
+  '줄은 걸친 폭으로는 100% 지만 여기서는 낮게 나온다. 그것이 §12-A 가 고친 결함이다.',
   '',
-  `| 화면 | ${WIDTHS.map(w => `${w}px`).join(' | ')} |`,
+  '**목표 60% 는 잠정값이다.** §9 가 정한 것이 아니라 이 지표를 넣으면서 임의로',
+  '적었다. 화면을 여러 번 재서 "고쳤다고 합의한 화면"이 어디쯤 나오는지 본 뒤에',
+  '§9 에 정식으로 올려야 한다. 그전까지 이 열은 통과/실패로 읽지 않는다.',
+  '',
+  '`.settings-page__section` 폭 기준 사용률은 2026-08-26 부로 화면을 가르지 못한다',
+  '— 폭 상한이 섹션이 아니라 패널 루트에 걸려 모든 화면이 같은 값을 낸다.',
+  'audit.json 의 `본문_사용률_최악_참고` 에 before 비교용으로만 남겼다.',
+  '',
+  `| 화면 | ${WIDTHS.map(w => `${w}px 최소 / 중앙`).join(' | ')} |`,
   `|---|${WIDTHS.map(() => '---').join('|')}|`,
   ...SECTIONS.map(s => `| ${s} | ${WIDTHS.map(w => {
     const m = report.sections[s]?.[w];
-    return m && !m.error ? `${m.layout.contentUsagePct}%` : '—';
+    return m && !m.error && m.minRowFillPct != null
+      ? `${m.minRowFillPct}% / ${m.medianRowFillPct}%` : '—';
   }).join(' | ')} |`),
   '',
   '## 화면별 결함 건수 (폭별 최댓값)',

@@ -37,6 +37,14 @@ npm run lint:css   # stylelint — 설정모드 토큰 강제
 
 `stylelint-config-standard` 중 표기 취향 규칙 6종(`alpha-value-notation` 등)은 껐다. 저장소 전체에서 1,362건을 내는데 §9 목표와 무관해 신호를 덮었다.
 
+**억제 잔여 14건**(2026-08-26). 이 중 실제 결함은 `ZoneCell.css` 무효 CSS 2건뿐이고(P-9, 훈련모드 경계라 여기서 안 고친다) 나머지 12건은 표기 취향이다.
+
+`property-no-vendor-prefix`는 억제가 아니라 **규칙 설정**으로 통과시킨다 — `.stylelintrc.json`의 `ignoreProperties: ["/user-select$/", "/appearance$/"]`. `-webkit-user-select`는 짝으로 둔 `-ms-` 와 함께 남겨야 하고, `-moz-appearance: textfield`는 number 입력 스피너를 지우는 데 아직 필요하다. 억제로 덮으면 "언젠가 고칠 것"으로 보이지만 실제로는 의도한 것이다.
+
+**이 옵션은 정규식 형식이어야 한다.** `["user-select", "appearance"]`처럼 이름만 적으면 조용히 무시된다 — 실측으로 확인했다.
+
+`--suppress`는 **이미 고쳐진 항목을 지우지 않는다.** 위반을 없앤 뒤 건수가 그대로면 억제 파일에서 그 항목을 직접 지워야 한다. 그리고 `rules`에 실재하지 않는 키(주석 대용 등)를 넣으면 stylelint가 모든 파일에 위반으로 걸어 기준선이 통째로 부풀어 오른다.
+
 ## 아키텍처
 
 ### 설정창 / 훈련창 이원 구조 ★

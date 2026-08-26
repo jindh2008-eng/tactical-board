@@ -1,6 +1,6 @@
 {
   "url": "http://localhost:5174",
-  "at": "2026-08-26T00:32:11.050Z",
+  "at": "2026-08-26T01:04:17.577Z",
   "widths": [
     1280,
     1800,
@@ -32,6 +32,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 14,
+        "worstRows": [
+          {
+            "sel": ".set-card__head",
+            "w": 438,
+            "pct": 22.6
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 438,
+            "pct": 26.7
+          },
+          {
+            "sel": ".bcf__ratio-row",
+            "w": 398,
+            "pct": 33.2
+          },
+          {
+            "sel": ".bcf__toggle",
+            "w": 438,
+            "pct": 33.4
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 398,
+            "pct": 39
+          }
+        ],
+        "minRowFillPct": 22.6,
+        "medianRowFillPct": 94.5,
         "distinctFontSizes": 5,
         "controls": 208,
         "smallTargets": [],
@@ -100,6 +130,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 20,
+        "worstRows": [
+          {
+            "sel": ".bcf__ratio-row",
+            "w": 918,
+            "pct": 14.4
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 918,
+            "pct": 16.9
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 438,
+            "pct": 22.6
+          },
+          {
+            "sel": ".bpv__cell-inner",
+            "w": 396,
+            "pct": 24.3
+          },
+          {
+            "sel": ".bpv__cell-inner",
+            "w": 396,
+            "pct": 24.3
+          }
+        ],
+        "minRowFillPct": 14.4,
+        "medianRowFillPct": 42.4,
         "distinctFontSizes": 5,
         "controls": 208,
         "smallTargets": [],
@@ -168,6 +228,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 20,
+        "worstRows": [
+          {
+            "sel": ".bcf__ratio-row",
+            "w": 1078,
+            "pct": 12.3
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 1078,
+            "pct": 14.4
+          },
+          {
+            "sel": ".bpv__cell-inner",
+            "w": 470.6,
+            "pct": 20.5
+          },
+          {
+            "sel": ".bpv__cell-inner",
+            "w": 470.6,
+            "pct": 20.5
+          },
+          {
+            "sel": ".bpv__cell-inner",
+            "w": 470.6,
+            "pct": 20.5
+          }
+        ],
+        "minRowFillPct": 12.3,
+        "medianRowFillPct": 35.6,
         "distinctFontSizes": 5,
         "controls": 208,
         "smallTargets": [],
@@ -238,6 +328,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 10,
+        "worstRows": [
+          {
+            "sel": ".set-card__head",
+            "w": 894,
+            "pct": 8.1
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 894,
+            "pct": 24.9
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 894,
+            "pct": 40.8
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 894,
+            "pct": 42.2
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 894,
+            "pct": 65.8
+          }
+        ],
+        "minRowFillPct": 8.1,
+        "medianRowFillPct": 95.3,
         "distinctFontSizes": 5,
         "controls": 213,
         "smallTargets": [],
@@ -281,6 +401,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 10,
+        "worstRows": [
+          {
+            "sel": ".set-card__head",
+            "w": 678,
+            "pct": 10.7
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 678,
+            "pct": 32.8
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 678,
+            "pct": 53.8
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 678,
+            "pct": 55.7
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 678,
+            "pct": 86.7
+          }
+        ],
+        "minRowFillPct": 10.7,
+        "medianRowFillPct": 93.9,
         "distinctFontSizes": 5,
         "controls": 213,
         "smallTargets": [],
@@ -324,6 +474,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 10,
+        "worstRows": [
+          {
+            "sel": ".set-card__head",
+            "w": 758,
+            "pct": 9.6
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 758,
+            "pct": 29.4
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 758,
+            "pct": 48.1
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 758,
+            "pct": 49.8
+          },
+          {
+            "sel": ".set-aside__evt-list",
+            "w": 758,
+            "pct": 77.6
+          }
+        ],
+        "minRowFillPct": 9.6,
+        "medianRowFillPct": 94.5,
         "distinctFontSizes": 5,
         "controls": 213,
         "smallTargets": [],
@@ -370,6 +550,36 @@
           "15.00": 2
         },
         "minFontPx": 12,
+        "rowCount": 35,
+        "worstRows": [
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 799.3,
+            "pct": 3.5
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 799.3,
+            "pct": 3.5
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 799.3,
+            "pct": 5.3
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 799.3,
+            "pct": 7
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 894,
+            "pct": 10.2
+          }
+        ],
+        "minRowFillPct": 3.5,
+        "medianRowFillPct": 94.4,
         "distinctFontSizes": 6,
         "controls": 290,
         "smallTargets": [],
@@ -434,6 +644,36 @@
           "15.00": 2
         },
         "minFontPx": 12,
+        "rowCount": 35,
+        "worstRows": [
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 543.3,
+            "pct": 5.2
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 543.3,
+            "pct": 5.2
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 543.3,
+            "pct": 7.7
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 543.3,
+            "pct": 10.3
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 638,
+            "pct": 14.3
+          }
+        ],
+        "minRowFillPct": 5.2,
+        "medianRowFillPct": 93.1,
         "distinctFontSizes": 6,
         "controls": 290,
         "smallTargets": [],
@@ -498,6 +738,36 @@
           "15.00": 2
         },
         "minFontPx": 12,
+        "rowCount": 35,
+        "worstRows": [
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 543.3,
+            "pct": 5.2
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 543.3,
+            "pct": 5.2
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 543.3,
+            "pct": 7.7
+          },
+          {
+            "sel": ".set-aside__people-icons",
+            "w": 543.3,
+            "pct": 10.3
+          },
+          {
+            "sel": ".set-card__head",
+            "w": 638,
+            "pct": 14.3
+          }
+        ],
+        "minRowFillPct": 5.2,
+        "medianRowFillPct": 94.3,
         "distinctFontSizes": 6,
         "controls": 290,
         "smallTargets": [],
@@ -563,6 +833,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 27,
+        "worstRows": [
+          {
+            "sel": ".settings-page__card-head",
+            "w": 902,
+            "pct": 12.4
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 902,
+            "pct": 14.1
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 902,
+            "pct": 14.1
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 902,
+            "pct": 20.7
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 902,
+            "pct": 20.7
+          }
+        ],
+        "minRowFillPct": 12.4,
+        "medianRowFillPct": 53.2,
         "distinctFontSizes": 5,
         "controls": 257,
         "smallTargets": [],
@@ -636,6 +936,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 27,
+        "worstRows": [
+          {
+            "sel": ".settings-page__card-head",
+            "w": 986,
+            "pct": 11.4
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 986,
+            "pct": 12.9
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 986,
+            "pct": 12.9
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 986,
+            "pct": 19
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 986,
+            "pct": 19
+          }
+        ],
+        "minRowFillPct": 11.4,
+        "medianRowFillPct": 48.7,
         "distinctFontSizes": 5,
         "controls": 257,
         "smallTargets": [],
@@ -709,6 +1039,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 27,
+        "worstRows": [
+          {
+            "sel": ".settings-page__card-head",
+            "w": 986,
+            "pct": 11.4
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 986,
+            "pct": 12.9
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 986,
+            "pct": 12.9
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 986,
+            "pct": 19
+          },
+          {
+            "sel": ".set-arrival__row",
+            "w": 986,
+            "pct": 19
+          }
+        ],
+        "minRowFillPct": 11.4,
+        "medianRowFillPct": 48.7,
         "distinctFontSizes": 5,
         "controls": 257,
         "smallTargets": [],
@@ -792,6 +1152,36 @@
           "11.10": 20
         },
         "minFontPx": 9,
+        "rowCount": 27,
+        "worstRows": [
+          {
+            "sel": ".scen-graph-legend",
+            "w": 654,
+            "pct": 9.5
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 28.9
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 31.2
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 34.8
+          },
+          {
+            "sel": ".scen-chart-tabs",
+            "w": 656,
+            "pct": 95.4
+          }
+        ],
+        "minRowFillPct": 9.5,
+        "medianRowFillPct": 95.6,
         "distinctFontSizes": 13,
         "controls": 220,
         "smallTargets": [
@@ -1078,6 +1468,36 @@
           "11.10": 20
         },
         "minFontPx": 9,
+        "rowCount": 27,
+        "worstRows": [
+          {
+            "sel": ".scen-graph-legend",
+            "w": 1174,
+            "pct": 5.3
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 28.9
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 31.2
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 34.8
+          },
+          {
+            "sel": ".scen-floor-row",
+            "w": 273,
+            "pct": 95.6
+          }
+        ],
+        "minRowFillPct": 5.3,
+        "medianRowFillPct": 97.6,
         "distinctFontSizes": 13,
         "controls": 220,
         "smallTargets": [
@@ -1364,6 +1784,36 @@
           "11.10": 20
         },
         "minFontPx": 9,
+        "rowCount": 27,
+        "worstRows": [
+          {
+            "sel": ".scen-graph-legend",
+            "w": 1934,
+            "pct": 3.2
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 28.9
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 31.2
+          },
+          {
+            "sel": ".scen-summary-row",
+            "w": 273,
+            "pct": 34.8
+          },
+          {
+            "sel": ".scen-floor-row",
+            "w": 273,
+            "pct": 95.6
+          }
+        ],
+        "minRowFillPct": 3.2,
+        "medianRowFillPct": 98.5,
         "distinctFontSizes": 13,
         "controls": 220,
         "smallTargets": [
@@ -1644,6 +2094,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 33,
+        "worstRows": [
+          {
+            "sel": ".cp-panel__level-tabs",
+            "w": 510,
+            "pct": 35.1
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          }
+        ],
+        "minRowFillPct": 35.1,
+        "medianRowFillPct": 96.3,
         "distinctFontSizes": 5,
         "controls": 261,
         "smallTargets": [],
@@ -1687,6 +2167,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 33,
+        "worstRows": [
+          {
+            "sel": ".cp-panel__level-tabs",
+            "w": 510,
+            "pct": 35.1
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          }
+        ],
+        "minRowFillPct": 35.1,
+        "medianRowFillPct": 96.3,
         "distinctFontSizes": 5,
         "controls": 261,
         "smallTargets": [],
@@ -1730,6 +2240,36 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 33,
+        "worstRows": [
+          {
+            "sel": ".cp-panel__level-tabs",
+            "w": 510,
+            "pct": 35.1
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          },
+          {
+            "sel": ".set-sechead",
+            "w": 508,
+            "pct": 92.9
+          }
+        ],
+        "minRowFillPct": 35.1,
+        "medianRowFillPct": 96.3,
         "distinctFontSizes": 5,
         "controls": 261,
         "smallTargets": [],
@@ -1775,6 +2315,26 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 3,
+        "worstRows": [
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 936,
+            "pct": 72.6
+          },
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 936,
+            "pct": 72.6
+          },
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 936,
+            "pct": 100
+          }
+        ],
+        "minRowFillPct": 72.6,
+        "medianRowFillPct": 72.6,
         "distinctFontSizes": 5,
         "controls": 226,
         "smallTargets": [],
@@ -1818,6 +2378,26 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 3,
+        "worstRows": [
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 1456,
+            "pct": 48.3
+          },
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 1456,
+            "pct": 48.3
+          },
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 1456,
+            "pct": 100
+          }
+        ],
+        "minRowFillPct": 48.3,
+        "medianRowFillPct": 48.3,
         "distinctFontSizes": 5,
         "controls": 226,
         "smallTargets": [],
@@ -1861,6 +2441,26 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 3,
+        "worstRows": [
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 1616,
+            "pct": 41.3
+          },
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 1616,
+            "pct": 41.3
+          },
+          {
+            "sel": ".unit-status-panel__types",
+            "w": 1616,
+            "pct": 96.3
+          }
+        ],
+        "minRowFillPct": 41.3,
+        "medianRowFillPct": 41.3,
         "distinctFontSizes": 5,
         "controls": 226,
         "smallTargets": [],
@@ -1906,6 +2506,21 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 2,
+        "worstRows": [
+          {
+            "sel": ".tag-preset-panel__types",
+            "w": 936,
+            "pct": 72.6
+          },
+          {
+            "sel": ".tag-preset-panel__types",
+            "w": 936,
+            "pct": 100
+          }
+        ],
+        "minRowFillPct": 72.6,
+        "medianRowFillPct": 100,
         "distinctFontSizes": 5,
         "controls": 348,
         "smallTargets": [],
@@ -1954,6 +2569,21 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 2,
+        "worstRows": [
+          {
+            "sel": ".tag-preset-panel__types",
+            "w": 1456,
+            "pct": 48.3
+          },
+          {
+            "sel": ".tag-preset-panel__types",
+            "w": 1456,
+            "pct": 100
+          }
+        ],
+        "minRowFillPct": 48.3,
+        "medianRowFillPct": 100,
         "distinctFontSizes": 5,
         "controls": 348,
         "smallTargets": [],
@@ -2002,6 +2632,21 @@
           "24.00": 1
         },
         "minFontPx": 12,
+        "rowCount": 2,
+        "worstRows": [
+          {
+            "sel": ".tag-preset-panel__types",
+            "w": 1616,
+            "pct": 41.3
+          },
+          {
+            "sel": ".tag-preset-panel__types",
+            "w": 1616,
+            "pct": 96.3
+          }
+        ],
+        "minRowFillPct": 41.3,
+        "medianRowFillPct": 96.3,
         "distinctFontSizes": 5,
         "controls": 348,
         "smallTargets": [],
@@ -2073,7 +2718,35 @@
       "count": 123,
       "at": "건물 · 소방시설@1280"
     },
-    "본문_사용률_최악": {
+    "행채움률_최소": {
+      "1280": {
+        "최소": 3.5,
+        "화면": "구조대상자"
+      },
+      "1800": {
+        "최소": 5.2,
+        "화면": "구조대상자"
+      },
+      "2560": {
+        "최소": 3.2,
+        "화면": "시나리오 예측"
+      }
+    },
+    "행채움률_중앙값": {
+      "1280": {
+        "최소": 53.2,
+        "화면": "출동대"
+      },
+      "1800": {
+        "최소": 42.4,
+        "화면": "건물 · 소방시설"
+      },
+      "2560": {
+        "최소": 35.6,
+        "화면": "건물 · 소방시설"
+      }
+    },
+    "본문_사용률_최악_참고": {
       "1280": {
         "최소": 73.1,
         "화면": "건물 · 소방시설"
@@ -2087,7 +2760,7 @@
         "화면": "건물 · 소방시설"
       }
     },
-    "프레임_사용률_최악": {
+    "프레임_사용률_최악_참고": {
       "1280": {
         "최소": 100,
         "화면": "건물 · 소방시설"

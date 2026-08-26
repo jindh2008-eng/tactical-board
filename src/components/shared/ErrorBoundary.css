@@ -118,7 +118,8 @@
   border-radius: 2px;
   color:         #ffc8c8;
   font-family:   monospace;
-  word-break:    break-word;
+  /* word-break: break-word 는 폐기됐다. 동작이 같은 표준 속성으로 바꾼다 */
+  overflow-wrap: break-word;
 }
 
 .error-boundary__stack {
