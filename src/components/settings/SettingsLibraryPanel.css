@@ -21,14 +21,6 @@
   flex-wrap: wrap;
 }
 
-.slp__name-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 200px;
-}
-
 .slp__label {
   font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
@@ -77,66 +69,12 @@
   flex: 1;
 }
 
-/* 저장 목록 */
-
-.slp__list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 260px;
-  overflow-y: auto;
-  padding: 2px 0;
-}
-
+/* 빈 목록 · 검색 결과 없음 양쪽에서 쓴다 */
 .slp__empty {
   font-size: var(--set-fs-sm);
   color: var(--set-text-faint);
-  padding: 14px;
+  padding: 16px 12px;
   text-align: center;
-}
-
-.slp__list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7px 10px;
-  background: var(--set-surface-0);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  gap: 10px;
-}
-
-.slp__list-item--active {
-  border-color: var(--set-accent);
-  background: var(--set-surface-0);
-}
-
-.slp__item-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.slp__item-name {
-  font-size: var(--set-fs-sm);
-  font-weight: 600;
-  color: var(--set-text-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.slp__item-date {
-  font-size: var(--set-fs-sm);
-  color: var(--set-text-faint);
-}
-
-.slp__item-actions {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
 }
 
 .slp__toast-stack {
@@ -148,4 +86,191 @@
   display: flex;
   flex-direction: column;
   gap: var(--set-sp-2);
+}
+
+/* ─────────────────────────────────────────────
+   시나리오 전환 (U-1)
+
+   이름칸과 ▾ 를 한 상자로 묶는다. 목록은 그 상자의 **왼쪽 모서리에 맞춰**
+   바로 아래로 연다 — 예전에는 화면 오른쪽 끝(여백 20px)에 떠서 여는 버튼과
+   모서리조차 맞지 않았고, 메뉴인지 화면인지 읽히지 않았다.
+   ─────────────────────────────────────────────*/
+
+.slp__switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 240px;
+  max-width: 480px;            /* 이름칸이 화면 폭을 다 먹으면 툴바가 밀린다 */
+}
+
+/* 목록의 기준점. 상자 자신은 overflow: hidden 이라 여기 둬야 한다 */
+.slp__switcher-anchor {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 입력 + ▾ 가 시각적으로 하나. 테두리는 바깥 상자만 그린다 */
+.slp__switcher-box {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-sm);
+  /* 모서리는 여기서 한 번만 자른다 — 안쪽 입력·버튼이 각자 반경을 갖지 않게 */
+  overflow: hidden;
+}
+
+.slp__switcher-box:focus-within {
+  border-color: var(--set-accent);
+}
+
+.slp__switcher .slp__name-input {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+}
+
+.slp__switcher-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 0 6px;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--set-border);
+  color: var(--set-text-faint);
+  cursor: pointer;
+  transition: background-color 0.1s, color 0.1s;
+}
+
+.slp__switcher-toggle:hover {
+  background-color: var(--set-surface-nav);
+  color: var(--set-text-body);
+}
+
+.slp__switcher-toggle:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: -2px;
+}
+
+/* ── 목록 ── */
+
+.slp__list-pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;                     /* 이름 상자의 왼쪽 모서리에 맞춘다 */
+  z-index: 40;
+  width: 100%;
+  min-width: 320px;
+  background: var(--set-surface-1);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-md);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  overflow: hidden;
+}
+
+.slp__list-search {
+  padding: 8px;
+  border-bottom: 1px solid var(--set-border-subtle);
+}
+
+.slp__list-search-input {
+  width: 100%;
+  padding: 5px 9px;
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-border);
+  border-radius: var(--set-r-sm);
+  color: var(--set-text-body);
+  font-size: var(--set-fs-sm);
+  outline: none;
+}
+
+.slp__list-search-input:focus { border-color: var(--set-accent); }
+
+.slp__list {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+  gap: 2px;
+}
+
+/* 행 — 전체가 「불러오기」다. 삭제만 오른쪽 메뉴로 뺀다 */
+.slp__row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: var(--set-r-sm);
+}
+
+.slp__row:hover { background-color: var(--set-surface-nav); }
+
+.slp__row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 4px 8px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  color: var(--set-text-body);
+  cursor: pointer;
+  border-radius: var(--set-r-sm);
+}
+
+.slp__row-main:focus-visible {
+  outline: 2px solid var(--set-accent);
+  outline-offset: -2px;
+}
+
+/* 지금 열려 있는 것 — 다시 부를 수 없다. 흐리게 하지 않는다(현재 상태의 표시다) */
+.slp__row-main:disabled {
+  cursor: default;
+  color: var(--set-accent);
+  font-weight: 700;
+}
+
+.slp__row-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.slp__row--active .slp__row-dot { background: var(--set-accent); }
+
+.slp__row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--set-fs-sm);
+}
+
+.slp__row-date {
+  flex-shrink: 0;
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+
+.slp__list-foot {
+  display: flex;
+  justify-content: flex-start;
+  padding: 6px 8px;
+  border-top: 1px solid var(--set-border-subtle);
 }

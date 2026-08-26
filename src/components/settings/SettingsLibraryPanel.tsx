@@ -3,9 +3,9 @@ import { useSettings } from '../../store/settingsStore';
 import { exportSettings, importSettings, exportScenario, importScenario } from '../../utils/settingsStorage';
 import type { SettingsSet } from '../../utils/settingsStorage';
 import {
-  SetButton, SetIconButton, SetMenu, SetMenuItem, SetMenuSeparator,
+  SetButton, SetMenu, SetMenuItem, SetMenuSeparator,
   SetStatusChip, SetToast, resolveSaveStatus,
-  IconSave, IconCheck, IconList, IconChevronDown, IconChevronUp,
+  IconSave, IconCheck, IconChevronDown, IconChevronUp,
   IconExport, IconImport, IconTrash, IconReset,
 } from './ui';
 import './SettingsLibraryPanel.css';
@@ -46,6 +46,8 @@ export function SettingsLibraryPanel() {
   } = useSettings();
 
   const [showList,    setShowList]    = useState(false);
+  const [listQuery,   setListQuery]   = useState('');
+  const switcherRef = useRef<HTMLDivElement>(null);
   const [showSaveAs,  setShowSaveAs]  = useState(false);
   const [saveAsName,  setSaveAsName]  = useState('');
   const [savedFlash,  setSavedFlash]  = useState(false);
@@ -65,6 +67,24 @@ export function SettingsLibraryPanel() {
   const deleteTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => () => { for (const t of deleteTimersRef.current.values()) clearTimeout(t); }, []);
+
+  /*
+   * 목록은 바깥을 누르거나 Esc 로 닫는다. 여는 컨트롤 옆에 붙어 뜨는 것은
+   * 메뉴이지 화면이 아니므로, 닫는 길이 버튼 재클릭 하나뿐이면 갇힌 느낌이 난다.
+   */
+  useEffect(() => {
+    if (!showList) return;
+    const onDown = (e: MouseEvent) => {
+      if (!switcherRef.current?.contains(e.target as Node)) setShowList(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowList(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [showList]);
 
   function requestDelete(set: SettingsSet) {
     if (!window.confirm(`"${set.name}" 설정을 삭제하겠습니까?`)) return;
@@ -150,20 +170,137 @@ export function SettingsLibraryPanel() {
     }
   }
 
+  /**
+   * 시나리오 목록 — 이름칸 바로 아래로 열린다.
+   *
+   * 행 전체가 「불러오기」다. 예전에는 이름을 읽고 오른쪽 끝의 77×26 버튼까지
+   * 가서 눌러야 했다 — 파일 목록에서 행 전체가 대상인 것이 관례다.
+   * 삭제는 행 메뉴 안으로 넣었다. 목록에서 가장 흔한 동작(전환)과 가장 위험한
+   * 동작(삭제)이 나란히 있으면 안 된다.
+   */
+  function renderList() {
+    const visible = settingsList.filter(s => !pendingDeletes.has(s.id));
+    // 검색칸은 항목이 많을 때만 그린다 — 세 줄짜리 목록 위의 검색칸은 방해다
+    const showSearch = visible.length >= 8;
+    const q = listQuery.trim().toLowerCase();
+    const rows = q ? visible.filter(s => s.name.toLowerCase().includes(q)) : visible;
+
+    return (
+      <div className="slp__list-pop" role="listbox" aria-label="시나리오 목록">
+        {showSearch && (
+          <div className="slp__list-search">
+            <input
+              className="slp__list-search-input"
+              placeholder="시나리오 검색…"
+              aria-label="시나리오 검색"
+              value={listQuery}
+              onChange={e => setListQuery(e.target.value)}
+              onKeyDown={e => e.stopPropagation()}
+              autoFocus
+            />
+          </div>
+        )}
+
+        <div className="slp__list">
+          {visible.length === 0 ? (
+            <div className="slp__empty">저장된 시나리오가 없습니다. 먼저 저장해 주세요.</div>
+          ) : rows.length === 0 ? (
+            <div className="slp__empty">「{listQuery}」에 맞는 시나리오가 없습니다.</div>
+          ) : rows.map(set => {
+            const active = set.id === activeSettingsId;
+            return (
+              <div
+                key={set.id}
+                className={`slp__row${active ? ' slp__row--active' : ''}`}
+              >
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  className="slp__row-main"
+                  disabled={active}
+                  onClick={() => { loadSettings(set.id); setShowList(false); }}
+                >
+                  <span className="slp__row-dot" aria-hidden="true" />
+                  <span className="slp__row-name">{set.name}</span>
+                  <span className="slp__row-date">{set.updatedAt}</span>
+                </button>
+                <SetMenu label={`"${set.name}" 더보기`}>
+                  {close => (
+                    <SetMenuItem
+                      icon={<IconTrash size={14} />}
+                      danger
+                      onClick={() => { close(); requestDelete(set); }}
+                    >
+                      삭제
+                    </SetMenuItem>
+                  )}
+                </SetMenu>
+              </div>
+            );
+          })}
+        </div>
+
+        {/*
+          바닥 액션. 「다른 이름으로」가 여기 있는 이유는 Figma·Google Docs 가
+          파일 메뉴에 두는 자리와 같다 — 툴바에는 일상 동작인 「저장」만 남긴다.
+        */}
+        <div className="slp__list-foot">
+          <SetButton
+            size="sm"
+            variant="ghost"
+            onClick={() => { setShowList(false); setShowSaveAs(true); setSaveAsName(''); }}
+          >
+            다른 이름으로 저장
+          </SetButton>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="slp">
       {/* ── 현재 설정 이름 + 버튼 행 ── */}
       <div className="slp__bar">
-        <div className="slp__name-group">
-          <label className="slp__label" htmlFor="slp-name">현재 설정</label>
-          <input
-            id="slp-name"
-            className="slp__name-input"
-            value={activeSettingsName}
-            onChange={e => setActiveSettingsName(e.target.value)}
-            placeholder="설정 이름"
-            onKeyDown={e => e.stopPropagation()}
-          />
+        {/*
+          시나리오 전환 — 이름이 곧 트리거다.
+          ▾ 를 이름칸에 붙여 **한 컨트롤로** 보이게 한다. 이름 편집은 그대로
+          인라인으로 남긴다(시나리오를 쓰면서 자주 고친다). 목록은 이 상자
+          왼쪽 모서리에 맞춰 바로 아래로 열린다 — 예전에는 화면 오른쪽 끝에
+          떠서 여는 버튼과 모서리조차 맞지 않았다.
+        */}
+        <div className="slp__switcher" ref={switcherRef}>
+          <label className="slp__label" htmlFor="slp-name">현재 시나리오</label>
+          {/*
+            목록의 기준점은 **이름 상자**여야 한다. 바깥 .slp__switcher 에 걸면
+            라벨 폭(88px)만큼 왼쪽으로 밀려 모서리가 어긋난다 — 실측으로 확인했다.
+            상자 자신은 overflow: hidden 이라 기준점이 될 수 없어 한 겹 더 둔다.
+          */}
+          <div className="slp__switcher-anchor">
+          <div className="slp__switcher-box">
+            <input
+              id="slp-name"
+              className="slp__name-input"
+              value={activeSettingsName}
+              onChange={e => setActiveSettingsName(e.target.value)}
+              placeholder="시나리오 이름"
+              onKeyDown={e => e.stopPropagation()}
+            />
+            <button
+              type="button"
+              className="slp__switcher-toggle"
+              aria-expanded={showList}
+              aria-haspopup="listbox"
+              aria-label={showList ? '시나리오 목록 닫기' : '시나리오 목록 열기'}
+              title="다른 시나리오 열기"
+              onClick={() => { setShowList(v => !v); setListQuery(''); }}
+            >
+              {showList ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+            </button>
+          </div>
+
+          {showList && renderList()}
+          </div>
         </div>
         <SetStatusChip
           status={resolveSaveStatus(isDirty, isApplied)}
@@ -176,19 +313,6 @@ export function SettingsLibraryPanel() {
             onClick={handleSave}
           >
             {savedFlash ? '저장됨' : '저장'}
-          </SetButton>
-
-          <SetButton onClick={() => { setShowSaveAs(s => !s); setSaveAsName(''); }}>
-            다른 이름으로
-          </SetButton>
-
-          <SetButton
-            icon={<IconList />}
-            aria-expanded={showList}
-            onClick={() => setShowList(s => !s)}
-          >
-            저장 목록
-            {showList ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />}
           </SetButton>
 
           {/*
@@ -261,48 +385,6 @@ export function SettingsLibraryPanel() {
           <SetButton variant="ghost" onClick={() => setShowSaveAs(false)}>
             취소
           </SetButton>
-        </div>
-      )}
-
-      {/* ── 저장 목록 ── */}
-      {showList && (
-        <div className="slp__list">
-          {(() => {
-            const visible = settingsList.filter(s => !pendingDeletes.has(s.id));
-            return visible.length === 0 ? (
-              <div className="slp__empty">
-                저장된 설정이 없습니다. 위에서 저장해주세요.
-              </div>
-            ) : (
-              visible.map(s => (
-                <div
-                  key={s.id}
-                  className={`slp__list-item ${s.id === activeSettingsId ? 'slp__list-item--active' : ''}`}
-                >
-                  <div className="slp__item-info">
-                    <span className="slp__item-name">{s.name}</span>
-                    <span className="slp__item-date">{s.updatedAt}</span>
-                  </div>
-                  <div className="slp__item-actions">
-                    <SetButton
-                      size="sm"
-                      onClick={() => loadSettings(s.id)}
-                      disabled={s.id === activeSettingsId}
-                    >
-                      불러오기
-                    </SetButton>
-                    <SetIconButton
-                      size="sm"
-                      variant="danger"
-                      label={`"${s.name}" 설정 삭제`}
-                      icon={<IconTrash size={14} />}
-                      onClick={() => requestDelete(s)}
-                    />
-                  </div>
-                </div>
-              ))
-            );
-          })()}
         </div>
       )}
 
