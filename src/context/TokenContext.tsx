@@ -885,9 +885,21 @@ export function TokenProvider({
 
   const setAerialTarget = useCallback((tokenId: string, target: { floorId: string; x: number; y: number; deployLabel: string } | null) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
-    setTokens(prev => prev.map(t =>
-      t.id === tokenId ? { ...t, aerialTarget: target ?? undefined, aerialSprayTarget: null } : t
-    ));
+    setTokens(prev => prev.map(t => {
+      if (t.id !== tokenId) return t;
+      // 회수(target === null)면 상태 태그도 함께 지운다.
+      //
+      // 전개하는 두 경로(LadderHandle · PlayPage 의 전개 모드)가 모두
+      // statusTag("3층 사다리전개")와 aerialTarget 을 **짝으로** 세운다.
+      // 회수에서 한쪽만 지우면 사다리는 걷혔는데 토큰 밑에 "1층 사다리전개"가
+      // 남는다. 여기서 같이 지워 "전개 태그가 있는데 전개는 안 된 상태"가
+      // 아예 생기지 않게 한다.
+      //
+      // setStatusTag 를 따로 부르지 않는 이유는 로그가 겹치기 때문이다 —
+      // 그쪽은 "… 해제"를 한 줄 더 남기는데, 아래에서 이미 "전개 해제"를 남긴다.
+      const cleared = target === null ? { statusTag: undefined } : {};
+      return { ...t, aerialTarget: target ?? undefined, aerialSprayTarget: null, ...cleared };
+    }));
     if (token) {
       const note = target === null
         ? '전개 해제'
