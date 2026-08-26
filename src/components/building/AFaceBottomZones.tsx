@@ -3,6 +3,7 @@ import { useVictims } from '../../context/VictimContext';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { MedicalPostBox } from './StandbyColumn';
+import { computeDropCenter } from '../../utils/dragDrop';
 import './AFaceBottomZones.css';
 
 // ─────────────────────────────────────────────
@@ -38,8 +39,8 @@ function SubZone({
   modifier:    string;
   taggedAsRit: boolean;
 }) {
-  const { tokens, moveToken, toggleMissionTag } = useTokens();
-  const { victims, moveVictim }                 = useVictims();
+  const { tokens, positions, moveToken, toggleMissionTag } = useTokens();
+  const { victims, victimPositions, moveVictim }            = useVictims();
 
   const zoneTokens  = tokens.filter(t => t.zoneKey  === zoneKey);
   // 이송 연결된 구조대상자는 출동대 토큰 우측에 붙어 렌더된다(TokenCard) — 구역 배치에서 제외.
@@ -58,15 +59,24 @@ function SubZone({
     // 밴드 밑에 깔려 안 보이는 원인이었음)
     const tokenId  = e.dataTransfer.getData('tokenId');
     const victimId = e.dataTransfer.getData('victimId');
+
+    // 놓은 자리를 그대로 지킨다 — 방면 구역(ExteriorZone)과 같은 방식이다.
+    //
+    // 예전에는 좌표 없이 moveToken(id, zoneKey) 만 불러서, 손으로 어디에
+    // 놓든 flex 흐름에 따라 다시 줄을 섰다. moveToken 은 pos 가 없으면
+    // 저장된 위치를 지우도록 돼 있어(TokenContext) **자동 이동은 지금처럼
+    // 자동 정렬로 남는다** — 좌표를 넘기는 이 경로만 자리를 기억한다.
+    const { x, y } = computeDropCenter(e, e.currentTarget.getBoundingClientRect());
+
     if (tokenId) {
-      moveToken(tokenId, zoneKey);
+      moveToken(tokenId, zoneKey, { x, y });
       if (taggedAsRit) {
         const token = tokens.find(t => t.id === tokenId);
         const alreadyTagged = token?.missionTags?.some(m => m.label === RIT_TAG.label) ?? false;
         if (!alreadyTagged) toggleMissionTag(tokenId, RIT_TAG);
       }
     }
-    if (victimId) moveVictim(victimId, zoneKey);
+    if (victimId) moveVictim(victimId, zoneKey, { x, y });
   }
 
   return (
@@ -77,8 +87,8 @@ function SubZone({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {zoneTokens.map(t  => <TokenCard  key={t.id}  token={t}  />)}
-        {zoneVictims.map(v => <VictimCard key={v.id}  victim={v} />)}
+        {zoneTokens.map(t  => <TokenCard  key={t.id}  token={t}  absPos={positions[t.id]} />)}
+        {zoneVictims.map(v => <VictimCard key={v.id}  victim={v} absPos={victimPositions[v.id]} />)}
       </div>
       {/* 명칭은 박스 하단 — 위쪽은 토큰이 쌓이는 자리라 가려진다 */}
       <span className="a-face-zone__label a-face-zone__label--bottom">{label}</span>
