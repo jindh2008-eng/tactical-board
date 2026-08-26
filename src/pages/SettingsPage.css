@@ -297,30 +297,16 @@
 }
 
 /*
- * 「다른 이름으로 저장」 줄은 바 아래로 겹쳐 띄운다 — 본문을 밀지 않는다.
+ * 제거된 규칙 — 2026-08-26
+ *   .settings-page__topbar .slp__save-as-row  (그리고 그 전에 .slp__list)
  *
- * `.slp__list` 를 여기서 뺐다(2026-08-26). U-1 이 목록을 이름칸 아래로 옮겼는데
- * 이 규칙이 **(0,2,0) 으로 새 규칙 (0,1,0) 을 이겨** 목록을 다시
- * `position: absolute; right: 20px; width: 520px` 으로 끌어냈다. 그 결과 목록이
- * 팝업 상자 **밖으로** 나가고, 팝업은 `overflow: hidden` 이라 통째로 잘려
- * 「시나리오가 하나도 안 보이는」 증상이 됐다.
+ * 이 규칙이 원래 「오른쪽 끝에 뜨는 팝업」을 만들던 것이다. 특이도가 (0,2,0)
+ * 이라 U-1 이 새로 쓴 (0,1,0) 규칙을 조용히 이겨 목록을 팝업 밖으로 끌어냈고,
+ * 그래서 시나리오가 하나도 안 보이는 증상이 났다.
  *
- * 팝업 모양은 이제 `SettingsLibraryPanel.css` 의 `.slp__list-pop` 이 혼자 그린다.
- * 여기서 다시 그리면 안 된다.
+ * 이제 마지막 사용자였던 save-as-row 자체가 사라졌다. 팝업 모양은
+ * SettingsLibraryPanel.css 의 .slp__list-pop 한 곳만 그린다.
  */
-.settings-page__topbar .slp__save-as-row {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 20px;
-  width: 520px;
-  max-width: calc(100% - 40px);
-  background: var(--set-surface-1);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-  padding: 8px;
-  z-index: 30;
-}
 
 /* ── 전체 레이아웃 (사이드바 + 메인 + 보조 열) ── */
 

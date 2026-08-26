@@ -60,8 +60,6 @@ export function SettingsLibraryPanel() {
   /** 삭제 확인 대기 중인 행. 한 번 더 눌러야 실제로 지운다 */
   const [armedId,     setArmedId]     = useState<string | null>(null);
   const switcherRef = useRef<HTMLDivElement>(null);
-  const [showSaveAs,  setShowSaveAs]  = useState(false);
-  const [saveAsName,  setSaveAsName]  = useState('');
   const [savedFlash,  setSavedFlash]  = useState(false);
   // 파일 입력을 둘로 나눈다 — 하나를 돌려 쓰면 백업 파일이 시나리오 경로로,
   // 시나리오 파일이 복원 경로로 들어가 조용히 엉뚱한 일이 벌어진다.
@@ -130,18 +128,27 @@ export function SettingsLibraryPanel() {
     setPendingDeletes(prev => { const next = new Map(prev); next.delete(id); return next; });
   }
 
-  function handleSave() {
-    saveSettings();
+  /*
+   * 저장된 이름과 지금 이름칸이 다른가. 저장된 적 없는 시나리오
+   * (activeSettingsId 가 없다)는 비교 대상이 없으므로 늘 「저장」이다.
+   */
+  const savedName   = settingsList.find(set => set.id === activeSettingsId)?.name;
+  const nameChanged = savedName !== undefined
+    && activeSettingsName.trim() !== ''
+    && activeSettingsName.trim() !== savedName;
+
+  function handleSaveCopy() {
+    const name = activeSettingsName.trim();
+    if (!name) return;
+    saveSettingsAs(name);
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1500);
   }
 
-  function handleSaveAs() {
-    const name = saveAsName.trim();
-    if (!name) return;
-    saveSettingsAs(name);
-    setSaveAsName('');
-    setShowSaveAs(false);
+  function handleSave() {
+    saveSettings();
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1500);
   }
 
   function handleNew() {
@@ -283,19 +290,6 @@ export function SettingsLibraryPanel() {
           })}
         </div>
 
-        {/*
-          바닥 액션. 「다른 이름으로」가 여기 있는 이유는 Figma·Google Docs 가
-          파일 메뉴에 두는 자리와 같다 — 툴바에는 일상 동작인 「저장」만 남긴다.
-        */}
-        <div className="slp__list-foot">
-          <SetButton
-            size="sm"
-            variant="ghost"
-            onClick={() => { setShowList(false); setShowSaveAs(true); setSaveAsName(''); }}
-          >
-            다른 이름으로 저장
-          </SetButton>
-        </div>
       </div>
     );
   }
@@ -357,13 +351,46 @@ export function SettingsLibraryPanel() {
           appliedAtLabel={lastAppliedAt ? formatClock(lastAppliedAt) : undefined}
         />
         <div className="slp__actions">
-          <SetButton
-            variant={savedFlash ? 'ok' : 'primary'}
-            icon={savedFlash ? <IconCheck /> : <IconSave />}
-            onClick={handleSave}
-          >
-            {savedFlash ? '저장됨' : '저장'}
-          </SetButton>
+          {/*
+            이름을 고친 순간에만 갈림길을 보여 준다.
+            평소에는 버튼 하나(저장)이고, 이름이 저장된 것과 달라지면 둘로 갈라진다.
+
+            예전에는 「다른 이름으로 저장」이 늘 떠 있었는데, 그 말이 「이름만
+            바꾸는 건가, 새로 만드는 건가」로 읽히지 않았다. 지금 레이블은 결과를
+            그대로 적는다 — 「이름 바꿔 저장」은 같은 시나리오, 「사본으로 저장」은
+            새 시나리오다.
+
+            이름칸을 고치면 무조건 복제되게 하는 안은 쓰지 않았다. 그러면 이름
+            변경 자체가 불가능해진다 — saveSettings 가 activeSettingsId 를 그대로
+            쓰므로 지금 이름 변경 경로가 이것 하나뿐이다.
+          */}
+          {nameChanged ? (
+            <>
+              <SetButton
+                variant={savedFlash ? 'ok' : 'primary'}
+                icon={savedFlash ? <IconCheck /> : <IconSave />}
+                onClick={handleSave}
+                title={`"${savedName}" 을 "${activeSettingsName.trim()}" 로 바꿔 저장합니다`}
+              >
+                {savedFlash ? '저장됨' : '이름 바꿔 저장'}
+              </SetButton>
+              <SetButton
+                icon={<IconSave />}
+                onClick={handleSaveCopy}
+                title={`"${savedName}" 은 그대로 두고 "${activeSettingsName.trim()}" 를 새로 만듭니다`}
+              >
+                사본으로 저장
+              </SetButton>
+            </>
+          ) : (
+            <SetButton
+              variant={savedFlash ? 'ok' : 'primary'}
+              icon={savedFlash ? <IconCheck /> : <IconSave />}
+              onClick={handleSave}
+            >
+              {savedFlash ? '저장됨' : '저장'}
+            </SetButton>
+          )}
 
           {/*
             두 종류를 섞지 않는다 — 담는 것이 다르다(settingsStorage.ts «파일 입출력»).
@@ -412,31 +439,6 @@ export function SettingsLibraryPanel() {
           />
         </div>
       </div>
-
-      {/* ── 다른 이름으로 저장 ── */}
-      {showSaveAs && (
-        <div className="slp__save-as-row">
-          <input
-            className="slp__name-input"
-            placeholder="새 이름 입력"
-            aria-label="새 설정 이름"
-            value={saveAsName}
-            onChange={e => setSaveAsName(e.target.value)}
-            onKeyDown={e => {
-              e.stopPropagation();
-              if (e.key === 'Enter') handleSaveAs();
-              if (e.key === 'Escape') setShowSaveAs(false);
-            }}
-            autoFocus
-          />
-          <SetButton variant="primary" onClick={handleSaveAs} disabled={!saveAsName.trim()}>
-            저장
-          </SetButton>
-          <SetButton variant="ghost" onClick={() => setShowSaveAs(false)}>
-            취소
-          </SetButton>
-        </div>
-      )}
 
       {restoredNotice && (
         <SetToast

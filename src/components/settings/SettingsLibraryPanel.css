@@ -50,25 +50,6 @@
   flex-wrap: wrap;
   flex-shrink: 0;
 }
-/*
- * 버튼 스타일은 여기 없다 — ui/SetButton 이 전담한다(§6).
- * 패널마다 __btn 을 다시 정의하던 것이 F-1 의 직접 원인이었다.
- */
-
-.slp__save-as-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  padding: 8px 10px;
-  background: var(--set-surface-0);
-  border: 1px solid var(--set-border);
-  border-radius: var(--set-r-sm);
-}
-
-.slp__save-as-row .slp__name-input {
-  flex: 1;
-}
-
 /* 빈 목록 · 검색 결과 없음 양쪽에서 쓴다 */
 .slp__empty {
   font-size: var(--set-fs-sm);
@@ -315,10 +296,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-
-.slp__list-foot {
-  display: flex;
-  justify-content: flex-start;
-  padding: 6px 8px;
-  border-top: 1px solid var(--set-border-subtle);
-}
+/*
+ * 제거된 규칙 — 2026-08-26
+ *   .slp__save-as-row  「다른 이름으로 저장」 전용 줄이었다. 이름칸을 고치면
+ *                      저장 버튼이 「이름 바꿔 저장 / 사본으로 저장」 둘로
+ *                      갈라지므로 따로 입력칸을 띄울 이유가 없어졌다.
+ *   .slp__list-foot    같은 이유로 목록 바닥 액션이 비었다.
+ */
