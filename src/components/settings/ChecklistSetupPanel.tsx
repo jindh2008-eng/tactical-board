@@ -47,7 +47,6 @@ const FIRE_STATUS_LABELS: Partial<Record<FireStatus, string>> = {
   complete:         '완진',
 };
 
-const CP_LEVELS: CommandProcedureLevel[] = ['beginner', 'intermediate', 'advanced'];
 const CP_LEVEL_LABELS: Record<CommandProcedureLevel, string> = {
   beginner:     '초급',
   intermediate: '중급',
@@ -74,6 +73,7 @@ export function ChecklistSetupPanel() {
     unitStatusConfig,
     unitTagPresetConfig,
     commandProcedureConfigs,
+    activeCommandProcedureLevel,
     appendChecklistSections,
     addChecklistSection,
     updateChecklistSection,
@@ -122,7 +122,7 @@ export function ChecklistSetupPanel() {
 
   // 불러오기 상태
   const [showImport,     setShowImport]     = useState(false);
-  const [importLevel,    setImportLevel]    = useState<CommandProcedureLevel>('beginner');
+
   const [importSelected, setImportSelected] = useState<Set<string>>(new Set());
 
   // 드래그 상태
@@ -256,6 +256,8 @@ export function ChecklistSetupPanel() {
 
   // ── 불러오기 ─────────────────────────────────
 
+  // 가져올 레벨 = 시나리오의 훈련 표시 레벨. 이 화면에는 고르는 수단이 없다
+  const importLevel: CommandProcedureLevel = activeCommandProcedureLevel;
   const importCategories = commandProcedureConfigs[importLevel] ?? [];
 
   function toggleImportCat(id: string) {
@@ -478,17 +480,14 @@ export function ChecklistSetupPanel() {
         </div>
       ) : (
         <div className="checklist-setup__import-panel">
-          <div className="checklist-setup__import-level-tabs">
-            {CP_LEVELS.map(lv => (
-              <button
-                key={lv}
-                className={`checklist-setup__import-level-tab${importLevel === lv ? ' checklist-setup__import-level-tab--active' : ''}`}
-                onClick={() => { setImportLevel(lv); setImportSelected(new Set()); }}
-              >
-                {CP_LEVEL_LABELS[lv]}
-              </button>
-            ))}
-          </div>
+          {/*
+            레벨을 여기서 고르지 않는다 — **시나리오 레벨을 따른다**(레일 머리의
+            드롭다운). 훈련할 레벨과 가져올 절차가 갈리면 엉뚱한 항목이 섞이는데,
+            탭이 따로 있으면 그게 조용히 일어난다.
+          */}
+          <p className="checklist-setup__import-scope">
+            <b>{CP_LEVEL_LABELS[importLevel]}</b> 지휘절차 — 시나리오 레벨을 따릅니다
+          </p>
           {importCategories.length === 0 ? (
             <p className="checklist-setup__import-empty">등록된 지휘절차가 없습니다.</p>
           ) : (

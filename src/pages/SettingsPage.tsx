@@ -14,6 +14,7 @@ import { UnitStatusPanel }       from '../components/settings/UnitStatusPanel';
 import { TagPresetPanel }        from '../components/settings/TagPresetPanel';
 import { ScenarioModal }         from '../components/overlays/ScenarioModal';
 import { DispatchArrivalAside, VictimFloorAside, ChecklistLegendAside } from '../components/settings/ui/AsideContent';
+import type { CommandProcedureLevel } from '../types/settings';
 import { computeReadiness, summarizeReadiness } from '../utils/scenarioReadiness';
 import './SettingsPage.css';
 
@@ -170,6 +171,8 @@ export function SettingsPage() {
     moveRosterToOrder,
     victimSetup,
     checklistConfig,
+    activeCommandProcedureLevel,
+    updateActiveCommandProcedureLevel,
     isDirty,
   } = settings;
 
@@ -498,7 +501,27 @@ export function SettingsPage() {
 
           <div className="settings-page__rail-body">
             <div className="settings-page__rail-head">
-              <span className="settings-page__rail-title">시나리오</span>
+              <div className="settings-page__rail-row">
+                <span className="settings-page__rail-title">시나리오</span>
+                {/*
+                  훈련 표시 레벨 — **시나리오 값**이라 여기 있다(예전에는 공통
+                  설정인 지휘절차 화면에 있었다). 아래 체크리스트의 「지휘절차에서
+                  불러오기」도 이 레벨만 보여준다 — 훈련할 레벨과 가져올 절차가
+                  갈리면 엉뚱한 항목이 섞인다.
+                */}
+                <label className="settings-page__rail-level">
+                  <span className="settings-page__rail-level-label">레벨</span>
+                  <select
+                    className="settings-page__rail-level-select"
+                    value={activeCommandProcedureLevel}
+                    onChange={e => updateActiveCommandProcedureLevel(e.target.value as CommandProcedureLevel)}
+                  >
+                    <option value="beginner">초급</option>
+                    <option value="intermediate">중급</option>
+                    <option value="advanced">고급</option>
+                  </select>
+                </label>
+              </div>
               <span className="settings-page__rail-meta">
                 {checklistConfig.sections.length}개 절 · {checklistItemCount}개 항목
               </span>

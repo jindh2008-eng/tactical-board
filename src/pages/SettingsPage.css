@@ -1166,3 +1166,41 @@
   height: 24px;
   cursor: pointer;
 }
+
+/* ── 레일 머리의 훈련 레벨 ── */
+
+.settings-page__rail-row {
+  display: flex;
+  align-items: center;
+  gap: var(--set-sp-3);
+}
+
+.settings-page__rail-level {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--set-sp-2);
+  cursor: pointer;
+}
+
+.settings-page__rail-level-label {
+  font-size: var(--set-fs-xs);
+  color: var(--set-text-faint);
+}
+
+.settings-page__rail-level-select {
+  padding: 2px var(--set-sp-2);
+  background: var(--set-surface-0);
+  border: 1px solid var(--set-accent);
+  border-radius: var(--set-r-sm);
+  color: var(--set-accent-strong);
+  font-size: var(--set-fs-sm);
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.settings-page__rail-level-select:focus {
+  outline: none;
+  border-color: var(--set-accent-strong);
+}

@@ -23,7 +23,6 @@ const TYPE_LABELS: Record<CommandProcedureItemType, string> = {
 export function CommandProcedurePanel() {
   const {
     commandProcedureConfigs, updateCommandProcedureLevel,
-    activeCommandProcedureLevel, updateActiveCommandProcedureLevel,
   } = useSettings();
 
   const [selectedLevel, setSelectedLevel] = useState<CommandProcedureLevel>('beginner');
@@ -188,20 +187,12 @@ export function CommandProcedurePanel() {
 
   return (
     <div className="cp-panel">
-      {/* 훈련 중 무플 화면 우측에 표시할 레벨 — 아래 편집 탭(어느 레벨을 편집 중인지)과는 별개 개념.
-          드롭다운으로 둬서 아래 편집 탭과 형태를 다르게 해 혼동을 줄인다. */}
-      <div className="cp-panel__active-level">
-        <span className="cp-panel__active-level-label">훈련 중 무플 화면에 표시할 레벨</span>
-        <select
-          className="cp-panel__active-level-select"
-          value={activeCommandProcedureLevel}
-          onChange={e => updateActiveCommandProcedureLevel(e.target.value as CommandProcedureLevel)}
-        >
-          {LEVELS.map(level => (
-            <option key={level} value={level}>{LEVEL_LABELS[level]}</option>
-          ))}
-        </select>
-      </div>
+      {/*
+        「훈련 중 표시할 레벨」은 여기 없다 — 시나리오 값이라 시나리오 레일 머리로
+        옮겼다(2026-08-25). 이 화면은 **공통 설정**이라 어느 시나리오에서 보든
+        같은 내용인데, 표시 레벨만 시나리오마다 달라 한 화면에 있으면 어느 쪽이
+        저장되는 값인지 알 수 없었다.
+      */}
 
       {/* 레벨 탭 — 아래에서 편집할 레벨 선택 (훈련 표시 레벨과 무관) */}
       <div className="cp-panel__level-tabs">

@@ -24,6 +24,8 @@ export interface WorkingPresets {
   fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
   aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
   checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
+  /** 훈련 표시 레벨 — 시나리오 값. SettingsSet 쪽 주석 참고 */
+  activeCommandProcedureLevel?: CommandProcedureLevel;
   /** @deprecated 공통 설정 — SettingsSet 쪽 주석 참고. 쓰기를 끊었다(2026-08-25) */
   commandProcedureConfigs?: CommandProcedureConfigs;
   /** @deprecated 위와 같음 */
@@ -52,6 +54,15 @@ export interface SettingsSet {
   fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
   aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
   checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
+
+  /**
+   * 훈련 중 무플 화면에 표시할 지휘절차 레벨.
+   *
+   * 지휘절차 **내용**(commandProcedureConfigs)은 공통 설정이지만 「어느 레벨로
+   * 훈련하는가」는 시나리오마다 다르다 — 같은 절차집을 두고 초급 시나리오와
+   * 고급 시나리오를 따로 만든다. 2026-08-25 에 공통에서 이쪽으로 옮겼다.
+   */
+  activeCommandProcedureLevel?: CommandProcedureLevel;
 
   /**
    * @deprecated 공통 설정이라 시나리오에 속하지 않는다. 새로 쓰지 않는다.

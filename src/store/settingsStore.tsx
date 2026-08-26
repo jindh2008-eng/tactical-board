@@ -125,7 +125,8 @@ export interface SettingsContextValue {
   // ── 지휘절차 ──────────────────────────────────
   commandProcedureConfigs:     CommandProcedureConfigs;
   updateCommandProcedureLevel: (level: CommandProcedureLevel, categories: CommandProcedureCategory[]) => void;
-  // 훈련 중 무플 화면에 표시할 레벨 — 시나리오와 무관한 전역값 (commandProcedureConfigs와 동일하게 독립 저장)
+  // 훈련 중 무플 화면에 표시할 레벨 — **시나리오 값**이다(2026-08-25 이전은 전역이었다).
+  // 지휘절차 내용은 공통이지만 어느 레벨로 훈련하는가는 시나리오마다 다르다.
   activeCommandProcedureLevel:       CommandProcedureLevel;
   updateActiveCommandProcedureLevel: (level: CommandProcedureLevel) => void;
 
@@ -246,8 +247,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [commandProcedureConfigs, setCommandProcedureConfigs] = useState<CommandProcedureConfigs>(
     loadCommandProcedureConfigs
   );
+  /*
+   * 훈련 표시 레벨 — 시나리오 값으로 옮겼다(2026-08-25).
+   * 자동저장분에 있으면 그것을, 없으면 옛 전역 키를 읽는다. 전역 키는 구버전
+   * 사용자가 쓰던 값을 한 번 이어받는 용도로만 남는다.
+   */
   const [activeCommandProcedureLevel, setActiveCommandProcedureLevel] = useState<CommandProcedureLevel>(
-    loadActiveCommandProcedureLevel
+    () => loadWorkingPresets().activeCommandProcedureLevel ?? loadActiveCommandProcedureLevel()
   );
   const [unitStatusConfig, setUnitStatusConfig] = useState<UnitStatusConfig>(
     loadUnitStatusConfig
@@ -274,8 +280,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
     timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
     medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-    fireSuppressionConfig, aerialSuppressionConfig, checklistConfig,
-  }), [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig]);
+    fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
+  }), [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel]);
 
   /** "저장됨" 기준선. undefined = 아직 못 정함(마운트 직후) */
   const savedSnapshotRef = useRef<string | undefined>(undefined);
@@ -308,7 +314,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
       timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
     });
 
     // 마운트 직후 · loadSettings/newSettings 직후는 "저장됨" 상태로 봉인한다.
@@ -319,7 +325,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
     setIsDirty(snapshot !== savedSnapshotRef.current);
     setIsApplied(appliedSnapshotRef.current !== null && snapshot === appliedSnapshotRef.current);
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, buildSnapshot]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -603,7 +609,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
@@ -612,7 +618,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     savedSnapshotRef.current = buildSnapshot();
     setIsDirty(false);
     setLastSavedAt(Date.now());
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, buildSnapshot]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
@@ -622,7 +628,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig,
+      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
     };
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
@@ -630,7 +636,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     savedSnapshotRef.current = buildSnapshot();
     setIsDirty(false);
     setLastSavedAt(Date.now());
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, buildSnapshot]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -685,7 +691,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (set.aerialSuppressionConfig) setAerialSuppressionConfig(JSON.parse(JSON.stringify(set.aerialSuppressionConfig)));
     if (set.checklistConfig) setChecklistConfig(JSON.parse(JSON.stringify(set.checklistConfig)));
     else setChecklistConfig({ level: 'junior', sections: [] });
-    // 지휘절차 / 출동대 상태메세지 / 태그 프리셋은 메인 설정 불러오기 시 변경하지 않음
+    // 훈련 표시 레벨은 시나리오 값이다. 구버전 파일에는 없으므로 그때는 지금 값을 둔다
+    if (set.activeCommandProcedureLevel) setActiveCommandProcedureLevel(set.activeCommandProcedureLevel);
+    // 지휘절차 **내용** / 출동대 상태메세지 / 태그 프리셋은 공통이라 불러오기 시 변경하지 않음
+    // (표시 레벨은 위에서 시나리오 값으로 바꾼다)
     setExtraFireFloors(set.building?.extraFireFloors ? JSON.parse(JSON.stringify(set.building.extraFireFloors)) : []);
     setHasSiamesePipe(resolveHasSiamesePipe(set.building));
     setHasIndoorHydrant(set.building?.hasIndoorHydrant ?? false);
