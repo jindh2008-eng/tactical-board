@@ -577,7 +577,22 @@ export function ChecklistSetupPanel() {
                       {isReadonly ? (
                         <span className="checklist-setup__item-text">
                           {item.itemType === 'message' ? (item.messageTitle ?? item.text) : item.text}
-                          {arrivalUnits && <span className="checklist-setup__item-units"> ({arrivalUnits})</span>}
+                          {item.itemType === 'arrival' && (
+                            arrivalUnits
+                              ? <span className="checklist-setup__item-units"> ({arrivalUnits})</span>
+                              /*
+                               * 편성이 없는 도착 항목.
+                               *
+                               * 착대를 옮기면 빈 착대가 압축되며 번호가 밀리는데, 체크리스트는
+                               * 착대 **번호**를 저장하므로 가리킬 곳이 사라진다. 예전에는 빈
+                               * 문자열이면 괄호째 안 그려서 「4착대 도착」이 멀쩡해 보였다 —
+                               * 경고 토스트는 닫으면 사라지고 결함만 남았다.
+                               *
+                               * 데이터는 고치지 않는다. 설정모드가 다른 화면의 값을 조용히
+                               * 바꾸면 되돌릴 수 없다 — 대신 판단할 재료를 계속 보여 준다.
+                               */
+                              : <span className="checklist-setup__item-units checklist-setup__item-units--empty"> (편성없음)</span>
+                          )}
                         </span>
                       ) : (
                         <input

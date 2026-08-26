@@ -250,6 +250,15 @@
   color: var(--set-text-faint);
 }
 
+/*
+ * 편성이 없는 도착 항목. 흐린 회색으로 두면 「(진압2, 진압3)」 과 구분되지
+ * 않아 그냥 지나친다 — 고쳐야 할 것이라는 신호가 필요하다.
+ */
+.checklist-setup__item-units--empty {
+  color: var(--set-warn);   /* 8.19:1 — 「미입력 · 주의」 용도로 정의된 토큰이다 */
+  font-weight: 700;
+}
+
 .checklist-setup__type-badge--message {
   background-color: color-mix(in srgb, var(--set-type-message) 14%, transparent);
   color: var(--set-type-message);
