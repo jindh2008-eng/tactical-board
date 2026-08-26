@@ -13,6 +13,9 @@ import './SettingsLibraryPanel.css';
 /** 삭제 되돌리기 유예 시간(§7.4 F-4) */
 const DELETE_UNDO_MS = 5000;
 
+/** 백업 복원 → 새로고침 사이를 건너는 일회용 플래그. 값은 복원된 시나리오 수 */
+const RESTORED_FLAG = 'tactical-board.settings.restored';
+
 function formatClock(ts: number): string {
   const d = new Date(ts);
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -45,7 +48,14 @@ export function SettingsLibraryPanel() {
     lastAppliedAt,
   } = useSettings();
 
-  const [showList,    setShowList]    = useState(false);
+  /*
+   * 백업 복원 → 새로고침을 건너온 플래그. **읽기만** 한다(순수) — 지우는 것은
+   * 아래 effect 다. 초기화 함수에서 지우면 StrictMode 가 두 번 부를 때 두 번째
+   * 호출이 null 을 보게 된다.
+   */
+  const restoredCount = useState(() => sessionStorage.getItem(RESTORED_FLAG))[0];
+
+  const [showList,    setShowList]    = useState(restoredCount !== null);
   const [listQuery,   setListQuery]   = useState('');
   const switcherRef = useRef<HTMLDivElement>(null);
   const [showSaveAs,  setShowSaveAs]  = useState(false);
@@ -72,6 +82,16 @@ export function SettingsLibraryPanel() {
    * 목록은 바깥을 누르거나 Esc 로 닫는다. 여는 컨트롤 옆에 붙어 뜨는 것은
    * 메뉴이지 화면이 아니므로, 닫는 길이 버튼 재클릭 하나뿐이면 갇힌 느낌이 난다.
    */
+  // 복원 직후 — 목록을 열어 무엇이 돌아왔는지 바로 보이게 한다
+  const [restoredNotice, setRestoredNotice] = useState<string | null>(
+    restoredCount !== null ? `백업을 복원했습니다 — 시나리오 ${restoredCount}건.` : null,
+  );
+
+  // 플래그는 한 번만 쓴다. 외부 저장소 정리라 effect 가 제자리다
+  useEffect(() => {
+    if (restoredCount !== null) sessionStorage.removeItem(RESTORED_FLAG);
+  }, [restoredCount]);
+
   useEffect(() => {
     if (!showList) return;
     const onDown = (e: MouseEvent) => {
@@ -162,8 +182,14 @@ export function SettingsLibraryPanel() {
     if (!file) return;
     e.target.value = '';
     try {
-      await importSettings(file);
-      alert('백업을 복원했습니다.');
+      const restored = await importSettings(file);
+      /*
+       * 복원은 새로고침으로 끝난다(여러 store 가 마운트 때만 localStorage 를
+       * 읽는다). 그래서 "몇 건이 돌아왔는지"를 새로고침 뒤에도 알려야 한다 —
+       * 한 번만 쓰는 플래그를 남겨 목록을 열어 준다. runtime.* 네임스페이스가
+       * 아니므로 runtimeSession 을 거치지 않는다(그쪽은 훈련 상태 전용이다).
+       */
+      sessionStorage.setItem(RESTORED_FLAG, String(restored));
       window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : '복원 실패');
@@ -295,6 +321,14 @@ export function SettingsLibraryPanel() {
               title="다른 시나리오 열기"
               onClick={() => { setShowList(v => !v); setListQuery(''); }}
             >
+              {/*
+                개수를 함께 보인다. 라벨 없는 ▾ 하나만으로는 "뒤에 목록이 있다"가
+                읽히지 않는다 — 「저장 목록」 버튼을 없앤 뒤 백업을 복원한 사람이
+                시나리오를 어디서 보는지 못 찾았다. 숫자가 그 신호다.
+              */}
+              {settingsList.length > 1 && (
+                <span className="slp__switcher-count">{settingsList.length}</span>
+              )}
               {showList ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
             </button>
           </div>
@@ -386,6 +420,14 @@ export function SettingsLibraryPanel() {
             취소
           </SetButton>
         </div>
+      )}
+
+      {restoredNotice && (
+        <SetToast
+          text={restoredNotice}
+          actionLabel="닫기"
+          onAction={() => setRestoredNotice(null)}
+        />
       )}
 
       {/* ── 삭제 되돌리기 토스트(§7.4 F-4). 여러 개면 아래에서부터 쌓는다 ── */}

@@ -422,8 +422,9 @@ export function importScenario(file: File): Promise<string> {
   });
 }
 
-export function importSettings(file: File): Promise<void> {
-  return new Promise((resolve, reject) => {
+/** 복원된 시나리오 수를 돌려준다 — 호출부가 "몇 건이 돌아왔는지" 알릴 수 있게 */
+export function importSettings(file: File): Promise<number> {
+  return new Promise<number>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
       try {
@@ -443,7 +444,7 @@ export function importSettings(file: File): Promise<void> {
           localStorage.setItem(UNIT_STATUS_KEY, JSON.stringify(data.unitStatusConfig));
         if (data.unitTagPresetConfig)
           localStorage.setItem(TAG_PRESET_KEY, JSON.stringify(data.unitTagPresetConfig));
-        resolve();
+        resolve(data.settingsList.length);
       } catch {
         reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
       }

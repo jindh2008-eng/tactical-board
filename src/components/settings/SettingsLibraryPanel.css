@@ -139,6 +139,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 1px;
   min-width: 32px;
   padding: 0 6px;
   background: none;
@@ -147,6 +148,14 @@
   color: var(--set-text-faint);
   cursor: pointer;
   transition: background-color 0.1s, color 0.1s;
+}
+
+/* 뒤에 목록이 있다는 신호. ▾ 하나만으로는 읽히지 않는다 */
+.slp__switcher-count {
+  font-size: var(--set-fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--set-text-faint);
+  margin-right: 3px;
 }
 
 .slp__switcher-toggle:hover {
