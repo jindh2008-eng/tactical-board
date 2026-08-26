@@ -141,7 +141,17 @@ export function ChecklistView({
                       </span>
                       <span className="checklist-panel__item-text">
                         {item.text}
-                        {arrivalUnits && <span className="checklist-panel__item-units"> ({arrivalUnits})</span>}
+                        {itemType === 'arrival' && (
+                          arrivalUnits
+                            ? <span className="checklist-panel__item-units"> ({arrivalUnits})</span>
+                            /*
+                             * 편성이 없는 도착 항목. 설정모드의 같은 표시와 짝이다
+                             * (ChecklistSetupPanel). 착대 번호가 밀려 가리킬 곳이
+                             * 사라진 항목인데, 예전에는 괄호째 안 그려서 훈련 중에
+                             * 「4착대 도착」이 멀쩡해 보였다.
+                             */
+                            : <span className="checklist-panel__item-units checklist-panel__item-units--empty"> (편성없음)</span>
+                        )}
                       </span>
                       {isLocked && <span className="checklist-panel__lock-icon">🔒</span>}
                       {/* 상위 항목 하위 숨김/표시 체크박스 */}

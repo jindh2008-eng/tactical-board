@@ -104,7 +104,11 @@ Context 경계를 넘어 동작을 호출해야 할 때 이 패턴을 쓴다(`Fi
 - `ChecklistView` — 표시 전용. 설정만 읽고 런타임 Context에 의존하지 않아 어디서든 렌더 가능.
 - `ChecklistPanel` — 부수효과 담당. 항목 타입별 분기(화재·이벤트·출동대·도착·메시지·구조대상자)와 하위 항목 연쇄를 실행한다. `applyItemToggle(item, checking)`이 로컬 클릭과 원격 명령의 공통 진입점이며 멱등하다.
 
-`/play`에서는 기본 숨김이고 상단 `표시옵션`으로 켠다. 지휘교수 태블릿으로 분리하는 작업이 진행 중이라 그렇다.
+**`/play`에는 진행상황 관리가 렌더되지 않는다.** `<ChecklistPanel>` 을 그리는 곳이 저장소에 없고(`PlayPage.tsx:455` 가 그렇게 적어 뒀다), 지휘절차 항목은 우측 `CommandProcedureTrainingBox` 로 대체됐다(무플 UI 개편, 2026-08-18 · P-2·P-7).
+
+`ChecklistDrawer` 도 호출부가 없지만 **의도적으로 남긴 것이다** — 향후 훈련모드(지휘) 화면용이다. `OverlayType` 의 `'checklist'` 가 남아 있는 것도 같은 이유다.
+
+따라서 `ChecklistView`/`ChecklistPanel` 을 고쳐도 지금은 화면에서 확인할 수 없다. 설정모드 레일의 `ChecklistSetupPanel` 만 눈에 보인다.
 
 ## 문서
 

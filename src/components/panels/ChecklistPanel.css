@@ -238,6 +238,15 @@
   color: var(--color-text-dim);
 }
 
+/*
+ * 편성이 없는 도착 항목. 흐린 색으로 두면 「(진압2, 진압3)」 과 구분되지 않아
+ * 훈련 중에 그냥 지나친다. 설정모드의 .checklist-setup__item-units--empty 와 짝이다.
+ */
+.checklist-panel__item-units--empty {
+  color: var(--color-warn);
+  font-weight: 700;
+}
+
 /* ── 잠금 아이콘 ── */
 
 .checklist-panel__lock-icon {
