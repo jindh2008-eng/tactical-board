@@ -105,9 +105,17 @@
 
 /* ─── 배치 구역 내 compact 사이즈 ─────────────────────────────────────
    건물 구역·방면·대기구역·임시의료소·출동대현황 공통 적용
+
+   이름과 달리 base(.token-card 14px)보다 **크다** — 판 위에 놓인 토큰은
+   멀리서 읽어야 한다. 여기 없는 구역은 조용히 14px 로 남는다.
+
+   A면 하단 밴드(직전대기·RIT·현장지휘소·임시의료소)가 그렇게 빠져 있었다.
+   목록의 .medical-post__body · .imminent-standby__body 는 밴드로 다시 짜기
+   전의 옛 클래스명이라 지금 마크업(.a-face-zone__body)에 걸리지 않는다.
    ─────────────────────────────────────────────────────────────────── */
 .zone-cell .token-card,
 .face-general-zone .token-card,
+.a-face-band__zone .a-face-zone__body .token-card,
 .standby-box__body .token-card,
 .standby-box__tokens .token-card,
 .standby-split__body .token-card,
