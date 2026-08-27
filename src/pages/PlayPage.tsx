@@ -41,6 +41,7 @@ import {
 import { resolveSprayTarget } from '../utils/sprayTarget';
 import { LogPanel }           from '../components/right/LogPanel';
 import { CommandProcedureTrainingBox } from '../components/right/CommandProcedureTrainingBox';
+import { ChiefSlot }          from '../components/shared/ChiefSlot';
 import './PlayPage.css';
 
 
@@ -304,17 +305,15 @@ function ResourcePanel() {
   const { stagingAreaChief, updateStagingAreaChief } = useSettings();
   const { resourceAssigned, setResourceAssigned }    = useResourceStatus();
 
-  // 자원대기소 운영 지정과 소장 지명 — 지휘관 결정이라 시각이 남아야 한다 (EVENT_LOG_PLAN N-14)
-  function toggleAssigned() {
-    const next = !resourceAssigned;
-    setResourceAssigned(next);
-    addLog({
-      logType: 'post', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '',
-      note:    next ? '자원대기소 운영 지정' : '자원대기소 운영 해제',
-      payload: { kind: 'post-install', post: 'resource', installed: next },
-    });
-  }
-
+  /*
+   * 운영 지정 토글을 없앴다 — 소장을 지명하면 그것이 곧 운영 지정이다.
+   * (EVENT_LOG_PLAN N-14 의 로그는 그대로 남긴다)
+   *
+   * **해제해도 운영 지정은 유지한다.** resourceAssigned 는 표시용이 아니라
+   * 도착한 출동대와 하차하는 펌프가 자원대기소로 갈지 대기1단계로 갈지를
+   * 정한다(TokenContext · UnitStatusPanel). 소장을 바꾸려고 잠깐 빼는 사이
+   * 도착 경로가 흔들리면 안 된다.
+   */
   function changeChief(name: string) {
     if (name === stagingAreaChief) return;
     updateStagingAreaChief(name);
@@ -323,10 +322,23 @@ function ResourcePanel() {
       note:    name ? `자원대기소장 지명: ${name}` : '자원대기소장 해제',
       payload: { kind: 'post-chief', post: 'resource', chiefTokenId: null, chiefLabel: name || null },
     });
+
+    if (name && !resourceAssigned) {
+      setResourceAssigned(true);
+      addLog({
+        logType: 'post', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '',
+        note:    '자원대기소 운영 지정',
+        payload: { kind: 'post-install', post: 'resource', installed: true },
+      });
+    }
   }
 
   const zoneKey    = 'standby-resource';
-  const zoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
+  const allZoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
+  // 소장은 이름 문자열로 저장된다(설정모드 stagingAreaChief 와 같은 형식)
+  const chiefToken = allZoneTokens.find(t => t.label === stagingAreaChief) ?? null;
+  // 소장은 슬롯이 그린다 — 박스에도 그리면 한 토큰이 두 번 보인다
+  const zoneTokens = chiefToken ? allZoneTokens.filter(t => t.id !== chiefToken.id) : allZoneTokens;
   // 맨 윗줄은 "도착대" — 방금 들어온 한 무리
   const { arrived, rest } = splitArrivalGroup(zoneTokens);
 
@@ -345,22 +357,17 @@ function ResourcePanel() {
     <div className="resource-panel">
       <div className="resource-panel__header">
         <span className="resource-panel__title">자원대기소</span>
-        <button
-          className={`resource-status-btn resource-status-btn--${resourceAssigned ? 'on' : 'off'}`}
-          onClick={toggleAssigned}
-        >
-          {resourceAssigned ? '지정' : '미지정'}
-        </button>
-        <select
-          className="resource-panel__chief-select"
-          value={stagingAreaChief}
-          onChange={e => changeChief(e.target.value)}
-        >
-          <option value="">소장 미지정</option>
-          {zoneTokens.map(t => (
-            <option key={t.id} value={t.label}>{t.label}</option>
-          ))}
-        </select>
+        <ChiefSlot
+          chief={chiefToken}
+          label="자원대기소장"
+          onAssign={t => {
+            // 소장은 그 자리에 있는 사람이다 — 밖에서 끌어왔으면 구역으로 함께 들인다.
+            // (이미 구역 안이면 moveToken 이 같은 zoneKey 로 아무 일도 하지 않는다)
+            if (t.zoneKey !== zoneKey) moveToken(t.id, zoneKey);
+            changeChief(t.label);
+          }}
+          onRelease={() => changeChief('')}
+        />
       </div>
       <div
         className="resource-panel__body"

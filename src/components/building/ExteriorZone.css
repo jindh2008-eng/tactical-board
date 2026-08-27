@@ -247,7 +247,8 @@
 .a-face-zone__label--bottom {
   margin-top:    auto;          /* 본문이 남는 높이를 먹고 명칭은 바닥에 붙는다 */
   padding:       2px 6px 3px;
-  font-size:     1.05rem;
+  /* 좌측 패널 제목과 같은 크기 — 직전대기·RIT·현장지휘소·임시의료소·구조 현황 */
+  font-size:     1.22rem;
   color:         #f0ece2;
   background:    rgba(56, 52, 46, 0.86);
   border-top:    1px solid var(--ctr-border-mid);

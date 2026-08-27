@@ -100,12 +100,21 @@
   box-sizing: border-box;
 }
 
-/* 패널 제목 — 우측 지휘절차 훈련 패널(.checklist-panel__title)과 동일 크기 */
+/*
+ * 패널 제목 — 우측 지휘절차의 **절차 항목**(.checklist-panel__item-text, 1.22rem)에
+ * 맞춘다. 훈련 중 멀리서 보는 화면이라 제목이 본문보다 작으면 안 읽힌다.
+ *
+ * 예전 주석은 「.checklist-panel__title 과 동일 크기」라고 적어 뒀는데 실제로는
+ * 1.0rem vs 1.15rem 으로 어긋나 있었다 — 값과 근거를 함께 고친다.
+ *
+ * 이벤트 로그는 우측 패널이라 .op-panel 밖이다. 아래에서 따로 잡는다.
+ */
 .op-panel .standby-box__title,
 .op-panel .rescue-stats__title,
 .op-panel .resource-panel__title,
-.op-panel .panel__header {
-  font-size: 1.0rem;
+.op-panel .panel__header,
+.right-panel .panel__header {
+  font-size: 1.22rem;
 }
 
 .op-panel__section {
@@ -154,11 +163,6 @@
 
 .op-panel .resource-panel__title {
   color: #7a5e28; /* 자원대기소 식별용 — 기존 standby-box--resource 헤더색 재사용 */
-}
-
-.op-panel .resource-panel__chief-select {
-  color: var(--ctr-border-mid);
-  border-color: var(--ctr-border-soft);
 }
 
 .op-panel .resource-panel__placeholder {
@@ -245,46 +249,6 @@
   color: var(--color-text);
   letter-spacing: 0.02em;
   flex-shrink: 0;
-}
-
-.resource-status-btn {
-  font-size:      0.65rem;
-  font-weight:    700;
-  padding:        2px 7px;
-  border-radius:  3px;
-  border:         none;
-  color:          #fff;
-  cursor:         pointer;
-  white-space:    nowrap;
-  flex-shrink:    0;
-  letter-spacing: 0.02em;
-  line-height:    1.5;
-  transition:     filter 0.12s;
-  font-family:    inherit;
-}
-
-.resource-status-btn:hover {
-  filter: brightness(1.18);
-}
-
-.resource-status-btn--off {
-  background: #ff8c42;
-}
-
-.resource-status-btn--on {
-  background: #2e7d32;
-}
-
-.resource-panel__chief-select {
-  font-size: 0.68rem;
-  background: transparent;
-  color: var(--color-text-dim);
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  padding: 1px 4px;
-  cursor: pointer;
-  max-width: 90px;
-  margin-left: auto;
 }
 
 /* 도착대 줄 + 아래 목록 — 세로로 나눠 담는다 */
@@ -435,3 +399,9 @@
 @keyframes spray-invalid-out {
   to { opacity: 0; }
 }
+
+/*
+ * 제거된 규칙 — 2026-08-27
+ *   .resource-status-btn        「지정/미지정」 토글. 소장 지명이 곧 운영 지정이 됐다.
+ *   .resource-panel__chief-select  소장 드롭다운. 제목줄의 소장 슬롯(ChiefSlot)이 대신한다.
+ */

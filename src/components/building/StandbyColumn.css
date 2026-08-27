@@ -232,44 +232,6 @@
 }
 
 /* ─────────────────────────────────────────────
-   임시의료소 상태 버튼
-   ─────────────────────────────────────────────*/
-
-.medical-status-btn {
-  font-size:      0.65rem;
-  font-weight:    700;
-  padding:        2px 7px;
-  border-radius:  3px;
-  border:         none;
-  color:          #fff;
-  cursor:         pointer;
-  white-space:    nowrap;
-  flex-shrink:    0;
-  letter-spacing: 0.02em;
-  line-height:    1.5;
-  transition:     filter 0.12s;
-  font-family:    inherit;
-}
-
-.medical-status-btn:hover {
-  filter: brightness(1.18);
-}
-
-.medical-status-btn:active {
-  filter: brightness(0.88);
-}
-
-/* 미설치 — 주황 */
-.medical-status-btn--none {
-  background: #ff8c42;
-}
-
-/* 설치 — 녹색 */
-.medical-status-btn--installed {
-  background: #2e7d32;
-}
-
-/* ─────────────────────────────────────────────
    임시의료소 담당 출동대 표시 래퍼
    ─────────────────────────────────────────────*/
 
@@ -361,3 +323,12 @@
   flex: 1;
   min-height: 0;
 }
+
+/*
+ * 제거된 규칙 — 2026-08-27
+ *   .medical-status-btn  「설치/미설치」 토글. 임시의료소장 지명이 곧 설치가 됐다.
+ *
+ * .standby-chief* 는 남긴다 — 아직 ChiefSelector(자원대기소용 SimpleStandbyBox)가
+ * 쓰는데, 그 경로는 현재 렌더되지 않는 StandbyColumn() 안에 있다. 죽은 코드를
+ * 지우는 것은 이번 범위가 아니라 손대지 않는다.
+ */
