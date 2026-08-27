@@ -143,6 +143,14 @@ export interface UnitToken {
    * 하나를 지우면 같은 그룹이 함께 지워진다.
    */
   pairGroupId?: string;
+  /**
+   * 착대 덮어쓰기 — 훈련 중 바꾼 값.
+   *
+   * 값이 없으면 설정 로스터의 arrivalOrder 를 따른다. 훈련창에서 설정은 읽기
+   * 전용이라 로스터를 고칠 수 없어, 여기에 얹어 두고 `훈련 세팅` 때 함께
+   * 사라지게 한다. → utils/arrivalOrder.ts
+   */
+  arrivalOrder?: number;
   lastMovedAt?: number;    // 마지막 이동 시각 (Date.now()) — recently-moved 강조용
   sprayState?:  SprayState | null;                                       // 방수 상태 (진압대 전용)
   /**

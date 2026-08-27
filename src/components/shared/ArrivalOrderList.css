@@ -1,0 +1,136 @@
+/* ─────────────────────────────────────────────
+   착대 목록(모드2) — 출동대현황 · 추가출동대 공용
+
+   UnitStatusPanel.css 의 .usp-arrival-list 를 옮겨 온 것이다. 두 패널이
+   같은 목록을 쓰게 되면서 한쪽 패널 이름을 딴 클래스가 맞지 않게 됐다.
+   ─────────────────────────────────────────────*/
+
+.arr-list {
+  height:      100%;
+  min-height:  0;
+  display:     flex;
+  flex-direction: column;
+  gap:         4px;
+  padding:     6px 6px 4px;
+  overflow-y:  auto;
+  overflow-x:  hidden;
+}
+
+/* 착대 한 차수 = 한 줄. 라벨(좌) + 토큰들(우, 넘치면 줄바꿈) */
+.arr-list__row {
+  display:        flex;
+  align-items:    flex-start;
+  gap:            6px;
+  padding-bottom: 4px;
+  border-radius:  4px;
+  /* 끌어다 놓는 자리라 경계가 손에 먼저 와야 한다 */
+  transition:     background-color 0.12s, box-shadow 0.12s;
+}
+
+.arr-list__row + .arr-list__row {
+  border-top:  1px solid rgba(91, 87, 80, 0.16);
+  padding-top: 4px;
+}
+
+/* 지금 놓으면 여기로 간다 */
+.arr-list__row--over {
+  background-color: rgba(31, 95, 168, 0.14);
+  box-shadow:       inset 0 0 0 1px rgba(31, 95, 168, 0.55);
+}
+
+/* 새 착대 줄 — 아직 없는 차수라 흐리게 두고, 끌어오면 위와 같이 켜진다 */
+.arr-list__row--new { opacity: 0.62; }
+.arr-list__row--over.arr-list__row--new { opacity: 1; }
+
+.arr-list__label {
+  flex-shrink:    0;
+  min-width:      30px;
+  padding-top:    7px;
+  font-size:      0.88rem;
+  font-weight:    700;
+  letter-spacing: 0.02em;
+  color:          #5b5750;
+  white-space:    nowrap;
+  user-select:    none;
+}
+
+/* 라벨 더블클릭으로 그 차수 전체를 도착시킬 수 있을 때만 */
+.arr-list__label--dispatch {
+  color:         #1f5fa8;
+  cursor:        pointer;
+  border-radius: 3px;
+  padding:       7px 4px 2px;
+  transition:    background 0.12s;
+}
+
+.arr-list__label--dispatch:hover {
+  background: rgba(31, 95, 168, 0.16);
+}
+
+.arr-list__body {
+  flex:      1;
+  min-width: 0;
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       5px 6px;
+}
+
+.arr-list__body .token-card-wrapper { flex-shrink: 0; }
+
+.arr-list__hint {
+  align-self: center;
+  font-size:  0.76rem;
+  color:      var(--ctr-border-mid);
+  user-select: none;
+}
+
+/*
+ * 컬럼 폭에 눌리지 않으므로 기본 크기를 쓴다 — .unit-status-panel .token-card
+ * 축소 규칙을 되돌린다. 자세함을 (0,3,0) 으로 올려 둔 것은 의도다:
+ * TokenCard.css 의 (0,2,0) 규칙과 자세함이 같으면 import 순서에 따라
+ * 조용히 뒤집힌다.
+ */
+.unit-status-panel .arr-list .token-card,
+.unit-add-panel   .arr-list .token-card {
+  min-width:     60px;
+  height:        32px;
+  padding:       0 12px;
+  border-radius: 8px;
+  font-size:     14px;
+}
+
+/* ── 모드1·모드2 전환 ────────────────────────── */
+.pool-mode {
+  display:       flex;
+  align-items:   center;
+  margin-left:   8px;
+  border:        1px solid var(--ctr-border-mid);
+  border-radius: 3px;
+  overflow:      hidden;
+  flex-shrink:   0;
+}
+
+.pool-mode__btn {
+  font-family: inherit;
+  font-size:   0.78rem;
+  font-weight: 700;
+  padding:     1px 8px;
+  border:      none;
+  background:  transparent;
+  color:       #5b5750;
+  cursor:      pointer;
+  line-height: 1.5;
+  white-space: nowrap;
+  transition:  background 0.12s, color 0.12s;
+}
+
+.pool-mode__btn + .pool-mode__btn {
+  border-left: 1px solid var(--ctr-border-mid);
+}
+
+.pool-mode__btn:hover { background: rgba(91, 87, 80, 0.12); }
+
+.pool-mode__btn--on {
+  color:      #1f5fa8;
+  background: rgba(31, 95, 168, 0.16);
+}

@@ -2,8 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 import type { UnitToken } from '../../types';
 import { useTokens }   from '../../context/TokenContext';
+import { useResourceStatus } from '../../context/ResourceStatusContext';
 import { UnitStatus }  from './UnitStatus';
 import { PoolTokenGrid } from '../shared/PoolTokenGrid';
+import { ArrivalOrderList, PoolModeToggle } from '../shared/ArrivalOrderList';
 import { UNIT_ADD_ZONE } from '../../utils/unitAddZone';
 import { summarizeUnits, summaryText, toUnitRefs } from '../../utils/dispatchSummary';
 import './UnitAddPanel.css';
@@ -20,9 +22,15 @@ import { rectToStage, stageBounds, stagePortalTarget } from '../../utils/stagePo
  *   - 만든 출동대는 이 박스(zoneKey: 'unit-add')에 담기고, 이후에는 옮긴 자리에 표시된다.
  *   - 메뉴가 열려 있는 동안 이 박스의 출동대를 우클릭하면 바로 삭제된다.
  */
+const ZONE_STANDBY1 = 'standby-standby1';
+const ZONE_RESOURCE = 'standby-resource';
+
 export function UnitAddPanel() {
   const { tokens, moveToken, removeToken, addLog } = useTokens();
+  const { resourceAssigned } = useResourceStatus();
   const [open, setOpen] = useState(false);
+  // 나열 방식 — 출동대현황과 같은 두 모드. 여기서 만든 대도 착대를 갖는다.
+  const [listMode, setListMode] = useState<'category' | 'arrival'>('category');
 
   // ── 추가출동대 요청·회수 로그 ────────────────────────────────────────
   // 생성할 때마다 로그를 남기면 "진압대 → 펌프 → 구조대 …"로 잘게 흩어져
@@ -120,6 +128,15 @@ export function UnitAddPanel() {
     };
   }, [open]);
 
+  /**
+   * 더블클릭 — 자원대기소가 「지정」이면 그리로, 아니면 대기1단계로.
+   * 출동대현황(UnitStatusPanel)과 같은 규칙이다. 동승 펌프를 함께 내보내는
+   * 일은 moveToken 이 맡는다 — 추가출동대도 대기 박스라 동승이 유지된다.
+   */
+  function handleTokenDoubleClick(tokenId: string) {
+    moveToken(tokenId, resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1);
+  }
+
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -146,6 +163,7 @@ export function UnitAddPanel() {
       <div className="panel unit-add-panel__box" ref={boxRef}>
         <div className="panel__header unit-add-panel__header">
           <span>추가출동대</span>
+          <PoolModeToggle mode={listMode} onChange={setListMode} />
           <button
             className={`unit-add-panel__btn${open ? ' unit-add-panel__btn--on' : ''}`}
             onClick={() => setOpen(v => !v)}
@@ -165,8 +183,19 @@ export function UnitAddPanel() {
         >
           {zoneTokens.length === 0 ? (
             <span className="unit-add-panel__placeholder">―</span>
+          ) : listMode === 'category' ? (
+            <PoolTokenGrid
+              tokens={zoneTokens}
+              onTokenDoubleClick={handleTokenDoubleClick}
+            />
           ) : (
-            <PoolTokenGrid tokens={zoneTokens} />
+            /* 모드2 — 착대 순번마다 한 줄. 여기서는 차수 일괄 도착을 두지 않는다:
+               추가 요청한 대는 한 무리로 오는 것이 아니라 그때그때 도착한다 */
+            <ArrivalOrderList
+              tokens={zoneTokens}
+              zoneKey={UNIT_ADD_ZONE}
+              onTokenDoubleClick={handleTokenDoubleClick}
+            />
           )}
         </div>
       </div>

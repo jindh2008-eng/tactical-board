@@ -9,6 +9,7 @@ import {
   saveTokenSession, loadTokenSession,
 } from '../utils/runtimeSession';
 import { UNIT_ADD_ZONE } from '../utils/unitAddZone';
+import { buildRosterOrderMap, nextArrivalOrder } from '../utils/arrivalOrder';
 import { isPoolZone, mountedPumpIds } from '../utils/unitPairing';
 import { summarizeUnits, summaryText, toUnitRefs } from '../utils/dispatchSummary';
 import { floorIdLabel } from '../utils/logLabels';
@@ -88,6 +89,8 @@ interface TokenContextValue {
     pairGroupId?: string,
   ) => void;
   moveToken:   (tokenId: string, toZoneKey: string | null, pos?: TokenPos, opts?: MoveTokenOptions) => void;
+  /** 착대를 바꾼다. 동승 중인 펌프도 함께 옮겨진다 → utils/arrivalOrder.ts */
+  setArrivalOrder: (tokenId: string, order: number) => void;
   removeToken: (tokenId: string) => void;
   rescueUnit:  (tokenId: string, victimLabel: string) => void;
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
@@ -507,6 +510,21 @@ export function TokenProvider({
         while (used.has(formatLabel(n))) n++;
         label = formatLabel(n);
       }
+      /*
+       * 착대도 같은 이유로 여기서 정한다 — 연타하면 진압6·진압7 로 밀려야지
+       * 둘 다 6 이 되면 안 된다. prev 를 봐야 직전 생성분이 반영된다.
+       *
+       * 짝(진압대+펌프)은 뒤에 만들어지는 펌프가 앞선 진압대의 값을 물려받는다.
+       * 설정모드 buildRoster 가 `vehEntry.arrivalOrder = unitOrder` 로 하는 것과
+       * 같다 — 펌프가 제 계수기로 번호를 뽑으면 진압3 인데 펌프1 이 된다.
+       */
+      const resolvedUnitType = unitType ?? defaultUnitType(color);
+      const pairOrder = pairGroupId
+        ? prev.find(t => t.pairGroupId === pairGroupId)?.arrivalOrder
+        : undefined;
+      const arrivalOrder = pairOrder
+        ?? nextArrivalOrder(resolvedUnitType, prev, buildRosterOrderMap(initialRosterRef.current));
+
       return [
         ...prev,
         {
@@ -517,15 +535,39 @@ export function TokenProvider({
           label,
           type,
           color,
-          unitType: unitType ?? defaultUnitType(color),
+          unitType: resolvedUnitType,
           // 직접 추가한 출동대는 좌측 '추가출동대' 박스에서 시작한다
           // (로스터 착대 출동대는 zoneKey: null = 출동대현황).
           zoneKey:  UNIT_ADD_ZONE,
           badges:   [],
           source:   'manual',
+          ...(arrivalOrder !== undefined ? { arrivalOrder } : {}),
           ...(pairGroupId ? { pairGroupId } : {}),
         },
       ];
+    });
+  }, []);
+
+  // ── 착대 변경 ───────────────────────────────
+  /**
+   * 착대를 바꾼다 — 설정 로스터는 건드리지 않고 토큰에 덮어쓴다.
+   *
+   * 동승 중인 펌프도 함께 옮긴다. 대기 박스에서 펌프는 진압대에 가려 보이지
+   * 않으므로(isMountedPump), 진압대만 옮기면 펌프는 옛 착대에 남았다가
+   * 하차하는 순간 엉뚱한 줄에 나타난다. moveToken 이 펌프를 데려가는 것과
+   * 같은 이유다.
+   *
+   * 로그는 남기지 않는다 — 무전 교신이 아니라 편성 정정이다.
+   */
+  const setArrivalOrder = useCallback((tokenId: string, order: number) => {
+    setTokens(prev => {
+      const token = prev.find(t => t.id === tokenId);
+      if (!token || token.arrivalOrder === order) return prev;
+      const ids = new Set([
+        tokenId,
+        ...mountedPumpIds(token, prev, initialRosterRef.current),
+      ]);
+      return prev.map(t => (ids.has(t.id) ? { ...t, arrivalOrder: order } : t));
     });
   }, []);
 
@@ -967,7 +1009,7 @@ export function TokenProvider({
   return (
     <TokenContext.Provider value={{
       tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
-      createToken, moveToken, removeToken, rescueUnit,
+      createToken, moveToken, setArrivalOrder, removeToken, rescueUnit,
       addBadge, removeBadge, clearBadges, toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, moveAerialTarget, setAerialSprayTarget, changeTokenColor, addLog,
     }}>
       {children}
