@@ -22,24 +22,39 @@
   background-color: rgba(0, 0, 0, 0.04);
 }
 
-/* 차 있으면 점선을 지운다 — 토큰 자체가 자리를 말한다 */
+/*
+ * 차 있으면 점선을 실선으로 바꾼다 — 더는 놓을 자리가 아니고,
+ * 이름표와 토큰이 한 덩어리라는 것을 테두리가 말한다.
+ */
 .chief-slot--filled {
-  border-color: transparent;
-  background-color: transparent;
+  border-style: solid;
+  border-color: var(--ctr-border-mid);
 }
 
 .chief-slot--filled:hover {
-  border-color: transparent;
+  border-color: var(--ctr-border-mid);
   background-color: transparent;
 }
 
-.chief-slot__empty {
+/*
+ * 역할 이름 — 「자원대기소장」. 비어 있으면 이것이 곧 「여기 놓으라」는 안내고,
+ * 차면 앞에 붙는 이름표가 된다.
+ */
+.chief-slot__label {
   font-size:   0.82rem;
   font-weight: 700;
   color:       var(--ctr-text-dim);
   white-space: nowrap;
   padding:     0 4px;
 }
+
+/* 찬 뒤에는 「자원대기소장: 물탱크1」로 읽히게 콜론을 붙인다 */
+.chief-slot--filled .chief-slot__label {
+  padding-right: 1px;
+  color:         var(--ctr-border-hard);
+}
+
+.chief-slot--filled .chief-slot__label::after { content: ':'; }
 
 /* 해제 — 토큰 옆에 붙는 작은 ✕. 소장을 바꾸려면 먼저 빼야 한다 */
 .chief-slot__release {

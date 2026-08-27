@@ -15,6 +15,17 @@ import './ChiefSlot.css';
 // 차 있으면 드롭을 **조용히 거절**한다. 소장은 한 명이고, 덮어쓰기를 허용하면
 // 훈련 중에 실수로 바뀌어도 알아채기 어렵다. 바꾸려면 먼저 빼야 한다.
 //
+// ## 이름표는 지우지 않는다 — 「자원대기소장: 물탱크1」
+//
+// 처음엔 토큰이 이름표 자리를 통째로 차지했다. 그러면 「물탱크1」만 남아
+// 그것이 소장인지 그냥 거기 있는 출동대인지 화면에서 구별되지 않는다.
+// 통제선(ControlLineToggles)이 「소방통제선 · 구급1」로 붙여 두는 것과 같은
+// 문법으로, 역할 이름을 앞에 두고 토큰을 옆에 붙인다.
+//
+// 다만 통제선과 성격이 다르다 — 통제선은 **누가 설치했는지 기록**이라 그
+// 출동대는 제 자리(방면)에 그대로 있다. 소장은 **그 구역에서 계속 활동하는
+// 사람**이라 토큰 자체가 여기 와 있어야 한다.
+//
 // ## 토큰은 구역을 떠나지 않는다
 //
 // 소장이 되어도 zoneKey 는 그대로다 — 소장은 그 자리에 있는 사람이지 다른
@@ -80,7 +91,9 @@ export function ChiefSlot({ chief, label, onAssign, onRelease }: ChiefSlotProps)
         ? `${label}: ${chief.label}`
         : `${label} — 출동대를 끌어다 놓으세요 (유관기관 제외)`}
     >
-      {chief ? (
+      {/* 이름표는 비었든 찼든 늘 남는다 — 이 자리가 무엇인지 먼저 읽혀야 한다 */}
+      <span className="chief-slot__label">{label}</span>
+      {chief && (
         <>
           <TokenCard token={chief} />
           <button
@@ -93,8 +106,6 @@ export function ChiefSlot({ chief, label, onAssign, onRelease }: ChiefSlotProps)
             ✕
           </button>
         </>
-      ) : (
-        <span className="chief-slot__empty">{label}</span>
       )}
     </div>
   );
