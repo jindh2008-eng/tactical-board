@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useVictims } from '../../context/VictimContext';
+import { useUIOverlay } from '../../context/UIOverlayContext';
 import { parseZoneKey } from '../../utils/logLabels';
 import { MaleIcon, FemaleIcon } from '../shared/victimIcons';
 import type { VictimToken } from '../../types/victim';
@@ -17,6 +17,17 @@ import './RescueBoard.css';
 // 그때 구조 성과는 **원래 있던 옥상** 것으로 세어야 한다 — 현재 zoneKey 로
 // 세면 구조된 사람은 전부 임시의료소로 몰리고, 그 전에도 A면으로 옮겨 가
 // 옥상 인원이 훈련 도중 슬금슬금 줄어든다.
+//
+// ## 하단 띠는 구조활동통계로 가는 문이다
+//
+// 이 판은 「누가 어디서 아직 안 나왔나」를 형상으로 본다. 중증도·연령 같은
+// 표 형태의 상세는 구조활동통계(RescueStatsModal)가 맡는다 — 이 좁은 칸에
+// 표를 넣으면 글씨를 줄여야 하고, 그러면 둘 다 못 읽는다.
+//
+// 그 팝업을 여는 자리를 임시의료소 헤더에서 여기로 옮겼다(2026-08-28).
+// 통계의 대상은 구조대상자지 임시의료소가 아니라서, 구조 현황판 옆에 두는 것이
+// 눈이 가는 순서와 맞는다. 접기 기능은 이 클릭에 자리를 내주고 없앴다 —
+// 하나의 띠에 두 동작을 얹으면 어느 쪽도 예측되지 않는다.
 //
 // ## 구조 판정은 임시의료소 진입이다
 //
@@ -85,10 +96,8 @@ function Row({ label, people }: { label: string; people: VictimToken[] }) {
 }
 
 export function RescueBoard() {
-  const { victims } = useVictims();
-  // 하단 명칭 띠가 곧 여닫는 버튼이다 — 다른 네 구역의 띠와 같은 자리라
-  // 별도 버튼을 위에 두지 않는다(그 자리는 표가 쓴다).
-  const [open, setOpen] = useState(true);
+  const { victims }     = useVictims();
+  const { openOverlay } = useUIOverlay();
 
   // 최초 배치 위치로 묶는다. originZoneKey 가 없는 옛 저장분은 현재 위치로 대신한다.
   const byFloor = new Map<string, VictimToken[]>();
@@ -136,7 +145,7 @@ export function RescueBoard() {
 
   return (
     <div className="a-face-band__zone a-face-band__zone--rescue">
-      <div className="rescue-board__body" hidden={!open}>
+      <div className="rescue-board__body">
         <div className="rescue-board__col">
           {leftRows.length === 0
             ? <p className="rescue-board__empty">—</p>
@@ -153,15 +162,14 @@ export function RescueBoard() {
       </div>
 
       {/*
-        명칭 띠 = 여닫기 버튼 + 인원 표시.
-        구조/전체를 여기 붙여, 접어 둔 상태에서도 진척이 보인다.
+        명칭 띠 = 구조활동통계를 여는 버튼 + 인원 표시.
+        구조/전체를 여기 붙여, 판을 훑기 전에 진척이 먼저 읽힌다.
       */}
       <button
         type="button"
         className="a-face-zone__label a-face-zone__label--bottom rescue-board__toggle"
-        aria-expanded={open}
-        title={open ? '구조 현황 접기' : '구조 현황 펼치기'}
-        onClick={() => setOpen(v => !v)}
+        title="구조활동통계 보기"
+        onClick={() => openOverlay('rescue-stats')}
       >
         구조 현황
         <span className="rescue-board__count">{rescued} / {total}</span>

@@ -199,29 +199,6 @@
   --a-face-hydrant-clear: 88px;
 }
 
-/* 헤더 우측 끝 전환 버튼 */
-.medical-stats-toggle {
-  margin-left:    auto;
-  flex-shrink:    0;
-  padding:        1px 8px;
-  font-family:    inherit;
-  font-size:      0.82rem;
-  font-weight:    700;
-  letter-spacing: 0.02em;
-  white-space:    nowrap;
-  color:          #5b5750;
-  background:     rgba(91, 87, 80, 0.08);
-  border:         1px solid var(--ctr-border-mid);
-  border-radius:  3px;
-  cursor:         pointer;
-  transition:     background 0.12s, color 0.12s;
-}
-
-.medical-stats-toggle:hover {
-  background: rgba(91, 87, 80, 0.16);
-  color:      #3a3730;
-}
-
 /* 구역 명칭 — 헤더 바 없이 텍스트만.
    크기는 좌측 운영 패널의 패널 제목(.op-panel 내 1.0rem)과 맞춘다. */
 .a-face-zone__label {

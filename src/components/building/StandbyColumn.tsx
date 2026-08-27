@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { useMedicalPost } from '../../context/MedicalPostContext';
-import { useUIOverlay } from '../../context/UIOverlayContext';
 import { TokenCard } from '../shared/TokenCard';
 import { ChiefSlot } from '../shared/ChiefSlot';
 import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
@@ -45,7 +44,6 @@ export function MedicalPostBox() {
     isInstalled, setIsInstalled,
     assignedTokenId, setAssignedTokenId,
   } = useMedicalPost();
-  const { openOverlay } = useUIOverlay();
 
   /*
    * 설치 토글을 없앴다 — 소장을 지명하면 그것이 곧 설치다.
@@ -111,6 +109,7 @@ export function MedicalPostBox() {
 
   return (
     <div className="a-face-band__zone a-face-band__zone--medical">
+      {/* 헤더에는 소장 자리만 둔다 — 구조활동통계는 옆 칸 「구조 현황」 띠에서 연다 */}
       <div className="a-face-zone__header">
         <ChiefSlot
           chief={chiefToken}
@@ -122,15 +121,6 @@ export function MedicalPostBox() {
           }}
           onRelease={() => changeChief(null)}
         />
-        {/* 헤더 우측 끝 — 구조활동통계를 화면 가운데 팝업으로 연다.
-            이 자리는 좁아서 표를 넣으면 글씨를 줄여야 한다 */}
-        <button
-          className="medical-stats-toggle"
-          onClick={() => openOverlay('rescue-stats')}
-          title="구조활동통계 보기"
-        >
-          구조활동통계
-        </button>
       </div>
 
       <div
