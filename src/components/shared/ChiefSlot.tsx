@@ -24,6 +24,17 @@ import './ChiefSlot.css';
 // 해제하면 표시만 박스로 돌아온다 — 토큰 자체는 움직인 적이 없다.
 // ─────────────────────────────────────────────
 
+/**
+ * 소장이 될 수 있는가 — **유관기관만 제외**한다.
+ *
+ * 처음엔 활동대(type: 'activity')로 좁혔는데 너무 좁았다. 차량 지휘차의
+ * 운전요원이나 직접입력으로 만든 인원도 소장을 맡는다. 소속이 다른
+ * 유관기관(경찰·한전·가스…)만 우리 쪽 소장이 될 수 없다.
+ */
+function canBeChief(token: UnitToken): boolean {
+  return token.type !== 'agency';
+}
+
 interface ChiefSlotProps {
   /** 지금 소장인 토큰. 없으면 빈 슬롯 */
   chief: UnitToken | null;
@@ -55,8 +66,7 @@ export function ChiefSlot({ chief, label, onAssign, onRelease }: ChiefSlotProps)
     const tokenId = e.dataTransfer.getData('tokenId');
     if (!tokenId) return;
     const token = tokens.find(t => t.id === tokenId);
-    // 차량·유관기관이 아니라 **출동대**만 소장이 된다
-    if (!token || token.type !== 'activity') return;
+    if (!token || !canBeChief(token)) return;
 
     onAssign(token);
   }
@@ -68,7 +78,7 @@ export function ChiefSlot({ chief, label, onAssign, onRelease }: ChiefSlotProps)
       onDrop={onDrop}
       title={chief
         ? `${label}: ${chief.label}`
-        : `${label} — 출동대를 끌어다 놓으세요`}
+        : `${label} — 출동대를 끌어다 놓으세요 (유관기관 제외)`}
     >
       {chief ? (
         <>
