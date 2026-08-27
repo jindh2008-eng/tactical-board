@@ -9,7 +9,7 @@ import {
   saveTokenSession, loadTokenSession,
 } from '../utils/runtimeSession';
 import { UNIT_ADD_ZONE } from '../utils/unitAddZone';
-import { buildRosterOrderMap, nextArrivalOrder } from '../utils/arrivalOrder';
+import { nextManualArrivalOrder } from '../utils/arrivalOrder';
 import { isPoolZone, mountedPumpIds } from '../utils/unitPairing';
 import { summarizeUnits, summaryText, toUnitRefs } from '../utils/dispatchSummary';
 import { floorIdLabel } from '../utils/logLabels';
@@ -511,8 +511,11 @@ export function TokenProvider({
         label = formatLabel(n);
       }
       /*
-       * 착대도 같은 이유로 여기서 정한다 — 연타하면 진압6·진압7 로 밀려야지
-       * 둘 다 6 이 되면 안 된다. prev 를 봐야 직전 생성분이 반영된다.
+       * 착대도 같은 이유로 여기서 정한다 — 연타하면 1차·2차로 밀려야지 둘 다
+       * 1차가 되면 안 된다. prev 를 봐야 직전 생성분이 반영된다.
+       *
+       * 설정 로스터는 세지 않는다 — 추가출동대는 1차부터 시작하는 별도 편성이다
+       * (utils/arrivalOrder.ts nextManualArrivalOrder).
        *
        * 짝(진압대+펌프)은 뒤에 만들어지는 펌프가 앞선 진압대의 값을 물려받는다.
        * 설정모드 buildRoster 가 `vehEntry.arrivalOrder = unitOrder` 로 하는 것과
@@ -522,8 +525,7 @@ export function TokenProvider({
       const pairOrder = pairGroupId
         ? prev.find(t => t.pairGroupId === pairGroupId)?.arrivalOrder
         : undefined;
-      const arrivalOrder = pairOrder
-        ?? nextArrivalOrder(resolvedUnitType, prev, buildRosterOrderMap(initialRosterRef.current));
+      const arrivalOrder = pairOrder ?? nextManualArrivalOrder(resolvedUnitType, prev);
 
       return [
         ...prev,

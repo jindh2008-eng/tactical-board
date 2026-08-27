@@ -43,27 +43,37 @@ export function effectiveOrder(
 }
 
 /**
- * 새로 만든 대에 줄 착대 — **같은 종류 중 최대 + 1**.
+ * 훈련 중 만든 대에 줄 착대 — **직접 만든 같은 종류 중 최대 + 1**.
  *
- * 설정모드 `dispatchRoster.nextOrderFor` 와 같은 규칙이되 모집단이 다르다.
- * 로스터만 보면 훈련 중 진압대를 연달아 둘 만들 때 둘 다 같은 번호를 받는다.
- * 지금 판에 있는 토큰 전체를 세야 한 칸씩 밀린다.
+ * ## 설정 로스터는 세지 않는다
+ *
+ * 로스터가 5착대까지 차 있어도 훈련 중 처음 만든 진압대는 **1차**다.
+ * 추가출동대는 원래 편성에 이어 붙는 것이 아니라 따로 요청해 받는 별도
+ * 편성이라, 기존 착대 번호를 물려받으면 「6차」 같은 숫자가 무엇을 가리키는지
+ * 흐려진다. 규칙 자체(같은 종류 중 최대+1)는 설정모드 `nextOrderFor` 와 같다.
+ *
+ * 그래서 추가출동대의 1차와 출동대현황의 1차는 서로 다른 무리다. 추가분을
+ * 출동대현황으로 끌어가면 그쪽 번호 체계로 합쳐진다 — 옮긴 사람이 정한 것이다.
+ *
+ * ## 모집단은 자리가 아니라 `source: 'manual'` 이다
+ *
+ * 추가출동대 박스에 남아 있는 것만 세면, 만든 대를 전부 내보낸 뒤 다시 만들 때
+ * 1차가 되살아나 같은 번호가 두 무리에 생긴다. 훈련 중 만든 대 전체를 세면
+ * 번호가 한 방향으로만 는다.
  *
  * 착대가 없는 종류는 undefined — 덮어쓰기를 얹지 않는다.
  */
-export function nextArrivalOrder(
+export function nextManualArrivalOrder(
   unitType: string,
   tokens:   readonly UnitToken[],
-  orderMap: ReadonlyMap<string, number>,
 ): number | undefined {
   if (!hasArrivalOrder(unitType)) return undefined;
 
   let max = 0;
   for (const t of tokens) {
+    if (t.source !== 'manual') continue;
     if (t.unitType !== unitType) continue;
-    const order = effectiveOrder(t, orderMap);
-    if (order === UNLISTED_ORDER) continue;
-    max = Math.max(max, order);
+    if (t.arrivalOrder !== undefined) max = Math.max(max, t.arrivalOrder);
   }
   return max + 1;
 }
