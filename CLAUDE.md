@@ -108,6 +108,8 @@ Context 경계를 넘어 동작을 호출해야 할 때 이 패턴을 쓴다(`Fi
 
 `ChecklistDrawer` 도 호출부가 없지만 **의도적으로 남긴 것이다** — 향후 훈련모드(지휘) 화면용이다. `OverlayType` 의 `'checklist'` 가 남아 있는 것도 같은 이유다.
 
+**이 상태를 되돌리자는 계획이 대기 중이다** — 우측 패널을 「시나리오 ⇄ 지휘절차」 탭으로 만들면 `ChecklistPanel` 이 `/play` 에 들어오고 부수효과가 전부 살아난다. 착수 전에 [CHECKLIST_PROCEDURE_LINK_PLAN.md](docs/CHECKLIST_PROCEDURE_LINK_PLAN.md) §4·§5 를 읽는다.
+
 따라서 `ChecklistView`/`ChecklistPanel` 을 고쳐도 지금은 화면에서 확인할 수 없다. 설정모드 레일의 `ChecklistSetupPanel` 만 눈에 보인다.
 
 ## 문서
@@ -118,6 +120,7 @@ Context 경계를 넘어 동작을 호출해야 할 때 이 패턴을 쓴다(`Fi
 |---|---|
 | **[MASTER_PLAN.md](docs/MASTER_PLAN.md)** ★ | **작업 순서의 단일 출처. 다음에 할 일은 §7-A 에 전수로 모아 뒀다.** 확정된 결정(§1), 코드로 검증한 진행 상태(§2), W-0~W-5 작업 순서(§4), 향후 단계(§7). 다른 문서와 우선순위가 어긋나면 이 문서를 따른다 |
 | **[DEFERRED_PROPAGATION.md](docs/DEFERRED_PROPAGATION.md)** ★ | **파급 기록부.** 현재 범위는 훈련모드(무플) 하나뿐이다. 작업 중 설정모드·지휘모드·분석창 수정이 필요해지면 **고치지 말고 여기 §3에 적는다** |
+| [CHECKLIST_PROCEDURE_LINK_PLAN.md](docs/CHECKLIST_PROCEDURE_LINK_PLAN.md) | 시나리오 체크리스트 ⇄ 지휘절차 연동 — **검토만 끝났고 구현 대기.** 착수 전 §5 의 결정 3건 확인 |
 | [PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | 프로그램 목적·화면 구성 (⚠ 2026-05-06 기준, 낙후) |
 | [DATA_FLOW.md](docs/DATA_FLOW.md) | 저장소 구조, 각 기능의 데이터 흐름, Provider 순서 (⚠ 2026-05-06 기준, 낙후) |
 | [RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md](docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md) | 반응형 **설계 근거·실측 기록** — §0 실측값, §3 설계, §6 검증기준 |

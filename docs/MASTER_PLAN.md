@@ -575,6 +575,8 @@ tactical-board-run-{yymmdd-hhmm}.json
 | **A-1** | 로그에 **「누가 결정했는가」(actor)** 를 남길 것인가 | A 안 남긴다(현행) · **B 기본값+예외 표시(문서 권장)** · C 매번 선택 | [EVENT_LOG_PLAN.md](EVENT_LOG_PLAN.md) §8 미결 2 |
 | **A-2** | 준비도 검사에서 **무엇을 `block`** 으로 할 것인가 | 지금은 전부 `warn`. 막으려면 `/play` 의 「훈련 세팅」을 손대야 해서 D-4 경계를 넘는다 | [SETTINGS_MODE_UI_PLAN.md](SETTINGS_MODE_UI_PLAN.md) §11 Q-2 |
 | **A-3** | **시나리오 예측(`ScenarioModal`)** 범위를 열 것인가 | 사용자가 「향후 별도 작업」으로 정했다. 열면 §9 지표가 목표에 닿는다 | 아래 B-3 참고 |
+| **A-4** | 시나리오 체크리스트 탭의 **부수효과를 살릴 것인가** | A 살린다(화재·도착·출동대·현장요소·구조대상자·메시지가 전부 동작) · B 표시만 연동 — **작업 크기를 가장 크게 가른다** | [CHECKLIST_PROCEDURE_LINK_PLAN.md](CHECKLIST_PROCEDURE_LINK_PLAN.md) D-1 |
+| **A-5** | **기존에 가져온** 체크리스트 항목도 지휘절차와 연동할 것인가 | A 전부 · B 기준 시점 이후. 사용자는 「새로 작성한 것만」이라 했으나 `sourceCommandProcedureItemId` 는 예전부터 기록돼 왔다 | 같은 문서 D-2 |
 
 **A-1 이 E-3 이후 로그 작업 전체를 막고 있다.** 스키마에 `actor` 자리는 열어 뒀다(E-3-8).
 
@@ -587,6 +589,8 @@ tactical-board-run-{yymmdd-hhmm}.json
 | **B-3** | `ScenarioModal` 정비 | 중간 | 942행 tsx + 703행 css. 9px 글자 · 무명 버튼 19건. **토큰은 이미 닿는다**(P-10 전제 정정 참고) — 막는 것은 §10 의 범위 결정뿐 |
 | **B-4** | 도착 항목 텍스트를 **파생값으로** | 중간 | 지금은 생성 시점 문자열이라 착대 번호가 밀리면 낡는다. 2026-08-26 에 **증상만** 가렸다(`(편성없음)` 표시) — [MESSAGE_READABILITY_PLAN.md](MESSAGE_READABILITY_PLAN.md) §2.1 |
 | **B-5** | 전역 내비게이션 정비 | 중간 | 세 모드가 `app-nav` 를 공유한다. 모드가 확정된 뒤 한 번에 — **P-4** · **P-1** |
+| **B-9** | **시나리오 체크리스트 ⇄ 지휘절차 연동 + 탭 전환** | 중간 | ✋ **검토 완료·구현 대기 (08-31).** 연동 키(`sourceCommandProcedureItemId`)와 호출 통로(`ChecklistCommandContext`)가 이미 있다. 막는 것은 A-4·A-5 결정 — [CHECKLIST_PROCEDURE_LINK_PLAN.md](CHECKLIST_PROCEDURE_LINK_PLAN.md) |
+| **B-10** | `right/RightPanel.tsx` 제거 | **파일 1개** | 호출부 0건. `PlayPage` 가 `.procedure-panel` 을 직접 그린다. B-9 에서 우측 패널을 손댈 때 함께 |
 | **B-6** | 빈 착대 구멍 | 작음 | 압축이 **드래그 경로에만** 걸려 있다. 수량을 줄여 착대가 비면 구멍이 남는다. `(편성없음)` 으로 보이므로 급하지 않다 |
 | **B-7** | `--ui-scale` 잔재 정리 | 작음 | ✅ **완료 (08-26)** — 8개 파일 100건 제거. 값 불변(폴백이 늘 1이었다) |
 | **B-8** | `ZoneCell` 무효 CSS | **2줄** | ✅ **완료 (08-26)** — `box-shadow: inset 0 0 0 1px #7aaccc`로 교체. 파일이 이미 쓰던 안쪽 테두리 관례(279행)와 같은 형태 — **P-9 해소** |
