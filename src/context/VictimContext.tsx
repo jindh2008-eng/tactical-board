@@ -219,11 +219,24 @@ export function VictimProvider({
 
         const updates: Record<string, VictimPos> = {};
         for (const [zoneKey, ids] of Object.entries(byZone)) {
-          const el   = document.querySelector(`[data-zone-key="${zoneKey}"]`);
-          const rect = el?.getBoundingClientRect();
-          const zoneW = rect && rect.width  > 0 ? rect.width  : 120;
-          const zoneH = rect && rect.height > 0 ? rect.height : 80;
-          const offsets = computeVictimOffsets(ids.length, zoneW, zoneH);
+          const el = document.querySelector<HTMLElement>(`[data-zone-key="${zoneKey}"]`);
+          /*
+           * offsetWidth/Height 로 잰다 — getBoundingClientRect 가 아니다.
+           *
+           * 훈련창은 스테이지가 `transform: scale()` 을 한 번 걸어 배율을
+           * 만든다. rect 는 그 **변환 뒤** 화면 px 라, 창이 작으면 구역이
+           * 절반 크기로 잡힌다. 그런데 아래 간격 상수(MARGIN·STEP)는 카드
+           * 실측을 적어 둔 **캔버스 px** 이라 둘의 단위가 어긋났다.
+           *   실측: 창이 0.475배일 때 A면 높이가 225 대신 103 으로 잡혀
+           *   카드가 아래(또는 위) 여백 22px 자리가 아니라 47px 안쪽에 섰다.
+           * offset* 은 변환을 무시한 레이아웃 크기 — 곧 캔버스 px 다.
+           * → docs/SCREEN_STAGE_PLAN.md §4.1
+           */
+          const zoneW = el && el.offsetWidth  > 0 ? el.offsetWidth  : 120;
+          const zoneH = el && el.offsetHeight > 0 ? el.offsetHeight : 80;
+          // A면은 가운데 상단부터 — 우측 하단은 하단 밴드에 가린다
+          const anchor = zoneKey === 'face-A' ? 'top-center' : 'bottom-right';
+          const offsets = computeVictimOffsets(ids.length, zoneW, zoneH, anchor);
           ids.forEach((id, i) => { updates[id] = offsets[i]; });
         }
 

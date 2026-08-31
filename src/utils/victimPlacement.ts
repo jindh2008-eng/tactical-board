@@ -73,8 +73,20 @@ const X_STEP   = 44; // 카드 간 가로 간격 — 겹치지 않는 최소 폭
 const Y_STEP   = 46; // 카드 간 세로 간격(줄 바뀔 때) — 겹치지 않는 최소 높이
 
 /**
+ * 어느 모서리부터 채우는가.
+ *
+ * `bottom-right` — 기본. 구역 우측 하단부터 왼쪽·위쪽으로 채운다.
+ * `top-center`   — A면 전용. 가운데 상단에서 좌우로 펼치고 아래로 쌓는다.
+ *
+ * A면만 다른 이유는 그 아래에 하단 밴드(직전대기·RIT·현장지휘소·임시의료소·
+ * 구조 현황)가 겹쳐 있기 때문이다. 밴드는 A면 위에 떠 있고 `face-A` 구역은
+ * 그 밑까지 이어져 있어서, 우측 하단에 놓으면 구조대상자가 밴드에 가린다.
+ * B·C·D 면에는 그런 것이 없어 기존 규칙 그대로 둔다.
+ */
+export type VictimAnchor = 'bottom-right' | 'top-center';
+
+/**
  * zone 내 n명 victim 의 초기 배치 좌표를 **구역 대비 0~1 정규화 값**으로 반환한다.
- * 우측 하단 모서리부터 겹치지 않게 정렬(왼쪽 → 위쪽 순으로 채움).
  *
  * 간격(MARGIN/STEP)은 카드 실측 크기 기준이라 px 로 계산한 뒤 마지막에 나눈다.
  * → docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md Phase 4
@@ -83,6 +95,7 @@ export function computeVictimOffsets(
   count:  number,
   zoneW:  number = 120,
   zoneH:  number = 80,
+  anchor: VictimAnchor = 'bottom-right',
 ): Pos[] {
   if (count <= 0) return [];
 
@@ -95,10 +108,26 @@ export function computeVictimOffsets(
   return Array.from({ length: count }, (_, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const px  = Math.max(w - MARGIN_X - col * X_STEP, 10);
-    const py  = Math.max(h - MARGIN_Y - row * Y_STEP, 10);
+
+    if (anchor === 'top-center') {
+      // 그 줄에 실제로 들어가는 인원 — 마지막 줄이 짧아도 가운데에 서게 한다
+      const inRow    = Math.min(cols, count - row * cols);
+      const rowWidth = (inRow - 1) * X_STEP;
+      const px = clamp(w / 2 - rowWidth / 2 + col * X_STEP, MARGIN_X, w - MARGIN_X);
+      const py = Math.min(MARGIN_Y + row * Y_STEP, Math.max(h - MARGIN_Y, 10));
+      return { x: px / w, y: py / h };
+    }
+
+    const px = Math.max(w - MARGIN_X - col * X_STEP, 10);
+    const py = Math.max(h - MARGIN_Y - row * Y_STEP, 10);
     return { x: px / w, y: py / h };
   });
+}
+
+function clamp(v: number, min: number, max: number): number {
+  // 구역이 카드 한 장보다 좁으면 범위가 뒤집힌다 — 그때는 왼쪽 여백에 맞춘다
+  if (max < min) return min;
+  return Math.max(min, Math.min(max, v));
 }
 
 // ─────────────────────────────────────────────
