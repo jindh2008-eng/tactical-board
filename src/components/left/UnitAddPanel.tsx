@@ -137,6 +137,20 @@ export function UnitAddPanel() {
     moveToken(tokenId, resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1);
   }
 
+  /**
+   * 착대 라벨 더블클릭 — 그 차수 전체를 한꺼번에 도착시킨다.
+   *
+   * 출동대현황은 이 동작을 착대모드에서만 연다. 도착 시각을 시계가 정하는
+   * 시간모드에서 「차수 도착」을 손으로 누르면 두 규칙이 부딪히기 때문이다.
+   * 추가출동대에는 그 사정이 없다 — 여기 있는 대는 훈련 중 요청해 받은 것이라
+   * 카운트다운이 붙지 않고, 언제 도착할지는 처음부터 사람이 정한다.
+   * 그래서 모드와 무관하게 늘 열어 둔다.
+   */
+  function handleOrderDoubleClick(items: UnitToken[]) {
+    const target = resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1;
+    for (const t of items) moveToken(t.id, target);
+  }
+
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -189,12 +203,12 @@ export function UnitAddPanel() {
               onTokenDoubleClick={handleTokenDoubleClick}
             />
           ) : (
-            /* 모드2 — 착대 순번마다 한 줄. 여기서는 차수 일괄 도착을 두지 않는다:
-               추가 요청한 대는 한 무리로 오는 것이 아니라 그때그때 도착한다 */
+            /* 모드2 — 착대 순번마다 한 줄. 라벨 더블클릭이면 그 차수 전체가 나간다 */
             <ArrivalOrderList
               tokens={zoneTokens}
               zoneKey={UNIT_ADD_ZONE}
               onTokenDoubleClick={handleTokenDoubleClick}
+              onOrderDoubleClick={handleOrderDoubleClick}
             />
           )}
         </div>
