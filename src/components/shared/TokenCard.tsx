@@ -34,12 +34,14 @@ const SPRAY_HANDLE_TYPES = new Set(['suppression', 'rescue', 'pump', 'water_tank
 function WaterGauge({ levelL, capacityL, token, draggable, showLevel }: {
   levelL: number; capacityL: number; token: UnitToken; draggable: boolean;
   /**
-   * 잔량을 숫자·채움으로 보일 것인가.
+   * 잔량 **수치**를 보일 것인가.
    *
    * 설정에서 실시간 계산을 끄면 잔량이 줄지 않아 늘 100 이다. 안 변하는 100 은
-   * 정보가 아니라 잡음이라 숨긴다. 게이지 **틀은 남긴다** — 이 네모가 곧
-   * 송수 연결을 끌어 잡는 손잡이라서(아래 useWaterConnectDrag) 없애면
-   * 급수 연결을 만들 방법이 사라진다.
+   * 정보가 아니라 잡음이라 숫자만 숨긴다.
+   *
+   * 채움 막대는 끄지 않는다 — 파란 게이지가 있어야 이 네모가 물탱크의 수량
+   * 칸으로 읽힌다. 비면 빈 상자가 되어 무엇인지 알 수 없고, 이 네모는 곧
+   * 송수 연결을 끌어 잡는 손잡이라(아래 useWaterConnectDrag) 눈에 띄어야 한다.
    */
   showLevel: boolean;
 }) {
@@ -64,21 +66,17 @@ function WaterGauge({ levelL, capacityL, token, draggable, showLevel }: {
         .filter(Boolean).join(' — ')}
       {...(draggable ? drag : {})}
     >
-      {showLevel && (
-        <>
-          {/* 채움 바 — 아래에서 위로 */}
-          <div
-            className="water-gauge__fill"
-            style={{ height: `${pct * 100}%`, background: fillColor }}
-          />
-          {/* 25% 단위 구분선 3개 */}
-          {[25, 50, 75].map(p => (
-            <div key={p} className="water-gauge__divider" style={{ bottom: `${p}%` }} />
-          ))}
-          {/* 퍼센트 수치 */}
-          <span className="water-gauge__pct">{pctInt}</span>
-        </>
-      )}
+      {/* 채움 바 — 아래에서 위로. 실시간 계산을 꺼도 그린다(늘 만수위) */}
+      <div
+        className="water-gauge__fill"
+        style={{ height: `${pct * 100}%`, background: fillColor }}
+      />
+      {/* 25% 단위 구분선 3개 */}
+      {[25, 50, 75].map(p => (
+        <div key={p} className="water-gauge__divider" style={{ bottom: `${p}%` }} />
+      ))}
+      {/* 퍼센트 수치 — 실시간 계산을 끄면 늘 100 이라 숨긴다 */}
+      {showLevel && <span className="water-gauge__pct">{pctInt}</span>}
     </div>
   );
 }
