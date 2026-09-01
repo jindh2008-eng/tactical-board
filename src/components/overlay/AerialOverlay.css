@@ -180,3 +180,33 @@
   color:        #ff9944;
   cursor:       not-allowed;
 }
+
+/* ─────────────────────────────────────────────
+   바스켓에 연결된 구조대상자
+
+   활동대의 `.token-carried-victims` 와 같은 모양·같은 컴포넌트다.
+   다른 것은 붙는 자리뿐 — 각 무리의 left/top 은 rAF 가 매 프레임 바스켓
+   오른쪽으로 옮긴다.
+   ─────────────────────────────────────────────*/
+
+.aerial-carried-layer {
+  position:       fixed;
+  inset:          0;
+  z-index:        9841;          /* .aerial-svg(9840) 바로 위 */
+  pointer-events: none;          /* 층은 통과시키고 카드만 받는다 */
+  overflow:       visible;
+}
+
+.aerial-carried {
+  position:  absolute;
+  left:      -9999px;
+  top:       -9999px;
+  /* 기준점이 바스켓 오른쪽 변 한가운데 — 거기서 세로 가운데를 맞춘다 */
+  transform: translateY(-50%);
+  display:   flex;
+  align-items: center;
+  gap:       2px;
+  white-space: nowrap;
+  /* 우클릭(이송해제)을 받아야 한다 */
+  pointer-events: auto;
+}

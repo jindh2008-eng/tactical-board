@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { victimDisplayName } from '../../utils/logLabels';
+import { VictimCard } from '../shared/VictimCard';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import {
@@ -511,6 +512,8 @@ export function AerialOverlay() {
           hide(`#aa-rungs-${id}`);
           hide(`#aa-tip-${id}`);
           hide(`#aa-tipzone-${id}`);
+          const carried = document.getElementById(`aa-carried-${id}`);
+          if (carried) carried.style.display = 'none';
           hide(`#aa-fan-${id}`);
           hide(`#aa-stream-${id}`);
           continue;
@@ -574,6 +577,15 @@ export function AerialOverlay() {
               ? '#ff4444'
               : isLadder ? '#ff9944' : '#ffcc44';
           tip.setAttribute('stroke', stroke);
+        }
+
+        // 바스켓에 연결된 구조대상자 — 사각형 오른쪽에 붙인다.
+        // (활동대가 토큰 오른쪽에 붙이는 것과 같은 자리다)
+        const carried = document.getElementById(`aa-carried-${token.id}`);
+        if (carried) {
+          carried.style.left    = `${tx + tipW / 2 + 4}px`;
+          carried.style.top     = `${ty}px`;
+          carried.style.display = '';
         }
 
         // 방수 팬·스트림 — 끝단(aerialTarget)에서 화점(aerialSprayTarget)으로
@@ -689,9 +701,35 @@ export function AerialOverlay() {
 
   if (activeTokens.length === 0 && monitorTokens.length === 0) return null;
 
+  /*
+   * 바스켓에 연결된 구조대상자.
+   *
+   * 활동대와 **같은 컴포넌트**(VictimCard attached)를 쓴다 — 연결이라는 사실은
+   * 같으니 모양도 같아야 한다. 다른 것은 붙는 자리뿐이다: 활동대는 토큰 옆,
+   * 고가차는 사다리 끝 바스켓 옆.
+   *
+   * SVG 가 아니라 형제 HTML 층에 둔다. 오버레이가 `position: fixed; inset: 0`
+   * 라 같은 화면 좌표계를 쓰고, 위치만 rAF 가 매 프레임 옮기면 된다.
+   */
+  const carriedLayer = (
+    <div className="aerial-carried-layer">
+      {activeTokens.map(token => {
+        const riding = victims.filter(v => v.carriedBy === token.id);
+        if (riding.length === 0) return null;
+        return (
+          <div key={token.id} id={`aa-carried-${token.id}`} className="aerial-carried">
+            {riding.map(v => <VictimCard key={v.id} victim={v} attached />)}
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <>
       {ReactDOM.createPortal(
+        <>
+        {carriedLayer}
         <svg ref={svgRef} className="aerial-svg" aria-hidden="true">
           {activeTokens.map(token => {
             const isLadder = token.unitType === 'ladder';
@@ -757,7 +795,8 @@ export function AerialOverlay() {
               />
             </g>
           ))}
-        </svg>,
+        </svg>
+        </>,
         stagePortalTarget(),
       )}
 
