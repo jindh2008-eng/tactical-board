@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useTokens } from '../../context/TokenContext';
+import { useVictims } from '../../context/VictimContext';
+import { victimDisplayName } from '../../utils/logLabels';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import {
@@ -25,8 +27,19 @@ const FAN_HALF_DEG = 22;
 const FAN_MAX_R = 14;
 
 // 끝단 사각형 크기
-const TIP_W = 14;
-const TIP_H = 10;
+/*
+ * 바스켓(끝단) 크기.
+ *
+ * 구조대상자를 여기 끌어다 놓는 자리가 되면서 14×10 은 너무 작았다 —
+ * 손으로 겨누기 어렵고 「놓을 수 있는 곳」으로도 안 보인다.
+ * 보이는 사각형을 키우고, 그 위에 더 넓은 투명 판정 사각형을 겹친다.
+ * 보이는 것만 키우면 사다리 그림이 뭉툭해지고, 판정만 키우면 안내가 안 된다.
+ * (방수선이 쓰는 `.aerial-fan-hit` 과 같은 수법이다)
+ */
+const TIP_W = 20;
+const TIP_H = 14;
+const TIP_HIT_W = 34;
+const TIP_HIT_H = 28;
 
 // 사다리 레일 반폭 (px) — 레일 간격 = RAIL_HALF * 2
 const RAIL_HALF    = 5;
@@ -294,7 +307,7 @@ function TipPopup({ tokenId, x, y, hasWater, isSpray, onClose }: TipPopupProps) 
 // ─────────────────────────────────────────────
 
 export function AerialOverlay() {
-  const { tokens, moveAerialTarget, setAerialTarget, setStatusTag } = useTokens();
+  const { tokens, moveAerialTarget, setAerialTarget, setStatusTag, addLog } = useTokens();
   const { connections } = useWaterConnections();
   const { showWaterSupply } = useDisplayOptions();
   const waterLevel          = useWaterLevel();
@@ -305,7 +318,46 @@ export function AerialOverlay() {
   const showWaterSupplyRef = useRef(showWaterSupply);
   const emptyIdsRef        = useRef<ReadonlySet<string> | undefined>(undefined);
   const dragRef        = useRef<{ tokenId: string } | null>(null);
+  const { victims, attachVictimToUnit, moveVictim } = useVictims();
+  const victimsRef = useRef(victims);
+  useEffect(() => { victimsRef.current = victims; }, [victims]);
+  const addLogRef  = useRef(addLog);
+  useEffect(() => { addLogRef.current = addLog; }, [addLog]);
+
   const tipDragPosRef  = useRef<Map<string, { x: number; y: number }>>(new Map());
+  /** 아래 completeBasketRescue 를 mouseup 콜백에서 최신으로 부르기 위한 통로 */
+  const completeRescueRef = useRef<(tokenId: string) => void>(() => {});
+
+  /**
+   * 바스켓을 완전히 접으면 태운 사람이 내린다 = 구조 완료.
+   *
+   * 활동대와 같은 문법이다 — 다만 활동대는 **자기가 임시의료소로 걸어가서**
+   * 구조가 끝나고(VictimContext 의 동반 이동 감시자), 고가차는 **사다리를
+   * 접는 것**이 그 자리를 대신한다. 차는 A면에 그대로 선다.
+   *
+   * `rescueUnit` 을 쓰지 않는 이유가 그것이다 — 그 함수는 로그만 남기는 것이
+   * 아니라 **토큰을 임시의료소로 옮긴다**(TokenContext:723). 고가차에 쓰면
+   * 사다리를 편 차가 임시의료소로 사라진다. 그래서 로그와 구조대상자 이동만
+   * 여기서 직접 한다.
+   */
+  function completeBasketRescue(tokenId: string) {
+    const carried = victimsRef.current.filter(v => v.carriedBy === tokenId);
+    if (carried.length === 0) return;
+
+    const token = tokensRef.current.find(t => t.id === tokenId);
+    addLogRef.current({
+      logType:    'rescue',
+      tokenId,
+      tokenName:  token?.label ?? tokenId,
+      tokenColor: token?.color,
+      fromZoneId: token?.zoneKey ?? 'pool',
+      toZoneId:   'medical-post',
+      note:       `${carried.map(victimDisplayName).join(', ')} 구조대상자 → 구조, 임시의료소 이동`,
+    });
+    // keepCarrier 없음 → 연결이 함께 끊긴다(활동대 도착과 같은 경로)
+    for (const v of carried) moveVictim(v.id, 'medical-post');
+  }
+
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);
   useEffect(() => { connsRef.current = connections; }, [connections]);
   useEffect(() => { showWaterSupplyRef.current = showWaterSupply; }, [showWaterSupply]);
@@ -390,6 +442,7 @@ export function AerialOverlay() {
         // A면(또는 그 아래)까지 내려오면 회수 — 그 외 무효 지점(판 밖 등)은 스냅백.
         // setAerialTarget(null) 이 aerialSprayTarget 도 함께 지우고 "전개 해제" 로그를 남긴다.
         if (isAerialRetractZone(ev.clientX, ev.clientY)) {
+          completeRescueRef.current(tokenId);
           setAerialTarget(tokenId, null);
         }
         cleanup();
@@ -414,6 +467,9 @@ export function AerialOverlay() {
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup',   onMouseUp);
+  // completeBasketRescue 는 ref 만 읽어 최신 클로저가 필요 없다. deps 에 넣으면
+  // 매 렌더 함수가 새로 만들어져 이 콜백까지 함께 갈린다 — ref 로 고정한다.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moveAerialTarget, setAerialTarget, setStatusTag]);
 
   // rAF 루프: 토큰·층 위치를 매 프레임 추적
@@ -449,6 +505,7 @@ export function AerialOverlay() {
           hide(`#aa-rails-${id}`);
           hide(`#aa-rungs-${id}`);
           hide(`#aa-tip-${id}`);
+          hide(`#aa-tipzone-${id}`);
           hide(`#aa-fan-${id}`);
           hide(`#aa-stream-${id}`);
           continue;
@@ -479,6 +536,13 @@ export function AerialOverlay() {
           const rungsEl = svg.querySelector(`#aa-rungs-${token.id}`) as SVGPathElement | null;
           if (railsEl) railsEl.setAttribute('d', seg.rails);
           if (rungsEl) rungsEl.setAttribute('d', seg.rungs);
+        }
+
+        // 끝단 판정 사각형 — 보이는 것보다 넓게, 같은 중심
+        const hitBox = svg.querySelector(`#aa-tipzone-${token.id}`) as SVGRectElement | null;
+        if (hitBox) {
+          hitBox.setAttribute('x', String(tx - TIP_HIT_W / 2));
+          hitBox.setAttribute('y', String(ty - TIP_HIT_H / 2));
         }
 
         // 끝단 사각형
@@ -553,20 +617,47 @@ export function AerialOverlay() {
     return () => cancelAnimationFrame(rafId);
   }, [activeTokens.length, monitorTokens.length]);
 
-  // 끝단 rect에 contextmenu·mousedown 이벤트 연결
+  // 매 렌더 갱신 — 최신 클로저를 유지한다(ChecklistPanel 의 remoteToggleRef 와 같은 방식).
+  // 렌더 본문에서 직접 대입하면 「ref 를 렌더 중에 수정」으로 걸린다.
+  useEffect(() => { completeRescueRef.current = completeBasketRescue; });
+
+  // 끝단 판정 사각형에 조작 이벤트를 건다 — 보이는 사각형이 아니라 넓은 쪽이다.
+  // 잡기·우클릭·구조대상자 드롭이 모두 같은 넓이를 쓴다.
   useEffect(() => {
     const handlers: { el: Element; event: string; fn: (e: Event) => void }[] = [];
 
     for (const token of activeTokens) {
-      const el = svgRef.current?.querySelector(`#aa-tip-${token.id}`);
+      const el = svgRef.current?.querySelector(`#aa-tipzone-${token.id}`);
       if (!el) continue;
       const tokenId = token.id;
       const ctxFn  = (e: Event) => handleTipContextMenu(e as MouseEvent, tokenId);
       const dragFn = (e: Event) => handleTipMouseDown(e as MouseEvent, tokenId);
+      // 구조대상자를 바스켓에 태운다 — 출동대 토큰에 떨구는 것과 같은 처리다
+      // (TokenCard.handleVictimDrop → attachVictimToUnit)
+      const overFn = (e: Event) => {
+        const ev = e as DragEvent;
+        const types = ev.dataTransfer?.types;
+        if (!types || (!types.includes('victimid') && !types.includes('victimId'))) return;
+        ev.preventDefault();          // 없으면 drop 이 조용히 안 걸린다
+        ev.stopPropagation();
+        ev.dataTransfer!.dropEffect = 'move';
+      };
+      const dropFn = (e: Event) => {
+        const ev = e as DragEvent;
+        const victimId = ev.dataTransfer?.getData('victimId');
+        if (!victimId) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        attachVictimToUnit(victimId, tokenId);
+      };
       el.addEventListener('contextmenu', ctxFn);
       el.addEventListener('mousedown',   dragFn);
+      el.addEventListener('dragover',    overFn);
+      el.addEventListener('drop',        dropFn);
       handlers.push({ el, event: 'contextmenu', fn: ctxFn });
       handlers.push({ el, event: 'mousedown',   fn: dragFn });
+      handlers.push({ el, event: 'dragover',    fn: overFn });
+      handlers.push({ el, event: 'drop',        fn: dropFn });
     }
 
     return () => {
@@ -609,14 +700,21 @@ export function AerialOverlay() {
                   </>
                 )}
 
-                {/* 끝단 사각형 (pointer-events: all — 우클릭 수신) */}
+                {/* 끝단 사각형 — 보이는 바스켓. 조작은 아래 판정 사각형이 받는다 */}
                 <rect
                   id={`aa-tip-${token.id}`}
                   x="-9999" y="-9999"
                   width={TIP_W} height={TIP_H}
                   rx="2"
                   className={isLadder ? 'aerial-tip aerial-tip--ladder' : 'aerial-tip aerial-tip--aerial'}
-                  style={{ pointerEvents: 'all', cursor: 'grab' }}
+                  style={{ pointerEvents: 'none' }}
+                />
+                {/* 조작 판정 — 잡기·우클릭·구조대상자 드롭. 보이지 않는다 */}
+                <rect
+                  id={`aa-tipzone-${token.id}`}
+                  x="-9999" y="-9999"
+                  width={TIP_HIT_W} height={TIP_HIT_H}
+                  className="aerial-tip-hit"
                 />
 
                 {/* 방수 팬 + 스트림 */}

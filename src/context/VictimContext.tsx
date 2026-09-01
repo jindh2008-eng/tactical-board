@@ -13,7 +13,7 @@ import {
   computeVictimOffsets,
 } from '../utils/victimPlacement';
 import { buildValidVictimZoneKeys } from '../data/buildingData';
-import { floorIdLabel, zoneLabel } from '../utils/logLabels';
+import { floorIdLabel, zoneLabel, victimDisplayName } from '../utils/logLabels';
 import {
   saveVictimSession, loadVictimSession,
   saveVictimSearchSession, loadVictimSearchSession,
@@ -69,16 +69,6 @@ export function useVictims(): VictimContextValue {
   return ctx;
 }
 
-// ─────────────────────────────────────────────
-// 로그용 구조대상자 표시명
-// ─────────────────────────────────────────────
-
-function victimDisplayName(v: VictimToken): string {
-  if (v.customLabel) return v.customLabel;
-  if (v.kind === 'group') return `${v.groupCount ?? '?'}명`;
-  const parts = [v.gender, v.ageGroup ?? (v.age != null ? `${v.age}세` : undefined), v.condition].filter(Boolean);
-  return parts.length > 0 ? (parts as string[]).join('/') : '구조대상자';
-}
 
 // ─────────────────────────────────────────────
 // 점수 기반 발견 스케줄 생성

@@ -105,3 +105,21 @@ export function parseZoneKey(zoneKey: string | null | undefined): ZoneRef {
   }
   return { zoneKey: key, floorId: null, face: null, part: 'other', label: zoneLabel(key) };
 }
+
+/**
+ * 로그에 쓰는 구조대상자 표시명 — 「남/40대/중상」.
+ *
+ * VictimContext 안에만 있던 것을 꺼냈다. 고가차 바스켓 구조(AerialOverlay)도
+ * 같은 형식으로 로그를 남겨야 하는데, 컨텍스트 파일에서 함수를 내보내면
+ * react-refresh 규칙에 걸린다.
+ */
+export function victimDisplayName(v: {
+  customLabel?: string; kind?: string; groupCount?: number;
+  gender?: string; ageGroup?: string; age?: number; condition?: string;
+}): string {
+  if (v.customLabel) return v.customLabel;
+  if (v.kind === 'group') return `${v.groupCount ?? '?'}명`;
+  const parts = [v.gender, v.ageGroup ?? (v.age != null ? `${v.age}세` : undefined), v.condition]
+    .filter(Boolean);
+  return parts.length > 0 ? (parts as string[]).join('/') : '구조대상자';
+}
