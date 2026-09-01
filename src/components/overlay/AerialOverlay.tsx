@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
+import type { UnitToken } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { victimDisplayName } from '../../utils/logLabels';
 import { VictimCard } from '../shared/VictimCard';
+import { useHandleDrag } from '../../hooks/useHandleDrag';
+import { resolveSprayTarget } from '../../utils/sprayTarget';
+import '../shared/NozzleHandle.css';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import {
@@ -37,11 +41,12 @@ const FAN_MAX_R = 14;
  * 매 프레임 토큰 높이를 재서(getEndpoints.th) 그 값을 쓰면 배율이 얼마든
  * 나란히 보인다.
  *
- * 가로는 세로의 1.4 배 — 바스켓은 사람이 서는 자리라 옆으로 넓다.
+ * 가로는 세로의 0.47 배. 처음에 1.4 배(세로보다 넓게)로 잡았다가 사다리 끝이
+ * 판을 가려 1/3 으로 줄였다. 세로는 그대로 토큰 높이를 따른다.
  * 판정 사각형은 사방 7px 씩 더 크다. 보이는 것만 키우면 겨누기 어렵고,
  * 판정만 키우면 놓을 곳이 안 보인다(방수선의 `.aerial-fan-hit` 과 같은 수법).
  */
-const TIP_RATIO   = 1.4;
+const TIP_RATIO   = 1.4 / 3;
 const TIP_HIT_PAD = 7;
 /** 토큰 높이를 못 잴 때의 하한 */
 const TIP_MIN_H = 14;
@@ -308,6 +313,65 @@ function TipPopup({ tokenId, x, y, hasWater, isSpray, onClose }: TipPopupProps) 
   );
 }
 
+/**
+ * 바스켓 방수 핸들 — 사각형 바로 아래.
+ *
+ * 활동대의 관창(NozzleHandle)과 같은 조작이다 — 끌면 그 지점으로 방수개시,
+ * 누르면 중단. 그 컴포넌트를 그대로 못 쓰는 이유는 저장하는 상태가 달라서다:
+ * 관창은 `sprayState`, 고가·굴절은 `aerialSprayTarget` 이다.
+ *
+ * 급수원(펌프·물탱크)이 연결됐을 때만 나온다. 우클릭 팝업의 「방수개시」는
+ * 그대로 남는다 — 이건 동선을 줄이는 수단이지 유일한 경로가 아니다.
+ */
+function AerialNozzle({ token, canSpray }: { token: UnitToken; canSpray: boolean }) {
+  const { setAerialSprayTarget, setStatusTag } = useTokens();
+  const isSpraying = token.aerialSprayTarget != null;
+
+  const drag = useHandleDrag({
+    enabled: true,
+    lineColor: isSpraying ? '#88bbff' : '#66ccff',
+    onDrop: ({ clientX, clientY }) => {
+      if (!canSpray) return;
+      const target = resolveSprayTarget(clientX, clientY);
+      if (!target) return;
+      setAerialSprayTarget(token.id, { floorId: target.floorId ?? '', x: target.x, y: target.y });
+      setStatusTag(token.id, { label: `${target.label} 방수`, color: 'blue' });
+    },
+    onTap: () => {
+      if (!isSpraying) return;
+      setAerialSprayTarget(token.id, null);
+      // 방수만 멈추고 전개 상태 표시로 되돌린다(우클릭 팝업의 「방수중단」과 같다)
+      if (token.aerialTarget) {
+        setStatusTag(token.id, {
+          label: `${token.aerialTarget.floorId} ${token.aerialTarget.deployLabel}`,
+          color: 'yellow',
+        });
+      } else {
+        setStatusTag(token.id, null);
+      }
+    },
+  });
+
+  const title = isSpraying ? '클릭 — 방수 중단' : '끌어서 방수 지점 지정';
+
+  return (
+    <div
+      className={`nozzle-handle${isSpraying ? ' nozzle-handle--active' : ''}`}
+      title={title}
+      aria-label={title}
+      {...drag}
+    >
+      {/* 관창 픽토그램 — 활동대와 같은 그림 */}
+      <svg viewBox="0 0 20 12" aria-hidden="true">
+        <rect x="1" y="4.2" width="8" height="3.6" rx="1.2" />
+        <path d="M9 3.6 L13.5 4.8 L13.5 7.2 L9 8.4 Z" />
+        <rect x="3.4" y="7.6" width="2.4" height="3.4" rx="0.9" />
+        <path className="nozzle-handle__jet" d="M14.8 6 H18.6" />
+      </svg>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────
 // AerialOverlay
 // ─────────────────────────────────────────────
@@ -514,6 +578,8 @@ export function AerialOverlay() {
           hide(`#aa-tipzone-${id}`);
           const carried = document.getElementById(`aa-carried-${id}`);
           if (carried) carried.style.display = 'none';
+          const nozzle = document.getElementById(`aa-nozzle-${id}`);
+          if (nozzle) nozzle.style.display = 'none';
           hide(`#aa-fan-${id}`);
           hide(`#aa-stream-${id}`);
           continue;
@@ -586,6 +652,14 @@ export function AerialOverlay() {
           carried.style.left    = `${tx + tipW / 2 + 4}px`;
           carried.style.top     = `${ty}px`;
           carried.style.display = '';
+        }
+
+        // 방수 핸들 — 사각형 바로 아래 한가운데
+        const nozzle = document.getElementById(`aa-nozzle-${token.id}`);
+        if (nozzle) {
+          nozzle.style.left    = `${tx}px`;
+          nozzle.style.top     = `${ty + tipH / 2 + 2}px`;
+          nozzle.style.display = '';
         }
 
         // 방수 팬·스트림 — 끝단(aerialTarget)에서 화점(aerialSprayTarget)으로
@@ -725,11 +799,33 @@ export function AerialOverlay() {
     </div>
   );
 
+  /*
+   * 바스켓 아래 방수 핸들 — 급수원이 연결된 고가·굴절차에만 나온다.
+   * 위치는 위 층과 같은 방식으로 rAF 가 옮긴다.
+   */
+  const nozzleLayer = (
+    <div className="aerial-carried-layer">
+      {activeTokens.map(token => {
+        const canSpray = canStartSpray(
+          showWaterSupply, connections, token.id, token.unitType, waterLevel?.emptyVehicleIds,
+        );
+        // 연결이 없으면 아예 그리지 않는다 — 물이 없는데 관창만 달려 있으면 오해한다
+        if (!canSpray && token.aerialSprayTarget == null) return null;
+        return (
+          <div key={token.id} id={`aa-nozzle-${token.id}`} className="aerial-nozzle">
+            <AerialNozzle token={token} canSpray={canSpray} />
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <>
       {ReactDOM.createPortal(
         <>
         {carriedLayer}
+        {nozzleLayer}
         <svg ref={svgRef} className="aerial-svg" aria-hidden="true">
           {activeTokens.map(token => {
             const isLadder = token.unitType === 'ladder';

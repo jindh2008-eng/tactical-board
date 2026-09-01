@@ -210,3 +210,15 @@
   /* 우클릭(이송해제)을 받아야 한다 */
   pointer-events: auto;
 }
+
+/*
+ * 바스켓 아래 방수 핸들. 자리만 잡고 모양은 `.nozzle-handle`(NozzleHandle.css)이
+ * 그대로 맡는다 — 활동대 관창과 같은 그림이어야 같은 조작으로 읽힌다.
+ */
+.aerial-nozzle {
+  position:  absolute;
+  left:      -9999px;
+  top:       -9999px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
