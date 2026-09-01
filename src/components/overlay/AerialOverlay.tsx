@@ -50,6 +50,8 @@ const TIP_RATIO   = 2.8 / 3;
 const TIP_HIT_PAD = 7;
 /** 토큰 높이를 못 잴 때의 하한 */
 const TIP_MIN_H = 14;
+/** 바스켓 아랫변에서 방수포 중심까지 — 사각형에 겹치지 않게 내린다 */
+const NOZZLE_DROP = 10;
 
 // 사다리 레일 반폭 (px) — 레일 간격 = RAIL_HALF * 2
 const RAIL_HALF    = 5;
@@ -314,7 +316,10 @@ function TipPopup({ tokenId, x, y, hasWater, isSpray, onClose }: TipPopupProps) 
 }
 
 /**
- * 바스켓 방수 핸들 — 사각형 바로 아래.
+ * 바스켓 방수포 — 사각형 바로 아래에 매단다.
+ *
+ * 물은 바스켓이 아니라 이 방수포에서 나간다(rAF 가 부채꼴 시작점을 여기로
+ * 잡는다). 펌프·물탱크의 방수포와 같은 그림이라 같은 것으로 읽힌다.
  *
  * 활동대의 관창(NozzleHandle)과 같은 조작이다 — 끌면 그 지점으로 방수개시,
  * 누르면 중단. 그 컴포넌트를 그대로 못 쓰는 이유는 저장하는 상태가 달라서다:
@@ -654,11 +659,19 @@ export function AerialOverlay() {
           carried.style.display = '';
         }
 
-        // 방수 핸들 — 사각형 바로 아래 한가운데
+        /*
+         * 방수포 — 바스켓 사각형 바로 아래에 매단다.
+         *
+         * 이 좌표가 곧 **물이 나가는 자리**다. 아래 부채꼴·물줄기를 바스켓
+         * 중심(tx, ty)이 아니라 여기서 시작시켜야, 바스켓이 뿜는 것이 아니라
+         * 방수포가 쏘는 그림이 된다 — 펌프·물탱크의 방수포와 같다.
+         */
+        const nozzleX = tx;
+        const nozzleY = ty + tipH / 2 + NOZZLE_DROP;
         const nozzle = document.getElementById(`aa-nozzle-${token.id}`);
         if (nozzle) {
-          nozzle.style.left    = `${tx}px`;
-          nozzle.style.top     = `${ty + tipH / 2 + 2}px`;
+          nozzle.style.left    = `${nozzleX}px`;
+          nozzle.style.top     = `${nozzleY}px`;
           nozzle.style.display = '';
         }
 
@@ -670,11 +683,11 @@ export function AerialOverlay() {
           // 끝단 위치: aerialTarget의 tx,ty를 원점으로 사용
           const sprayPts = getEndpoints(tokenEl, token.aerialSprayTarget);
           if (sprayPts && fan && stream) {
-            // ox,oy = 전개 끝단(사각형 중심), tx,ty = 화점
-            fan.setAttribute('d',    buildFanPath(tx, ty, sprayPts.tx, sprayPts.ty));
-            stream.setAttribute('d', buildStreamPath(tx, ty, sprayPts.tx, sprayPts.ty));
+            // 시작점은 바스켓 중심이 아니라 그 아래 매단 **방수포**다
+            fan.setAttribute('d',    buildFanPath(nozzleX, nozzleY, sprayPts.tx, sprayPts.ty));
+            stream.setAttribute('d', buildStreamPath(nozzleX, nozzleY, sprayPts.tx, sprayPts.ty));
             // 눌러서 방수 중단 — 가운데 줄기에만 판정선을 둔다
-            if (hit) hit.setAttribute('d', buildStreamPath(tx, ty, sprayPts.tx, sprayPts.ty));
+            if (hit) hit.setAttribute('d', buildStreamPath(nozzleX, nozzleY, sprayPts.tx, sprayPts.ty));
           }
         } else {
           if (fan)    fan.setAttribute('d', '');
