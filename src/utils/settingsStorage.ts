@@ -22,6 +22,7 @@ export interface WorkingPresets {
   eventSetup?:             EventSetupItem[];        // 이벤트 토큰 설정
   hydrantSetup?:           HydrantSetupItem[];      // 소화전 사전 설정
   fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
+  realtimeCalcEnabled?:     boolean;                 // 실시간 화재·수량 계산 사용 여부(기본 true)
   aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
   checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
   /** 훈련 표시 레벨 — 시나리오 값. SettingsSet 쪽 주석 참고 */
@@ -52,6 +53,7 @@ export interface SettingsSet {
   eventSetup?:        EventSetupItem[];        // 이벤트 토큰 설정
   hydrantSetup?:      HydrantSetupItem[];      // 소화전 사전 설정
   fireSuppressionConfig?:   FireSuppressionConfig;   // 화재 소화 설정
+  realtimeCalcEnabled?:     boolean;                 // 실시간 화재·수량 계산 사용 여부(기본 true)
   aerialSuppressionConfig?: AerialSuppressionConfig; // 고가차/굴절차 소화 설정
   checklistConfig?:         ChecklistConfig;          // 훈련 진행 체크리스트
 
@@ -224,6 +226,7 @@ export function loadWorkingPresets(): WorkingPresets {
       eventSetup:         parsed.eventSetup        ?? [],
       hydrantSetup:            parsed.hydrantSetup            ?? [],
       fireSuppressionConfig:   parsed.fireSuppressionConfig,
+      realtimeCalcEnabled:     parsed.realtimeCalcEnabled,
       aerialSuppressionConfig: parsed.aerialSuppressionConfig,
       checklistConfig: parsed.checklistConfig
         ? {

@@ -50,6 +50,20 @@ export const DEFAULT_TIMING: TimingSettings = {
 };
 
 /** 화재 소화 설정 */
+/**
+ * 실시간 계산 스위치 — 화재진화율과 수량 변경을 **함께** 켜고 끈다.
+ *
+ * 「시작」을 누르면 1초 타이머 넷이 돌며 화재 단계를 낮추고 물탱크를 비운다.
+ * 그 계산 없이 지휘 절차만 훈련하고 싶을 때가 있어 스위치를 뒀다.
+ *
+ * 두 계산을 하나로 묶은 것은 서로 맞물려 있기 때문이다 — 수량이 0 이 되면
+ * 방수가 끊기고(WaterLevelContext), 방수가 끊기면 화재가 더 안 꺼진다.
+ * 한쪽만 끄면 「물은 주는데 불은 안 꺼진다」 같은 상태가 되어 훈련이 흐려진다.
+ *
+ * 값이 없으면 켠 것으로 본다 — 기존 저장분의 동작을 그대로 지킨다.
+ */
+export const DEFAULT_REALTIME_CALC_ENABLED = true;
+
 export interface FireSuppressionConfig {
   ptsPerSec: number;   // 100% 방수 기준 초당 소화포인트
   thresholds: {

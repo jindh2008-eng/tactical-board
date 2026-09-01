@@ -12,6 +12,7 @@ import { setDragGrabOffset } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import { useWaterLevel }       from '../../context/WaterLevelContext';
 import { useDisplayOptions }   from '../../context/DisplayOptionsContext';
+import { useSettings }         from '../../store/settingsStore';
 import { useTouchDrag } from '../../hooks/useTouchDrag';
 import { isOnTacticalBoard, isOnBuildingFace } from '../../utils/tokenHandles';
 import { useWaterConnectDrag } from '../../hooks/useWaterConnectDrag';
@@ -30,8 +31,17 @@ const AERIAL_UNIT_TYPES = new Set(['aerial', 'ladder']);
 // 관창(진압·구조) + 방수포(펌프·물탱크) — 둘 다 우측 상단 방수 핸들을 쓴다
 const SPRAY_HANDLE_TYPES = new Set(['suppression', 'rescue', 'pump', 'water_tank']);
 
-function WaterGauge({ levelL, capacityL, token, draggable }: {
+function WaterGauge({ levelL, capacityL, token, draggable, showLevel }: {
   levelL: number; capacityL: number; token: UnitToken; draggable: boolean;
+  /**
+   * 잔량을 숫자·채움으로 보일 것인가.
+   *
+   * 설정에서 실시간 계산을 끄면 잔량이 줄지 않아 늘 100 이다. 안 변하는 100 은
+   * 정보가 아니라 잡음이라 숨긴다. 게이지 **틀은 남긴다** — 이 네모가 곧
+   * 송수 연결을 끌어 잡는 손잡이라서(아래 useWaterConnectDrag) 없애면
+   * 급수 연결을 만들 방법이 사라진다.
+   */
+  showLevel: boolean;
 }) {
   const pct       = capacityL > 0 ? Math.max(0, Math.min(1, levelL / capacityL)) : 0;
   const pctInt    = Math.round(pct * 100);
@@ -45,25 +55,30 @@ function WaterGauge({ levelL, capacityL, token, draggable }: {
     disabled: !draggable || token.statusTag?.label === '펌프고장',
   });
 
+  const amount = `${Math.round(levelL).toLocaleString()}L / ${capacityL.toLocaleString()}L`;
+
   return (
     <div
       className={`water-gauge${draggable ? ' water-gauge--draggable' : ''}`}
-      title={draggable
-        ? `${Math.round(levelL).toLocaleString()}L / ${capacityL.toLocaleString()}L — 끌어서 송수 연결`
-        : `${Math.round(levelL).toLocaleString()}L / ${capacityL.toLocaleString()}L`}
+      title={[showLevel ? amount : '', draggable ? '끌어서 송수 연결' : '']
+        .filter(Boolean).join(' — ')}
       {...(draggable ? drag : {})}
     >
-      {/* 채움 바 — 아래에서 위로 */}
-      <div
-        className="water-gauge__fill"
-        style={{ height: `${pct * 100}%`, background: fillColor }}
-      />
-      {/* 25% 단위 구분선 3개 */}
-      {[25, 50, 75].map(p => (
-        <div key={p} className="water-gauge__divider" style={{ bottom: `${p}%` }} />
-      ))}
-      {/* 퍼센트 수치 */}
-      <span className="water-gauge__pct">{pctInt}</span>
+      {showLevel && (
+        <>
+          {/* 채움 바 — 아래에서 위로 */}
+          <div
+            className="water-gauge__fill"
+            style={{ height: `${pct * 100}%`, background: fillColor }}
+          />
+          {/* 25% 단위 구분선 3개 */}
+          {[25, 50, 75].map(p => (
+            <div key={p} className="water-gauge__divider" style={{ bottom: `${p}%` }} />
+          ))}
+          {/* 퍼센트 수치 */}
+          <span className="water-gauge__pct">{pctInt}</span>
+        </>
+      )}
     </div>
   );
 }
@@ -270,6 +285,8 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   const onBoard = isOnTacticalBoard(token.zoneKey);
 
   // ── 수량 게이지 ──────────────────────────────
+  // 실시간 계산이 꺼져 있으면 잔량이 늘 100 이라 숫자를 숨긴다(게이지 틀은 남긴다)
+  const { realtimeCalcEnabled } = useSettings();
   const isWaterUnit    = waterLevel !== null && WATER_UNIT_TYPES.has(token.unitType);
   const waterLevelL    = isWaterUnit ? (waterLevel!.levels[token.id] ?? waterLevel!.getCapacity(token.id)) : 0;
   const waterCapL      = isWaterUnit ? waterLevel!.getCapacity(token.id) : 0;
@@ -461,6 +478,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
             capacityL={waterCapL}
             token={token}
             draggable={onBoard && !selectMode}
+            showLevel={realtimeCalcEnabled}
           />
         )}
 

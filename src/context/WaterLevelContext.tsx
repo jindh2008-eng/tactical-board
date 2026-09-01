@@ -7,6 +7,7 @@ import { useTokens }         from './TokenContext';
 import { useWaterConnections } from './WaterConnectionContext';
 import { useTraining }       from './TrainingContext';
 import { useFireCommand }    from './FireCommandContext';
+import { useSettings }       from '../store/settingsStore';
 import { saveWaterLevelSession, loadWaterLevelSession } from '../utils/runtimeSession';
 
 // ─────────────────────────────────────────────
@@ -208,7 +209,8 @@ export function useWaterLevel(): WaterLevelValue | null {
 export function WaterLevelProvider({ children }: { children: ReactNode }) {
   const { tokens, addLog, setSprayState, setAerialSprayTarget } = useTokens();
   const { connections } = useWaterConnections();
-  const { status, elapsed } = useTraining();
+  const { status, elapsed }     = useTraining();
+  const { realtimeCalcEnabled } = useSettings();
   const { getFireStates } = useFireCommand();
 
   // tokenId → 최대 용량 맵
@@ -349,7 +351,9 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
   const prevLevelsLogRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
-    if (status !== 'running') return;
+    // 실시간 계산을 끄면 잔량이 변하지 않으므로 경고도 울릴 일이 없다.
+    // 그래도 명시로 막는다 — 잔량은 용량 동기화(위 이펙트)로도 움직인다.
+    if (status !== 'running' || !realtimeCalcEnabled) return;
     const prev = prevLevelsLogRef.current;
 
     for (const [id, level] of Object.entries(levels)) {
@@ -391,11 +395,11 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
     }
 
     prevLevelsLogRef.current = { ...levels };
-  }, [levels, status]);
+  }, [levels, status, realtimeCalcEnabled]);
 
-  // 훈련 진행 중 매 초 잔량 갱신
+  // 훈련 진행 중 매 초 잔량 갱신 — 설정에서 실시간 계산을 끄면 쉰다
   useEffect(() => {
-    if (status !== 'running') return;
+    if (status !== 'running' || !realtimeCalcEnabled) return;
     const rates = computeNetFlowRates(
       tokensRef.current,
       connectionsRef.current,

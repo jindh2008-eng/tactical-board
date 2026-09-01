@@ -91,6 +91,8 @@ export function ScenarioModal({ standalone = false }: { standalone?: boolean }) 
     hydrantSetup,
     fireSuppressionConfig,
     updateFireSuppressionConfig,
+    realtimeCalcEnabled,
+    setRealtimeCalcEnabled,
     aerialSuppressionConfig,
     updateAerialSuppressionConfig,
   } = useSettings();
@@ -361,7 +363,36 @@ export function ScenarioModal({ standalone = false }: { standalone?: boolean }) 
   const depletionSec = netDrain > 0 && maxPool > 0 ? Math.round(maxPool / netDrain * 60) : null;
   const finalReserve = waterData.length > 0 ? waterData[waterData.length - 1].total : 0;
 
+  /*
+   * 상단 띠 — 실시간 계산 스위치.
+   *
+   * `.scen-body` 가 가로 flex 라(왼쪽 320px 고정) 그 안에 넣으면 열이 하나 더
+   * 생긴다. 바깥을 세로로 한 겹 감싸 폭 전체를 쓰는 줄을 만든다.
+   * 체크박스를 고른 것은 설정모드가 이미 그 형태를 쓰기 때문이다
+   * (건물·소방시설의 「연결송수구」·「옥내소화전」).
+   */
+  const realtimeBar = (
+    <div className="scen-realtime">
+      <label className="scen-realtime__toggle">
+        <input
+          type="checkbox"
+          checked={realtimeCalcEnabled}
+          onChange={e => setRealtimeCalcEnabled(e.target.checked)}
+        />
+        <span className="scen-realtime__text">실시간 반영</span>
+        <span className="scen-realtime__note">화재진화율 · 수량 변경</span>
+      </label>
+      <span className="scen-realtime__desc">
+        {realtimeCalcEnabled
+          ? '훈련 「시작」 후 매 초 화재 단계와 물탱크 잔량이 계산됩니다.'
+          : '자동 계산이 멈춥니다 — 화재 단계는 체크리스트로, 수량은 만수위로 고정됩니다.'}
+      </span>
+    </div>
+  );
+
   const body = (
+    <div className={standalone ? 'scen-page scen-page--standalone' : 'scen-page'}>
+    {realtimeBar}
     <div className={standalone ? 'scen-body scen-body--standalone' : 'scen-body'}>
 
       {/* ── 왼쪽 패널 ── */}
@@ -923,6 +954,7 @@ export function ScenarioModal({ standalone = false }: { standalone?: boolean }) 
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 

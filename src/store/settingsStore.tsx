@@ -11,6 +11,7 @@ import type {
 } from '../types/settings';
 import type { EventSetupItem, EventType } from '../types/events';
 import { DEFAULT_TIMING, DEFAULT_DISPATCH_SETUP, DEFAULT_FIRE_SUPPRESSION_CONFIG, DEFAULT_AERIAL_SUPPRESSION_CONFIG,
+         DEFAULT_REALTIME_CALC_ENABLED,
          BOARD_COL_RATIO_MIN, BOARD_COL_RATIO_MAX, BOARD_COL_RATIO_DEFAULT } from '../types/settings';
 import type { SettingsSet } from '../utils/settingsStorage';
 import {
@@ -104,6 +105,13 @@ export interface SettingsContextValue {
   // ── 화재 소화 설정 ────────────────────────────
   fireSuppressionConfig:        FireSuppressionConfig;
   updateFireSuppressionConfig:  (patch: Partial<FireSuppressionConfig>) => void;
+
+  /**
+   * 실시간 계산 사용 여부 — 화재진화율과 수량 변경을 **함께** 켜고 끈다.
+   * → types/settings.ts DEFAULT_REALTIME_CALC_ENABLED
+   */
+  realtimeCalcEnabled:          boolean;
+  setRealtimeCalcEnabled:       (v: boolean) => void;
 
   // ── 고가차/굴절차 소화 설정 ───────────────────
   aerialSuppressionConfig:       AerialSuppressionConfig;
@@ -237,6 +245,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [fireSuppressionConfig, setFireSuppressionConfig] = useState<FireSuppressionConfig>(
     () => loadWorkingPresets().fireSuppressionConfig ?? DEFAULT_FIRE_SUPPRESSION_CONFIG
   );
+  const [realtimeCalcEnabled, setRealtimeCalcEnabled] = useState<boolean>(
+    () => loadWorkingPresets().realtimeCalcEnabled ?? DEFAULT_REALTIME_CALC_ENABLED
+  );
   const [aerialSuppressionConfig, setAerialSuppressionConfig] = useState<AerialSuppressionConfig>(
     () => loadWorkingPresets().aerialSuppressionConfig ?? DEFAULT_AERIAL_SUPPRESSION_CONFIG
   );
@@ -279,8 +290,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
     timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
     medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-    fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
-  }), [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel]);
+    fireSuppressionConfig, realtimeCalcEnabled, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
+  }), [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, realtimeCalcEnabled, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel]);
 
   /** "저장됨" 기준선. undefined = 아직 못 정함(마운트 직후) */
   const savedSnapshotRef = useRef<string | undefined>(undefined);
@@ -313,7 +324,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       building: { config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio },
       timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
+      fireSuppressionConfig, realtimeCalcEnabled, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
     });
 
     // 마운트 직후 · loadSettings/newSettings 직후는 "저장됨" 상태로 봉인한다.
@@ -324,7 +335,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
     setIsDirty(snapshot !== savedSnapshotRef.current);
     setIsApplied(appliedSnapshotRef.current !== null && snapshot === appliedSnapshotRef.current);
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, realtimeCalcEnabled, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
 
   // ── 건물 설정 ──────────────────────────────────
 
@@ -600,7 +611,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
+      fireSuppressionConfig, realtimeCalcEnabled, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
     };
     setActiveSettingsId(id);
     setSettingsList(prev => upsertSettingsSet(prev, set));
@@ -609,7 +620,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     savedSnapshotRef.current = buildSnapshot();
     setIsDirty(false);
     setLastSavedAt(Date.now());
-  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
+  }, [activeSettingsId, activeSettingsName, config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, realtimeCalcEnabled, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
 
   const saveSettingsAs = useCallback((newName: string) => {
     const id = generateId();
@@ -619,7 +630,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       timing, sharedBadgePresets: [], unitBadgePresets: [],
       dispatchSetup, dispatchRoster, victimSetup, arrivalMode,
       medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup,
-      fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
+      fireSuppressionConfig, realtimeCalcEnabled, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel,
     };
     setActiveSettingsId(id);
     setActiveSettingsName(newName);
@@ -627,7 +638,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     savedSnapshotRef.current = buildSnapshot();
     setIsDirty(false);
     setLastSavedAt(Date.now());
-  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
+  }, [config, fireFloor, fireStatus, targetName, extraFireFloors, hasSiamesePipe, hasIndoorHydrant, boardColumnRatio, timing, dispatchSetup, dispatchRoster, victimSetup, arrivalMode, medicalPostChief, stagingAreaChief, eventSetup, hydrantSetup, fireSuppressionConfig, realtimeCalcEnabled, aerialSuppressionConfig, checklistConfig, activeCommandProcedureLevel, buildSnapshot]);
 
   const loadSettings = useCallback((id: string) => {
     const set = settingsList.find(s => s.id === id);
@@ -679,6 +690,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setEventSetup(set.eventSetup ? JSON.parse(JSON.stringify(set.eventSetup)) : []);
     setHydrantSetup(set.hydrantSetup ? JSON.parse(JSON.stringify(set.hydrantSetup)) : []);
     if (set.fireSuppressionConfig)  setFireSuppressionConfig(JSON.parse(JSON.stringify(set.fireSuppressionConfig)));
+    // 옛 저장분에는 이 필드가 없다 — 없으면 켠 것으로 본다(그때의 동작이 그랬다)
+    setRealtimeCalcEnabled(set.realtimeCalcEnabled ?? DEFAULT_REALTIME_CALC_ENABLED);
     if (set.aerialSuppressionConfig) setAerialSuppressionConfig(JSON.parse(JSON.stringify(set.aerialSuppressionConfig)));
     if (set.checklistConfig) setChecklistConfig(JSON.parse(JSON.stringify(set.checklistConfig)));
     else setChecklistConfig({ level: 'junior', sections: [] });
@@ -746,6 +759,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       victimSetup, addVictimSetupItem, updateVictimSetupItem, removeVictimSetupItem,
       hydrantSetup, addHydrantSetupItem, updateHydrantSetupItem, removeHydrantSetupItem,
       fireSuppressionConfig, updateFireSuppressionConfig,
+      realtimeCalcEnabled, setRealtimeCalcEnabled,
       aerialSuppressionConfig, updateAerialSuppressionConfig,
       checklistConfig,
       addChecklistSection, updateChecklistSection, removeChecklistSection, reorderChecklistSections,

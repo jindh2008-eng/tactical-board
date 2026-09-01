@@ -60,6 +60,24 @@
 
 /* ── 본문 2단 레이아웃 ── */
 
+/*
+ * 바깥 세로 틀 — 상단 띠(실시간 반영) + 본문 두 열.
+ *
+ * `.scen-body` 는 가로 flex 라 그 안에 띠를 넣으면 세 번째 열이 된다.
+ * 한 겹 감싸 폭 전체를 쓰는 줄을 만든다.
+ */
+.scen-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scen-page--standalone {
+  height: 100%;
+}
+
 .scen-body {
   display: flex;
   flex: 1;
@@ -68,7 +86,54 @@
 }
 
 .scen-body--standalone {
-  height: 100%;
+  min-height: 0;
+}
+
+/* ── 상단 띠 — 실시간 계산 스위치 ── */
+
+.scen-realtime {
+  display:       flex;
+  align-items:   center;
+  gap:           14px;
+  flex-wrap:     wrap;
+  flex-shrink:   0;
+  padding:       10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  background:    var(--color-bg);
+}
+
+.scen-realtime__toggle {
+  display:     inline-flex;
+  align-items: center;
+  gap:         7px;
+  cursor:      pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.scen-realtime__toggle input {
+  width:   16px;
+  height:  16px;
+  margin:  0;
+  cursor:  pointer;
+  accent-color: var(--color-accent);
+}
+
+.scen-realtime__text {
+  font-size:   0.95rem;
+  font-weight: 700;
+}
+
+.scen-realtime__note {
+  font-size: 0.82rem;
+  color:     var(--color-text-dim);
+}
+
+/* 켬/끔이 무엇을 바꾸는지 한 줄로 — 눌러 보고 알아채게 두지 않는다 */
+.scen-realtime__desc {
+  font-size: 0.82rem;
+  color:     var(--color-text-dim);
+  min-width: 0;
 }
 
 .scen-left {

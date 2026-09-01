@@ -114,7 +114,7 @@ function floorIdFromZoneKey(zoneKey: string): string | null {
 function FireSuppressionEffect() {
   const { tokens }                                             = useTokens();
   const { fireStates, setFireStatus, setFirePercentage }      = useBuildingState();
-  const { fireSuppressionConfig: cfg, aerialSuppressionConfig } = useSettings();
+  const { fireSuppressionConfig: cfg, aerialSuppressionConfig, realtimeCalcEnabled } = useSettings();
   const { status: trainingStatus }                             = useTraining();
 
   const fireStatesRef        = useRef(fireStates);
@@ -124,6 +124,8 @@ function FireSuppressionEffect() {
   const setFireRef           = useRef(setFireStatus);
   const setFirePercentageRef = useRef(setFirePercentage);
   const trainingRef          = useRef(trainingStatus);
+  // 설정에서 실시간 계산을 끄면 이 타이머가 통째로 쉰다 → types/settings.ts
+  const realtimeRef          = useRef(realtimeCalcEnabled);
   const ptsRef               = useRef<Record<string, number>>({});
   const pctRef               = useRef<Record<string, number>>({});
 
@@ -134,13 +136,14 @@ function FireSuppressionEffect() {
   useEffect(() => { setFireRef.current           = setFireStatus;       }, [setFireStatus]);
   useEffect(() => { setFirePercentageRef.current = setFirePercentage;   }, [setFirePercentage]);
   useEffect(() => { trainingRef.current          = trainingStatus;      }, [trainingStatus]);
+  useEffect(() => { realtimeRef.current          = realtimeCalcEnabled; }, [realtimeCalcEnabled]);
 
   // 1초 간격: 연소확대→최성기는 포인트 누적, 최성기/70%/50%는 연속 % 감소
   useEffect(() => {
     const lastFireRef: Record<string, FireStatus | null> = {};
 
     const interval = setInterval(() => {
-      if (trainingRef.current !== 'running') return;
+      if (trainingRef.current !== 'running' || !realtimeRef.current) return;
 
       const config = cfgRef.current;
       const fires  = fireStatesRef.current;
@@ -263,10 +266,11 @@ function getEventLocationId(pos: EventPos, zoneKey: string | undefined): string 
 function EventFireSuppressionEffect() {
   const { enabledEvents, positions, statuses, zoneKeys, setEventStatus, setFirePercentage } = useEvents();
   const { tokens }                                                                  = useTokens();
-  const { fireSuppressionConfig: cfg }                                              = useSettings();
+  const { fireSuppressionConfig: cfg, realtimeCalcEnabled }                          = useSettings();
   const { status: trainingStatus }                                                  = useTraining();
 
   const tokensRef            = useRef(tokens);
+  const realtimeRef          = useRef(realtimeCalcEnabled);
   const statusesRef          = useRef(statuses);
   const positionsRef         = useRef(positions);
   const zoneKeysRef          = useRef(zoneKeys);
@@ -287,12 +291,13 @@ function EventFireSuppressionEffect() {
   useEffect(() => { setStatusRef.current         = setEventStatus;    }, [setEventStatus]);
   useEffect(() => { setFirePercentageRef.current = setFirePercentage; }, [setFirePercentage]);
   useEffect(() => { trainingRef.current          = trainingStatus;    }, [trainingStatus]);
+  useEffect(() => { realtimeRef.current          = realtimeCalcEnabled; }, [realtimeCalcEnabled]);
 
   useEffect(() => {
     const lastStatusRef: Record<string, string> = {};
 
     const interval = setInterval(() => {
-      if (trainingRef.current !== 'running') return;
+      if (trainingRef.current !== 'running' || !realtimeRef.current) return;
 
       const config = cfgRef.current;
       const evts   = enabledRef.current;
