@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { victimDisplayName } from '../../utils/logLabels';
-import { MaleIcon, FemaleIcon } from '../shared/victimIcons';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import {
@@ -512,8 +511,6 @@ export function AerialOverlay() {
           hide(`#aa-rungs-${id}`);
           hide(`#aa-tip-${id}`);
           hide(`#aa-tipzone-${id}`);
-          const riders = document.getElementById(`aa-riders-${id}`);
-          if (riders) riders.style.display = 'none';
           hide(`#aa-fan-${id}`);
           hide(`#aa-stream-${id}`);
           continue;
@@ -577,14 +574,6 @@ export function AerialOverlay() {
               ? '#ff4444'
               : isLadder ? '#ff9944' : '#ffcc44';
           tip.setAttribute('stroke', stroke);
-        }
-
-        // 바스켓에 탄 구조대상자 — 사각형 윗변에 얹는다
-        const riders = document.getElementById(`aa-riders-${token.id}`);
-        if (riders) {
-          riders.style.left    = `${tx}px`;
-          riders.style.top     = `${ty - tipH / 2}px`;
-          riders.style.display = '';
         }
 
         // 방수 팬·스트림 — 끝단(aerialTarget)에서 화점(aerialSprayTarget)으로
@@ -700,46 +689,9 @@ export function AerialOverlay() {
 
   if (activeTokens.length === 0 && monitorTokens.length === 0) return null;
 
-  /*
-   * 바스켓에 탄 구조대상자.
-   *
-   * SVG 가 아니라 형제 HTML 층에 그린다 — 오버레이가 `position: fixed; inset: 0`
-   * 라 같은 화면 좌표계를 쓰고, 위치만 rAF 가 매 프레임 옮기면 된다.
-   * SVG 안에 넣으려면 foreignObject 가 필요한데 얻는 것이 없다.
-   *
-   * 차량 토큰 옆에는 그리지 않는다 — TokenCard 가 고가차·굴절차를 건너뛴다.
-   * 사람은 땅이 아니라 바스켓에 있다.
-   */
-  const ridersLayer = (
-    <div className="aerial-riders-layer" aria-hidden="true">
-      {activeTokens.map(token => {
-        const riding = victims.filter(v => v.carriedBy === token.id);
-        if (riding.length === 0) return null;
-        return (
-          <div key={token.id} id={`aa-riders-${token.id}`} className="aerial-riders">
-            {riding.map(v => {
-              const Icon = v.gender === '여' ? FemaleIcon : MaleIcon;
-              return (
-                <span
-                  key={v.id}
-                  className={`aerial-rider aerial-rider--${v.gender === '여' ? 'female' : 'male'}`}
-                  title={victimDisplayName(v)}
-                >
-                  <Icon className="aerial-rider__svg" />
-                </span>
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
-  );
-
   return (
     <>
       {ReactDOM.createPortal(
-        <>
-        {ridersLayer}
         <svg ref={svgRef} className="aerial-svg" aria-hidden="true">
           {activeTokens.map(token => {
             const isLadder = token.unitType === 'ladder';
@@ -805,8 +757,7 @@ export function AerialOverlay() {
               />
             </g>
           ))}
-        </svg>
-        </>,
+        </svg>,
         stagePortalTarget(),
       )}
 

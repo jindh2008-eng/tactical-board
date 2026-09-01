@@ -174,13 +174,9 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   const { victims, attachVictimToUnit } = useVictims();
   // 연결된 구조대상자는 구역 흐름 배치에서 빼고(각 구역 컴포넌트가 carriedBy 를 걸러낸다)
   // 이 토큰 우측에 아이콘만 붙여 렌더한다.
-  /*
-   * 고가차·굴절차는 여기 그리지 않는다 — 사람은 땅의 차량이 아니라 **바스켓**에
-   * 있다. 그쪽은 AerialOverlay 가 끝단 사각형 위에 얹어 그린다.
-   */
-  const carriedVictims = AERIAL_UNIT_TYPES.has(token.unitType)
-    ? []
-    : victims.filter(v => v.carriedBy === token.id);
+  // 고가차·굴절차도 같다 — 사다리 끝이 아니라 **토큰 옆**에 붙는다.
+  // 바스켓 위에 얹어 그려 봤으나 그렇게까지 사실적일 이유가 없었다(2026-09-01).
+  const carriedVictims = victims.filter(v => v.carriedBy === token.id);
 
   function handleVictimDragOver(e: React.DragEvent<HTMLDivElement>) {
     if (token.unitType === 'hydrant') return;

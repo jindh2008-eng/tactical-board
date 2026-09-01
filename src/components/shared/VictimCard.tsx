@@ -170,6 +170,18 @@ export function VictimCard({ victim, absPos, attached }: Props) {
     setCtxMenu(null);
   }, [rescueUnit, moveVictim, victim]);
 
+  /**
+   * 이송 연결 해제 — 자리는 그대로 두고 연결만 끊는다.
+   *
+   * `moveVictim` 을 지금 구역으로 다시 부르면 `keepCarrier` 가 없으므로
+   * carriedBy 가 지워진다(VictimContext:536 「사용자가 직접 옮기면 끊긴다」).
+   * 구역이 같아 이동 로그도 남지 않는다 — 자리를 옮긴 것이 아니라서다.
+   */
+  const handleDetach = useCallback(() => {
+    moveVictim(victim.id, victim.zoneKey);
+    setCtxMenu(null);
+  }, [moveVictim, victim.id, victim.zoneKey]);
+
   // absPos 는 구역 대비 0~1 정규화 좌표 (TokenCard 와 동일)
   const wrapperStyle: React.CSSProperties | undefined = absPos
     ? {
@@ -275,6 +287,7 @@ export function VictimCard({ victim, absPos, attached }: Props) {
             tokens={tokens}
             onUpdate={handleUpdate}
             onRescue={handleRescue}
+            onDetach={handleDetach}
             onClose={handleClose}
           />
         )}
@@ -330,6 +343,7 @@ export function VictimCard({ victim, absPos, attached }: Props) {
             tokens={tokens}
             onUpdate={handleUpdate}
             onRescue={handleRescue}
+            onDetach={handleDetach}
             onClose={handleClose}
           />
         )}
@@ -377,6 +391,7 @@ export function VictimCard({ victim, absPos, attached }: Props) {
           tokens={tokens}
           onUpdate={handleUpdate}
           onRescue={handleRescue}
+          onDetach={handleDetach}
           onClose={handleClose}
         />
       )}

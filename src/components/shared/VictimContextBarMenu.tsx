@@ -48,6 +48,8 @@ interface Props {
   tokens:     UnitToken[];
   onUpdate:   (update: VictimUpdate) => void;
   onRescue:   (unit: UnitToken) => void;
+  /** 이송 연결 해제 — 연결된 상태에서만 넘어온다 */
+  onDetach:   () => void;
   onClose:    () => void;
 }
 
@@ -56,7 +58,7 @@ interface Props {
 // ─────────────────────────────────────────────
 
 export function VictimContextBarMenu({
-  victim, anchorRect, tokens, onUpdate, onRescue, onClose,
+  victim, anchorRect, tokens, onUpdate, onRescue, onDetach, onClose,
 }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -333,6 +335,21 @@ export function VictimContextBarMenu({
           >
             구조
           </button>
+
+          {/*
+            이송 해제 — 출동대에 연결됐을 때만 보인다.
+            끌어서 다른 자리에 놓아도 끊기지만(VictimContext.moveVictim), 토큰 옆
+            아이콘은 작아 겨누기 어렵다. 여기 버튼을 두면 자리를 옮기지 않고 끊는다.
+          */}
+          {victim.carriedBy && (
+            <button
+              className="vcbm__btn vcbm__btn--detach"
+              onMouseDown={e => { e.stopPropagation(); onDetach(); }}
+              title="이송 연결을 끊는다 — 있던 자리에 그대로 남는다"
+            >
+              이송해제
+            </button>
+          )}
 
           {/* 환자상태 — person 전용 */}
           {victim.kind === 'person' && (

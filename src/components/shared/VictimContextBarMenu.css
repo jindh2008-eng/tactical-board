@@ -104,6 +104,21 @@
   color:        #ffa050;
 }
 
+/*
+ * 이송해제 — 연결을 끊는 조작이라 「구조」와 색을 나눈다.
+ * 되돌릴 수 있는 조작이므로 경고색(빨강)까지는 쓰지 않는다.
+ */
+.vcbm__btn--detach {
+  color:        #7aa8d8;
+  border-color: #24405a;
+}
+
+.vcbm__btn--detach:hover:not(:disabled) {
+  background:   #0c1a28;
+  border-color: #7aa8d8;
+  color:        #a8ccf0;
+}
+
 /* 이미 구조됨 */
 .vcbm__btn--rescued {
   color:        #5a4030 !important;
