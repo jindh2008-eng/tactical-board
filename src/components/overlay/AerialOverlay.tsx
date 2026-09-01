@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { victimDisplayName } from '../../utils/logLabels';
+import { MaleIcon, FemaleIcon } from '../shared/victimIcons';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useActionMode } from '../../context/ActionModeContext';
 import {
@@ -28,18 +29,22 @@ const FAN_MAX_R = 14;
 
 // 끝단 사각형 크기
 /*
- * 바스켓(끝단) 크기.
+ * 바스켓(끝단) 크기 — **출동대 토큰 세로에 맞춘다.**
  *
- * 구조대상자를 여기 끌어다 놓는 자리가 되면서 14×10 은 너무 작았다 —
- * 손으로 겨누기 어렵고 「놓을 수 있는 곳」으로도 안 보인다.
- * 보이는 사각형을 키우고, 그 위에 더 넓은 투명 판정 사각형을 겹친다.
- * 보이는 것만 키우면 사다리 그림이 뭉툭해지고, 판정만 키우면 안내가 안 된다.
- * (방수선이 쓰는 `.aerial-fan-hit` 과 같은 수법이다)
+ * 고정 px 로 두면 안 된다. 이 오버레이는 `position: fixed` 라 스테이지 배율
+ * **밖**의 화면 px 로 그려지는데, 토큰은 배율을 타기 때문이다. 14px 로 박아
+ * 두면 훈련장 PC(배율 0.975)에서는 토큰 35px 옆에 14px 바스켓이 붙는다.
+ * 매 프레임 토큰 높이를 재서(getEndpoints.th) 그 값을 쓰면 배율이 얼마든
+ * 나란히 보인다.
+ *
+ * 가로는 세로의 1.4 배 — 바스켓은 사람이 서는 자리라 옆으로 넓다.
+ * 판정 사각형은 사방 7px 씩 더 크다. 보이는 것만 키우면 겨누기 어렵고,
+ * 판정만 키우면 놓을 곳이 안 보인다(방수선의 `.aerial-fan-hit` 과 같은 수법).
  */
-const TIP_W = 20;
-const TIP_H = 14;
-const TIP_HIT_W = 34;
-const TIP_HIT_H = 28;
+const TIP_RATIO   = 1.4;
+const TIP_HIT_PAD = 7;
+/** 토큰 높이를 못 잴 때의 하한 */
+const TIP_MIN_H = 14;
 
 // 사다리 레일 반폭 (px) — 레일 간격 = RAIL_HALF * 2
 const RAIL_HALF    = 5;
@@ -53,6 +58,7 @@ const RUNG_SPACING = 10;
 interface Endpoints {
   ox: number; oy: number;   // 차량 토큰 우측 상단 모서리
   tx: number; ty: number;   // 저장된 클릭 지점 (screen 좌표)
+  th: number;               // 차량 토큰 세로 — 바스켓 크기의 기준
 }
 
 function getEndpoints(
@@ -69,7 +75,7 @@ function getEndpoints(
   const tx = boardRect.left + target.x * boardRect.width;
   const ty = boardRect.top  + target.y * boardRect.height;
 
-  return { ox, oy, tx, ty };
+  return { ox, oy, tx, ty, th: tokenRect.height };
 }
 
 // 굴절차 관절점 계산
@@ -127,7 +133,7 @@ function getMonitorOrigin(
   const tx = boardRect.left + target.x * boardRect.width;
   const ty = boardRect.top  + target.y * boardRect.height;
 
-  return { ox, oy, tx, ty };
+  return { ox, oy, tx, ty, th: tokenRect.height };
 }
 
 // 방수 팬 SVG path — 끝단(ox,oy)에서 화점(tx,ty)으로 퍼지는 원뿔
@@ -506,6 +512,8 @@ export function AerialOverlay() {
           hide(`#aa-rungs-${id}`);
           hide(`#aa-tip-${id}`);
           hide(`#aa-tipzone-${id}`);
+          const riders = document.getElementById(`aa-riders-${id}`);
+          if (riders) riders.style.display = 'none';
           hide(`#aa-fan-${id}`);
           hide(`#aa-stream-${id}`);
           continue;
@@ -516,8 +524,12 @@ export function AerialOverlay() {
         const pts = getEndpoints(tokenEl, effTarget);
         if (!pts) continue;
 
-        const { ox, oy, tx, ty } = pts;
+        const { ox, oy, tx, ty, th } = pts;
         const isLadder = token.unitType === 'ladder';
+
+        // 바스켓 크기 — 출동대 토큰 세로와 같게(배율을 따라간다)
+        const tipH = Math.max(TIP_MIN_H, th);
+        const tipW = tipH * TIP_RATIO;
         const isSpray  = token.aerialSprayTarget != null;
 
         if (isLadder) {
@@ -541,8 +553,10 @@ export function AerialOverlay() {
         // 끝단 판정 사각형 — 보이는 것보다 넓게, 같은 중심
         const hitBox = svg.querySelector(`#aa-tipzone-${token.id}`) as SVGRectElement | null;
         if (hitBox) {
-          hitBox.setAttribute('x', String(tx - TIP_HIT_W / 2));
-          hitBox.setAttribute('y', String(ty - TIP_HIT_H / 2));
+          hitBox.setAttribute('x',      String(tx - tipW / 2 - TIP_HIT_PAD));
+          hitBox.setAttribute('y',      String(ty - tipH / 2 - TIP_HIT_PAD));
+          hitBox.setAttribute('width',  String(tipW + TIP_HIT_PAD * 2));
+          hitBox.setAttribute('height', String(tipH + TIP_HIT_PAD * 2));
         }
 
         // 끝단 사각형
@@ -552,8 +566,10 @@ export function AerialOverlay() {
             showWaterSupplyRef.current, connsRef.current, token.id, token.unitType,
             emptyIdsRef.current,
           );
-          tip.setAttribute('x', String(tx - TIP_W / 2));
-          tip.setAttribute('y', String(ty - TIP_H / 2));
+          tip.setAttribute('x',      String(tx - tipW / 2));
+          tip.setAttribute('y',      String(ty - tipH / 2));
+          tip.setAttribute('width',  String(tipW));
+          tip.setAttribute('height', String(tipH));
           // 색상: 방수중 → 파랑, 급수없음 → 빨강, 정상 → 차종색
           const stroke = isSpray
             ? '#88bbff'
@@ -561,6 +577,14 @@ export function AerialOverlay() {
               ? '#ff4444'
               : isLadder ? '#ff9944' : '#ffcc44';
           tip.setAttribute('stroke', stroke);
+        }
+
+        // 바스켓에 탄 구조대상자 — 사각형 윗변에 얹는다
+        const riders = document.getElementById(`aa-riders-${token.id}`);
+        if (riders) {
+          riders.style.left    = `${tx}px`;
+          riders.style.top     = `${ty - tipH / 2}px`;
+          riders.style.display = '';
         }
 
         // 방수 팬·스트림 — 끝단(aerialTarget)에서 화점(aerialSprayTarget)으로
@@ -676,9 +700,46 @@ export function AerialOverlay() {
 
   if (activeTokens.length === 0 && monitorTokens.length === 0) return null;
 
+  /*
+   * 바스켓에 탄 구조대상자.
+   *
+   * SVG 가 아니라 형제 HTML 층에 그린다 — 오버레이가 `position: fixed; inset: 0`
+   * 라 같은 화면 좌표계를 쓰고, 위치만 rAF 가 매 프레임 옮기면 된다.
+   * SVG 안에 넣으려면 foreignObject 가 필요한데 얻는 것이 없다.
+   *
+   * 차량 토큰 옆에는 그리지 않는다 — TokenCard 가 고가차·굴절차를 건너뛴다.
+   * 사람은 땅이 아니라 바스켓에 있다.
+   */
+  const ridersLayer = (
+    <div className="aerial-riders-layer" aria-hidden="true">
+      {activeTokens.map(token => {
+        const riding = victims.filter(v => v.carriedBy === token.id);
+        if (riding.length === 0) return null;
+        return (
+          <div key={token.id} id={`aa-riders-${token.id}`} className="aerial-riders">
+            {riding.map(v => {
+              const Icon = v.gender === '여' ? FemaleIcon : MaleIcon;
+              return (
+                <span
+                  key={v.id}
+                  className={`aerial-rider aerial-rider--${v.gender === '여' ? 'female' : 'male'}`}
+                  title={victimDisplayName(v)}
+                >
+                  <Icon className="aerial-rider__svg" />
+                </span>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <>
       {ReactDOM.createPortal(
+        <>
+        {ridersLayer}
         <svg ref={svgRef} className="aerial-svg" aria-hidden="true">
           {activeTokens.map(token => {
             const isLadder = token.unitType === 'ladder';
@@ -704,8 +765,8 @@ export function AerialOverlay() {
                 <rect
                   id={`aa-tip-${token.id}`}
                   x="-9999" y="-9999"
-                  width={TIP_W} height={TIP_H}
-                  rx="2"
+                  width={TIP_MIN_H * TIP_RATIO} height={TIP_MIN_H}
+                  rx="3"
                   className={isLadder ? 'aerial-tip aerial-tip--ladder' : 'aerial-tip aerial-tip--aerial'}
                   style={{ pointerEvents: 'none' }}
                 />
@@ -713,7 +774,7 @@ export function AerialOverlay() {
                 <rect
                   id={`aa-tipzone-${token.id}`}
                   x="-9999" y="-9999"
-                  width={TIP_HIT_W} height={TIP_HIT_H}
+                  width={TIP_MIN_H * TIP_RATIO} height={TIP_MIN_H}
                   className="aerial-tip-hit"
                 />
 
@@ -744,7 +805,8 @@ export function AerialOverlay() {
               />
             </g>
           ))}
-        </svg>,
+        </svg>
+        </>,
         stagePortalTarget(),
       )}
 

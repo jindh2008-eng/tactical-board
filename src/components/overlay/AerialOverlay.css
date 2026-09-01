@@ -180,3 +180,49 @@
   color:        #ff9944;
   cursor:       not-allowed;
 }
+
+/* ─────────────────────────────────────────────
+   바스켓 탑승자 — 끝단 사각형 윗변에 얹힌다
+
+   층 자체는 화면 전체를 덮되 이벤트를 받지 않는다. 각 무리(.aerial-riders)의
+   left/top 은 rAF 가 매 프레임 바스켓 중심 윗변으로 옮긴다.
+   ─────────────────────────────────────────────*/
+
+.aerial-riders-layer {
+  position:       fixed;
+  inset:          0;
+  z-index:        9841;          /* .aerial-svg(9840) 바로 위 */
+  pointer-events: none;
+  overflow:       visible;
+}
+
+.aerial-riders {
+  position:  absolute;
+  left:      -9999px;
+  top:       -9999px;
+  /* 기준점이 바스켓 윗변 한가운데 — 거기서 위로 올려 붙인다 */
+  transform: translate(-50%, -100%);
+  display:   flex;
+  align-items: flex-end;
+  gap:       2px;
+  padding-bottom: 2px;
+  white-space: nowrap;
+}
+
+.aerial-rider {
+  display: inline-flex;
+  /* 구조 전이라 흐린 회색 — 구조 현황판의 미구조 색과 같은 계열 */
+  color:   #f0ece2;
+  filter:  drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9));
+}
+
+.aerial-rider--male   { color: #9ccbf0; }
+.aerial-rider--female { color: #f0a0a8; }
+
+/* 바스켓 세로가 배율을 따라 변하므로 아이콘도 상대값으로 둔다 */
+.aerial-rider__svg {
+  height:       18px;
+  width:        auto;
+  aspect-ratio: 14 / 26;
+  display:      block;
+}
