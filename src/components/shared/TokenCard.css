@@ -284,6 +284,14 @@
    ─────────────────────────────────────────────*/
 
 /* ── 상단 출동대 상태메세지 ── */
+/*
+ * 상태메시지 — 토큰 위 말풍선. 「대원탈진」처럼 무전으로 오는 보고가 여기 뜬다.
+ *
+ * 2026-09-01 에 글씨를 두 배로 키웠다(0.65 → 1.3rem). 훈련 중 멀리서 읽는
+ * 정보인데 토큰 글씨(1.13rem)의 절반이라 눈에 들어오지 않았다.
+ * 상자·닫기 버튼도 같은 배로 올려 비율을 지킨다 — 글씨만 키우면 여백이
+ * 상대적으로 사라져 글자가 테두리에 붙는다.
+ */
 .token-status-msg {
   position:       absolute;
   bottom:         calc(100% + 3px);
@@ -291,11 +299,11 @@
   transform:      translateX(-50%);
   display:        flex;
   align-items:    center;
-  gap:            4px;
-  padding:        2px 6px 2px 8px;
+  gap:            7px;
+  padding:        4px 11px 4px 14px;
   background:     rgba(10, 20, 30, 0.92);
   border:         1px solid rgba(80, 140, 200, 0.55);
-  border-radius:  10px;
+  border-radius:  14px;
   white-space:    nowrap;
   pointer-events: auto;
   backdrop-filter: blur(3px);
@@ -304,7 +312,7 @@
 }
 
 .token-status-msg__text {
-  font-size:      0.65rem;
+  font-size:      1.3rem;
   font-weight:    700;
   color:          #88ccee;
   letter-spacing: 0.03em;
@@ -314,12 +322,12 @@
   display:        flex;
   align-items:    center;
   justify-content: center;
-  width:          13px;
-  height:         13px;
+  width:          20px;
+  height:         20px;
   border:         none;
   background:     transparent;
   color:          rgba(100, 160, 210, 0.65);
-  font-size:      10px;
+  font-size:      16px;
   cursor:         pointer;
   padding:        0;
   flex-shrink:    0;
