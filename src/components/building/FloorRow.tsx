@@ -28,8 +28,18 @@ export function FloorRow({
   const { stairSmokeFloor, smokeConcentration, doorStates, fireStates } = useBuildingState();
   const { building } = useSettings();
   const hasIndoorHydrant = building.hasIndoorHydrant ?? false;
-  // 연결송수구는 지상 1층 좌측 하단(지면)에 고정 표시한다. 방면 선택은 없앴다.
-  const isGroundFloor    = !floor.isBasement && floor.endFloor === 1;
+  /*
+   * 연결송수구는 지상 1층 좌측 하단(지면)에 고정 표시한다. 방면 선택은 없앴다.
+   *
+   * 1층이 압축 행에 묶여도 표시해야 한다. 화점층이 4층이면 아래가 「1~3층」
+   * 한 줄로 접히는데, 그 행은 startFloor: 1 · endFloor: 3 이다(낮은 층이
+   * start, 높은 층이 end — buildingData.ts). `endFloor === 1` 만 보던 예전
+   * 조건은 여기서 거짓이 되어 송수구가 통째로 사라졌다.
+   *
+   * 「1층을 품은 지상 행인가」로 묻는다 — BuildingPreview.tsx:199 가 이미
+   * 같은 판정을 쓰고 있어 설정모드 미리보기와 훈련모드가 이제 일치한다.
+   */
+  const isGroundFloor    = !floor.isBasement && floor.startFloor <= 1 && floor.endFloor >= 1;
   const showSiamesePipe  = isGroundFloor && (building.hasSiamesePipe ?? false);
 
   // RF의 endFloor = aboveGroundFloors + 1
