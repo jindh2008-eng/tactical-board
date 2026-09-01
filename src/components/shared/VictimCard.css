@@ -72,26 +72,34 @@
    호버 툴팁 — 포털 렌더링 (항상 최상단 표시)
    ─────────────────────────────────────────────*/
 
+/*
+ * 호버 정보 — 판 위 토큰 글씨보다 크게.
+ *
+ * 기준은 배치 구역의 토큰 1.13rem = 18.1px(TokenCard.css). 이 상자는
+ * `stagePortalTarget()` = document.body 에 그려져 **스테이지 배율을 타지 않으므로**
+ * rem 값이 곧 화면 크기다. 훈련장 PC 배율이 0.975 라 토큰은 17.6px 로 보이고,
+ * 아래 21.1px 가 그보다 확실히 크다.
+ */
 .victim-tooltip-portal {
   background: rgba(15, 15, 25, 0.93);
   border: 1px solid rgba(120, 110, 180, 0.45);
-  border-radius: 4px;
-  padding: 4px 8px;
+  border-radius: 5px;
+  padding: 6px 11px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   white-space: nowrap;
 }
 
 .tooltip__age {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 1.32rem;
+  font-weight: 800;
   color: #e8e6ff;
 }
 
 .tooltip__cond {
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 1.24rem;
+  font-weight: 800;
 }
 
 .victim-tooltip-portal.victim-cond--minor    .tooltip__cond { color: #5cc87c; }
@@ -99,11 +107,11 @@
 .victim-tooltip-portal.victim-cond--dead     .tooltip__cond { color: #aaaaaa; }
 
 .tooltip__loc {
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 1.24rem;
+  font-weight: 800;
   color: #b0b8cc;
   border-left: 1px solid rgba(120, 110, 180, 0.35);
-  padding-left: 6px;
+  padding-left: 8px;
 }
 
 /* ─────────────────────────────────────────────
