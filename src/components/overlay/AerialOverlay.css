@@ -197,6 +197,17 @@
   overflow:       visible;
 }
 
+/* 바스켓에 탄 활동대 — 기준점이 바스켓 **왼쪽** 변 한가운데.
+   오른쪽은 구조대상자(.aerial-carried)가 쓴다 */
+.aerial-rider {
+  position:  absolute;
+  left:      -9999px;
+  top:       -9999px;
+  transform: translate(-100%, -50%);
+  /* 끌어 내리기·우클릭 메뉴를 받아야 한다 */
+  pointer-events: auto;
+}
+
 .aerial-carried {
   position:  absolute;
   left:      -9999px;

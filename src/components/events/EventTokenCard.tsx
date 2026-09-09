@@ -4,7 +4,7 @@ import type { EventType, EventStatus } from '../../types/events';
 import { EVENT_TYPE_STATUSES } from '../../types/events';
 import type { FireStatus } from '../../types';
 import { FireEventIcon, FlameIcon, EVENT_STATUS_TO_FIRE, gasElectricFireStage } from '../shared/FlameIcon';
-import { readEventLocationAtPoint, EVENT_TOKEN_SIZE_VAR, EVENT_TOKEN_FALLBACK } from '../../utils/eventLocation';
+import { readEventLocationAtPoint, EVENT_TOKEN_SIZE_VAR, EVENT_TOKEN_SIZE } from '../../utils/eventLocation';
 import { zoneLabel } from '../../utils/logLabels';
 import './EventTokenCard.css';
 import { stagePortalTarget } from '../../utils/stagePortal';
@@ -81,8 +81,8 @@ function getStatusItem(eventType: EventType, value: EventStatus) {
 
 // 실측(getBoundingClientRect)이 0 으로 나오는 순간에만 쓰는 폴백이다.
 // 진짜 크기는 --event-token-size 가 정한다 → utils/eventLocation.ts
-const TOKEN_W = EVENT_TOKEN_FALLBACK;
-const TOKEN_H = EVENT_TOKEN_FALLBACK;
+const TOKEN_W = EVENT_TOKEN_SIZE;
+const TOKEN_H = EVENT_TOKEN_SIZE;
 
 interface Props {
   id:              string;
@@ -187,9 +187,9 @@ export function EventTokenCard({
   // 카드 크기가 층 행 높이를 따라 변하므로 글자도 같은 비율로 따라가야 한다 —
   // 카드 폭 대비 비율로 내고 CSS 변수에 곱한다.
   const statusRatio = statusLabel
-    ? Math.min(0.24, (1 - 4 / EVENT_TOKEN_FALLBACK) / statusLabel.length)
+    ? Math.min(0.24, (1 - 4 / EVENT_TOKEN_SIZE) / statusLabel.length)
     : 0.24;
-  const statusFontSize = `calc(var(${EVENT_TOKEN_SIZE_VAR}, ${EVENT_TOKEN_FALLBACK}px) * ${statusRatio.toFixed(4)})`;
+  const statusFontSize = `calc(var(${EVENT_TOKEN_SIZE_VAR}, ${EVENT_TOKEN_SIZE}px) * ${statusRatio.toFixed(4)})`;
 
   // 화염 오버레이 — 아이콘 위에 반투명 화염 이미지를 겹쳐 "불타는" 느낌 표현
   // (fire 타입 + 커스텀 아이콘 없음인 경우는 화염 자체가 이미 베이스 아이콘이므로 중복 생략)

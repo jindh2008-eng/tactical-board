@@ -1,0 +1,40 @@
+/* 송수 해제 팝업 — WaterConnectionOverlay 의 `.wco-popup` 에서 옮겨 왔다 */
+
+.wdp-backdrop {
+  position: fixed;
+  inset:    0;
+  z-index:  9901;
+  cursor:   default;
+}
+
+.wdp {
+  position:      fixed;
+  z-index:       9902;
+  transform:     translate(-50%, -110%);
+  background:    #0e1822;
+  border:        1.5px solid #2255aa;
+  border-radius: 6px;
+  box-shadow:    0 4px 16px rgba(0, 0, 0, 0.6);
+  overflow:      hidden;
+  user-select:   none;
+}
+
+.wdp__btn {
+  display:     block;
+  width:       100%;
+  padding:     9px 18px;
+  background:  transparent;
+  border:      none;
+  color:       #88ccff;
+  font-size:   0.80rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor:      pointer;
+  white-space: nowrap;
+  transition:  background 0.1s;
+}
+
+.wdp__btn:hover {
+  background: #1a3060;
+  color:      #bbddff;
+}

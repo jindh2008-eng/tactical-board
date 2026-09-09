@@ -232,19 +232,33 @@
   letter-spacing: 0.06em;
 }
 
-/* 임시의료소 — 명칭 + 설치상태·소장 지정을 한 줄에 (배경 없이) */
-.a-face-zone__header {
-  flex-shrink: 0;
-  display:     flex;
-  align-items: center;
-  gap:         5px;
-  padding:     3px 6px 1px;
-  min-width:   0;
+/* 임시의료소 하단 띠 — 「임시의료소 소장 지휘1」을 한 줄에.
+
+   자원대기소가 제목 옆에 소장 자리를 두는 것과 같은 문법이다. 예전에는
+   박스 **위쪽** 별도 헤더(.a-face-zone__header)에 소장만 따로 있었는데,
+   같은 것을 두 화면이 다른 자리에 두고 있었다(2026-09-02 통일).
+
+   띠의 색·선은 여기로 옮겨 받는다 — 안쪽 명칭 span 은 글자만 남는다. */
+.a-face-zone__footer {
+  margin-top:      auto;          /* 본문이 남는 높이를 먹고 띠는 바닥에 붙는다 */
+  flex-shrink:     0;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             6px;
+  padding:         2px 6px 3px;
+  background:      rgba(56, 52, 46, 0.86);
+  border-top:      1px solid var(--ctr-border-mid);
+  min-width:       0;
 }
 
-.a-face-zone__header .a-face-zone__label {
-  padding:    0;
-  text-align: left;
+/* 띠 안에서는 명칭이 배경·선을 갖지 않는다 — 띠가 대신 갖는다 */
+.a-face-zone__footer .a-face-zone__label--bottom {
+  margin-top:  0;
+  padding:     0;
+  background:  none;
+  border-top:  none;
+  min-width:   0;               /* 자리가 좁으면 명칭이 먼저 줄고 소장 자리는 남는다 */
 }
 
 /* 토큰이 담기는 본문.

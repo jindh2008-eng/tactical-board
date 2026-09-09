@@ -1,0 +1,134 @@
+/* ─────────────────────────────────────────────
+   순환보수 칸 — 소화전 위의 줄
+
+   ## 방면마다 쌓이는 방향이 다르지 않아야 한다
+
+   방면 구역의 소화전 기둥은 A면이 `column`, 나머지가 `column-reverse` 다
+   (ExteriorZone.tsx 의 cornerStyle). 그래서 소화전과 순환칸을 그 기둥의 형제로
+   두면 면에 따라 위아래가 뒤집힌다. `.hydrant-stack` 으로 한 번 감싸 **자기
+   안에서** 세로를 정한다 — 부모의 방향은 이 상자 하나만 뒤집을 뿐이다.
+
+   줄 안쪽은 `column-reverse` 다. DOM 첫 번째(1번 소비)가 **맨 아래**,
+   소화전에 가장 가까운 자리에 온다.
+   ─────────────────────────────────────────────*/
+
+.hydrant-stack {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            4px;
+}
+
+.circ-slot {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            3px;
+  pointer-events: auto;
+}
+
+/* ── 줄 — 아래가 1번 ──────────────────────────
+
+   **넘치면 옆으로 접힌다.** A면은 구역이 소화전보다도 낮아(실측 130px 대
+   116px) 5대가 세로로 서면 200px 가까이 건물 쪽으로 넘어간다. 세로 성장을
+   묶고 `wrap` 을 켜면 3대까지는 그대로 쌓이고 그 위는 옆 열로 접힌다 —
+   「위로 쌓는다」는 성질은 그대로 두면서 높이만 정해진다.
+
+   B~D면은 세로로 넉넉해 `--circ-max-h` 를 주지 않는다. 그러면 `max-height`
+   가 `none` 이라 접힐 일이 없다. */
+.circ-slot__units {
+  display:        flex;
+  flex-flow:      column-reverse wrap;
+  align-items:    center;
+  align-content:  flex-end;
+  gap:            4px 6px;
+  max-height:     var(--circ-max-h, none);
+}
+
+.circ-slot__row {
+  display:     flex;
+  align-items: center;
+  gap:         4px;
+}
+
+/*
+ * 칸 안에서는 「순환급수」 임무 칩을 숨긴다.
+ *
+ * 칸 아래에 이미 「순환급수」 이름표가 있고, 그 안에 선 차는 전부 순환대다 —
+ * 줄마다 칩을 또 달면 같은 말이 대수만큼 반복된다(2026-09-09 사용자 지적).
+ * 역할 슬롯이 「단위」 칩에 하는 처리와 같다(RoleSlot.css).
+ *
+ * **임무 자체는 그대로다** — 칸 밖(로그·분석·다른 화면)에서는 보인다.
+ */
+.circ-slot .token-mission-label[data-mission='순환급수'] {
+  display: none;
+}
+
+/* 지금 그 자리가 하는 일 — 소비·대기·보수.
+   자리는 고정이 아니라 줄 번호를 따라 움직인다(1번이 비면 줄 끝으로 간다). */
+.circ-slot__role {
+  font-size:           0.86rem;
+  font-weight:         700;
+  line-height:         1;
+  color:               #f0ece2;
+  -webkit-text-stroke: 1px #000;
+  paint-order:         stroke fill;
+  white-space:         nowrap;
+  pointer-events:      none;
+}
+
+/* ── 이름표 = 송수 손잡이 ─────────────────────
+   차가 서 있을 때만 파랗다(HydrantIcon.css 의 토출구와 같은 파랑). 「여기서
+   물이 나간다」를 한 가지 색으로 말한다.
+
+   **비어 있으면 회색으로 묻는다.** 역할 슬롯이 빈 자리에 하는 것과 같은 문법이다
+   (RoleSlot.css) — 빈 자리가 파랗게 떠 있으면 지정·미지정이 한눈에 구별되지 않고,
+   아무도 없는 칸이 「이미 돌아가는 중」으로 읽힌다(2026-09-09 사용자 결정). */
+.circ-slot__label {
+  display:       inline-flex;
+  align-items:   center;
+  padding:       7px 12px;
+  border-radius: 5px;
+  font-size:     1.13rem;
+  font-weight:   800;
+  line-height:   1;
+  white-space:   nowrap;
+  color:         #ffffff;
+  background:    var(--chip-mission-bg);
+  border:        1px solid var(--chip-mission-border);
+  box-shadow:    0 1px 2px rgba(0, 0, 0, 0.35);
+  cursor:        grab;
+  user-select:   none;
+}
+
+.circ-slot__label:hover {
+  filter: brightness(1.18);
+}
+
+/* 아직 아무도 세우지 않았다 — 방면 배경(옅은 베이지) 위의 회색 점선 */
+.circ-slot__label--empty {
+  color:        rgba(90, 86, 78, 0.62);
+  background:   rgba(90, 86, 78, 0.10);
+  border:       1px dashed rgba(90, 86, 78, 0.42);
+  box-shadow:   none;
+}
+
+.circ-slot__label--empty:hover {
+  filter:       none;
+  border-color: var(--chip-mission-bg);
+}
+
+/* 이미 한 곳을 먹이고 있다 — 더 뽑을 수 없다(한 무리는 한 중계 지점) */
+.circ-slot__label--linked {
+  cursor:  default;
+  opacity: 0.72;
+}
+
+.circ-slot__label--linked:hover {
+  filter: none;
+}
+
+/* 5대가 찼다 — 드롭을 조용히 거절하는 상태의 표시 */
+.circ-slot--full .circ-slot__label {
+  border-style: dashed;
+}

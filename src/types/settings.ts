@@ -41,12 +41,15 @@ export const BOARD_COL_RATIO_DEFAULT = 1.744;
 /** 출동대 행동 타이밍 설정 */
 export interface TimingSettings {
   rescueTimeSec: number;   // 구조 처리 시간(초) — 기본 30
-  moveTimeSec:   number;   // 이동 시간(초)       — 기본 30
 }
 
+/*
+ * 이동 시간(`moveTimeSec`)은 2026-09-02 에 없앴다 — 토큰 좌측의 이동 카운트다운
+ * 표시를 지우면서 값을 읽는 곳이 하나도 남지 않았다. 예전에 저장된 설정 번들에는
+ * 키가 남아 있을 수 있으나 아무도 읽지 않으므로 그대로 둔다.
+ */
 export const DEFAULT_TIMING: TimingSettings = {
   rescueTimeSec: 30,
-  moveTimeSec:   30,
 };
 
 /** 화재 소화 설정 */

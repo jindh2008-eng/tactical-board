@@ -84,19 +84,27 @@ export function readEventLocationAtPoint(cx: number, cy: number): EventLocation 
    읽는다 — 값을 여러 곳에 박아 두면 어긋난다.
    ───────────────────────────────────────────── */
 
-/** 층 행 높이 대비 토큰 크기. 0.8 이면 "이 층에 있다"가 한눈에 읽힌다 */
-export const EVENT_TOKEN_FLOOR_RATIO = 0.8;
-/** 상한 (캔버스 px). 저층 건물에서 층이 아주 높아져도 토큰이 과하게 커지지 않게 한다 */
-export const EVENT_TOKEN_MAX = 140;
-/** 변수를 못 읽을 때의 폴백 — 예전 고정 크기 */
-export const EVENT_TOKEN_FALLBACK = 100;
+/**
+ * 층 행 높이 대비 토큰 크기 — **층에 꼭 맞게 채운다.**
+ *
+ * 0.9 다. 「현장요소가 몇 층에 있는가」가 한눈에 읽히려면 그 층을 채워야 하고,
+ * 남는 10% 가 위아래 층 경계와의 간격이다.
+ *
+ * 이력: 고정 100px → 0.8(상한 140, 2026-08-23) → 고정 100px 로 되돌림
+ * → **0.9(상한 없음, 2026-09-02)**. 상한을 두면 층이 높은 건물에서 「층을
+ * 채운다」는 규칙이 조용히 깨지므로 두지 않는다.
+ * → docs/SCREEN_STAGE_PLAN.md §6.6
+ */
+export const EVENT_TOKEN_FLOOR_RATIO = 0.9;
+/** 층 높이를 모를 때의 폴백 (캔버스 px) — 예전 고정 크기 */
+export const EVENT_TOKEN_SIZE = 100;
 /** CSS 변수 이름 */
 export const EVENT_TOKEN_SIZE_VAR = '--event-token-size';
 
-/** 층 행 높이(캔버스 px) → 토큰 크기(캔버스 px). 하한은 두지 않는다 */
+/** 층 행 높이(캔버스 px) → 토큰 크기(캔버스 px) */
 export function computeEventTokenSize(floorRowH: number): number {
-  if (!Number.isFinite(floorRowH) || floorRowH <= 0) return EVENT_TOKEN_FALLBACK;
-  return Math.min(EVENT_TOKEN_MAX, floorRowH * EVENT_TOKEN_FLOOR_RATIO);
+  if (!Number.isFinite(floorRowH) || floorRowH <= 0) return EVENT_TOKEN_SIZE;
+  return floorRowH * EVENT_TOKEN_FLOOR_RATIO;
 }
 
 /**
@@ -106,9 +114,9 @@ export function computeEventTokenSize(floorRowH: number): number {
  */
 export function readEventTokenSize(): number {
   const board = document.getElementById('tactical-area');
-  if (!board) return EVENT_TOKEN_FALLBACK;
+  if (!board) return EVENT_TOKEN_SIZE;
   const raw = parseFloat(getComputedStyle(board).getPropertyValue(EVENT_TOKEN_SIZE_VAR));
-  return Number.isFinite(raw) && raw > 0 ? raw : EVENT_TOKEN_FALLBACK;
+  return Number.isFinite(raw) && raw > 0 ? raw : EVENT_TOKEN_SIZE;
 }
 
 /**

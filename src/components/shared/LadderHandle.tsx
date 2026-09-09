@@ -5,6 +5,7 @@ import {
   resolveAerialDeployFloor, maxDeployHeight, deployLabelOf, overHeightMessage,
 } from '../../utils/aerialDeploy';
 import { logDragEvent }   from '../../utils/dragDiagnostics';
+import { showBoardNotice } from '../../utils/boardNotice';
 import './LadderHandle.css';
 
 // ─────────────────────────────────────────────
@@ -33,7 +34,7 @@ export function LadderHandle({ token }: Props) {
       const target = resolveAerialDeployFloor(clientX, clientY);
       if (!target) return;                       // 지하층·A/C면·판 밖 — 조용히 취소
       if (target.floorHeight > maxDeployHeight(token.unitType)) {
-        alert(overHeightMessage(token.unitType));
+        showBoardNotice(overHeightMessage(token.unitType), clientX, clientY);
         return;
       }
       const rect = document.getElementById('tactical-area')?.getBoundingClientRect();

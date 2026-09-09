@@ -7,6 +7,9 @@ import { useTokens }         from './TokenContext';
 import { useWaterConnections } from './WaterConnectionContext';
 import { useTraining }       from './TrainingContext';
 import { useFireCommand }    from './FireCommandContext';
+import { useHydrantCirculation } from './HydrantCirculationContext';
+import { useHydrantState }    from './HydrantStateContext';
+import { expandCirculationFlow, consumingUnitOf } from '../utils/circulationFlow';
 import { useSettings }       from '../store/settingsStore';
 import { saveWaterLevelSession, loadWaterLevelSession } from '../utils/runtimeSession';
 
@@ -34,8 +37,12 @@ const WATER_SOURCES  = new Set(['pump', 'water_tank']);
 // 처리 순서:
 //   1. 펌프 → 진압대: 연결된 진압대 수 × 300 소모 (고장 시 skip)
 //   2. 차량 → 차량: 수신 측 미충족 수요만큼 공급 (최대 1500, 고장 시 skip)
-//   3. 소화전 → 차량: 수신 측 잔여 수요만큼 공급 (최대 1000)
-//      소화전 고장은 연결 자체가 제거되므로 별도 체크 불필요
+//   3. 소화전 → 차량: 수신 측 잔여 수요만큼 공급 (최대 1000, 고장 소화전 skip)
+//
+// **순환보수는 여기 들어오기 전에 펴진다.** 순환칸에서 나가는 선은 출발점이 차
+// 한 대가 아니라 무리라 이 함수가 그대로는 셈하지 못한다. 호출부가
+// `expandCirculationFlow` 로 가상 연결 둘(소화전→3번 · 1번→목적지)을 만들어
+// 넘긴다 — utils/circulationFlow.ts
 // ─────────────────────────────────────────────
 
 function sprayMultiplier(state: SprayState | null | undefined): number {
@@ -59,6 +66,7 @@ function computeNetFlowRates(
   levels:          Record<string, number>,
   capacities:      Record<string, number>,
   initialFloorIds: Set<string> = new Set(),
+  brokenHydrantIds: ReadonlySet<string> = new Set(),
 ): Record<string, number> {
   const net: Record<string, number> = {};
   for (const t of tokens) {
@@ -162,10 +170,13 @@ function computeNetFlowRates(
   // 3. 소화전 → 차량
   //    소화전 1개당 최대 1000/min, 복수 차량 연결 시 균등 분담
   //    수신 차량이 만수이면 소모량만큼만 공급 (demand-pull)
-  //    소화전 고장 시 HydrantBarMenu에서 연결을 먼저 제거하므로 별도 체크 불필요
+  //    **고장난 소화전에서는 물이 나오지 않는다.** 예전 주석은 「고장 시 연결을 먼저
+  //    제거하므로 별도 체크 불필요」였는데, 실제로 지우는 코드가 없어 고장난 소화전이
+  //    계속 1000ℓ/min 을 흘렸다(2026-09-09 확인).
   const hydrantGroups = new Map<string, typeof connections>();
   for (const conn of connections) {
     if (conn.fromType !== 'hydrant' || !(conn.toId in net)) continue;
+    if (brokenHydrantIds.has(conn.fromId)) continue;
     if (!hydrantGroups.has(conn.fromId)) hydrantGroups.set(conn.fromId, []);
     hydrantGroups.get(conn.fromId)!.push(conn);
   }
@@ -210,8 +221,16 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
   const { tokens, addLog, setSprayState, setAerialSprayTarget } = useTokens();
   const { connections } = useWaterConnections();
   const { status, elapsed }     = useTraining();
-  const { realtimeCalcEnabled } = useSettings();
+  const { realtimeCalcEnabled, hydrantSetup } = useSettings();
   const { getFireStates } = useFireCommand();
+  /*
+   * 순환보수 — 칸에서 나가는 선 하나를 가상 연결 둘로 펴서 계산한다
+   * (utils/circulationFlow.ts). 소화전 고장은 여기서 본다: 예전에는
+   * 「고장 시 연결을 먼저 제거하므로 별도 체크 불필요」라고 적혀 있었으나
+   * 실제로는 지우지 않아 **고장난 소화전이 계속 물을 주고 있었다.**
+   */
+  const { slots: circulationSlots, rotate } = useHydrantCirculation();
+  const { brokenHydrants }                  = useHydrantState();
 
   // tokenId → 최대 용량 맵
   const capacityMap = useMemo(() => {
@@ -282,6 +301,14 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
   const effectiveBrokenIdRef = useRef(effectiveBrokenIds);
   const levelsRef            = useRef(levels);
   const addLogRef            = useRef(addLog);
+  const circulationRef       = useRef(circulationSlots);
+  const brokenHydrantRef     = useRef(brokenHydrants);
+  const rotateRef            = useRef(rotate);
+  const hydrantSetupRef      = useRef(hydrantSetup);
+  useEffect(() => { circulationRef.current   = circulationSlots; }, [circulationSlots]);
+  useEffect(() => { brokenHydrantRef.current = brokenHydrants;   }, [brokenHydrants]);
+  useEffect(() => { rotateRef.current        = rotate;           }, [rotate]);
+  useEffect(() => { hydrantSetupRef.current  = hydrantSetup;     }, [hydrantSetup]);
   useEffect(() => { tokensRef.current            = tokens;            }, [tokens]);
   useEffect(() => { connectionsRef.current       = connections;       }, [connections]);
   useEffect(() => { capacityRef.current          = capacityMap;       }, [capacityMap]);
@@ -402,29 +429,60 @@ export function WaterLevelProvider({ children }: { children: ReactNode }) {
     if (status !== 'running' || !realtimeCalcEnabled) return;
     const rates = computeNetFlowRates(
       tokensRef.current,
-      connectionsRef.current,
+      expandCirculationFlow(connectionsRef.current, circulationRef.current, brokenHydrantRef.current),
       effectiveBrokenIdRef.current,
       levelsRef.current,
       capacityRef.current,
       initialFloorIdsFromStates(getFireStates()),
+      brokenHydrantRef.current,
     );
-    setLevels(prev => {
-      const next = { ...prev };
-      for (const [id, ratePerMin] of Object.entries(rates)) {
-        const cap   = capacityRef.current[id] ?? 0;
-        const delta = ratePerMin / 60;   // 1초 기준 변화량
-        next[id] = Math.max(0, Math.min(cap, (prev[id] ?? cap) + delta));
-      }
-      return next;
-    });
+    const nextLevels = { ...levelsRef.current };
+    for (const [id, ratePerMin] of Object.entries(rates)) {
+      const cap   = capacityRef.current[id] ?? 0;
+      const delta = ratePerMin / 60;   // 1초 기준 변화량
+      nextLevels[id] = Math.max(0, Math.min(cap, (nextLevels[id] ?? cap) + delta));
+    }
+    // 다음 틱이 이 값을 이어받게 한다 — ref 갱신은 렌더 뒤에나 오므로 여기서 먼저 민다
+    levelsRef.current = nextLevels;
+    setLevels(nextLevels);
+
+    /*
+     * 순환보수 교대 — **1번이 비면 줄 끝으로 보낸다.**
+     *
+     * 2번이 앞으로 나와 소비를 잇고, 3번이 그 뒤에 붙고, 방금 빈 차가 소화전으로
+     * 간다. 목록 회전이 곧 순환이다(docs/WATER_SUPPLY_MISSION_PLAN.md §3.3).
+     *
+     * 뒤에 물이 남은 차가 하나도 없으면 돌리지 않는다 — 돌려 봐야 빈 차가 빈 차와
+     * 자리를 바꿀 뿐이고, 매 초 돌면 로그만 쌓인다.
+     */
+    for (const [hydrantId, line] of Object.entries(circulationRef.current)) {
+      const head = consumingUnitOf(line);
+      if (!head || line.length < 2) continue;
+      if ((nextLevels[head] ?? 0) > 0) continue;
+      const anyWaterBehind = line.slice(1).some(id => (nextLevels[id] ?? 0) > 0);
+      if (!anyWaterBehind) continue;
+      const name = hydrantSetupRef.current.find(h => h.id === hydrantId)?.name;
+      rotateRef.current(
+        hydrantId,
+        name ? `${name} 소화전` : hydrantId,
+        // 이름은 여기서 찾아 넘긴다 — 순환 Context 는 TokenProvider 밖이라 못 찾는다
+        id => tokensRef.current.find(t => t.id === id)?.label ?? id,
+      );
+    }
   // elapsed가 1씩 증가할 때마다 실행
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elapsed]);
 
   // 현재 순유량 (표시용 — 렌더링 기준)
   const flowRates = useMemo(
-    () => computeNetFlowRates(tokens, connections, effectiveBrokenIds, levels, capacityMap, initialFloorIdsFromStates(getFireStates())),
-    [tokens, connections, effectiveBrokenIds, levels, capacityMap],
+    () => computeNetFlowRates(
+      tokens,
+      expandCirculationFlow(connections, circulationSlots, brokenHydrants),
+      effectiveBrokenIds, levels, capacityMap, initialFloorIdsFromStates(getFireStates()),
+      brokenHydrants,
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tokens, connections, circulationSlots, brokenHydrants, effectiveBrokenIds, levels, capacityMap],
   );
 
   const getCapacity = useCallback(

@@ -11,11 +11,18 @@ import { VictimProvider }     from '../context/VictimContext';
 import { EventProvider }      from '../context/EventContext';
 import { ActionModeProvider, useActionMode } from '../context/ActionModeContext';
 import { WaterConnectionProvider } from '../context/WaterConnectionContext';
+import { WaterLinePeekProvider }    from '../context/WaterLinePeekProvider';
 import { WaterLevelProvider }      from '../context/WaterLevelContext';
 import { HydrantStateProvider }    from '../context/HydrantStateContext';
 import { ChecklistProgressProvider } from '../context/ChecklistProgressContext';
 import { ResourceStatusProvider, useResourceStatus } from '../context/ResourceStatusContext';
 import { MedicalPostProvider } from '../context/MedicalPostContext';
+import { RoleReleaseProvider, useRoleRelease } from '../context/RoleReleaseContext';
+import { UnitCommanderProvider } from '../context/UnitCommanderContext';
+import { HydrantCirculationProvider } from '../context/HydrantCirculationContext';
+import { UnitCommanderBridge } from '../components/shared/UnitCommanderBridge';
+import { WaterMissionBridge }  from '../components/shared/WaterMissionBridge';
+import { BoardNoticeHost }    from '../components/shared/BoardNoticeHost';
 import { FireCommandProvider }     from '../context/FireCommandContext';
 import { ChecklistCommandProvider } from '../context/ChecklistCommandContext';
 import { StageRoot }               from '../components/stage/StageRoot';
@@ -39,9 +46,10 @@ import {
   resolveAerialDeployFloor, maxDeployHeight, overHeightMessage,
 } from '../utils/aerialDeploy';
 import { resolveSprayTarget } from '../utils/sprayTarget';
+import { showBoardNotice }    from '../utils/boardNotice';
 import { LogPanel }           from '../components/right/LogPanel';
 import { CommandProcedureTrainingBox } from '../components/right/CommandProcedureTrainingBox';
-import { ChiefSlot }          from '../components/shared/ChiefSlot';
+import { RoleSlot }           from '../components/shared/RoleSlot';
 import './PlayPage.css';
 
 
@@ -213,7 +221,7 @@ function AerialTargetOverlay() {
 
     // 높이 제한 검증
     if (floorHeight > maxDeployHeight(aerialMode.unitType)) {
-      alert(overHeightMessage(aerialMode.unitType));
+      showBoardNotice(overHeightMessage(aerialMode.unitType), e.clientX, e.clientY);
       return;
     }
 
@@ -304,6 +312,7 @@ function ResourcePanel() {
   const { tokens, moveToken, addLog }                = useTokens();
   const { stagingAreaChief, updateStagingAreaChief } = useSettings();
   const { resourceAssigned, setResourceAssigned }    = useResourceStatus();
+  const { registerReleaser }                         = useRoleRelease();
 
   /*
    * 운영 지정 토글을 없앴다 — 소장을 지명하면 그것이 곧 운영 지정이다.
@@ -333,6 +342,16 @@ function ResourcePanel() {
     }
   }
 
+  /*
+   * 소장이 움직이면 지명을 놓는다 — 자원대기소 안에서 자리만 옮겨도 해제다.
+   * 이름 문자열로 저장돼 있어 이름표로 맞춘다(아래 chiefToken 과 같은 기준).
+   */
+  useEffect(() => registerReleaser('resource-chief', (_tokenId, tokenLabel) => {
+    if (tokenLabel && tokenLabel === stagingAreaChief) changeChief('');
+  // changeChief는 매 렌더 새로 만들어진다 — 의존성에 넣으면 매 렌더 재등록된다
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [registerReleaser, stagingAreaChief]);
+
   const zoneKey    = 'standby-resource';
   const allZoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
   // 소장은 이름 문자열로 저장된다(설정모드 stagingAreaChief 와 같은 형식)
@@ -357,16 +376,17 @@ function ResourcePanel() {
     <div className="resource-panel">
       <div className="resource-panel__header">
         <span className="resource-panel__title">자원대기소</span>
-        <ChiefSlot
-          chief={chiefToken}
-          label="자원대기소장"
+        <RoleSlot
+          holder={chiefToken}
+          tag="소장"
+          emptyTag="[미설치]"
+          roleName="자원대기소장"
           onAssign={t => {
             // 소장은 그 자리에 있는 사람이다 — 밖에서 끌어왔으면 구역으로 함께 들인다.
             // (이미 구역 안이면 moveToken 이 같은 zoneKey 로 아무 일도 하지 않는다)
             if (t.zoneKey !== zoneKey) moveToken(t.id, zoneKey);
             changeChief(t.label);
           }}
-          onRelease={() => changeChief('')}
         />
       </div>
       <div
@@ -468,7 +488,7 @@ export function PlayPage() {
   const { building, timing, dispatchRoster, victimSetup, arrivalMode } = useSettings();
   const { runKey, status, elapsed, loadSettings, start, stop }         = useTraining();
 
-  const [showWaterSupply, setShowWaterSupply] = useState(true);
+  const [showWaterLine,   setShowWaterLine]   = useState(true);
   const [showSpray,       setShowSpray]       = useState(true);
   const [showControlLine, setShowControlLine] = useState(true);
   const [showAllVictims,  setShowAllVictims]  = useState(false);
@@ -476,7 +496,7 @@ export function PlayPage() {
   const [showDrawingTools, setShowDrawingTools] = useState(false);
 
   const handleOptionToggle = useCallback((key: DisplayOptionKey) => {
-    if (key === 'waterSupply')      setShowWaterSupply(v => !v);
+    if (key === 'waterLine')        setShowWaterLine(v => !v);
     else if (key === 'spray')       setShowSpray(v => !v);
     else if (key === 'controlLine') setShowControlLine(v => !v);
     else if (key === 'victims')     setShowAllVictims(v => !v);
@@ -484,9 +504,9 @@ export function PlayPage() {
   }, []);
 
   const displayOptions = useMemo(
-    () => ({ showWaterSupply, showSpray, showControlLine, showAllVictims, showDrawingTools,
+    () => ({ showWaterLine, showSpray, showControlLine, showAllVictims, showDrawingTools,
              toggleOption: handleOptionToggle }),
-    [showWaterSupply, showSpray, showControlLine, showAllVictims, showDrawingTools, handleOptionToggle],
+    [showWaterLine, showSpray, showControlLine, showAllVictims, showDrawingTools, handleOptionToggle],
   );
 
   const elapsedRef = useRef(elapsed);
@@ -552,13 +572,19 @@ export function PlayPage() {
       <ChecklistProgressProvider key={runKey}>
       <ResourceStatusProvider key={runKey}>
       <MedicalPostProvider key={runKey}>
+      {/* RoleReleaseProvider 는 TokenProvider 보다 바깥이어야 한다 —
+          moveToken 이 여기 등록된 해제 함수를 부른다(RoleReleaseContext 주석) */}
+      <RoleReleaseProvider>
+      <UnitCommanderProvider key={runKey}>
       <TokenProvider
         key={runKey}
-        timingConfig={{ rescueTimeSec: timing.rescueTimeSec, moveTimeSec: timing.moveTimeSec }}
+        timingConfig={{ rescueTimeSec: timing.rescueTimeSec }}
         initialRoster={dispatchRoster}
         started={started}
         arrivalMode={arrivalMode}
       >
+        {/* 지휘관이 구역을 옮기면 자리·무리·임무 표시를 함께 정리한다 */}
+        <UnitCommanderBridge />
         <VictimProvider
           key={runKey}
           initialVictimSetup={victimSetup}
@@ -569,10 +595,21 @@ export function PlayPage() {
           <ActionModeProvider key={runKey}>
           <DrawingProvider key={runKey}>
           <WaterConnectionProvider>
+          <WaterLinePeekProvider>
           <FireCommandProvider>
           <ChecklistCommandProvider>
-          <WaterLevelProvider>
+          {/*
+            순환보수 줄과 소화전 고장은 **유량 계산보다 바깥**이어야 한다 —
+            WaterLevelContext 가 둘 다 읽어 가상 연결을 만들고(순환칸), 고장난
+            소화전을 막는다(utils/circulationFlow.ts · docs/WATER_SUPPLY_MISSION_PLAN.md §3.3).
+            HydrantStateProvider 는 원래 안쪽에 있었는데, 그 자리에서는 유량이
+            고장 여부를 볼 수 없어 **고장난 소화전이 계속 물을 주고 있었다.**
+          */}
           <HydrantStateProvider>
+          <HydrantCirculationProvider key={runKey}>
+          {/* 연결·배치가 바뀌면 「중요」·「1선」·「순환급수」를 다시 붙이고 로그를 남긴다 */}
+          <WaterMissionBridge />
+          <WaterLevelProvider>
             <StageRoot>
             <div className="play-layout">
               {/* ── 좌측 운영 패널 — 추가출동대 → 출동대현황 → 자원대기소 → 대기1단계 ── */}
@@ -623,19 +660,28 @@ export function PlayPage() {
               <AerialTargetOverlay />
               <AerialSprayTargetOverlay />
 
+              {/* ── 판 위 안내 말풍선 — 「급수차 지정필요」 같은 안내가 여기서 뜬다 ──
+                  부르는 쪽(우클릭 메뉴·관창 핸들)은 부르자마자 사라지기도 해서
+                  표시는 오래 사는 이 자리 하나가 맡는다 — utils/boardNotice.ts */}
+              <BoardNoticeHost />
+
               {/* ── 드래그 진단 패널 (개발 모드 전용) ── */}
               <DragDiagnosticsPanel />
             </div>
             </StageRoot>
-          </HydrantStateProvider>
           </WaterLevelProvider>
+          </HydrantCirculationProvider>
+          </HydrantStateProvider>
           </ChecklistCommandProvider>
           </FireCommandProvider>
+          </WaterLinePeekProvider>
           </WaterConnectionProvider>
           </DrawingProvider>
           </ActionModeProvider>
         </VictimProvider>
       </TokenProvider>
+      </UnitCommanderProvider>
+      </RoleReleaseProvider>
       </MedicalPostProvider>
       </ResourceStatusProvider>
       </ChecklistProgressProvider>

@@ -2,10 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { UnitToken } from '../../types';
 import { useTokens } from '../../context/TokenContext';
+import { missionPresetsFor, MISSION_UNIT_COMMANDER } from '../../config/unitMissions';
+import { useUnitCommander } from '../../context/UnitCommanderContext';
+import {
+  commanderOfScope, groupOfMember, commandScopeOf, EXTERIOR_SCOPE, circulationScope,
+} from '../../utils/unitCommandScope';
 import { useActionMode } from '../../context/ActionModeContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
-import { useDisplayOptions } from '../../context/DisplayOptionsContext';
+import { useHydrantCirculation } from '../../context/HydrantCirculationContext';
 import { sprayBlockReason, sprayBlockMessage } from '../../utils/waterSupply';
+import { showBoardNotice } from '../../utils/boardNotice';
 import { useWaterLevel } from '../../context/WaterLevelContext';
 import { useSettings } from '../../store/settingsStore';
 import { useVictims } from '../../context/VictimContext';
@@ -73,10 +79,12 @@ const GAP = 6;
 // ─────────────────────────────────────────────
 
 export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
-  const { toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialSprayTarget } = useTokens();
+  const { toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialSprayTarget,
+          setBasketRider } = useTokens();
+  const { groups, assign, release, removeMember } = useUnitCommander();
   const { enterMode }           = useActionMode();
   const { connections }         = useWaterConnections();
-  const { showWaterSupply }     = useDisplayOptions();
+  const { circulationIds, hydrantOf } = useHydrantCirculation();
   const waterLevel              = useWaterLevel();
   const { unitTagPresetConfig, unitStatusConfig } = useSettings();
   const { activeSearches, searchScores, addUnitToSearch, removeUnitFromSearch } = useVictims();
@@ -92,12 +100,29 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const noteInputRef = useRef<HTMLInputElement>(null);
   const tabRefs      = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  const canWaterConnect   = WATER_SOURCE_TYPES.has(token.unitType);
+  /*
+   * 순환대는 **제 이름으로 송수하지 않는다.** 물은 순환칸에서 나가는 선 하나로
+   * 무리가 함께 보낸다(CirculationSlot). 여기 단추를 남기면 눌러 놓고도
+   * 어디에도 이을 수 없는(연결 규칙이 거절하는) 단추가 된다.
+   */
+  const canWaterConnect   = WATER_SOURCE_TYPES.has(token.unitType)
+                            && !circulationIds.has(token.id);
   const isAerialVehicle   = AERIAL_TYPES.has(token.unitType);
   const deployLabel       = token.unitType === 'aerial' ? '사다리전개' : '바스켓전개';
-  const isSprayCapable    = SPRAY_CAPABLE_TYPES.has(token.unitType);
+  /*
+   * 바스켓에 탄 활동대는 방수를 걸 수 없다 — 관창을 숨기고 송수라인을 끊는
+   * 것과 짝이다(TokenCard `showNozzle` · AerialOverlay.boardBasket).
+   * 여기만 남기면 「방수개시」가 보이는데 눌러도 급수가 없어 막히는,
+   * 왜 안 되는지 알 수 없는 단추가 된다.
+   */
+  const isSprayCapable    = SPRAY_CAPABLE_TYPES.has(token.unitType) && !token.ridingOn;
   const isSprayActive     = isSprayCapable && token.sprayState != null;
-  const isMonitorUnit     = MONITOR_TYPES.has(token.unitType);
+  /*
+   * 순환대는 방수포도 쓰지 않는다 — 제 물을 쏘면 실어 나를 물이 없다.
+   * 「송수」와 같은 이유로 단추 자체를 감춘다(TokenCard 의 `showNozzle` 과 짝).
+   */
+  const isMonitorUnit     = MONITOR_TYPES.has(token.unitType)
+                            && !circulationIds.has(token.id);
   const isMonitorActive   = isMonitorUnit && token.aerialSprayTarget != null;
 
   // ── 인명검색 ──────────────────────────────────
@@ -140,15 +165,31 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
 
   const showSearchButton = isSearchCapable && isInInterior;
 
+  /*
+   * 단위지휘관 소속에서 빼는 길.
+   *
+   * 예전에는 연결선을, 그다음에는 소속 이름표를 눌렀다. 표시가 토큰 안쪽
+   * 테두리 하나로 줄면서 누를 자리가 없어져 여기로 옮겼다 — 그 대를 두고
+   * 통제만 떼는 동작이라 「기능」에 있는 것이 맞다(구역 밖으로 끌어내면
+   * 자리를 옮기는 것이라 그때는 저절로 풀린다).
+   */
+  const memberOf = groupOfMember(groups, token.id);
+
   const hasFuncButtons =
     isAerialVehicle ||
     isSprayCapable ||
     canWaterConnect ||
     isMonitorUnit ||
-    showSearchButton;
+    showSearchButton ||
+    memberOf !== undefined;
 
   // ── 데이터 ──────────────────────────────────
-  const missionPresets  = unitTagPresetConfig[token.unitType]?.missions ?? [];
+  /*
+   * 임무는 설정모드가 아니라 코드에서 온다 — 시나리오마다 달라지는 값이
+   * 아니라 편성상 정해진 것이라서다(config/unitMissions.ts, 2026-09-04).
+   * 상태(status)는 그대로 설정모드가 정한다.
+   */
+  const missionPresets  = missionPresetsFor(token.unitType);
   const statusPresets   = unitTagPresetConfig[token.unitType]?.statuses ?? [];
   const statusMessages  = unitStatusConfig[token.unitType] ?? [];
   const isDirectInput   = !!token.customNote && !statusMessages.includes(token.customNote);
@@ -188,8 +229,44 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
     // 팝업 위로 마우스가 이동하면 유지되므로 여기서는 아무것도 안 함
   }
 
+  /**
+   * 임무를 켜고 끈다.
+   *
+   * 「단위」는 임무 표시에서 끝나지 않는다 — 그 대는 **그 자리의
+   * 단위지휘관**이 된다. 층 슬롯에 끌어다 놓는 것과 같은 결과다
+   * (UnitCommanderContext 주석). 임무를 떼면 그 자리를 물리고 소속대도
+   * 함께 풀린다.
+   */
   function handleMission(label: string, color: string) {
+    const wasOn = token.missionTags?.some(m => m.label === label) ?? false;
     toggleMissionTag(token.id, { label, color });
+
+    /*
+     * 순환칸에 선 차의 「단위」는 **그 순환급수팀 전체의 지휘관**이라는 뜻이다
+     * (2026-09-09 사용자 결정). 면(`face-D`)이 아니라 그 팀을 자리로 넘겨야
+     * 「D면 지휘관」과 뜻이 섞이지 않고, 칸을 떠나면 저절로 물러난다
+     * (자리 하나짜리 — unitCommandScope).
+     */
+    const circHydrant = hydrantOf(token.id);
+    const commandKey  = circHydrant ? circulationScope(circHydrant) : token.zoneKey;
+
+    if (label === MISSION_UNIT_COMMANDER.label && commandKey) {
+      if (wasOn) { release(token.id); return; }
+
+      /*
+       * 한 범위에 지휘관은 하나다 — 층도, 계단실도. 이미 있던 지휘관은
+       * 자리에서 물러나므로 그 대의 「단위」 임무도 함께 뗀다. 안 그러면
+       * 지휘관이 아닌 대가 지휘관 표시를 달고 남는다.
+       * 건물 밖만 예외다 — 임무 단위로 여럿 설 수 있어 밀어내지 않는다.
+       */
+      const prevId = commandScopeOf(commandKey) === EXTERIOR_SCOPE
+        ? undefined
+        : commanderOfScope(groups, commandKey);
+      if (prevId && prevId !== token.id) {
+        toggleMissionTag(prevId, MISSION_UNIT_COMMANDER);
+      }
+      assign(commandKey, token.id);
+    }
   }
 
   function handleStatus(label: string, color: string) {
@@ -217,13 +294,22 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
     onClose();
   }
 
-  /** 송수 사용 훈련이면 급수 연결과 잔량을 확인한다. 막히면 안내하고 true 반환 */
+  /** 급수 연결과 잔량을 확인한다. 막히면 안내하고 true 반환 */
   function blockedBySupply(): boolean {
     const reason = sprayBlockReason(
-      showWaterSupply, connections, token.id, token.unitType, waterLevel?.emptyVehicleIds,
+      connections, token.id, token.unitType, waterLevel?.emptyVehicleIds,
     );
     if (reason === null) return false;
-    alert(sprayBlockMessage(reason, token.unitType));
+    /*
+     * 메뉴는 곧 닫힌다 — 안내는 **메뉴 밖**(BoardNoticeHost)이 그린다.
+     * 여기서 그리면 닫히면서 같이 사라져 한 프레임도 안 보인다.
+     * 자리는 그 토큰 위다(메뉴를 띄운 앵커).
+     */
+    showBoardNotice(
+      sprayBlockMessage(reason, token.unitType),
+      anchorRect.left + anchorRect.width / 2,
+      anchorRect.top,
+    );
     onClose();
     return true;
   }
@@ -275,19 +361,21 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
     if (activeTab === 'mission') {
       return (
         <div className="usbm2__popup-items">
+          {/*
+            버튼 색은 붙었을 때 토큰에 나타나는 칩과 같다 — 임무는 파랑,
+            「단위」만 지휘 축이라 보라다(App.css 「판 위 칩 두 축」).
+            고른 것만 테두리를 밝혀 표시한다.
+          */}
           {missionPresets.map(preset => {
             const isActive = token.missionTags?.some(m => m.label === preset.label) ?? false;
-            const col = TAG_COLORS[preset.color] ?? TAG_COLORS.white;
             return (
               <button
                 key={preset.label}
-                className={['usbm2__popup-btn', isActive ? 'usbm2__popup-btn--active' : ''].filter(Boolean).join(' ')}
-                style={{
-                  background:  col.bg,
-                  borderColor: isActive ? col.text : col.border,
-                  color:       col.text,
-                  ...(isActive ? { boxShadow: `0 0 0 2px ${col.text}` } : {}),
-                }}
+                className={[
+                  'usbm2__popup-btn', 'usbm2__popup-btn--mission',
+                  isActive ? 'usbm2__popup-btn--active' : '',
+                ].filter(Boolean).join(' ')}
+                data-mission={preset.label}
                 onMouseDown={e => { e.stopPropagation(); handleMission(preset.label, preset.color); }}
               >
                 {isActive && <span className="usbm2__check">✓</span>}
@@ -440,6 +528,30 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
                 방수포
               </button>
             )
+          )}
+          {token.ridingOn && (
+            <button
+              className="usbm2__popup-btn usbm2__popup-btn--unit-member"
+              onMouseDown={e => {
+                e.stopPropagation();
+                setBasketRider(token.id, null);
+                onClose();
+              }}
+            >
+              하차
+            </button>
+          )}
+          {memberOf && (
+            <button
+              className="usbm2__popup-btn usbm2__popup-btn--unit-member"
+              onMouseDown={e => {
+                e.stopPropagation();
+                removeMember(memberOf.commanderId, token.id, token.label);
+                onClose();
+              }}
+            >
+              소속 해제
+            </button>
           )}
           {showSearchButton && (
             isSearchActive ? (

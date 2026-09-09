@@ -16,6 +16,28 @@
   pointer-events: none;
 }
 
+/* ── 감춘 선 ──────────────────────────────────
+   「송수라인」을 끄면 활동대로 가는 선이 여기 걸린다.
+
+   `display: none` 이 아니라 `visibility` 다. 선의 d 는 매 프레임 갱신되는데
+   (WaterConnectionOverlay 의 rAF), display 로 빼면 레이아웃에서 사라져
+   되살아나는 순간이 어색하다. visibility 는 자리를 지키므로 켜지는 즉시
+   제자리에서 나타나고, 덤으로 클릭도 함께 막힌다 — 안 보이는 선을 눌러
+   해제하는 일이 없다.
+
+   **송수를 끄는 동안에는 되살린다.** 어느 대에 이미 물을 대고 있는지 모르면
+   연결 가능 강조(파란 점선)만으로는 판단이 안 된다 — 이미 연결된 대에 또
+   끌어다 놓게 된다. 손잡이를 놓으면 다시 감춰진다(useWaterConnectDrag).
+   ─────────────────────────────────────────────*/
+
+.wco-group--hidden {
+  visibility: hidden;
+}
+
+body.water-connect-dragging .wco-group--hidden {
+  visibility: visible;
+}
+
 /* ── 배관 선 (얇고 어두운 파란선) ────────────── */
 
 .wco-line {
@@ -68,6 +90,34 @@
   filter:    drop-shadow(0 0 1px #cc0000);
 }
 
+/* ── 짚은 선 (배지 오버·해제 팝업) ──────────────
+   배지가 가리키는 연결 하나만 도드라지게 한다(context/waterLinePeek).
+
+   **색은 건드리지 않는다.** 파랑/빨강이 정상·고장을 말하고 있어서, 짚었다고
+   색을 바꾸면 고장 난 선이 멀쩡해 보인다. 굵기와 불투명도만 올린다 — 상태는
+   색이, 주목은 굵기가 맡는 식으로 갈라 둔다.
+
+   그래서 이 블록이 `--broken` **뒤에** 와야 한다. 둘 다 클래스 두 개짜리라
+   특이도가 같고, 뒤에 온 쪽이 opacity 를 가져간다.
+
+   감춰 둔 선도 짚으면 보인다 — 「송수라인」을 껐을 때 배지가 그 선의 대역이라,
+   짚어서 확인할 길이 없으면 배지만 보고 어디로 가는지 짐작해야 한다.
+   ─────────────────────────────────────────────*/
+
+.wco-group--peek {
+  visibility: visible;
+}
+
+.wco-group--peek .wco-line {
+  stroke-width: 3;
+  opacity:      1;
+}
+
+.wco-group--peek .wco-flow {
+  stroke-width: 4;
+  opacity:      1;
+}
+
 /* ── 클릭 히트 영역 ───────────────────────────── */
 
 .wco-hit {
@@ -80,41 +130,4 @@
 
 /* ── 송수 해제 팝업 ───────────────────────────── */
 
-.wco-popup-backdrop {
-  position: fixed;
-  inset:    0;
-  z-index:  9901;
-  cursor:   default;
-}
-
-.wco-popup {
-  position:      fixed;
-  z-index:       9902;
-  transform:     translate(-50%, -110%);
-  background:    #0e1822;
-  border:        1.5px solid #2255aa;
-  border-radius: 6px;
-  box-shadow:    0 4px 16px rgba(0, 0, 0, 0.6);
-  overflow:      hidden;
-  user-select:   none;
-}
-
-.wco-popup__btn {
-  display:     block;
-  width:       100%;
-  padding:     9px 18px;
-  background:  transparent;
-  border:      none;
-  color:       #88ccff;
-  font-size:   0.80rem;
-  font-weight: 700;
-  font-family: inherit;
-  cursor:      pointer;
-  white-space: nowrap;
-  transition:  background 0.1s;
-}
-
-.wco-popup__btn:hover {
-  background: #1a3060;
-  color:      #bbddff;
-}
+/* 송수 해제 팝업은 shared/WaterDisconnectPopup 으로 옮겼다 (배지 클릭과 공용) */

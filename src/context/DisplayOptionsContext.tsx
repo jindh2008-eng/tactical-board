@@ -2,17 +2,25 @@ import { createContext, useContext } from 'react';
 
 /** 표시옵션 키 — 토글 진입점(`toggleOption`)이 받는 값 */
 export type DisplayOptionKey =
-  | 'waterSupply' | 'spray' | 'controlLine' | 'victims' | 'drawing';
+  | 'waterLine' | 'spray' | 'controlLine' | 'victims' | 'drawing';
 
 export interface DisplayOptions {
   /**
-   * 송수·수량 사용 여부. 송수 연결선 표시와 수량 게이지를 하나로 묶은 옵션이다.
+   * 송수라인 표시 여부 — **보이기만 정하는 옵션이다.**
    *
-   * OFF 면 급수 계통을 아예 쓰지 않는 훈련이라는 뜻이다 — 송수 핸들·연결선·게이지가
-   * 모두 사라지고, 방수는 급수 연결 없이 무조건 가능해진다.
-   * ON 이면 전 차종(진압·구조·고가·굴절)이 송수 연결이 있어야만 방수할 수 있다.
+   * 예전 「송수·수량」은 연결선·수량 게이지·송수 손잡이·방수 가능 판정 네 가지를
+   * 한꺼번에 껐다. 급수가 이제 훈련의 전제라(연결이 있어야 방수한다) 끄고 켤
+   * 대상이 아니다 — 남은 것은 **선이 판을 덮는 문제**뿐이라 그것만 다룬다.
+   *
+   * OFF 라도 소화전↔차량·차량↔차량 선은 그대로 보인다. 사라지는 것은
+   * **진압대·구조대로 가는 선**뿐이다 — 한 펌프에서 여러 대로 뻗어 판을 덮는
+   * 것이 그쪽이고, 그 정보는 차량에 붙는 번호 배지가 대신 말한다(TokenCard).
+   *
+   * OFF 에도 예외가 하나 있다 — **송수를 끄는 동안에는 감춘 선이 다시 보인다.**
+   * 이미 물을 받는 대인지 모르면 연결할 곳을 고를 수 없기 때문이다
+   * (WaterConnectionOverlay.css `.wco-group--hidden`).
    */
-  showWaterSupply: boolean;
+  showWaterLine: boolean;
   showSpray:       boolean;
   /** 소방·경찰 통제선 사용 여부. OFF 면 띠와 설치 버튼이 모두 사라진다 */
   showControlLine: boolean;
@@ -33,7 +41,7 @@ export interface DisplayOptions {
 }
 
 export const DisplayOptionsContext = createContext<DisplayOptions>({
-  showWaterSupply: true,
+  showWaterLine:   true,
   showSpray:       true,
   showControlLine: true,
   showAllVictims:  false,

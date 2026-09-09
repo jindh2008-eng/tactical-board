@@ -6,6 +6,9 @@ import { useVictims } from '../../context/VictimContext';
 import { useBuildingState } from '../../context/BuildingStateContext';
 import type { SmokeLevel } from '../../context/BuildingStateContext';
 import { useDisplayOptions } from '../../context/DisplayOptionsContext';
+import { useUnitCommander } from '../../context/UnitCommanderContext';
+import { commanderOfScope } from '../../utils/unitCommandScope';
+import { isDrawnInBasket } from '../../utils/basketRider';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { FlameIcon } from '../shared/FlameIcon';
@@ -209,6 +212,7 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
   // 구조대상자 토큰
   const { victims, victimPositions, moveVictim, discoveredVictimIds, activeSearches } = useVictims();
   const { showAllVictims } = useDisplayOptions();
+  const { groups } = useUnitCommander();
 
   // 인명검색 진행률 (center 구역 전용)
   const isCenter      = zone.id === 'center';
@@ -225,7 +229,21 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
   // 요약 행(isRange)에는 구조대상자 배치 불가 — 출동대 토큰만 허용
   const isVictimDropTarget = isDropTarget && !isRange;
   const zoneKey            = `${floorId}-${zone.id}`;
-  const zoneTokens         = isDropTarget        ? tokens.filter(t => t.zoneKey === zoneKey)  : [];
+  const commanderId        = commanderOfScope(groups, zoneKey);
+  /* 소속대는 안쪽 보라 테두리로 표시한다(UnitCommanderContext) */
+  /*
+   * 지휘관 토큰을 렌더에서 빼는 것은 **중앙 구역뿐**이다.
+   *
+   * 중앙 구역의 지휘관은 층 슬롯이 그리므로(UnitCommanderSlot) 여기서 또
+   * 그리면 한 토큰이 두 번 보인다. 하지만 계단실에는 슬롯이 없다 —
+   * 거기서 「단위」 임무로 지휘관을 세우면 아무도 안 그려 **토큰이 사라졌다**
+   * (2026-09-08 수정). 그리는 쪽이 있을 때만 뺀다.
+   */
+  const hiddenCommanderId  = isCenter ? commanderId : undefined;
+  const zoneTokens         = isDropTarget
+    ? tokens.filter(t => t.zoneKey === zoneKey && t.id !== hiddenCommanderId
+                         && !isDrawnInBasket(tokens, t))
+    : [];
   // 건물 내부 구역은 discoveredVictimIds에 있는 구조대상자만 표시 (인명검색 후 발견된 것만)
   // 이송 연결된 구조대상자는 출동대 토큰 우측에 붙어 렌더된다(TokenCard) — 구역 배치에서 제외.
   const allZoneVictims     = isVictimDropTarget  ? victims.filter(v => v.zoneKey === zoneKey && !v.carriedBy) : [];
@@ -382,7 +400,11 @@ export function ZoneCell({ zone, floorId, smokeLevel = 'none', isRange = false }
 
       {/* 배치된 출동대 토큰 */}
       {isDropTarget && zoneTokens.map(token => (
-        <TokenCard key={token.id} token={token} absPos={positions[token.id]} />
+        <TokenCard
+          key={token.id}
+          token={token}
+          absPos={positions[token.id]}
+        />
       ))}
 
       {/* 배치된 구조대상자 토큰 */}

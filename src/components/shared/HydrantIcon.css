@@ -1,9 +1,25 @@
 /* ─────────────────────────────────────────────
    소화전 아이콘 — 전술 상황판 방면 구역 고정 표시
-   크기는 출동대 토큰 가로 너비(60px) 기준의 1.5배
+
+   크기는 **층고를 따른다** — 높이 = 층 행 높이의 90%, 가로 = 그 높이의 3/4.
+   현장요소 토큰과 같은 자다(utils/eventLocation.ts). 층고는 `TacticalArea` 가
+   `#tactical-area` 에 심는 `--floor-row-h`(캔버스 px)이고, 방면 구역도 그
+   하위라 상속받는다. 폴백 180px 은 층이 없는 곳에 놓였을 때의 대략값이다.
+
+   ## A면은 이 크기를 다 담지 못한다 (2026-09-02 실측)
+
+   소화전 크기는 A면이 아니라 층고가 정한다. 다만 **건물과 A면이 한 칸을 나눠
+   갖는 구조**라(TacticalArea 의 grid), 건물을 키우면 층고가 커지면서 A면은
+   반대로 작아진다. 기본 높이(A면 227px·층고 174.7px)에서 아이콘 전체는 195px
+   인데 A면에 남는 자리는 104px 이라, A면 소화전은 구역 위로 약 86px 올라와
+   B면 소화전과 겹친다. A면을 키우면(경계 핸들 드래그) 층고가 함께 낮아져
+   저절로 해소된다 — 6행 건물 기준 비율 0.84 이하에서 밴드까지 다 들어간다.
    ───────────────────────────────────────────── */
 
 .hydrant-icon {
+  --hydrant-h: calc(var(--floor-row-h, 180px) * 0.9);
+  --hydrant-w: calc(var(--hydrant-h) * 0.75);
+
   position:       relative;
   display:        flex;
   flex-direction: column;
@@ -36,12 +52,16 @@
 .hydrant-icon__body {
   position: relative;
   display:  block;
-  width:    45px;
+  width:    var(--hydrant-w);
+  height:   var(--hydrant-h);
 }
 
+/* PNG 원본 비율(0.66)이 지정 상자(0.75)보다 좁다. `contain` 으로 넣어
+   높이는 정확히 층고의 1/4 이 되게 하고 가로는 늘리지 않는다. */
 .hydrant-icon__img {
-  width:          45px;
-  height:         auto;
+  width:          100%;
+  height:         100%;
+  object-fit:     contain;
   display:        block;
   pointer-events: none;
 }

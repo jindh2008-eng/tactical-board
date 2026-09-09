@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { isDrawnInBasket } from '../../utils/basketRider';
 import type { Face, FaceZone } from '../../types';
 import { ControlLine } from './ControlLine';
 import { useFireLine } from '../../context/FireLineContext';
@@ -14,6 +15,9 @@ import { useSettings } from '../../store/settingsStore';
 import { TokenCard } from '../shared/TokenCard';
 import { VictimCard } from '../shared/VictimCard';
 import { HydrantIcon } from '../shared/HydrantIcon';
+import { CirculationSlot } from './CirculationSlot';
+import { CIRCULATION_MIN_DISTANCE_M } from '../../config/unitMissions';
+import { useHydrantCirculation } from '../../context/HydrantCirculationContext';
 import { AFaceBottomZones } from './AFaceBottomZones';
 import { computeDropCenter } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
@@ -63,10 +67,50 @@ function cornerStyle(corner: HydrantCorner, face: Face): React.CSSProperties {
     : { ...base, right: 4, alignItems: 'flex-end' };
 }
 
+/**
+ * 소화전 하나와 그 위의 순환보수 칸.
+ *
+ * **한 상자로 감싸는 이유가 있다.** 소화전 기둥은 A면이 `column`, 나머지 면이
+ * `column-reverse` 라(cornerStyle) 순환칸을 기둥의 형제로 두면 면에 따라 위아래가
+ * 뒤집힌다. 이 상자가 자기 안에서 세로를 정하므로 어느 면에서든 순환칸이 위다.
+ *
+ * 칸은 **거리 150m 이상**일 때만 생긴다. 그 아래에서는 호스를 연장하면 되므로
+ * 순환보수라는 것 자체가 없다.
+ */
+function HydrantStack({ hydrant, zoneKey, face }: {
+  hydrant: { id: string; name: string; distanceM: number };
+  zoneKey: string;
+  face:    Face;
+}) {
+  /*
+   * A면은 세로가 없다 — 구역 높이가 소화전 자체보다 낮다(실측 130px 대 116px,
+   * HydrantIcon.css 주석의 「A면은 이 크기를 다 담지 못한다」와 같은 사정).
+   * 그대로 두면 5대가 200px 가까이 건물 쪽으로 넘어간다. 성장 높이를 묶어
+   * 세 대까지만 쌓고 그 위는 옆 열로 접는다(CirculationSlot.css).
+   */
+  const style = face === 'A'
+    ? ({ '--circ-max-h': '124px' } as React.CSSProperties)
+    : undefined;
+
+  return (
+    <div className="hydrant-stack" style={style}>
+      {hydrant.distanceM >= CIRCULATION_MIN_DISTANCE_M && (
+        <CirculationSlot
+          hydrantId={hydrant.id}
+          hydrantName={`${hydrant.name} 소화전`}
+          zoneKey={zoneKey}
+        />
+      )}
+      <HydrantIcon id={hydrant.id} name={hydrant.name} distanceM={hydrant.distanceM} />
+    </div>
+  );
+}
+
 function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
   const { tokens, positions, moveToken }         = useTokens();
   const { victims, victimPositions, moveVictim } = useVictims();
   const { hydrantSetup }                         = useSettings();
+  const { circulationIds }                       = useHydrantCirculation();
 
   // 이 방면에 배정된 소화전 필터링 후 코너별 그룹화
   const faceHydrants = hydrantSetup.filter(h => h.side === face);
@@ -74,7 +118,14 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
   const rightHydrants = faceHydrants.filter((_, i) => getHydrantCorner(face, i) === 'bottom-right');
 
   const zoneKey     = `face-${face}`;
-  const zoneTokens  = tokens.filter(t => t.zoneKey === zoneKey);
+  /*
+   * 바스켓에 탄 활동대는 AerialOverlay 가, 순환대는 순환칸이 그린다 —
+   * 여기서 또 그리면 한 토큰이 두 번 보인다. 순환대의 zoneKey 는 이 면 그대로다
+   * (자리를 옮긴 것이 아니라 소화전 옆에 선 것이다 — HydrantCirculationContext).
+   */
+  const zoneTokens  = tokens.filter(
+    t => t.zoneKey === zoneKey && !isDrawnInBasket(tokens, t) && !circulationIds.has(t.id),
+  );
   // 이송 연결된 구조대상자는 출동대 토큰 우측에 붙어 렌더된다(TokenCard) — 구역 배치에서 제외.
   const zoneVictims = victims.filter(v => v.zoneKey === zoneKey && !v.carriedBy);
 
@@ -115,9 +166,13 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
           제어 대상(보드) 바로 옆에 둔다 */}
       {face === 'C' && <DisplayOptionsBar />}
 
-      {/* 출동대 토큰 */}
+      {/* 출동대 토큰 — 소속대는 흐리게(무전 상대가 아니라는 표시) */}
       {zoneTokens.map(token => (
-        <TokenCard key={token.id} token={token} absPos={positions[token.id]} />
+        <TokenCard
+          key={token.id}
+          token={token}
+          absPos={positions[token.id]}
+        />
       ))}
       {/* 구조대상자 토큰 */}
       {zoneVictims.map(victim => (
@@ -127,18 +182,14 @@ function FaceGeneralZone({ zone, face }: { zone: FaceZone; face: Face }) {
       {/* 소화전 아이콘 — 좌측 (A면: 하단 밴드 위 / 그 외: 하단) */}
       {leftHydrants.length > 0 && (
         <div style={cornerStyle('bottom-left', face)}>
-          {leftHydrants.map(h => (
-            <HydrantIcon key={h.id} id={h.id} name={h.name} distanceM={h.distanceM} />
-          ))}
+          {leftHydrants.map(h => <HydrantStack key={h.id} hydrant={h} zoneKey={zoneKey} face={face} />)}
         </div>
       )}
 
       {/* 소화전 아이콘 — 우측 (A면: 하단 밴드 위 / 그 외: 하단) */}
       {rightHydrants.length > 0 && (
         <div style={cornerStyle('bottom-right', face)}>
-          {rightHydrants.map(h => (
-            <HydrantIcon key={h.id} id={h.id} name={h.name} distanceM={h.distanceM} />
-          ))}
+          {rightHydrants.map(h => <HydrantStack key={h.id} hydrant={h} zoneKey={zoneKey} face={face} />)}
         </div>
       )}
 

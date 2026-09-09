@@ -3,7 +3,8 @@ import { useTokens } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
 import { useMedicalPost } from '../../context/MedicalPostContext';
 import { TokenCard } from '../shared/TokenCard';
-import { ChiefSlot } from '../shared/ChiefSlot';
+import { RoleSlot } from '../shared/RoleSlot';
+import { useRoleRelease } from '../../context/RoleReleaseContext';
 import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
 import { ArrivedGroupRow } from '../shared/ArrivedGroupRow';
 import { splitArrivalGroup } from '../../utils/arrivalGroup';
@@ -44,6 +45,7 @@ export function MedicalPostBox() {
     isInstalled, setIsInstalled,
     assignedTokenId, setAssignedTokenId,
   } = useMedicalPost();
+  const { registerReleaser } = useRoleRelease();
 
   /*
    * 설치 토글을 없앴다 — 소장을 지명하면 그것이 곧 설치다.
@@ -82,14 +84,18 @@ export function MedicalPostBox() {
   // 소장은 슬롯이 그린다 — 박스에도 그리면 한 토큰이 두 번 보인다
   const zoneTokens  = allZoneTokens.filter(t => t.id !== assignedTokenId);
 
-  // 담당 토큰이 구역을 벗어나면 담당자만 자동 해제 (설치 상태는 유지)
-  useEffect(() => {
-    if (assignedTokenId && !allZoneTokens.some(t => t.id === assignedTokenId)) {
-      changeChief(null);
-    }
-  // changeChief는 매 렌더 새로 만들어진다 — 의존성에 넣으면 매 렌더 재실행된다
+  /*
+   * 소장이 움직이면 담당자만 자동 해제한다(설치 상태는 유지).
+   *
+   * 예전에는 「구역에 없으면 해제」를 렌더마다 검사했는데, 임시의료소 안에서
+   * 자리만 옮기는 것은 잡지 못했다. 지금은 `moveToken` 이 알려 준다 —
+   * 어디로 옮기든 한 번에 걸린다(RoleReleaseContext).
+   */
+  useEffect(() => registerReleaser('medical-chief', (tokenId) => {
+    if (tokenId === assignedTokenId) changeChief(null);
+  // changeChief는 매 렌더 새로 만들어진다 — 의존성에 넣으면 매 렌더 재등록된다
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allZoneTokens, assignedTokenId]);
+  }), [registerReleaser, assignedTokenId]);
 
   function onDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -109,20 +115,6 @@ export function MedicalPostBox() {
 
   return (
     <div className="a-face-band__zone a-face-band__zone--medical">
-      {/* 헤더에는 소장 자리만 둔다 — 구조활동통계는 옆 칸 「구조 현황」 띠에서 연다 */}
-      <div className="a-face-zone__header">
-        <ChiefSlot
-          chief={chiefToken}
-          label="임시의료소장"
-          onAssign={t => {
-            // 소장은 그 자리에 있는 사람이다 — 밖에서 끌어왔으면 구역으로 함께 들인다
-            if (t.zoneKey !== zoneKey) moveToken(t.id, zoneKey);
-            changeChief(t.id);
-          }}
-          onRelease={() => changeChief(null)}
-        />
-      </div>
-
       <div
         className="a-face-zone__body"
         data-zone-key={zoneKey}
@@ -146,8 +138,24 @@ export function MedicalPostBox() {
           </div>
         ))}
       </div>
-    {/* 명칭은 박스 하단 — 직전대기·RIT·현장지휘소 와 같은 자리 */}
-      <span className="a-face-zone__label a-face-zone__label--bottom">임시의료소</span>
+      {/* 명칭은 박스 하단 — 직전대기·RIT·현장지휘소 와 같은 자리.
+          소장 자리는 그 명칭 옆에 붙인다 — 자원대기소와 같은 문법이다
+          (「자원대기소 소장 물탱크1」). 예전에는 박스 위쪽 별도 헤더였는데,
+          같은 것을 두 곳이 다르게 두고 있었다. */}
+      <div className="a-face-zone__footer">
+        <span className="a-face-zone__label a-face-zone__label--bottom">임시의료소</span>
+        <RoleSlot
+          holder={chiefToken}
+          tag="소장"
+          emptyTag="[미설치]"
+          roleName="임시의료소장"
+          onAssign={t => {
+            // 소장은 그 자리에 있는 사람이다 — 밖에서 끌어왔으면 구역으로 함께 들인다
+            if (t.zoneKey !== zoneKey) moveToken(t.id, zoneKey);
+            changeChief(t.id);
+          }}
+        />
+      </div>
     </div>
   );
 }

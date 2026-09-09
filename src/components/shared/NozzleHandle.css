@@ -27,10 +27,27 @@
   transition: border-color 0.12s, background 0.12s, opacity 0.12s;
 }
 
-/* 방수포(펌프·물탱크)는 우측에 수량 게이지가 붙어 있다.
-   핸들 오른쪽 끝을 토큰 오른쪽 모서리에 맞춰 게이지와 겹치지 않게 한다. */
+/* ── 방수포(펌프·물탱크) — 수량 게이지 우측 상단 ──────────────
+   원래는 토큰 오른쪽 모서리에 걸쳐 **토큰 위로 8.8px 튀어나와** 있었다.
+   그 자리가 송수 번호 배지 행(y −23~−3)과 부딪힌다 — 배지 간격이 23px 이고
+   행이 토큰 중앙 정렬이라 **연결 2개부터** 겹치기 시작해, 5개면 4·5번 배지가
+   세로 5.8px 띠에서 가려졌다(실측).
+
+   그래서 게이지 위로 옮겼다. 핸들이 토큰 위(y<0)를 벗어나지 않으므로 배지가
+   몇 개든 겹치지 않고, 게이지 **안쪽**에 얹히므로 래퍼 폭이 늘지 않는다 —
+   구역 우측 경계에서 잘리거나 이송 구조대상자 아이콘과 부딪힐 일이 없다.
+   게이지의 송수 드래그 면적은 32×37 중 22×16 을 내주고 70% 가 남는다.
+
+   자리도 맞다 — 방수포는 제 물탱크로 쏘니 수량 옆이 제자리고, 게이지와
+   방수포는 둘 다 펌프·물탱크 전용이라 항상 같이 나오는 짝이다.
+
+   치수는 래퍼가 심은 변수를 본다(TokenCard.css). 폴백은 그 값과 같게 둔다 —
+   래퍼 밖에서 핸들이 그려지는 경우를 위한 보험이다.
+   ─────────────────────────────────────────────────────────────*/
 .nozzle-handle--monitor {
-  transform: translate(-100%, -55%);
+  left:      calc(100% + var(--gauge-gap, 4px) + var(--gauge-w, 32px));
+  top:       1px;
+  transform: translate(-100%, 0);
 }
 
 .nozzle-handle:active { cursor: grabbing; }
@@ -73,6 +90,18 @@
   filter: grayscale(1);
   cursor: not-allowed;
 }
+
+/* 급수원이 없는 고가·굴절 방수포 — **계속** 빨갛게 둔다.
+   활동대 관창의 `--blocked`(회색)와 다른 이유는, 이쪽은 전개했으면 늘
+   그려지므로 「달려 있지만 못 쏜다」를 색 하나로 말해야 하기 때문이다
+   (AerialOverlay 의 AerialNozzle 주석). 끌거나 누르면 이유를 말한다. */
+.nozzle-handle--nosupply {
+  border-color: #ff6666;
+  background:   rgba(70, 16, 16, 0.95);
+}
+
+.nozzle-handle--nosupply svg { fill: #ffaaaa; }
+.nozzle-handle--nosupply .nozzle-handle__jet { stroke: #ff6666; }
 
 /* 막힌 상태에서 조작을 시도했을 때 잠깐 빨갛게 */
 .nozzle-handle--blocked-flash {

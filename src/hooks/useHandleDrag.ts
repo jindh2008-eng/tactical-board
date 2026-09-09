@@ -195,8 +195,16 @@ export function useHandleDrag({
   // 언마운트 백스톱 — 드래그 중 핸들이 사라져도 선을 반드시 지운다.
   // cleanup 을 의존성에 넣으면 매 렌더마다 효과가 다시 돌아 **진행 중인 드래그를
   // 취소한다.** 마운트/언마운트에 한 번씩만 돌아야 하므로 빈 배열이 맞다.
+  //
+  // 끝났다는 알림도 함께 보낸다. 이 경로는 window 리스너까지 떼므로
+  // `endDrag` 가 영영 불리지 않아, 시작할 때 켠 표시가 판에 남는다 —
+  // 송수 연결의 「연결 가능 강조」와 「감춘 선 되살리기」가 그렇다
+  // (useWaterConnectDrag).
+  useEffect(() => () => {
+    if (stateRef.current?.active) cbRef.current.onDragEnd?.();
+    cleanup();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => cleanup, []);
+  }, []);
 
   function handlePointerDown(e: ReactPointerEvent<HTMLElement>) {
     if (!enabled || e.button !== 0) return;

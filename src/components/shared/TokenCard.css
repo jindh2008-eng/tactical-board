@@ -7,6 +7,13 @@
 .token-card-wrapper {
   position: relative;
   display:  inline-block;
+
+  /* 수량 게이지의 자리 — 게이지 자신(.water-gauge)과 방수포 핸들
+     (NozzleHandle.css `.nozzle-handle--monitor`)이 **같은 수를 봐야 한다.**
+     핸들이 게이지 우측 상단에 얹히므로, 한쪽만 고치면 핸들이 게이지를
+     벗어나거나 파묻힌다. 상속으로 자식 CSS 파일까지 내려간다. */
+  --gauge-gap: 4px;
+  --gauge-w:   32px;
 }
 
 .token-card-wrapper--select {
@@ -48,6 +55,32 @@
   white-space: nowrap;
   transition: opacity 0.12s, transform 0.12s;
   letter-spacing: 0.01em;
+}
+
+/*
+ * 소속대 — 단위지휘관 밑에 든 대. **토큰 안쪽 보라 테두리 하나로 말한다.**
+ *
+ * 표시 방법을 네 번 바꿨다. 남긴 이유를 적어 둔다.
+ *
+ *   투명도 0.45  — 토큰 안쪽 대비까지 무너졌다(4.23:1 → 2.00:1). 이름을 못 읽는다.
+ *   채도 0.28    — 래퍼 안의 임무 칩·상태 메시지까지 함께 바랬다. 「저 칩이 왜
+ *                  흐리지」가 된다. 흐림·바램은 **읽어야 할 것**까지 덮는다.
+ *   지휘관까지 실선 — 흩어진 토큰 사이에서 선이 교차하고, 판 대비 1.90:1 이라
+ *                  배율이 작아지면 사라졌다.
+ *   「└진압1」 이름표 — 토큰만 한 칩이 하나 더 붙어 판이 복잡해졌다.
+ *
+ * 안쪽 테두리는 토큰 크기를 늘리지 않고(바깥으로 나가지 않는다), 색이
+ * 지휘관 칩과 같아 「저 보라와 한 무리」로 읽힌다. 한 구역에 지휘관은
+ * 하나뿐이라 누구 밑인지도 색만으로 정해진다 — 이름은 마우스를 올리면
+ * `title` 이 알려 준다.
+ *
+ * `outline-offset` 을 음수로 줘 **안쪽**에 긋는다. box-shadow 로 하면
+ * 「이동 직후 강조」(.token-card--recently-moved)와 같은 속성을 다퉈 서로
+ * 지운다.
+ */
+.token-card-wrapper--member .token-card {
+  outline:        3.5px solid var(--chip-command-bg);
+  outline-offset: -3.5px;
 }
 
 .token-card:active {
@@ -123,7 +156,10 @@
 .medical-post__body .token-card,
 .imminent-standby__body .token-card,
 .unit-status-panel .token-card,
-.resource-panel__body .token-card {
+.resource-panel__body .token-card,
+/* 역할 슬롯(단위지휘관·소장) 안의 토큰도 상황판과 같은 크기여야 한다 —
+   자리에 앉았다고 사람이 작아지지는 않는다 (2026-09-02) */
+.role-slot .token-card {
   min-width: 0;
   height: auto;
   /* 글꼴은 rem 이라 루트 배율을 따라간다. 패딩은 px 라 --ui-scale 로 함께 맞춘다
@@ -202,7 +238,7 @@
 }
 
 /* ─────────────────────────────────────────────
-   임시의료소 직전대기 카운트다운
+   임시의료소 구조 처치 카운트다운
    ─────────────────────────────────────────────*/
 
 .token-countdown {
@@ -219,12 +255,6 @@
   text-align: center;
   white-space: nowrap;
   letter-spacing: 0;
-}
-
-/* 이동중 카운트다운 — 구조중과 동일 위치, 색상만 구분 */
-.token-countdown--move {
-  background: #3a6ea8;
-  border-color: #6a9fd8;
 }
 
 /* ─── 최근 이동 강조 ─── */
@@ -339,6 +369,65 @@
   color: #ff8888;
 }
 
+/* ── 송수 번호 배지 ────────────────────────────────────────────
+ * 펌프·물탱크가 물을 대주는 대를 번호로 세운다. 자리는 **토큰 바로 위**,
+ * 상태메시지 아래다 — 상태메시지가 더 급한 정보라 위를 내주고, 배지는
+ * 토큰에 붙어 있어야 「이 차의 송수」로 읽힌다.
+ *
+ * 바탕색은 **연결된 대의 토큰 색**이다. 번호만으로는 ①이 진압인지 구조인지
+ * 알 수 없어, 색이 그 절반을 말해 준다(TokenCard.tsx data-color).
+ *
+ * 여기가 선의 출발점이기도 하다(data-water-anchor). 그래서 원 하나가
+ * 그대로 선의 꼭지가 되도록 동그랗게 둔다.
+ */
+.token-supply-badges {
+  position:       absolute;
+  bottom:         calc(100% + 3px);
+  left:           50%;
+  transform:      translateX(-50%);
+  display:        flex;
+  gap:            3px;
+  z-index:        5;
+  pointer-events: auto;
+}
+
+.token-supply-badge {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           20px;
+  height:          20px;
+  padding:         0;
+  border-radius:   50%;
+  font-family:     inherit;
+  font-size:       0.72rem;
+  font-weight:     800;
+  line-height:     1;
+  cursor:          pointer;
+  box-shadow:      0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.token-supply-badge:hover {
+  filter: brightness(1.25);
+}
+
+/* 색은 토큰 색을 그대로 따른다 (.token-card--* 와 같은 값) */
+.token-supply-badge[data-color='red']     { background: #E53935; color: #FFFFFF; border: 1px solid #c62828; }
+.token-supply-badge[data-color='yellow']  { background: #FBC02D; color: #000000; border: 1px solid #f9a825; }
+.token-supply-badge[data-color='green']   { background: #43A047; color: #FFFFFF; border: 1px solid #2e7d32; }
+.token-supply-badge[data-color='blue']    { background: #1565C0; color: #FFFFFF; border: 1px solid #0D47A1; }
+.token-supply-badge[data-color='white']   { background: #F5F5F5; color: #212121; border: 1px solid #bdbdbd; }
+.token-supply-badge[data-color='vehicle'] { background: #1c1408; color: #ccaa66; border: 1px solid #4a3818; }
+.token-supply-badge[data-color='agency']  { background: #140e20; color: #bb99dd; border: 1px solid #3a2a5a; }
+
+/*
+ * 배지가 있으면 상태메시지를 그 높이만큼 밀어 올린다.
+ * 20px(배지) + 3px(배지-토큰 간격) + 3px(메시지-배지 간격) = 26px.
+ */
+.token-card-wrapper--supplying .token-status-msg {
+  bottom: calc(100% + 26px);
+}
+
 /* ── 하단 상태 태그 (임무/상태 프리셋) ── */
 .token-status-tag-below {
   position:       absolute;
@@ -450,10 +539,10 @@
 
 .water-gauge {
   position:       absolute;
-  left:           calc(100% + 4px);
+  left:           calc(100% + var(--gauge-gap));
   top:            0;
   bottom:         0;
-  width:          32px;
+  width:          var(--gauge-w);
   border-radius:  4px;
   overflow:       hidden;
   background:     rgba(20, 22, 35, 0.75);
@@ -515,68 +604,89 @@
   letter-spacing: -0.02em;
 }
 
+/*
+ * 방수포 핸들이 게이지 우측 상단을 차지하는 차(펌프·물탱크가 방면에 있을 때)
+ * 는 숫자를 아래로 내린다. 그대로 두면 글자 상자(y 10.5~26.5)가 핸들
+ * 아래끝(17)과 겹쳐 **숫자 윗부분 2.5px 가 잘려 보인다** — 실측값이다.
+ *
+ * 핸들이 없는 자리(건물 내부 등)에서는 중앙을 지킨다. 이유 없이 숫자가
+ * 아래로 내려가 있으면 같은 게이지가 자리마다 달라 보인다.
+ */
+.token-card-wrapper--monitor-nozzle .water-gauge__pct {
+  align-items:    flex-end;
+  padding-bottom: 2px;
+}
+
 /* ─────────────────────────────────────────────
    임무 레이블 — 토큰 좌측에 붙는 컬러 칩
    ─────────────────────────────────────────────*/
 
 /* 임무 레이블 컨테이너 — 토큰 좌측에 붙어서 복수 레이블을 간격 없이 나열 */
+/*
+ * 임무 레이블 — 토큰 **왼쪽에 나란히 붙는 칩**.
+ *
+ * 예전에는 글자를 세로로 눕힌 좁은 띠였다. 임무 이름이 「단위」·「1선」·
+ * 「중요」 두 글자로 정해지면서(config/unitMissions.ts) 세로로 쌓을 이유가
+ * 없어졌고, 역할 슬롯의 「소장」 칩과 같은 모양으로 통일했다 — 판 위에서
+ * 「무엇을 맡았는가」를 말하는 표시가 한 가지 모양이어야 읽기 쉽다.
+ *
+ * 치수는 상황판 토큰과 같다(패딩 9px · 반지름 5px · 1.13rem) — 옆에 붙는
+ * 토큰과 키가 어긋나지 않는다.
+ */
 .token-mission-labels {
   position:       absolute;
   right:          calc(100% + 4px);
-  top:            0;
-  bottom:         0;
+  top:            50%;
+  transform:      translateY(-50%);
   display:        flex;
   flex-direction: row;
-  align-items:    stretch;
+  align-items:    center;
+  gap:            3px;
   pointer-events: none;
 }
 
-/* 개별 임무 레이블 칩 */
+/* 하나뿐인 **눌리는** 임무 칩 — 「단위」.
+   누르면 소속대 목록과 지휘관 해제가 열린다(TokenCard). 나머지 임무 칩은
+   장식이라 부모가 꺼 둔 `pointer-events` 를 그대로 물려받는다. */
+.token-mission-label--action {
+  font-family:    inherit;
+  cursor:         pointer;
+  pointer-events: auto;
+}
+
+.token-mission-label--action:hover {
+  filter: brightness(1.2);
+}
+
+/* 개별 임무 칩 — 역할 슬롯 칩(RoleSlot.css)과 같은 모양.
+   색은 **파랑**이다 — 「그 대가 하는 일」을 말하는 축이다(App.css 두 축). */
 .token-mission-label {
-  padding:        0 4px;
-  border:         1px solid;
-  display:        flex;
-  flex-direction: row-reverse;  /* 첫 번째 컬럼이 토큰에 가장 가깝게 */
-  align-items:    stretch;
-  gap:            2px;
+  display:       inline-flex;
+  align-items:   center;
+  padding:       9px;
+  border:        1px solid var(--chip-mission-border);
+  border-radius: 5px;
+  background:    var(--chip-mission-bg);
+  color:         #ffffff;
+  font-size:     1.13rem;
+  font-weight:   800;
+  line-height:   1;
+  white-space:   nowrap;
 }
 
-/* 첫 번째(가장 왼쪽) 레이블만 왼쪽 모서리 둥글게 */
-.token-mission-label:first-child {
-  border-radius: 4px 0 0 4px;
+/* 「단위」만 보라다 — 임무 목록에 있지만 뜻은 **지휘 역할**이라서,
+   방면처럼 슬롯이 없는 자리에서는 이 칩이 곧 지휘관 표시가 된다. */
+/* 두 자리 번호(펌프10·진압12) — 높이는 그대로 두고 가로로만 늘린다.
+   원형이 알약이 될 뿐이라 「같은 크기의 동그란 배지」라는 인상이 유지된다. */
+.token-supply-badge--wide {
+  width:     auto;
+  min-width: 20px;
+  padding:   0 5px;
 }
 
-/* 마지막(토큰에 붙는) 레이블만 오른쪽 모서리 둥글게 */
-.token-mission-label:last-child {
-  border-radius: 0 4px 4px 0;
-}
-
-/* 레이블이 1개뿐이면 전체 둥글게 */
-.token-mission-label:only-child {
-  border-radius: 4px;
-}
-
-/* 인접 레이블 간 좌측 보더 제거 (이중선 방지) */
-.token-mission-label + .token-mission-label {
-  border-left: none;
-}
-
-/* 한 컬럼 (최대 3글자) */
-.token-mission-label__col {
-  display:         flex;
-  flex-direction:  column;
-  align-items:     center;
-  justify-content: space-evenly; /* N글자 → N등분해서 각 중앙에 배치 */
-}
-
-/* 개별 글자 */
-.token-mission-label__char {
-  display:               block;
-  font-size:             12px;
-  font-weight:           900;
-  line-height:           1;
-  text-align:            center;
-  -webkit-text-stroke:   0.4px currentColor;
+.token-mission-label[data-mission='단위'] {
+  background:   var(--chip-command-bg);
+  border-color: var(--chip-command-border);
 }
 
 /* ─────────────────────────────────────────────

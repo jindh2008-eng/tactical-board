@@ -62,7 +62,7 @@ npm run lint:css   # stylelint — 설정모드 토큰 강제
 **모드 구분은 라우트보다 넓다.** 저장소는 위 이원 구조가 맞지만, 화면은 네 모드로 나눈다 — 설정모드(`/settings`) · 훈련모드(무플)(`/play`) · 훈련모드(지휘)(미구현) · 분석(창)(`/play` 내부 모달). **현재 작업 범위는 훈련모드(무플) 하나다.** 근거와 경계는 [MASTER_PLAN.md](docs/MASTER_PLAN.md) D-4 참고.
 
 - `src/utils/settingsStorage.ts` — localStorage 단일 창구. `SettingsExport` 인터페이스가 전체 설정 번들 형식이다.
-- `src/utils/runtimeSession.ts` — sessionStorage 단일 창구. `tactical-board.runtime.*` 키 **13종**을 여기서만 읽고 쓴다(하이픈이 든 `equip-msg` · `victim-search` 를 빠뜨려 오래도록 11종으로 적혀 있었다). 새 런타임 상태를 영속화할 때는 반드시 여기에 `save*`/`load*` 쌍을 추가한다.
+- `src/utils/runtimeSession.ts` — sessionStorage 단일 창구. `tactical-board.runtime.*` 키 **15종**을 여기서만 읽고 쓴다(하이픈이 든 `equip-msg` · `victim-search` 를 빠뜨려 오래도록 11종으로 적혀 있었다. 14번째는 층별 단위지휘관 `unit-commander`, 15번째는 소화전 순환보수 줄 `hydrant-circulation`). 새 런타임 상태를 영속화할 때는 반드시 여기에 `save*`/`load*` 쌍을 추가한다. **`clearRuntimeSession()` 에도 함께 넣는다** — `equip-msg` 가 빠져 있어 지난 훈련의 설비 상태메시지가 새 훈련까지 살아남았다(2026-09-09 해소).
 
 ### runKey — Provider 재마운트로 상태 초기화
 

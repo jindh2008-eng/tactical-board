@@ -390,19 +390,6 @@ export function SettingsPage() {
                         }}
                       />
                     </label>
-                    <label className="settings-page__timing-label">
-                      이동 시간(초)
-                      <input
-                        className="settings-page__timing-input"
-                        type="number"
-                        min={1}
-                        value={timing.moveTimeSec}
-                        onChange={e => {
-                          const v = Math.max(1, parseInt(e.target.value, 10) || 1);
-                          updateTiming({ moveTimeSec: v });
-                        }}
-                      />
-                    </label>
                   </div>
                 </div>
 

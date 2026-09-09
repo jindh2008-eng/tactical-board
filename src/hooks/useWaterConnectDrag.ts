@@ -10,9 +10,18 @@ import { logDragEvent } from '../utils/dragDiagnostics';
 // 끄는 동안 연결 가능한 대상만 밝게 표시한다. 대상 판정은 DOM 의
 // `data-water-type` 을 읽어서 하므로, 새 급수 설비를 추가할 때 그 속성만
 // 달아 주면 이 훅이 자동으로 인식한다.
+//
+// 끄는 동안 **감춰 둔 송수라인도 되살린다.** 「송수라인」을 껐으면 활동대로
+// 가는 선이 안 보이는데, 그 상태에서는 연결 가능 강조만으로 부족하다 —
+// 이미 물을 받고 있는 대인지 알 수가 없어 같은 대에 또 끌어다 놓게 된다.
+// 되살리는 일은 CSS 가 한다(WaterConnectionOverlay.css). 여기서는 몸통에
+// 표를 붙였다 떼기만 한다 — 리렌더 없이 켜지고 꺼져야 하는 표시라
+// React 상태로 두지 않았다.
 // ─────────────────────────────────────────────
 
 const VALID_TARGET_CLASS = 'water-drop-ok';
+/** 송수를 끄는 중임을 알리는 몸통 표 — 감춘 선을 되살리는 열쇠 */
+const DRAGGING_CLASS = 'water-connect-dragging';
 
 interface Options {
   /** 출발 설비 id (`data-token-id` 와 같아야 한다) */
@@ -29,8 +38,9 @@ export function useWaterConnectDrag({ fromId, fromType, fromName, disabled }: Op
 
   const full = isSourceFull(connections, fromId, fromType);
 
-  // 드래그를 시작하면 연결 가능한 대상에 표시를 켠다
+  // 드래그를 시작하면 연결 가능한 대상에 표시를 켜고, 감춘 선을 되살린다
   const highlight = useCallback(() => {
+    document.body.classList.add(DRAGGING_CLASS);
     for (const el of document.querySelectorAll<HTMLElement>('[data-water-type]')) {
       const toId   = el.getAttribute('data-token-id');
       const toType = el.getAttribute('data-water-type');
@@ -42,6 +52,7 @@ export function useWaterConnectDrag({ fromId, fromType, fromName, disabled }: Op
   }, [connections, fromId, fromType]);
 
   const clearHighlight = useCallback(() => {
+    document.body.classList.remove(DRAGGING_CLASS);
     for (const el of document.querySelectorAll<HTMLElement>('.' + VALID_TARGET_CLASS)) {
       el.classList.remove(VALID_TARGET_CLASS);
     }

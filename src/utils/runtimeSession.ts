@@ -63,11 +63,11 @@ export interface TokenSessionState {
    */
   arrivalTargetAt: Record<string, number>;
 
-  /**
-   * 이동 카운트다운 완료 절대 시각 (ms timestamp).
-   * arrivalTargetAt 와 동일한 방식으로 복원 시 정확한 남은 시간 계산.
+  /*
+   * 이동 카운트다운 완료 시각(`moveTargetAt`)은 2026-09-02 에 없앴다 —
+   * 토큰 좌측의 이동 카운트다운 표시가 사라지면서 복원할 것이 없어졌다.
+   * 예전 저장분에는 키가 남아 있으나 읽지 않는다(JSON 여분 필드라 무해).
    */
-  moveTargetAt?: Record<string, number>;
 
   /**
    * createToken 카운터 상태.
@@ -129,7 +129,6 @@ export function loadTokenSession(): TokenSessionState | null {
     }
 
     parsed.arrivalTargetAt = parsed.arrivalTargetAt ?? {};
-    parsed.moveTargetAt    = parsed.moveTargetAt    ?? {};
     parsed.counters        = parsed.counters        ?? {};
 
     return parsed;
@@ -549,6 +548,152 @@ export function loadPostsSession(): PostsSessionState | null {
 }
 
 // ─────────────────────────────────────────────
+// 층별 단위지휘관
+//
+// 「어느 층을 누가 맡았는가」는 지휘관의 명시적 결정이라 임시의료소장·
+// 자원대기소장과 같은 성격이다. 다만 저 둘은 현장에 **세우는 거점**이라
+// 설치 여부와 한 몸이고(KEY_POSTS), 이쪽은 층마다 하나씩 붙는 지정이라
+// 형태가 다르다 — 키를 따로 둔다.
+//
+// 값은 토큰 id 다. 이름 문자열로 두면 같은 이름의 토큰이 새로 생겼을 때
+// 지명이 엉뚱하게 되살아난다(자원대기소장이 오래 그랬다).
+// ─────────────────────────────────────────────
+
+const KEY_UNIT_COMMANDER = 'tactical-board.runtime.unit-commander';
+
+/**
+ * 무리 하나 — **지휘관 토큰 id 를 열쇠로** 담는다.
+ *
+ * `scope` 는 그 무리가 성립하는 범위다.
+ *   `'3F-center'` 같은 구역 키 — 건물 안. 층마다 지휘관이 하나다.
+ *   `'exterior'`               — 건물 밖(A~D면 전체). 면 경계는 실제 경계가
+ *                                아니라 표현상의 칸이라 면을 옮겨도 무리가
+ *                                유지된다. 밖에서는 임무 단위로 여럿 설 수 있다.
+ */
+export interface UnitCommandGroup {
+  scope:   string;
+  members: string[];
+}
+
+/** 지휘관 토큰 id → 그 무리 */
+export type UnitCommandGroupMap = Record<string, UnitCommandGroup>;
+
+export interface UnitCommandSessionState {
+  groups: UnitCommandGroupMap;
+}
+
+/** 구버전 키 보정 — 2026-09-04 이전에는 **층 id**(`3F`)였다 */
+function toZoneKey(key: string): string {
+  return key.endsWith('-center') || key.startsWith('face-') ? key : `${key}-center`;
+}
+
+/** 구역 키 → 무리의 범위. 방면과 계단실은 각각 하나로 묶인다
+    (utils/unitCommandScope.ts 와 같은 규칙 — 여기 두는 것은 구버전 저장분
+    끌어올리기 전용이라, 그쪽을 import 하면 순환이 된다) */
+function toScope(zoneKey: string): string {
+  if (zoneKey.startsWith('face-')) return 'exterior';
+  if (zoneKey.endsWith('-stair'))  return 'stairwell';
+  return zoneKey;
+}
+
+export function saveUnitCommanderSession(state: UnitCommandSessionState): void {
+  try {
+    sessionStorage.setItem(KEY_UNIT_COMMANDER, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+export function loadUnitCommanderSession(): UnitCommandSessionState | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_UNIT_COMMANDER);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isPlainRecord(parsed)) return null;
+
+    // ── 현재 형식: { groups: { <지휘관id>: { scope, members } } } ──
+    if (isPlainRecord(parsed.groups)) {
+      const groups: UnitCommandGroupMap = {};
+      for (const [cmdId, g] of Object.entries(parsed.groups)) {
+        if (!isPlainRecord(g) || typeof g.scope !== 'string' || !g.scope) continue;
+        const members = Array.isArray(g.members)
+          ? g.members.filter((id): id is string => typeof id === 'string' && !!id)
+          : [];
+        groups[cmdId] = { scope: g.scope, members };
+      }
+      return { groups };
+    }
+
+    /*
+     * ── 구버전 두 가지를 끌어올린다 ──
+     *   ① `{ '3F': 'token-id' }`                     (2026-09-02 이전)
+     *   ② `{ commanders: {zoneKey→id}, members: {} }` (2026-09-08 이전)
+     * 둘 다 자리(구역)를 열쇠로 삼았다. 지금은 지휘관을 열쇠로 삼고 자리는
+     * `scope` 로 들고 있다 — 방면 사이 이동에서 무리가 풀리지 않게 하려면
+     * 자리보다 사람이 기준이어야 하기 때문이다.
+     */
+    const legacyFlat    = Object.values(parsed).some(v => typeof v === 'string');
+    const rawCommanders = legacyFlat ? parsed : parsed.commanders;
+    const rawMembers    = legacyFlat ? {}     : parsed.members;
+    if (!isPlainRecord(rawCommanders)) return { groups: {} };
+
+    const members: Record<string, string[]> = {};
+    if (isPlainRecord(rawMembers)) {
+      for (const [key, ids] of Object.entries(rawMembers)) {
+        if (Array.isArray(ids)) {
+          const clean = ids.filter((id): id is string => typeof id === 'string' && !!id);
+          if (clean.length > 0) members[toZoneKey(key)] = clean;
+        }
+      }
+    }
+
+    const groups: UnitCommandGroupMap = {};
+    for (const [key, tokenId] of Object.entries(rawCommanders)) {
+      if (typeof tokenId !== 'string' || !tokenId) continue;
+      const zoneKey = toZoneKey(key);
+      groups[tokenId] = { scope: toScope(zoneKey), members: members[zoneKey] ?? [] };
+    }
+    return { groups };
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
+// 소화전 순환보수 줄
+//
+// 소화전 id → 그 소화전에 붙은 순환대 **순서 있는** 목록.
+//
+// **순서가 곧 자리다** — 1번 소비(중요물탱크에 보수) · 2번 대기(만수로 바로 뒤) ·
+// 3번 보수·이동(소화전에서 받고 온다). 1번이 비면 줄 끝으로 보내 한 칸씩 당긴다.
+// 그래서 배열이지 집합이 아니다. → docs/WATER_SUPPLY_MISSION_PLAN.md §3.3
+// ─────────────────────────────────────────────
+
+const KEY_CIRCULATION = 'tactical-board.runtime.hydrant-circulation';
+
+/** 소화전 id → 순환대 토큰 id 목록(순서 있음) */
+export type CirculationMap = Record<string, string[]>;
+
+export function saveCirculationSession(slots: CirculationMap): void {
+  try {
+    sessionStorage.setItem(KEY_CIRCULATION, JSON.stringify(slots));
+  } catch { /* ignore */ }
+}
+
+export function loadCirculationSession(): CirculationMap | null {
+  try {
+    const raw = sessionStorage.getItem(KEY_CIRCULATION);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isPlainRecord(parsed)) return null;
+
+    const slots: CirculationMap = {};
+    for (const [hydrantId, ids] of Object.entries(parsed)) {
+      if (!Array.isArray(ids)) continue;
+      const list = ids.filter((id): id is string => typeof id === 'string' && !!id);
+      if (list.length > 0) slots[hydrantId] = list;
+    }
+    return slots;
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────────
 // 전체 초기화 (새 훈련 시작 시 호출)
 // ─────────────────────────────────────────────
 
@@ -566,5 +711,9 @@ export function clearRuntimeSession(): void {
     sessionStorage.removeItem(KEY_WATER_LEVELS);
     sessionStorage.removeItem(KEY_VICTIM_SEARCH);
     sessionStorage.removeItem(KEY_CHECKLIST);
+    sessionStorage.removeItem(KEY_UNIT_COMMANDER);
+    sessionStorage.removeItem(KEY_CIRCULATION);
+    // 설비 상태메시지 — 빠져 있었다. 새 훈련에 지난 훈련의 「소화전 파손」이 남았다
+    sessionStorage.removeItem(KEY_EQUIP_MSG);
   } catch { /* ignore */ }
 }

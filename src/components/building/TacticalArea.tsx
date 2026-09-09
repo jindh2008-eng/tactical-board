@@ -102,10 +102,11 @@ export function TacticalArea({
   const gridTemplateRows =
     `${C_FACE_HEIGHT}px ${midRowParts.join(' ')} minmax(${A_FACE_MIN_HEIGHT}px, 1fr)`;
 
-  // ── 이벤트 토큰 크기 ──
+  // ── 층 행 하나의 높이 ──
   // 층 행은 전부 같은 높이다. midRowParts 가 블록(옥상 / 지상나머지 / 지하)별
   // 높이이고 각 블록 안에서 행이 균등 분할되므로, 행 하나의 높이는 언제나
-  // `건물높이 / 총가중치` 다. 이 값 하나로 토큰 크기가 정해진다.
+  // `건물높이 / 총가중치` 다. 층 크기를 따르는 것들(현장요소 토큰·옥내외
+  // 소화전)이 전부 이 값 하나에서 나온다.
   // → docs/SCREEN_STAGE_PLAN.md §6.6
   const floorRowH      = totalWeight > 0 ? buildingHeight / totalWeight : 0;
   const eventTokenSize = computeEventTokenSize(floorRowH);
@@ -159,6 +160,8 @@ export function TacticalArea({
       className="tactical-area"
       style={{
         '--above-pct': abovePct,
+        // 층 행 하나의 높이(캔버스 px). 층고에 비례해야 하는 장식물(소화전 등)이 읽는다.
+        '--floor-row-h': `${floorRowH.toFixed(1)}px`,
         [EVENT_TOKEN_SIZE_VAR]: `${eventTokenSize.toFixed(1)}px`,
         gridTemplateColumns,
         gridTemplateRows,

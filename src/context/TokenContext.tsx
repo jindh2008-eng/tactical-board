@@ -15,6 +15,8 @@ import { summarizeUnits, summaryText, toUnitRefs } from '../utils/dispatchSummar
 import { floorIdLabel } from '../utils/logLabels';
 import { useResourceStatus } from './ResourceStatusContext';
 import { useLog } from './LogContext';
+import { useRoleRelease } from './RoleReleaseContext';
+import { conflictingMissionLabels } from '../config/unitMissions';
 
 const ZONE_RESOURCE = 'standby-resource';
 const ZONE_STANDBY1 = 'standby-standby1';
@@ -27,7 +29,6 @@ const ZONE_STANDBY1 = 'standby-standby1';
 const DISMOUNT_ZONES = new Set<string>([ZONE_RESOURCE, ZONE_STANDBY1]);
 import { generateId } from '../utils/settingsStorage';
 
-const MEDICAL_TARGET_ZONE = 'standby-imminent';
 const ARRIVAL_TARGET_ZONE = 'standby-standby1';
 
 // ─────────────────────────────────────────────
@@ -36,12 +37,10 @@ const ARRIVAL_TARGET_ZONE = 'standby-standby1';
 
 interface TimingConfig {
   rescueTimeSec: number;
-  moveTimeSec:   number;
 }
 
 const DEFAULT_TIMING_CONFIG: TimingConfig = {
   rescueTimeSec: 30,
-  moveTimeSec:   30,
 };
 
 // ─────────────────────────────────────────────
@@ -66,8 +65,6 @@ function defaultUnitType(color: TokenColor): string {
 export type TokenPos = Pos;
 
 export interface MoveTokenOptions {
-  /** true: 이동 카운트다운 없이 이동 (arrival 자동도착 전용) */
-  suppressMoveCountdown?: boolean;
   /** true: 연동 펌프를 따라 움직이지 않는다 (연쇄 이동 자기 자신) */
   skipPairMove?: boolean;
 }
@@ -77,7 +74,6 @@ interface TokenContextValue {
   logs:               LogEntry[];
   positions:          Record<string, TokenPos>;
   medicalCountdowns:  Record<string, number>;
-  moveCountdowns:     Record<string, number>;
   arrivalCountdowns:  Record<string, number>;
   createToken: (
     baseKey:     string,
@@ -108,6 +104,13 @@ interface TokenContextValue {
   setAerialTarget:      (tokenId: string, target: { floorId: string; x: number; y: number; deployLabel: string } | null) => void;
   moveAerialTarget:     (tokenId: string, x: number, y: number, floorId?: string) => void;
   setAerialSprayTarget: (tokenId: string, target: { floorId: string; x: number; y: number } | null) => void;
+  /**
+   * 바스켓 탑승/하차. `aerialTokenId` 가 null 이면 내린다.
+   *
+   * 역할 해제·송수 해제 같은 곁일은 **부르는 쪽이** 한다(AerialOverlay) —
+   * 그 Context 들이 TokenProvider 보다 안쪽에 있어 여기서는 닿지 않는다.
+   */
+  setBasketRider:    (tokenId: string, aerialTokenId: string | null) => void;
   changeTokenColor:  (tokenId: string, color: TokenColor) => void;
   addLog:            (entry: Omit<LogEntry, 'id' | 'timestamp' | 'elapsedSec' | 'wallClockMs'>) => void;
 }
@@ -167,6 +170,8 @@ export function TokenProvider({
   // `useTokens().addLog` / `useTokens().logs` 를 그대로 쓸 수 있게 다시 노출한다.
   // docs/EVENT_LOG_PLAN.md E-1
   const { logs, addLog } = useLog();
+  // 토큰이 움직이면 그가 맡고 있던 역할을 놓게 한다 (RoleReleaseContext 주석)
+  const { releaseRolesFor } = useRoleRelease();
 
   // ── 세션 데이터 1회 로드 (최초 렌더에서만) ──────────────────────────
   const sessionDataRef = useRef<
@@ -223,25 +228,6 @@ export function TokenProvider({
 
   const [medicalCountdowns, setMedicalCountdowns] = useState<Record<string, number>>({});
 
-  const moveTargetAtRef = useRef<Record<string, number>>({});
-
-  const [moveCountdowns, setMoveCountdowns] = useState<Record<string, number>>(() => {
-    const s = getSession();
-    if (s && s.tokens.length > 0 && s.moveTargetAt) {
-      const now = Date.now();
-      const result: Record<string, number> = {};
-      for (const [id, targetAt] of Object.entries(s.moveTargetAt)) {
-        const remaining = Math.ceil((targetAt - now) / 1000);
-        if (remaining > 0) {
-          result[id] = remaining;
-          moveTargetAtRef.current[id] = targetAt;
-        }
-      }
-      return result;
-    }
-    return {};
-  });
-
   /**
    * 도착 카운트다운:
    *  - started=false (훈련 미시작): 항상 빈 객체 (타이머 미작동)
@@ -268,13 +254,11 @@ export function TokenProvider({
 
   const tokensRef     = useRef<UnitToken[]>([]);
   const medicalTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  const moveTimers    = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const arrivalTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const timingRef = useRef<TimingConfig>({ ...DEFAULT_TIMING_CONFIG });
   timingRef.current = {
     rescueTimeSec: timingConfig?.rescueTimeSec ?? DEFAULT_TIMING_CONFIG.rescueTimeSec,
-    moveTimeSec:   timingConfig?.moveTimeSec   ?? DEFAULT_TIMING_CONFIG.moveTimeSec,
   };
 
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);
@@ -283,7 +267,6 @@ export function TokenProvider({
   useEffect(() => {
     return () => {
       Object.values(medicalTimers.current).forEach(clearTimeout);
-      Object.values(moveTimers.current).forEach(clearTimeout);
       Object.values(arrivalTimers.current).forEach(clearTimeout);
     };
   }, []);
@@ -349,24 +332,6 @@ export function TokenProvider({
           });
         } else {
           scheduleArrival(tokenId, delayMs, targetAt);
-        }
-      }
-
-      // 이동 카운트다운 타이머 재등록 (moveTargetAt 기반)
-      if (s.moveTargetAt) {
-        for (const [tokenId, targetAt] of Object.entries(s.moveTargetAt)) {
-          const delayMs = targetAt - now;
-          if (delayMs > 0) {
-            moveTimers.current[tokenId] = setTimeout(() => {
-              delete moveTimers.current[tokenId];
-              delete moveTargetAtRef.current[tokenId];
-              setMoveCountdowns(prev => {
-                const next = { ...prev };
-                delete next[tokenId];
-                return next;
-              });
-            }, delayMs);
-          }
         }
       }
     } else {
@@ -442,14 +407,6 @@ export function TokenProvider({
         }
         return next;
       });
-      setMoveCountdowns(prev => {
-        if (Object.keys(prev).length === 0) return prev;
-        const next: Record<string, number> = {};
-        for (const k of Object.keys(prev)) {
-          if (prev[k] > 1) next[k] = prev[k] - 1;
-        }
-        return next;
-      });
       setArrivalCountdowns(prev => {
         if (Object.keys(prev).length === 0) return prev;
         const next: Record<string, number> = {};
@@ -470,18 +427,15 @@ export function TokenProvider({
       for (const [id, secs] of Object.entries(arrivalCountdowns)) {
         arrivalTargetAt[id] = arrivalTargetAtRef.current[id] ?? (now + secs * 1000);
       }
-      const moveTargetAt: Record<string, number> = { ...moveTargetAtRef.current };
-
       saveTokenSession({
         tokens,
         positions,
         arrivalTargetAt,
-        moveTargetAt,
         counters: counters.current,
       });
     }, 500);
     return () => clearTimeout(timer);
-  }, [tokens, positions, arrivalCountdowns, moveCountdowns]);
+  }, [tokens, positions, arrivalCountdowns]);
 
   // ── 토큰 생성 ───────────────────────────────
   const createToken = useCallback((
@@ -583,6 +537,16 @@ export function TokenProvider({
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
 
+    /*
+     * 역할(단위지휘관·자원대기소장·임시의료소장)은 **그 자리에 있는 사람**이라
+     * 움직이는 순간이 곧 해제다. 같은 구역 안에서 자리만 옮겨도 마찬가지라
+     * zoneChanged 를 따지지 않고 매 이동마다 알린다.
+     *
+     * 지명은 이동한 **뒤에** 이뤄진다(RoleSlot 호출부) — 순서가 반대면 방금
+     * 지명한 것이 곧바로 풀린다.
+     */
+    releaseRolesFor(tokenId, token.label, toZoneKey);
+
     const zoneChanged = token.zoneKey !== toZoneKey;
 
     if (zoneChanged && token.zoneKey === null && toZoneKey !== null) {
@@ -644,34 +608,6 @@ export function TokenProvider({
             fromZoneKey: token.zoneKey ?? 'pool', toZoneKey, auto: false,
           },
         });
-
-        if (!opts?.suppressMoveCountdown) {
-          const moveSec  = timingRef.current.moveTimeSec;
-          const targetAt = Date.now() + moveSec * 1000;
-          moveTargetAtRef.current[tokenId] = targetAt;
-          setMoveCountdowns(prev => ({ ...prev, [tokenId]: moveSec }));
-          if (moveTimers.current[tokenId]) clearTimeout(moveTimers.current[tokenId]);
-          moveTimers.current[tokenId] = setTimeout(() => {
-            delete moveTimers.current[tokenId];
-            delete moveTargetAtRef.current[tokenId];
-            setMoveCountdowns(prev => {
-              const next = { ...prev };
-              delete next[tokenId];
-              return next;
-            });
-          }, moveSec * 1000);
-        }
-      } else {
-        if (moveTimers.current[tokenId]) {
-          clearTimeout(moveTimers.current[tokenId]);
-          delete moveTimers.current[tokenId];
-        }
-        delete moveTargetAtRef.current[tokenId];
-        setMoveCountdowns(prev => {
-          const next = { ...prev };
-          delete next[tokenId];
-          return next;
-        });
       }
     }
 
@@ -703,7 +639,7 @@ export function TokenProvider({
         moveTokenRef.current(id, pumpZone, undefined, { skipPairMove: true });
       }
     }
-  }, [addLog]);
+  }, [addLog, releaseRolesFor]);
 
   // moveToken 이 자기 자신을 다시 부를 수 있게 참조를 들고 있는다.
   // deps 가 [] 라 함수가 다시 만들어지지 않으므로 최초 값 그대로면 충분하다.
@@ -713,6 +649,14 @@ export function TokenProvider({
   const rescueUnit = useCallback((tokenId: string, victimLabel: string) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
+
+    /*
+     * 여기서 자리를 옮기는 것은 `moveToken` 이 아니라 아래 setTokens 다
+     * (구조중 배지를 같은 갱신에 얹어야 해서다). 그래서 역할 해제 알림도
+     * 직접 보내야 한다 — 안 그러면 단위지휘관이 임시의료소에 가 있는 동안
+     * 층 슬롯이 그를 계속 그려 한 토큰이 두 번 보인다.
+     */
+    releaseRolesFor(token.id, token.label, 'medical-post');
 
     setTokens(prev => prev.map(t => {
       if (t.id !== tokenId) return t;
@@ -742,6 +686,16 @@ export function TokenProvider({
     const rescueSec = timingRef.current.rescueTimeSec;
     setMedicalCountdowns(prev => ({ ...prev, [tokenId]: rescueSec }));
 
+    /*
+     * 처치 시간이 끝나면 **「구조중」 배지만 걷는다.** 예전에는 직전대기로
+     * 자동 이동시켰는데, 그 자리를 뜨는 것은 지휘관의 판단이지 시계가 정할
+     * 일이 아니다(2026-09-02). 옮길 때는 임시의료소에서 토큰을 더블클릭한다
+     * (StandbyColumn.tsx — 직전대기로 보낸다).
+     *
+     * 완료 로그는 남긴다 — 「몇 분에 처치가 끝났는가」가 평가 항목이다.
+     * 이동이 없으므로 `rescue` 로 남긴다(`move` 로 남기면 로그판이 출발지→
+     * 도착지 경로를 그리려 든다 — LogPanel.tsx).
+     */
     if (medicalTimers.current[tokenId]) clearTimeout(medicalTimers.current[tokenId]);
     medicalTimers.current[tokenId] = setTimeout(() => {
       delete medicalTimers.current[tokenId];
@@ -750,29 +704,28 @@ export function TokenProvider({
         delete next[tokenId];
         return next;
       });
+      // 임시의료소를 이미 떠났으면 손대지 않는다 — 그쪽은 moveToken 이 정리했다
+      const stillHere = tokensRef.current.find(
+        tk => tk.id === tokenId && tk.zoneKey === 'medical-post',
+      );
+      if (!stillHere) return;
+
       setTokens(prev => prev.map(t => {
         if (t.id !== tokenId || t.zoneKey !== 'medical-post') return t;
-        return {
-          ...t,
-          zoneKey: MEDICAL_TARGET_ZONE,
-          badges:  t.badges.filter(b => b.line1 !== '구조중'),
-        };
+        return { ...t, badges: t.badges.filter(b => b.line1 !== '구조중') };
       }));
-      const done = tokensRef.current.find(tk => tk.id === tokenId);
-      if (done) {
-        addLog({
-          logSource:  'system',
-          logType:    'move',
-          tokenId:    done.id,
-          tokenName:  done.label,
-          tokenColor: done.color,
-          fromZoneId: 'medical-post',
-          toZoneId:   MEDICAL_TARGET_ZONE,
-          note:       '임시의료소 처치 완료 → 직전대기 자동 이동',
-        });
-      }
+      addLog({
+        logSource:  'system',
+        logType:    'rescue',
+        tokenId:    stillHere.id,
+        tokenName:  stillHere.label,
+        tokenColor: stillHere.color,
+        fromZoneId: 'medical-post',
+        toZoneId:   '',
+        note:       '임시의료소 처치 완료',
+      });
     }, rescueSec * 1000);
-  }, [addLog]);
+  }, [addLog, releaseRolesFor]);
 
   // ── 배지 ────────────────────────────────────
   const addBadge = useCallback((tokenId: string, badge: Omit<TokenBadge, 'id'>) => {
@@ -827,9 +780,14 @@ export function TokenProvider({
     if (!token) return;
     const prev_tags = token.missionTags ?? [];
     const exists = prev_tags.some(m => m.label === tag.label);
+    /*
+     * 함께 설 수 없는 임무는 켜는 쪽이 이긴다 — 1선펌프와 중요물탱크가 그렇다.
+     * 「단위」와는 겹칠 수 있다(config/unitMissions.ts).
+     */
+    const conflicts = conflictingMissionLabels(tag.label);
     const next_tags = exists
       ? prev_tags.filter(m => m.label !== tag.label)
-      : [...prev_tags, tag];
+      : [...prev_tags.filter(m => !conflicts.includes(m.label)), tag];
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, missionTags: next_tags.length > 0 ? next_tags : undefined } : t
     ));
@@ -978,6 +936,26 @@ export function TokenProvider({
     ));
   }, []);
 
+  const setBasketRider = useCallback((tokenId: string, aerialTokenId: string | null) => {
+    const rider  = tokensRef.current.find(t => t.id === tokenId);
+    const aerial = tokensRef.current.find(
+      t => t.id === (aerialTokenId ?? rider?.ridingOn),
+    );
+    if (!rider || rider.ridingOn === (aerialTokenId ?? undefined)) return;
+
+    setTokens(prev => prev.map(t =>
+      t.id === tokenId ? { ...t, ridingOn: aerialTokenId ?? undefined } : t
+    ));
+
+    addLog({
+      logType: 'post', tokenId, tokenName: rider.label, tokenColor: rider.color,
+      fromZoneId: rider.zoneKey ?? '', toZoneId: rider.zoneKey ?? '',
+      note: aerialTokenId
+        ? `${aerial?.label ?? '고가차'} 바스켓 탑승: ${rider.label}`
+        : `${aerial?.label ?? '고가차'} 바스켓 하차: ${rider.label}`,
+    });
+  }, [addLog]);
+
   const changeTokenColor = useCallback((tokenId: string, color: TokenColor) => {
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, color } : t
@@ -985,9 +963,15 @@ export function TokenProvider({
   }, []);
 
   const removeToken = useCallback((tokenId: string) => {
+    // 사라지는 사람이 역할을 들고 있으면 먼저 놓는다 — 이동과 같은 이유다
+    const gone = tokensRef.current.find(t => t.id === tokenId);
+    if (gone) releaseRolesFor(gone.id, gone.label, null);
+
     setTokens(prev => {
       const target = prev.find(t => t.id === tokenId);
       if (!target) return prev;
+      // 태운 사람을 먼저 내린다 — 지워진 차를 붙들고 있으면 아무도 안 그린다
+      prev = prev.map(t => (t.ridingOn === tokenId ? { ...t, ridingOn: undefined } : t));
       // 함께 만들어진 짝(진압대+펌프)은 동승 중일 때만 같이 지운다.
       // 대기 박스를 떠나 따로 움직이기 시작한 뒤에는 각자 지운다 —
       // 상황판에 배치해 둔 펌프가 진압대를 지웠다고 함께 사라지면 안 된다.
@@ -1006,13 +990,13 @@ export function TokenProvider({
       }
       return prev.filter(t => !doomed.has(t.id));
     });
-  }, []);
+  }, [releaseRolesFor]);
 
   return (
     <TokenContext.Provider value={{
-      tokens, logs, positions, medicalCountdowns, moveCountdowns, arrivalCountdowns,
+      tokens, logs, positions, medicalCountdowns, arrivalCountdowns,
       createToken, moveToken, setArrivalOrder, removeToken, rescueUnit,
-      addBadge, removeBadge, clearBadges, toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, moveAerialTarget, setAerialSprayTarget, changeTokenColor, addLog,
+      addBadge, removeBadge, clearBadges, toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, moveAerialTarget, setAerialSprayTarget, setBasketRider, changeTokenColor, addLog,
     }}>
       {children}
     </TokenContext.Provider>

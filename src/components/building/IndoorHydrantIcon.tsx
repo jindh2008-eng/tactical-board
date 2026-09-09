@@ -5,7 +5,6 @@ import { useHydrantState }     from '../../context/HydrantStateContext';
 import { useSettings }         from '../../store/settingsStore';
 import { useTokens }           from '../../context/TokenContext';
 import { useWaterConnectDrag }  from '../../hooks/useWaterConnectDrag';
-import { useDisplayOptions }    from '../../context/DisplayOptionsContext';
 import '../shared/HydrantIcon.css';  // hi-menu 스타일 + hi-pulse 키프레임 공유
 import './IndoorHydrantIcon.css';
 import { stagePortalTarget, stageBounds, rectToStage } from '../../utils/stagePortal';
@@ -41,12 +40,11 @@ export function IndoorHydrantIcon({ floorId }: Props) {
   const broken   = isBroken(id);
   const isSource = mode.type === 'water-connect' && mode.sourceId === id;
 
-  const { showWaterSupply } = useDisplayOptions();
   // 옥내소화전은 토출구를 따로 그릴 자리가 없어 아이콘 전체가 손잡이다
   const { drag } = useWaterConnectDrag({
     fromId: id, fromType: 'indoor_hydrant', fromName: label, disabled: broken,
   });
-  const dragEnabled = showWaterSupply && !broken && mode.type === null;
+  const dragEnabled = !broken && mode.type === null;
 
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({

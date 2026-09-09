@@ -5,6 +5,7 @@ import { useSettings } from '../../store/settingsStore';
 import { ZoneCell } from './ZoneCell';
 import { IndoorHydrantIcon } from './IndoorHydrantIcon';
 import { SiamesePipeIcon } from './SiamesePipeIcon';
+import { UnitCommanderSlot } from './UnitCommanderSlot';
 import './FloorRow.css';
 
 const ACTIVE_FIRE_STATUSES = new Set<FireStatus>(['extension-peak', 'peak', 'seventy', 'half']);
@@ -101,6 +102,8 @@ export function FloorRow({
         {hasIndoorHydrant && floor.id !== 'RF' && (
           <IndoorHydrantIcon floorId={floor.id} />
         )}
+        {/* 단위지휘관 자리 — 소화전 유무·옥상·요약 행과 무관하게 모든 층에 둔다 */}
+        <UnitCommanderSlot floorId={floor.id} />
       </div>
     </div>
   );

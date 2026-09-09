@@ -37,6 +37,23 @@
   --ctr-text-dim:     #7a7670;
   --ctr-roof-bg:      #e4e0d4;
 
+  /*
+   * ── 판 위 칩 두 축 ─────────────────────────
+   * 파랑 = **임무**(그 대가 하는 일 — 1선펌프·중요물탱크)
+   * 보라 = **지휘 역할·계선**(단위지휘관·소장·그 소속)
+   *
+   * 뜻이 다른 두 축이 같은 파랑을 쓰던 것을 갈랐다(2026-09-08). 색으로
+   * 종류를, 채움/테두리로 강약을 말한다 — 색만으로 나누지 않는 이유는
+   * 청색맹에서 파랑↔보라 구분이 약해지기 때문이다.
+   *
+   * 새로 더한 토큰이라 기존 값은 건드리지 않았다 — 설정모드에 영향 없다(P-8).
+   */
+  --chip-mission-bg:     #1668b0;
+  --chip-mission-border: #0f4f88;
+  --chip-command-bg:     #6b3fa0;
+  --chip-command-border: #502c7c;
+  --chip-command-fg:     #502c7c;
+
   --font-main: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
 }
 

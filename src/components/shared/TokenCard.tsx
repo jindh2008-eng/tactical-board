@@ -2,24 +2,31 @@ import { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react
 import ReactDOM from 'react-dom';
 import type { TokenPos } from '../../context/TokenContext';
 import { useTokens } from '../../context/TokenContext';
+import { useUnitCommander } from '../../context/UnitCommanderContext';
+import { groupOfMember, unitCommanderZoneLabel } from '../../utils/unitCommandScope';
 import { useActionMode } from '../../context/ActionModeContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
+import { useHydrantCirculation } from '../../context/HydrantCirculationContext';
+import { useWaterLinePeek } from '../../context/waterLinePeek';
 import { useVictims } from '../../context/VictimContext';
 import type { UnitToken } from '../../types';
 import { PRESET_COLORS } from '../../types/presets';
+import { MISSION_UNIT_COMMANDER } from '../../config/unitMissions';
 import { secsToMmss } from '../../utils/dispatchRoster';
 import { setDragGrabOffset } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import { useWaterLevel }       from '../../context/WaterLevelContext';
-import { useDisplayOptions }   from '../../context/DisplayOptionsContext';
 import { useSettings }         from '../../store/settingsStore';
 import { useTouchDrag } from '../../hooks/useTouchDrag';
 import { isOnTacticalBoard, isOnBuildingFace } from '../../utils/tokenHandles';
 import { useWaterConnectDrag } from '../../hooks/useWaterConnectDrag';
+import { canConnectWater } from '../../utils/waterConnectRules';
 import { VictimCard }       from './VictimCard';
 import { NozzleHandle }     from './NozzleHandle';
 import { LadderHandle }     from './LadderHandle';
 import { UnitStatusBarMenu } from './UnitStatusBarMenu';
+import { WaterDisconnectPopup } from './WaterDisconnectPopup';
+import { BoardListPopup } from './BoardListPopup';
 import { HydrantBarMenu }    from './HydrantBarMenu';
 import './TokenCard.css';
 import { stagePortalTarget, rectToStage } from '../../utils/stagePortal';
@@ -30,6 +37,15 @@ const WATER_UNIT_TYPES  = new Set(['pump', 'water_tank']);
 const AERIAL_UNIT_TYPES = new Set(['aerial', 'ladder']);
 // 관창(진압·구조) + 방수포(펌프·물탱크) — 둘 다 우측 상단 방수 핸들을 쓴다
 const SPRAY_HANDLE_TYPES = new Set(['suppression', 'rescue', 'pump', 'water_tank']);
+/**
+ * 송수 번호 배지를 다는 차종 — 물을 **내주는** 쪽이다.
+ *
+ * 선이 붙은 대의 이름을 판 위에서 좇는 대신, 물을 대주는 차 위에 번호를
+ * 붙여 「이 펌프가 세 대에 물을 대고 있다」를 한눈에 읽게 한다. 「송수라인」을
+ * 꺼 활동대로 가는 선을 감췄을 때 그 정보를 대신 지고 있는 것이 이 배지다
+ * (DisplayOptionsContext).
+ */
+const SUPPLY_BADGE_TYPES = new Set(['pump', 'water_tank']);
 
 function WaterGauge({ levelL, capacityL, token, draggable, showLevel }: {
   levelL: number; capacityL: number; token: UnitToken; draggable: boolean;
@@ -81,6 +97,23 @@ function WaterGauge({ levelL, capacityL, token, draggable, showLevel }: {
   );
 }
 
+/**
+ * 이름표 끝의 번호 — 「진압3」 → `'3'`, 「펌프10」 → `'10'`.
+ *
+ * 송수 배지의 숫자가 곧 **누구인지**를 말하게 하려는 것이다. 빨간 배지에 3이면
+ * 진압3이다 — 색으로 종류를, 숫자로 그 대를 읽는다(2026-09-09 사용자 결정).
+ *
+ * 부대명 접두사를 쓰면 이름이 「거진진압」처럼 되어 번호가 없다
+ * (`computeRosterDisplayName` — utils/dispatchRoster.ts). 직접 만든 대도
+ * 그럴 수 있다. 그때는 **점(●)** 을 찍는다 — 연결 순번으로 되돌리면 같은
+ * 자리에 두 가지 뜻의 숫자가 섞여, 3이 「진압3」인지 「세 번째 선」인지
+ * 알 수 없게 된다. 누구인지는 마우스를 올리면 이름이 나온다.
+ */
+function unitNumberOf(label: string | undefined): string | null {
+  const m = label?.match(/(\d+)\s*$/);
+  return m ? m[1] : null;
+}
+
 // ── statusTag 색상 (컴포넌트 외부 상수로 이동) ──────────
 const STATUS_TAG_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   blue:   { bg: '#0d1e3a', border: '#2255aa', text: '#88bbff' },
@@ -100,15 +133,24 @@ interface Props {
 }
 
 export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect, onDoubleClick }: Props) {
+  const { tokens, moveToken, addLog, toggleMissionTag } = useTokens();
+  const { groups, addMember, removeMember, release } = useUnitCommander();
   const { mode, clearMode }        = useActionMode();
-  const { addConnection, connections } = useWaterConnections();
+  const { addConnection, connections, removeConnection } = useWaterConnections();
+  const { circulationIds }         = useHydrantCirculation();
+  const { setPeekConnId }          = useWaterLinePeek();
   const waterLevel                 = useWaterLevel();
-  const { showWaterSupply }        = useDisplayOptions();
 
   const [barMenu,      setBarMenu]      = useState<{
     left: number; top: number; right: number; bottom: number; width: number; height: number;
   } | null>(null);
   const [isRecent,     setIsRecent]     = useState(false);
+  // 번호 배지에서 연 「송수 해제」 팝업
+  const [supplyPopup,  setSupplyPopup]  = useState<{ connId: string; x: number; y: number } | null>(null);
+  // 「대 N」 칩에서 연 소속대 목록
+  const [memberPopup,  setMemberPopup]  = useState<{ x: number; y: number } | null>(null);
+  // 마우스를 올린 번호 배지의 연결 id
+  const [hoverConnId,  setHoverConnId]  = useState<string | null>(null);
   // 뷰포트 상단 근접 시 오버레이를 아래쪽으로 전환 (좌표 추적 없이 boolean만)
   const [overlayBelow, setOverlayBelow] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -135,6 +177,9 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   const isSource = mode.type !== null &&
     'sourceId' in mode && mode.sourceId === token.id;
   const isInMode = mode.type !== null && !isSource && mode.type !== 'water-connect';
+
+  /** 순환보수 줄에 선 차 — 제 이름으로 송수하지 않는다(CirculationSlot) */
+  const isCirculating = circulationIds.has(token.id);
 
   // ── 이벤트 핸들러 ────────────────────────────
 
@@ -183,11 +228,96 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
     ? []
     : victims.filter(v => v.carriedBy === token.id);
 
+  /*
+   * 이 토큰이 **단위지휘관인가.** 지휘관 위에 다른 출동대를 겹쳐 놓으면
+   * 소속대가 된다 — 층 슬롯에 놓는 것과 같은 결과다(UnitCommanderContext).
+   */
+  const isUnitCommander = !!groups[token.id];
+
+  /*
+   * 이 토큰이 **누구 밑인가.** 표시는 토큰 안쪽 보라 테두리 하나다 —
+   * 선(교차·배율 문제)도, 이름표(너무 크고 판이 복잡해짐)도 아니다.
+   * 한 구역에 지휘관은 하나뿐이라 색만으로 대상이 정해지고, 이름은
+   * 마우스를 올렸을 때 알려 준다.
+   */
+  const memberOf    = groupOfMember(groups, token.id);
+  const commanderOf = memberOf
+    ? tokens.find(t => t.id === memberOf.commanderId) ?? null
+    : null;
+  /*
+   * 소속 표시는 **여기서 정한다.** 호출부가 내려보내던 `member` prop 은 구역마다
+   * 빠뜨릴 수 있어(위 prop 주석) 관계와 표시가 갈라졌다. 관계를 아는 곳이
+   * 곧 표시를 정하는 곳이어야 어디에 그려도 같게 나온다.
+   */
+  /**
+   * 단위지휘관 밑에 든 **소속대**인가.
+   *
+   * 토큰 안쪽에 지휘관 칩과 같은 보라 테두리를 두른다. 현장지휘관은 그 구역을
+   * 단위지휘관을 통해 통제하므로 소속대는 무전 상대가 아닌데, 지워도 안 되고
+   * (현장에 있다) 또렷해도 안 되는 자리다. 한 구역에 지휘관은 하나뿐이라
+   * 「누구 밑인가」는 색만으로 정해진다 — 이름표를 따로 붙이지 않는 이유다.
+   *
+   * **호출부가 내려보내던 값이었다.** 그러면 구역마다 빠뜨릴 수 있고, 실제로
+   * B면(BFaceWithStandby)·대기 패널·순환칸이 넘기지 않아 건물 밖 소속대가
+   * D면에서 B면으로 옮기면 소속이 풀린 것처럼 보였다(2026-09-09). 관계는
+   * 그대로였고 **표시만 사라진 것**이라 오히려 헷갈렸다. 관계를 아는 곳이
+   * 곧 표시를 정하는 곳이어야 어디에 그려도 같게 나온다.
+   */
+  const isMember = memberOf !== undefined;
+
+  /** 이 토큰이 지휘관이면 그 소속대들 */
+  const myMembers = (groups[token.id]?.members ?? [])
+    .map(id => tokens.find(t => t.id === id))
+    .filter((t): t is UnitToken => !!t);
+
+  /**
+   * 그 소속대를 잠깐 밝힌다 — 배지에 마우스를 올린 동안만. null 이면 전부 끈다.
+   *
+   * React 상태로 두지 않는다. 리렌더 없이 켜지고 꺼져야 하는 표시라,
+   * 송수 드래그가 대상을 밝힐 때 쓰는 방식과 같다(useWaterConnectDrag).
+   */
+  /**
+   * 단위지휘관에서 물러난다 — 자리·임무 표시·기록을 함께 정리한다.
+   *
+   * 우클릭 임무 「단위」를 다시 눌러 끄는 것과 같은 결과다. 그쪽은 임무 목록에
+   * 있어 「표시를 끈다」로 읽히는데, 이 단추는 무리를 펼쳐 놓고 누르는 자리라
+   * 「이 사람을 물린다」로 읽힌다 — 같은 일을 두 문맥에서 부르는 것이다.
+   *
+   * 이동으로 물러날 때의 기록(UnitCommanderBridge)과 같은 payload 를 남긴다.
+   * 그래야 분석에서 「어떻게 물러났는가」와 무관하게 한 줄로 셀 수 있다.
+   */
+  function releaseCommander() {
+    const scope = groups[token.id]?.scope;
+    if (!scope) return;
+    release(token.id);
+    if (token.missionTags?.some(m => m.label === MISSION_UNIT_COMMANDER.label)) {
+      toggleMissionTag(token.id, MISSION_UNIT_COMMANDER);
+    }
+    addLog({
+      logType: 'post', tokenId: token.id, tokenName: token.label,
+      fromZoneId: '', toZoneId: '',
+      note:    `단위지휘관 해제: ${unitCommanderZoneLabel(scope)} · ${token.label}`,
+      payload: {
+        kind: 'unit-commander', floorId: scope,
+        commanderTokenId: null, commanderLabel: null,
+      },
+    });
+  }
+
+  function peekMember(memberId: string | null) {
+    for (const m of myMembers) {
+      document.querySelector(`[data-token-id="${m.id}"]`)
+        ?.classList.toggle('token-card-wrapper--member-peek', m.id === memberId);
+    }
+  }
+
   function handleVictimDragOver(e: React.DragEvent<HTMLDivElement>) {
     if (token.unitType === 'hydrant') return;
     // dragover 에서는 값을 못 읽으므로 타입만 확인한다(브라우저가 소문자로 준다).
     const types = e.dataTransfer.types;
-    if (!types.includes('victimid') && !types.includes('victimId')) return;
+    const hasVictim = types.includes('victimid') || types.includes('victimId');
+    const hasToken  = types.includes('tokenid')  || types.includes('tokenId');
+    if (!hasVictim && !(hasToken && isUnitCommander)) return;
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
@@ -195,12 +325,45 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
 
   function handleVictimDrop(e: React.DragEvent<HTMLDivElement>) {
     if (token.unitType === 'hydrant') return;
+
     const victimId = e.dataTransfer.getData('victimId');
-    if (!victimId) return;          // 출동대 드롭 등 — 구역이 처리하게 둔다
+    if (victimId) {
+      e.preventDefault();
+      e.stopPropagation();
+      attachVictimToUnit(victimId, token.id);
+      logDragEvent('TokenCard victim attach', `victim=${victimId} → ${token.label}`);
+      return;
+    }
+
+    // ── 지휘관 위에 겹친 출동대 → 소속대 편입 ──
+    const dropId = e.dataTransfer.getData('tokenId');
+    if (!isUnitCommander || !dropId || dropId === token.id) return;  // 구역이 처리하게 둔다
+    /*
+     * **순환칸 안에서는 소속대를 붙일 수 없다**(2026-09-09 사용자 결정).
+     * 칸 안의 「단위」는 그 순환급수팀 전체의 지휘관이라는 뜻이라, 그 밑에
+     * 따로 대를 매다는 것은 같은 말을 두 번 하는 것이 된다 — 줄에 서 있는
+     * 차들이 이미 무리다. 끌어낸 뒤에 붙이는 것은 그대로 된다.
+     */
+    if (isCirculating) return;
+    const dropped = tokens.find(t => t.id === dropId);
+    if (!dropped || dropped.type === 'agency') return;
+
     e.preventDefault();
     e.stopPropagation();
-    attachVictimToUnit(victimId, token.id);
-    logDragEvent('TokenCard victim attach', `victim=${victimId} → ${token.label}`);
+    // 겹친 대가 다른 구역에서 왔으면 지휘관과 같은 구역으로 들인다.
+    // 편입은 이동 뒤에 한다(이동이 옛 소속을 풀기 때문).
+    if (dropped.zoneKey !== token.zoneKey) moveToken(dropId, token.zoneKey!);
+    addMember(token.id, dropId);
+    addLog({
+      logType: 'post', tokenId: dropId, tokenName: dropped.label,
+      fromZoneId: '', toZoneId: '',
+      note:    `단위지휘관 소속 편입: ${token.label} · ${dropped.label}`,
+      payload: {
+        kind: 'unit-commander', floorId: groups[token.id].scope,
+        commanderTokenId: token.id, commanderLabel: token.label,
+      },
+    });
+    logDragEvent('TokenCard member attach', `${dropped.label} → ${token.label}`);
   }
 
   function handleContextMenu(e: React.MouseEvent) {
@@ -220,7 +383,16 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   function handleClick(e: React.MouseEvent) {
     if (mode.type === 'water-connect' && !isSource) {
       e.stopPropagation();
-      addConnection(mode.sourceId, token.id, mode.sourceType, token.unitType, mode.sourceName);
+      /*
+       * 규칙은 끌어서 잇든 눌러서 잇든 같아야 한다.
+       *
+       * 이 경로에는 검사가 없었다 — 우클릭 「송수」로 들어온 모드에서는
+       * 최대 연결 수도 종류 제한도 그냥 통과했다. 소화전 토출구가 2구인데
+       * 세 번째 연결이 만들어질 수 있었다는 뜻이다.
+       */
+      if (canConnectWater(connections, mode.sourceId, mode.sourceType, token.id, token.unitType)) {
+        addConnection(mode.sourceId, token.id, mode.sourceType, token.unitType, mode.sourceName);
+      }
       clearMode();
       return;
     }
@@ -233,24 +405,54 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   // 출동대 상태메세지: 항상 토큰 위에 표시 (X로 닫기)
   const showStatusMsg = !!token.customNote;
 
+  // ── 송수 번호 배지 ───────────────────────────
+  const supplyLinks = SUPPLY_BADGE_TYPES.has(token.unitType)
+                      && isOnTacticalBoard(token.zoneKey)
+    ? connections.filter(c => c.fromId === token.id)
+    : [];
+
+
+  /*
+   * 짚은 선 — **올린 배지가 우선, 없으면 팝업이 문 것**.
+   *
+   * 마우스를 치우면 짚은 것을 놓지만, 눌러서 팝업을 열었으면 계속 짚고 있는다
+   * (핀). 「송수 해제」를 누르기 직전에 어느 선을 끊는지 보여야 하는데, 팝업이
+   * 뜬 순간 선이 사라지면 확인할 수가 없다.
+   *
+   * 짚는 슬롯은 판 전체에 하나다(waterLinePeek). 팝업이 열려 있는 동안에는
+   * 화면 전체를 덮는 backdrop 이 있어 **다른 배지에 마우스를 올릴 수 없으므로**,
+   * 두 카드가 슬롯을 다툴 일이 없다.
+   */
+  const peekConnId = hoverConnId ?? supplyPopup?.connId ?? null;
+  useEffect(() => {
+    if (peekConnId === null) return;
+    setPeekConnId(peekConnId);
+    // 이 카드가 짚기를 놓을 때만 비운다 — 언마운트(연결이 끊겨 배지가
+    // 사라지는 경우 포함)도 이 경로로 정리된다
+    return () => setPeekConnId(null);
+  }, [peekConnId, setPeekConnId]);
+
   // ── 절대 위치 스타일 ─────────────────────────
   // absPos 는 구역 대비 0~1 정규화 좌표 → 퍼센트로 넘겨 구역 크기 변화에 따라간다
+  //
+  // 배지가 달린 차는 한 칸 위로 올린다(5 → 7). 배지는 토큰 **위**에 서는데
+  // A면 직전대기 띠(`.a-face-band`, z-index 6)가 그 자리를 덮고 있어, 5 로
+  // 두면 띠 아래 깔려 눌리지 않는다 — 실측으로 확인했다(elementFromPoint 가
+  // 띠를 집는다). 토큰 상자 자체의 자리는 그대로라 띠와 겹치는 것은 배지뿐이다.
   const wrapperStyle: React.CSSProperties | undefined = absPos
     ? {
         position:  'absolute',
         left:      `${absPos.x * 100}%`,
         top:       `${absPos.y * 100}%`,
         transform: 'translate(-50%, -50%)',
-        zIndex:    5,
+        zIndex:    supplyLinks.length > 0 ? 7 : 5,
       }
     : undefined;
 
   // ── 카운트다운 ───────────────────────────────
-  const { tokens, medicalCountdowns, moveCountdowns, arrivalCountdowns, setCustomNote } = useTokens();
+  const { medicalCountdowns, arrivalCountdowns, setCustomNote } = useTokens();
   const medicalCountdown = token.zoneKey === 'medical-post'
     ? (medicalCountdowns[token.id] ?? null) : null;
-  const moveCountdown    = medicalCountdown === null
-    ? (moveCountdowns[token.id] ?? null) : null;
   const arrivalCountdown = token.zoneKey === null
     ? (arrivalCountdowns[token.id] ?? null) : null;
 
@@ -313,7 +515,8 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
 
   // ── 수량 소진 (0%) ───────────────────────────
   const isWaterEmpty   = isWaterUnit && waterLevelL === 0;
-  const showWaterGauge = onBoard && isWaterUnit && showWaterSupply;
+  // 게이지는 늘 나온다 — 「송수라인」은 선만 감추는 옵션이다
+  const showWaterGauge = onBoard && isWaterUnit;
 
   // ── CSS 클래스 조합 ──────────────────────────
   const cardClasses = [
@@ -331,9 +534,19 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
 
   // 방수 핸들만 방면 한정 — 건물 내부는 자리가 좁아 부속을 붙이지 않는다.
   // (방수 지점은 건물 내부도 그대로 지정할 수 있다)
+  // 바스켓에 탄 활동대는 관창을 숨긴다 — 관창을 들고 바스켓에 오를 일이 없다.
+  // 송수라인도 탑승할 때 함께 끊긴다(AerialOverlay.boardBasket · 사용자 결정).
+  //
+  // **순환대도 방수포를 쓰지 않는다**(2026-09-09 사용자 결정). 순환보수 중인 차는
+  // 물을 실어 나르는 것이 임무라, 제 물을 방수포로 쏘면 그 임무가 무너진다.
+  // 송수 손잡이를 뗀 것과 짝이다.
   const showNozzle      = isOnBuildingFace(token.zoneKey)
-                          && SPRAY_HANDLE_TYPES.has(token.unitType) && !selectMode;
+                          && SPRAY_HANDLE_TYPES.has(token.unitType) && !selectMode
+                          && !token.ridingOn && !isCirculating;
   // 전개 전에만 띄운다 — 전개 후에는 사다리 끝단을 직접 끌어 옮긴다(AerialOverlay)
+  // 방수포 핸들이 게이지 우측 상단을 차지하는가 — 수량 숫자를 아래로 내릴 조건
+  // (게이지는 펌프·물탱크에만 붙으므로 둘은 늘 같이 나온다)
+  const monitorNozzle   = showNozzle && isWaterUnit;
   const showLadder      = onBoard && AERIAL_UNIT_TYPES.has(token.unitType)
                           && !selectMode && token.aerialTarget == null;
 
@@ -344,12 +557,13 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   return (
     <>
       <div
-        className={`token-card-wrapper${selectMode ? ' token-card-wrapper--select' : ''}${carriedVictims.length > 0 ? ' token-card-wrapper--carrying' : ''}`}
+        className={`token-card-wrapper${selectMode ? ' token-card-wrapper--select' : ''}${carriedVictims.length > 0 ? ' token-card-wrapper--carrying' : ''}${isMember ? ' token-card-wrapper--member' : ''}${supplyLinks.length > 0 ? ' token-card-wrapper--supplying' : ''}${monitorNozzle ? ' token-card-wrapper--monitor-nozzle' : ''}`}
         style={wrapperStyle}
         ref={wrapperRef}
         data-token-id={token.id}
         data-water-type={token.unitType}
         data-touch-drop-target="true"
+        title={commanderOf ? `${commanderOf.label} 단위지휘관 소속` : undefined}
         onDragOver={handleVictimDragOver}
         onDrop={handleVictimDrop}
       >
@@ -408,6 +622,35 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
           </div>
         )}
 
+        {/* ── 송수 배지 — 토큰 위, 상태메세지 아래 ──
+             활동대는 종류로 묶어 개수, 차량은 낱개 순번(위 linkGroups 주석) */}
+        {supplyLinks.length > 0 && (
+          <div className="token-supply-badges">
+            {supplyLinks.map(c => {
+              const target = tokens.find(t => t.id === c.toId);
+              const num    = unitNumberOf(target?.label ?? c.toName);
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`token-supply-badge${(num?.length ?? 0) > 1 ? ' token-supply-badge--wide' : ''}`}
+                  data-color={target?.color ?? 'white'}
+                  // 이 연결의 선은 토큰 한복판이 아니라 이 배지에서 뽑는다
+                  // (WaterConnectionOverlay 의 connectionAnchor)
+                  data-water-anchor={`${c.fromId}:${c.toId}`}
+                  title={`${target?.label ?? c.toName ?? ''} 송수`}
+                  onMouseEnter={() => setHoverConnId(c.id)}
+                  onMouseLeave={() => setHoverConnId(null)}
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    setSupplyPopup({ connId: c.id, x: e.clientX, y: e.clientY });
+                  }}
+                >{num ?? '●'}</button>
+              );
+            })}
+          </div>
+        )}
+
         {/* ── 상단 출동대 상태메세지 ── */}
         {showStatusMsg && (
           <div className="token-status-msg">
@@ -420,31 +663,36 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
           </div>
         )}
 
-        {/* ── 좌측 임무 레이블 (복수, 간격 없이 나란히) ── */}
+        {/* ── 좌측 임무 레이블 ── */}
         {hasMission && (
           <div className="token-mission-labels">
-            {token.missionTags!.map(m => {
-              const col   = STATUS_TAG_COLORS[m.color] ?? STATUS_TAG_COLORS.white;
-              const chars = [...m.label];
-              const cols: string[][] = [];
-              for (let i = 0; i < chars.length; i += 3) cols.push(chars.slice(i, i + 3));
-              return (
-                <div
+            {/*
+              임무 칩은 장식이다 — 딱 하나, **「단위」만 누를 수 있다.**
+              누르면 그 밑의 소속대와 「단위지휘관 해제」가 함께 열린다
+              (2026-09-09 사용자 결정). 지휘 관계를 보고 푸는 자리를 그 표시
+              위에 둔 것이라, 무리를 확인하러 다른 데를 뒤질 일이 없다.
+            */}
+            {token.missionTags?.map(m => (
+              m.label === MISSION_UNIT_COMMANDER.label && isUnitCommander ? (
+                <button
                   key={m.label}
-                  className="token-mission-label"
-                  style={{ background: col.bg, borderColor: col.border, color: col.text }}
-                  aria-label={m.label}
-                >
-                  {cols.map((colChars, ci) => (
-                    <span key={ci} className="token-mission-label__col">
-                      {colChars.map((ch, i) => (
-                        <span key={i} className="token-mission-label__char">{ch}</span>
-                      ))}
-                    </span>
-                  ))}
+                  type="button"
+                  className="token-mission-label token-mission-label--action"
+                  data-mission={m.label}
+                  title={myMembers.length > 0
+                    ? `소속대 ${myMembers.length}대 — 눌러서 목록·해제`
+                    : '단위지휘관 — 눌러서 해제'}
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    setMemberPopup({ x: e.clientX, y: e.clientY });
+                  }}
+                >{m.label}</button>
+              ) : (
+                <div key={m.label} className="token-mission-label" data-mission={m.label} aria-label={m.label}>
+                  {m.label}
                 </div>
-              );
-            })}
+              )
+            ))}
           </div>
         )}
 
@@ -482,7 +730,12 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
             levelL={waterLevelL}
             capacityL={waterCapL}
             token={token}
-            draggable={onBoard && !selectMode}
+            /*
+             * 순환대는 **제 이름으로 송수하지 않는다.** 물은 순환칸에서 나가는
+             * 선 하나로 무리가 함께 보낸다(CirculationSlot). 게이지는 그대로
+             * 두되 손잡이만 뗀다 — 잔량은 여전히 읽어야 한다.
+             */
+            draggable={onBoard && !selectMode && !isCirculating}
             showLevel={realtimeCalcEnabled}
           />
         )}
@@ -506,13 +759,8 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
       {/* 카운트다운 포털 (우측 배지 형태 — 드래그 중 표시 안 됨, 포털 유지) */}
       {medicalCountdown !== null && countdownPortal(
         '',
-        `직전대기 이동까지 ${medicalCountdown}초`,
+        `구조 처치 완료까지 ${medicalCountdown}초`,
         `구조중 ${medicalCountdown}초`,
-      )}
-      {moveCountdown !== null && countdownPortal(
-        'token-countdown--move',
-        `이동 완료까지 ${moveCountdown}초`,
-        moveCountdown,
       )}
       {arrivalCountdown !== null && countdownPortal(
         'token-countdown--arrival',
@@ -526,6 +774,33 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
       )}
       {barMenu && !isHydrant && (
         <UnitStatusBarMenu token={token} anchorRect={barMenu} onClose={handleClose} />
+      )}
+
+      {supplyPopup && (
+        <WaterDisconnectPopup
+          x={supplyPopup.x} y={supplyPopup.y}
+          onDisconnect={() => { removeConnection(supplyPopup.connId); setSupplyPopup(null); }}
+          onClose={() => setSupplyPopup(null)}
+        />
+      )}
+
+      {/* 「단위」 칩을 누르면 무리가 열린다 — 소속대 목록과 지휘관 해제가 한자리에 */}
+      {memberPopup && (
+        <BoardListPopup
+          x={memberPopup.x} y={memberPopup.y}
+          title={myMembers.length > 0 ? `소속대 ${myMembers.length}대` : '소속대 없음'}
+          items={myMembers.map(m => ({ id: m.id, label: m.label, color: m.color }))}
+          actionLabel="소속 해제"
+          onPick={memberId => {
+            const m = myMembers.find(t => t.id === memberId);
+            if (m) removeMember(token.id, m.id, m.label);
+            if (myMembers.length <= 1) setMemberPopup(null);
+          }}
+          onHover={peekMember}
+          footerLabel="단위지휘관 해제"
+          onFooter={() => { peekMember(null); releaseCommander(); setMemberPopup(null); }}
+          onClose={() => { peekMember(null); setMemberPopup(null); }}
+        />
       )}
     </>
   );

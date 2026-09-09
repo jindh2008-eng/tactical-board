@@ -1,0 +1,35 @@
+/* ─────────────────────────────────────────────
+   판 위 안내 말풍선
+
+   「송수 해제」 팝업(WaterDisconnectPopup.css)과 같은 색·테두리·그림자를 쓴다.
+   판 위에 뜨는 작은 창이 두 가지 모양이면 어느 쪽이 눌러야 하는 것인지
+   매번 다시 판단해야 한다.
+
+   가림막이 없다 — 읽는 동안에도 판을 계속 조작할 수 있어야 한다.
+   ─────────────────────────────────────────────*/
+
+.board-notice {
+  position:      fixed;
+  z-index:       9903;
+  transform:     translate(-50%, -125%);
+  max-width:     320px;
+  padding:       9px 14px;
+  background:    #0e1822;
+  border:        1.5px solid #2255aa;
+  border-radius: 6px;
+  box-shadow:    0 4px 16px rgba(0, 0, 0, 0.6);
+  color:         #88ccff;
+  font-size:     0.80rem;
+  font-weight:   700;
+  line-height:   1.45;
+  text-align:    center;
+  user-select:   none;
+  cursor:        default;
+  animation:     board-notice-in 0.14s ease-out;
+}
+
+/* 아래에서 살짝 올라오며 뜬다 — 어디서 나온 말인지 눈이 따라간다 */
+@keyframes board-notice-in {
+  from { opacity: 0; transform: translate(-50%, -110%); }
+  to   { opacity: 1; transform: translate(-50%, -125%); }
+}

@@ -158,6 +158,22 @@ export interface UnitToken {
    * `eventId`가 있으면 현장요소 토큰을 직접 겨눈 것이다 — `floorId`에는 그 토큰의 배치 구역이 들어간다.
    */
   sprayTarget?: { x: number; y: number; floorId?: string; label?: string; eventId?: string } | null;
+  /**
+   * 탑승한 고가·굴절차 토큰 id — **바스켓에 타고 있다는 뜻이다.**
+   *
+   * 국내(강원) 고가·굴절차는 운전원이 1명이라 바스켓을 운용하려면 활동대가
+   * 따로 부서돼 올라타야 한다. 그것을 판에 옮긴 것이 이 값이다.
+   *
+   * `zoneKey` 는 **그대로 둔다**(차가 선 방면). 자리를 옮기는 것이 아니라
+   * 그리는 데만 바뀌는 것이라, 방수 판정·대기 이동·로그가 보는 zoneKey 를
+   * 건드리면 그 분기 전부에 새 경우가 생긴다. 단위지휘관이 같은 방식이다 —
+   * 토큰은 구역에 있고 슬롯이 그린다.
+   *
+   * 그리는 곳은 AerialOverlay 의 탑승 층이고, 구역 렌더는 이 값이 있는 토큰을
+   * 뺀다(ZoneCell·ExteriorZone). **그리는 쪽이 사라지면 반드시 내려야 한다** —
+   * 전개가 풀린 차에 태운 채로 두면 아무도 안 그려 토큰이 사라진다.
+   */
+  ridingOn?: string;
   aerialTarget?: { floorId: string; x: number; y: number; deployLabel: string } | null;  // 고가차/굴절차 전개 지점
   aerialSprayTarget?: { floorId: string; x: number; y: number } | null;                  // 고가차/굴절차 방수 지점
 }
@@ -240,7 +256,35 @@ export type LogPayload =
    * 소방 SOP상 지휘관의 명시적 결정이고 **"언제 세웠는가"가 평가 항목**이다.
    */
   | { kind: 'post-install'; post: PostKind; installed: boolean }
-  | { kind: 'post-chief';   post: PostKind; chiefTokenId: string | null; chiefLabel: string | null };
+  | { kind: 'post-chief';   post: PostKind; chiefTokenId: string | null; chiefLabel: string | null }
+
+  /**
+   * 층별 단위지휘관 지정/해제. 거점(post)이 아니라 **층에 붙는 지정**이라
+   * 따로 둔다 — 임시의료소·자원대기소는 하나씩뿐이지만 이쪽은 층마다 있다.
+   */
+  | { kind: 'unit-commander'; floorId: string; commanderTokenId: string | null; commanderLabel: string | null }
+
+  /**
+   * 급수 임무 자동 지정·해제 — 「중요」·「1선」·「순환급수」.
+   *
+   * 이 셋은 손으로 붙이지 않는다(connection 과 배치에서 파생된다 —
+   * utils/waterMissions.ts). 그래서 **언제 무엇이 세워졌는지는 로그에만 남는다.**
+   * 「몇 분에 중요물탱크를 지정했는가」가 평가 항목이다.
+   */
+  | { kind: 'water-mission'; tokenId: string; tokenLabel: string;
+      missionLabel: string; assigned: boolean }
+
+  /**
+   * 순환보수 줄 — 배치·해제·교대.
+   *
+   * `position` 은 배치 시점의 줄 번호다(1번 소비 · 2번 대기 · 3번 보수·이동).
+   * 교대 간격을 이어 붙이면 순환 주기가 나오고, 대수와 소화전 거리로
+   * 필요 대수를 역산할 수 있다 — docs/WATER_SUPPLY_MISSION_PLAN.md §6.2.
+   * 훈련 화면은 부족을 벌하지 않으므로(같은 문서 §6.4) **판정은 전부 여기서 나온다.**
+   */
+  | { kind: 'circulation'; action: 'assign' | 'release' | 'rotate';
+      hydrantId: string; hydrantName: string | null;
+      tokenId: string; tokenLabel: string | null; position: number | null };
 
 /** 현장에 세우는 거점 */
 export type PostKind = 'medical' | 'resource';

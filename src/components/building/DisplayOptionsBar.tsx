@@ -19,7 +19,7 @@ import './DisplayOptionsBar.css';
  */
 
 const ITEMS: { key: DisplayOptionKey; label: string }[] = [
-  { key: 'waterSupply', label: '송수·수량' },
+  { key: 'waterLine',   label: '송수라인' },
   { key: 'spray',       label: '방수 표시' },
   { key: 'controlLine', label: '통제선'   },
   { key: 'victims',     label: '구조대상자' },
@@ -30,7 +30,7 @@ export function DisplayOptionsBar() {
   const opts = useDisplayOptions();
 
   const checked: Record<DisplayOptionKey, boolean> = {
-    waterSupply: opts.showWaterSupply,
+    waterLine:   opts.showWaterLine,
     spray:       opts.showSpray,
     controlLine: opts.showControlLine,
     victims:     opts.showAllVictims,

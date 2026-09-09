@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import type { UnitToken } from '../../types';
 import { useTokens }            from '../../context/TokenContext';
 import { useWaterConnections }  from '../../context/WaterConnectionContext';
-import { useDisplayOptions }    from '../../context/DisplayOptionsContext';
 import { useHandleDrag }        from '../../hooks/useHandleDrag';
 import { sprayBlockReason }     from '../../utils/waterSupply';
 import { useWaterLevel }         from '../../context/WaterLevelContext';
@@ -34,7 +33,6 @@ interface Props {
 export function NozzleHandle({ token }: Props) {
   const { setSprayState, setAerialSprayTarget, setStatusTag } = useTokens();
   const { connections }       = useWaterConnections();
-  const { showWaterSupply }   = useDisplayOptions();
   const waterLevel            = useWaterLevel();
   const hintTimerRef          = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hostRef               = useRef<HTMLDivElement>(null);
@@ -43,7 +41,7 @@ export function NozzleHandle({ token }: Props) {
   const isSpraying = isMonitor ? token.aerialSprayTarget != null : token.sprayState != null;
   // 방수포는 연결이 필요 없지만 제 수량이 0이면 못 쏜다
   const blockReason = sprayBlockReason(
-    showWaterSupply, connections, token.id, token.unitType, waterLevel?.emptyVehicleIds,
+    connections, token.id, token.unitType, waterLevel?.emptyVehicleIds,
   );
   const canSpray = blockReason === null;
 

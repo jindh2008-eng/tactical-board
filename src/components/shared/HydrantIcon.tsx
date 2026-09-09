@@ -6,7 +6,6 @@ import { useSettings }    from '../../store/settingsStore';
 import { useTokens }      from '../../context/TokenContext';
 import { useWaterConnections } from '../../context/WaterConnectionContext';
 import { useWaterConnectDrag }  from '../../hooks/useWaterConnectDrag';
-import { useDisplayOptions }    from '../../context/DisplayOptionsContext';
 import './HydrantIcon.css';
 import { stagePortalTarget, stageBounds, rectToStage } from '../../utils/stagePortal';
 
@@ -31,7 +30,6 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
   const { unitStatusConfig }                                                 = useSettings();
   const { addLog }                                                           = useTokens();
   const { connections }                                                      = useWaterConnections();
-  const { showWaterSupply }                                                  = useDisplayOptions();
   const statusMessages = unitStatusConfig['hydrant'] ?? [];
   const activeMsg      = getEquipmentMessage(id);
 
@@ -51,7 +49,8 @@ export function HydrantIcon({ id, name, distanceM }: Props) {
     fromId: id, fromType: 'hydrant', fromName: logName, disabled: broken,
   });
   const usedOutlets = connections.filter(c => c.fromId === id).length;
-  const showOutlets = showWaterSupply && !broken;
+  // 토출구는 표시옵션과 무관하게 늘 나온다 — 「송수라인」은 선만 감춘다
+  const showOutlets = !broken;
 
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({

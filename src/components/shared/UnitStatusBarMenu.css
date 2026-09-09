@@ -149,6 +149,32 @@
   filter: brightness(1.15);
 }
 
+/* ── 임무 버튼 — 붙었을 때 토큰에 뜨는 칩과 같은 색 ──────────
+   임무는 파랑, 「단위」만 지휘 축이라 보라다(App.css 「판 위 칩 두 축」).
+   고른 것은 테두리와 그림자로 구별한다. */
+.usbm2__popup-btn--mission {
+  background:   var(--chip-mission-bg);
+  border-color: var(--chip-mission-border);
+  color:        #ffffff;
+}
+
+/* 소속 해제 — 지휘 축이라 보라를 쓰되, 떼는 동작이라 테두리형이다 */
+.usbm2__popup-btn--unit-member {
+  background:   transparent;
+  border-color: var(--chip-command-bg);
+  color:        #c9a8ee;
+}
+
+.usbm2__popup-btn--mission[data-mission='단위'] {
+  background:   var(--chip-command-bg);
+  border-color: var(--chip-command-border);
+}
+
+.usbm2__popup-btn--mission.usbm2__popup-btn--active {
+  border-color: #ffffff;
+  box-shadow:   0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+
 .usbm2__check {
   font-size:   0.93rem;
   line-height: 1;

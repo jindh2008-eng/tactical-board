@@ -8,9 +8,9 @@
   display:        flex;
   flex-direction: column;
   align-items:    center;
-  /* 층 행 높이에 비례한다 — TacticalArea 가 --event-token-size 를 심는다.
-     left/top 은 토큰의 **중심**이므로 절반만큼 되돌린다. 크기가 변해도
-     중심이 고정이라 토큰이 제자리에 머문다. → utils/eventLocation.ts */
+  /* 크기는 고정 100px 이다 — TacticalArea 가 --event-token-size 로 심는다
+     (2026-09-02, 층 행 높이 비례에서 되돌림).
+     left/top 은 토큰의 **중심**이므로 절반만큼 되돌린다. → utils/eventLocation.ts */
   width:          var(--event-token-size, 100px);
   transform:      translate(-50%, -50%);
   cursor:         grab;

@@ -19,6 +19,14 @@ const CONNECT_RULES: Record<string, ReadonlySet<string>> = {
   // 펌프·물탱크가 현장 급수의 중심 — 관창·사다리·연결송수구·중계까지
   pump:           new Set(['suppression', 'rescue', 'aerial', 'ladder', 'siamese_pipe', 'pump', 'water_tank']),
   water_tank:     new Set(['suppression', 'rescue', 'aerial', 'ladder', 'siamese_pipe', 'pump', 'water_tank']),
+  /*
+   * 순환보수 칸 — **출발점이 차 한 대가 아니라 무리다.**
+   *
+   * 순환대는 개별 송수라인을 갖지 않는다. 칸에서 나가는 선 하나가 그 소화전에
+   * 붙은 순환대 전체가 함께 보내는 물이다(docs/WATER_SUPPLY_MISSION_PLAN.md §3.2).
+   * 그래서 fromId 는 토큰 id 가 아니라 `circ-<소화전id>` 다.
+   */
+  circulation:    new Set(['pump', 'water_tank']),
 };
 
 /** 이 종류에서 송수를 시작할 수 있는가 */
@@ -30,6 +38,11 @@ export function isWaterSource(unitType: string): boolean {
 const MAX_CONNECTIONS: Record<string, number> = {
   hydrant:      2,   // 토출구 2개
   siamese_pipe: 2,   // 면당 2구
+  /*
+   * 한 무리는 **한 중계 지점만** 먹인다. 둘로 늘리면 소화전에서 들어오는
+   * 1000ℓ/min 을 나눠 갖게 되어 어느 쪽도 채우지 못한다.
+   */
+  circulation:  1,
 };
 
 interface ConnectionLike {
