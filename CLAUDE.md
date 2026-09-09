@@ -27,7 +27,23 @@ npx tsc -b --force   # 타입체크만 (빠른 확인용)
 
 `npm run dev`를 Bash로 실행하지 말고 `.claude/launch.json`의 `tactical-board-dev` 설정으로 preview 도구를 쓴다.
 
-**린트 기준선**: 현재 약 56건의 오류가 이미 존재한다(대부분 `react-refresh/only-export-components` — Provider와 훅을 한 파일에 두는 이 코드베이스의 관례 — 와 `react-hooks/set-state-in-effect`). 새 오류만 회귀로 취급하고, 파일 단위로 비교한다.
+**린트 기준선**: **오류 55건 · 경고 9건**이 이미 존재한다(2026-09-10 실측).
+
+| 건수 | 규칙 | 성격 |
+|---|---|---|
+| 28 | `react-refresh/only-export-components` | Provider와 훅을 한 파일에 두는 이 코드베이스의 관례 |
+| 20 | `react-hooks/refs` | 렌더 중 ref 접근 — Context 다수가 그렇게 짜여 있다 |
+| 7 | `react-hooks/set-state-in-effect` | 효과에서 상태를 세우는 자리 |
+
+**남은 55건에 실제 결함은 없다** — 전부 구조에서 오는 것이라, 고치려면 파일을
+가르거나 Context를 다시 짜야 한다. 규칙 위반 중 유일한 결함이던
+`no-constant-condition` 1건(`UnitStatusBarMenu` 의 `|| true`)은 2026-09-10에
+지웠다.
+
+**새 오류만 회귀로 취급하고, 파일 단위로 비교한다.** 새 파일에 Provider와 훅을
+함께 두면 위 28건이 늘어나는데 그것은 관례를 따른 것이라 회귀가 아니다 — 다만
+**총계가 조용히 불어나므로**, 순수 헬퍼는 `.ts` 로 갈라 두면 늘지 않는다
+(`utils/unitCommandScope.ts` · `context/waterLinePeek.ts` 가 그렇게 갈라 둔 예다).
 
 ```bash
 npm run lint:css   # stylelint — 설정모드 토큰 강제
