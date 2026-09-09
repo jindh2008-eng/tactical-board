@@ -198,7 +198,10 @@ export function UnitStatusBarMenu({ token, anchorRect, onClose }: Props) {
   const tabs: { key: TabKey; label: string }[] = [];
   if (missionPresets.length > 0)                    tabs.push({ key: 'mission',   label: '임무' });
   if (statusPresets.length > 0)                     tabs.push({ key: 'status',    label: '상태' });
-  if (statusMessages.length > 0 || true)            tabs.push({ key: 'statusMsg', label: '상태메세지' });
+  // 상태메세지 탭은 **프리셋이 없어도** 낸다 — 그 안에 「직접입력」이 있다.
+  // (조건이 `statusMessages.length > 0 || true` 로 적혀 있었다. 뒤의 `|| true`
+  //  가 앞을 죽여 늘 참이었으니, 읽는 사람이 조건을 따지게 두지 않는다)
+  tabs.push({ key: 'statusMsg', label: '상태메세지' });
   if (hasFuncButtons)                               tabs.push({ key: 'func',      label: '기능' });
 
   // ── 위/아래 배치 결정 ────────────────────────
