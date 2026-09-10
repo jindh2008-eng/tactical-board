@@ -95,11 +95,19 @@
   flex-wrap: wrap;
 }
 
+/*
+ * 시간 — 무전 STT 와 맞춰 볼 때 가장 먼저 찾는 값이다. 내용(1.22rem)보다 한 단계
+ * 작고 옅게 두되, 어두운 바탕(#080e0e)에서 한눈에 읽혀야 한다.
+ * 0.74rem · #3a6a6a(대비 약 3:1) 는 흐려서 안 보였다(2026-09-11)
+ * → 0.95rem · #8fc0c0(대비 약 10:1) · 굵게.
+ */
 .log-panel__time {
-  font-size: 0.74rem;
-  color: #3a6a6a;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #8fc0c0;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .log-panel__token {
