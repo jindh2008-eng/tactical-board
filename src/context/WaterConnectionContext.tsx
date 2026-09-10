@@ -61,7 +61,7 @@ export function useWaterConnections(): WaterConnectionContextValue {
 // ─────────────────────────────────────────────
 
 export function WaterConnectionProvider({ children }: { children: ReactNode }) {
-  const { tokens, addLog, setSprayState, setAerialSprayTarget } = useTokens();
+  const { tokens, setSprayState, setAerialSprayTarget } = useTokens();
 
   // 마운트 시 sessionStorage에서 복원 (없으면 빈 배열)
   const [connections, setConnections] = useState<WaterConnection[]>(
@@ -95,41 +95,23 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
     const fromName  = fromNameOverride ?? fromToken?.label ?? fromId;
     const toName    = toNameOverride   ?? toToken?.label   ?? toId;
 
-    addLog({
-      logType:    'water-relay',
-      tokenId:    fromId,
-      tokenName:  fromName,
-      tokenColor: fromToken?.color,
-      fromZoneId: fromId,
-      toZoneId:   toId,
-      note:       `${fromName} → ${toName}`,
-    });
+    // 로그는 WaterMissionBridge 가 남긴다 — 이 연결로 바뀐 급수 임무(중요·1선)를
+    // 같은 줄에 붙이려면 순환칸까지 봐야 하는데, 그 Provider 는 여기보다 안쪽이다.
+    // docs/EVENT_LOG_PHRASING_PLAN.md §2.3
 
     setConnections(prev => [
       ...prev,
       { id: `wc-${generateId()}`, fromId, toId, fromType, toType, status: 'active', fromName, toName },
     ]);
-  }, [addLog]);
+  }, []);
 
   // removeConnRef를 먼저 선언하여 아래 useEffect에서 사용 가능하게 함
   const removeConnection = useCallback((id: string) => {
     const conn = connectionsRef.current.find(c => c.id === id);
     if (conn) {
-      const fromToken = tokensRef.current.find(t => t.id === conn.fromId);
-      const toToken   = tokensRef.current.find(t => t.id === conn.toId);
-      // 연결 시점에 저장해 둔 이름을 우선 쓴다 — 소화전·연결송수구처럼 tokens 에 없는
-      // 설비는 이게 없으면 raw id 가 노출된다. 이 필드가 없는(구버전 세션) 연결만 대체한다.
-      const fromName  = conn.fromName ?? fromToken?.label ?? conn.fromId;
-      const toName    = conn.toName   ?? toToken?.label   ?? conn.toId;
-      addLog({
-        logType:    'water-relay',
-        tokenId:    conn.fromId,
-        tokenName:  fromName,
-        tokenColor: fromToken?.color,
-        fromZoneId: conn.fromId,
-        toZoneId:   conn.toId,
-        note:       `${fromName} → ${toName} 해제`,
-      });
+      // 해제 로그는 WaterMissionBridge 가 남긴다 — 연결 목록의 변화를 보고 한 줄로 만든다.
+      // 연결 시점에 박아 둔 이름(fromName/toName)은 그쪽이 그대로 쓴다.
+      const toToken = tokensRef.current.find(t => t.id === conn.toId);
       // 급수가 완전히 끊기면 방수도 멈춘다. 남은 연결이 있으면 유지한다
       // (한 대에 펌프 두 대가 물릴 수 있어 마지막 하나가 빠질 때만 중단해야 한다).
       const remaining = connectionsRef.current.filter(c => c.id !== id);
@@ -143,7 +125,7 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
       }
     }
     setConnections(prev => prev.filter(c => c.id !== id));
-  }, [addLog, setSprayState, setAerialSprayTarget]);
+  }, [setSprayState, setAerialSprayTarget]);
 
   // removeConnRef는 최신 removeConnection을 항상 참조
   useEffect(() => { removeConnRef.current = removeConnection; }, [removeConnection]);

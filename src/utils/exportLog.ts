@@ -18,12 +18,27 @@ const LOG_TYPE_LABELS: Record<LogType, string> = {
   'search':       '인명검색',
   'victim-found': '발견',
   'post':         '거점',
+  'arrival':      '도착',
 };
+
+/** 유형 열 — 같은 종류라도 도착·복귀, 이동·임무지정은 가른다 */
+function typeLabelOf(entry: LogEntry): string {
+  const p = entry.payload;
+  if (p?.kind === 'arrival' && p.mode === 'return') return '복귀';
+  if (p?.kind === 'move' && p.intent === 'mission') return '임무';
+  return LOG_TYPE_LABELS[entry.logType] ?? entry.logType;
+}
 
 // ── 로그 내용 → 한 줄 텍스트 ─────────────────────────────────────────────
 
 function entryContent(entry: LogEntry): string {
   const { logType, tokenName, fromZoneId, toZoneId, note } = entry;
+
+  // 무전 멘트로 남긴 것(도착·이동·임무지정·송수)은 note 가 곧 내용이다 — EVENT_LOG_PHRASING_PLAN §4
+  const p = entry.payload;
+  if (logType === 'arrival')          return note ?? '';
+  if (p?.kind === 'move' && p.intent) return note ?? '';
+  if (p?.kind === 'water-relay')      return note ?? '';
 
   if (logType === 'fire-status') return `${tokenName} ${note ?? ''}`.trim();
   if (logType === 'status-tag')  return `${tokenName} ${note ?? ''}`.trim();
@@ -65,7 +80,7 @@ export function exportLogsAsPdf(logs: LogEntry[], targetName: string): void {
   const title   = `이벤트 로그 — ${targetName || '훈련'} (${dateStr})`;
 
   const rows = [...logs].reverse().map(entry => {
-    const typeLabel = LOG_TYPE_LABELS[entry.logType] ?? entry.logType;
+    const typeLabel = typeLabelOf(entry);
     const content   = entryContent(entry);
     return `<tr><td class="col-time">${entry.timestamp}</td><td class="col-type">${typeLabel}</td><td class="col-content">${content}</td></tr>`;
   }).join('\n');
@@ -116,7 +131,7 @@ export function exportLogsAsCsv(logs: LogEntry[], targetName: string): void {
   const rows = [...logs].reverse().map(entry =>
     [
       escapeCell(entry.timestamp),
-      escapeCell(LOG_TYPE_LABELS[entry.logType] ?? entry.logType),
+      escapeCell(typeLabelOf(entry)),
       escapeCell(entryContent(entry)),
     ].join(',')
   );

@@ -193,8 +193,9 @@ export interface UnitToken {
  * 'search'      : 인명검색 진행 (시작 · 중단 · 2차 전환)
  * 'victim-found': 구조대상자 발견
  * 'post'        : 임시의료소·자원대기소 설치와 소장 지명
+ * 'arrival'     : 도착·복귀 묶음 — 같은 태스크에 들어온 대를 한 줄로 (EVENT_LOG_PHRASING_PLAN §3)
  */
-export type LogType = 'move' | 'rescue' | 'fire-status' | 'status-tag' | 'water-relay' | 'door' | 'smoke' | 'event-status' | 'checklist' | 'training' | 'dispatch' | 'search' | 'victim-found' | 'post';
+export type LogType = 'move' | 'rescue' | 'fire-status' | 'status-tag' | 'water-relay' | 'door' | 'smoke' | 'event-status' | 'checklist' | 'training' | 'dispatch' | 'search' | 'victim-found' | 'post' | 'arrival';
 
 /**
  * 로그의 구조화 데이터.
@@ -242,7 +243,18 @@ export type LogPayload =
    * `from`/`to`는 `utils/logLabels.ts`의 `parseZoneKey()` 결과다.
    */
   | { kind: 'move';  tokenId: string; tokenLabel: string; unitType: string;
-      fromZoneKey: string; toZoneKey: string; auto: boolean }
+      fromZoneKey: string; toZoneKey: string; auto: boolean;
+      /**
+       * 문장의 성격 — 'mission' 은 RIT 임무지정이다(칸이 아니라 임무).
+       * 이 값이 있으면 note 가 완성된 문장이다(EVENT_LOG_PHRASING_PLAN §4). 구버전 저장분엔 없다
+       */
+      intent?: 'move' | 'mission' }
+  /**
+   * 도착·복귀 한 묶음 — 같은 태스크에 들어온 대를 한 줄로 적는다.
+   * `units` 로 대별 이동을 다시 펼칠 수 있다 — 출동대별 이동 기록(G-1)은 잃지 않는다.
+   * 출동대현황·추가출동대로 되돌리면 이 줄에서 그 대가 빠진다(EVENT_LOG_PHRASING_PLAN §2.2)
+   */
+  | { kind: 'arrival'; mode: 'arrive' | 'return'; zoneKey: string; units: ArrivalUnitRef[] }
   /** 방수 개시·중단. `targetFloorId`는 층 id 또는 'face-X' */
   | { kind: 'spray'; tokenId: string; tokenLabel: string;
       state: string | null; fromZoneKey: string | null; targetFloorId: string | null;
@@ -284,7 +296,33 @@ export type LogPayload =
    */
   | { kind: 'circulation'; action: 'assign' | 'release' | 'rotate';
       hydrantId: string; hydrantName: string | null;
-      tokenId: string; tokenLabel: string | null; position: number | null };
+      tokenId: string; tokenLabel: string | null; position: number | null }
+  /**
+   * 송수 연결·해제 한 건 — 무전 멘트 한 줄(「물탱크1 44호 소화전 점령 / 중요물탱크 지정」).
+   * `missions` 는 이 연결로 물을 받는 차에 딸려 바뀐 급수 임무다. 연결로 설명되지 않는
+   * 임무 변화는 따로 `water-mission` 으로 남는다(WaterMissionBridge).
+   */
+  | { kind: 'water-relay'; connected: boolean; connectionId: string;
+      fromId: string; toId: string; fromType: string; toType: string;
+      fromName: string; toName: string; missions: WaterMissionChange[] }
+  /**
+   * 거점 설치(지정)와 소장 지명을 한 번에 — 첫 지명이 곧 설치다.
+   * 「자원대기소 지정, 소장: 지휘운전」(EVENT_LOG_PHRASING_PLAN §2.5)
+   */
+  | { kind: 'post-open'; post: PostKind; chiefTokenId: string | null; chiefLabel: string };
+
+/** 도착·복귀 묶음에 든 출동대 1건 — 어디서 왔는지까지 담는다 */
+export interface ArrivalUnitRef extends DispatchUnitRef {
+  fromZoneKey: string;
+}
+
+/** 송수 연결에 딸려 바뀐 급수 임무 1건 */
+export interface WaterMissionChange {
+  tokenId:      string;
+  tokenLabel:   string;
+  missionLabel: string;
+  assigned:     boolean;
+}
 
 /** 현장에 세우는 거점 */
 export type PostKind = 'medical' | 'resource';

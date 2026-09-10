@@ -13,6 +13,7 @@ import { nextManualArrivalOrder } from '../utils/arrivalOrder';
 import { isPoolZone, mountedPumpIds } from '../utils/unitPairing';
 import { summarizeUnits, summaryText, toUnitRefs } from '../utils/dispatchSummary';
 import { floorIdLabel } from '../utils/logLabels';
+import { classifyMove, movePhrase, missionPhrase } from '../utils/logPhrase';
 import { useResourceStatus } from './ResourceStatusContext';
 import { useLog } from './LogContext';
 import { useRoleRelease } from './RoleReleaseContext';
@@ -92,7 +93,11 @@ interface TokenContextValue {
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
   removeBadge:       (tokenId: string, badgeId: string) => void;
   clearBadges:       (tokenId: string) => void;
-  toggleMissionTag:  (tokenId: string, tag: StatusTag) => void;
+  /**
+   * 임무 칩 켜기/끄기. `silent` 면 로그를 남기지 않는다 — 부르는 쪽이 더 나은 문장으로
+   * 이미 남겼을 때다(RIT 칸 드롭의 「RIT 임무지정」, 송수 연결의 「/ 중요물탱크 지정」).
+   */
+  toggleMissionTag:  (tokenId: string, tag: StatusTag, opts?: { silent?: boolean }) => void;
   setStatusTag:      (tokenId: string, tag: StatusTag | null) => void;
   /**
    * 토큰 말풍선 메모.
@@ -169,7 +174,7 @@ export function TokenProvider({
   // 로그는 LogContext(더 바깥)가 보관한다. 여기서는 위임만 하고, 기존 호출부가
   // `useTokens().addLog` / `useTokens().logs` 를 그대로 쓸 수 있게 다시 노출한다.
   // docs/EVENT_LOG_PLAN.md E-1
-  const { logs, addLog } = useLog();
+  const { logs, addLog, addArrivalLog, retractArrival } = useLog();
   // 토큰이 움직이면 그가 맡고 있던 역할을 놓게 한다 (RoleReleaseContext 주석)
   const { releaseRolesFor } = useRoleRelease();
 
@@ -280,44 +285,64 @@ export function TokenProvider({
     const s = getSession();
     const hasSession = s !== null && s.tokens.length > 0;
 
-    /** 공통: tokenId に delay(ms) 후 대기1단계로 자동 이동 */
-    function scheduleArrival(tokenId: string, delayMs: number, targetAt: number) {
-      arrivalTargetAtRef.current[tokenId] = targetAt;
+    /**
+     * 같은 시각에 도착하는 무리를 **한 타이머**로 대기1단계에 들인다.
+     *
+     * 토큰마다 타이머를 따로 걸면 같은 착대라도 콜백이 따로 돌아, 도착 로그가
+     * 대당 한 줄로 갈라진다. 한 콜백 안에서 처리해야 LogContext 가 한 줄로 묶는다
+     * (docs/EVENT_LOG_PHRASING_PLAN.md §3). 도착 시각 자체는 종전과 같다.
+     */
+    function scheduleArrivalGroup(tokenIds: string[], delayMs: number, targetAt: number) {
+      for (const id of tokenIds) arrivalTargetAtRef.current[id] = targetAt;
 
       const timerId = setTimeout(() => {
-        delete arrivalTimers.current[tokenId];
-        delete arrivalTargetAtRef.current[tokenId];
+        for (const id of tokenIds) {
+          delete arrivalTimers.current[id];
+          delete arrivalTargetAtRef.current[id];
+        }
 
         setArrivalCountdowns(prev => {
           const next = { ...prev };
-          delete next[tokenId];
+          for (const id of tokenIds) delete next[id];
           return next;
         });
 
-        const current = tokensRef.current.find(t => t.id === tokenId);
-        if (!current || current.zoneKey !== null) return;
+        // 그사이 손으로 옮긴 대는 빠진다 — 이미 출동대현황을 떠났다
+        const arriving = tokenIds
+          .map(id => tokensRef.current.find(t => t.id === id))
+          .filter((t): t is UnitToken => !!t && t.zoneKey === null);
+        if (arriving.length === 0) return;
 
+        const arrivingIds = new Set(arriving.map(t => t.id));
         setTokens(prev => prev.map(t =>
-          t.id === tokenId ? { ...t, zoneKey: ARRIVAL_TARGET_ZONE } : t,
+          arrivingIds.has(t.id) ? { ...t, zoneKey: ARRIVAL_TARGET_ZONE } : t,
         ));
-        addLog({
-          logSource:  'system' as const,
-          logType:    'move' as const,
-          tokenId:    current.id,
-          tokenName:  current.label,
-          tokenColor: current.color,
-          fromZoneId: 'pool',
-          toZoneId:   ARRIVAL_TARGET_ZONE,
-          note:       '현장 도착 → 대기1단계 자동 이동',
-        });
+        for (const t of arriving) logAutoArrival(t);
       }, delayMs);
 
-      arrivalTimers.current[tokenId] = timerId;
+      // 무리 전체가 한 타이머를 나눠 쓴다 — 언마운트 정리의 중복 clearTimeout 은 무해하다
+      for (const id of tokenIds) arrivalTimers.current[id] = timerId;
+    }
+
+    /** 자동 도착 1건 — 같은 태스크 안의 것끼리 LogContext 가 한 줄로 묶는다 */
+    function logAutoArrival(t: UnitToken) {
+      addArrivalLog({
+        mode: 'arrive', zoneKey: ARRIVAL_TARGET_ZONE, logSource: 'system',
+        unit: { tokenId: t.id, label: t.label, unitType: t.unitType, fromZoneKey: 'pool' },
+      });
+    }
+
+    /** 키가 같은 것끼리 모은다 — 같은 착대는 같은 시각이다 */
+    function groupBy<K>(pairs: [string, K][]): Map<K, string[]> {
+      const groups = new Map<K, string[]>();
+      for (const [id, key] of pairs) groups.set(key, [...(groups.get(key) ?? []), id]);
+      return groups;
     }
 
     if (hasSession && s) {
       // ── 경로 A: 세션 복원 — arrivalTargetAt 기반으로 타이머 재등록 ──
       const now = Date.now();
+      const pending: [string, number][] = [];
       for (const [tokenId, targetAt] of Object.entries(s.arrivalTargetAt)) {
         const delayMs = targetAt - now;
         if (delayMs <= 0) {
@@ -331,8 +356,11 @@ export function TokenProvider({
             return next;
           });
         } else {
-          scheduleArrival(tokenId, delayMs, targetAt);
+          pending.push([tokenId, targetAt]);
         }
+      }
+      for (const [targetAt, ids] of groupBy(pending)) {
+        scheduleArrivalGroup(ids, targetAt - now, targetAt);
       }
     } else {
       // ── 경로 B: 신규 훈련 시작 — roster 기반 ──────────────────────
@@ -367,28 +395,23 @@ export function TokenProvider({
             ? { ...t, zoneKey: ARRIVAL_TARGET_ZONE }
             : t,
         ));
+        // 한 루프 안이라 전부 한 줄이 된다 — 「대기1단계 도착: …」
         for (const tokenId of immediateIds) {
           const token = tokensRef.current.find(t => t.id === tokenId);
-          addLog({
-            logSource:  'system',
-            logType:    'move',
-            tokenId:    tokenId,
-            tokenName:  token?.label ?? tokenId,
-            tokenColor: token?.color ?? 'red',
-            fromZoneId: 'pool',
-            toZoneId:   ARRIVAL_TARGET_ZONE,
-            note:       '훈련 시작 시 현장 대기 → 대기1단계 자동 배치',
-          });
+          if (token && token.zoneKey === null) logAutoArrival(token);
         }
       }
 
-      // arrivalSec > 0 인 출동대 → 카운트다운 후 자동 이동
+      // arrivalSec > 0 인 출동대 → 카운트다운 후 자동 이동. 같은 초끼리 한 타이머
       const initialCountdowns: Record<string, number> = {};
+      const delayed: [string, number][] = [];
       for (const item of initialRosterRef.current) {
         if (item.arrivalSec <= 0) continue;
-        const targetAt = now + item.arrivalSec * 1000;
-        scheduleArrival(`roster-${item.id}`, item.arrivalSec * 1000, targetAt);
+        delayed.push([`roster-${item.id}`, item.arrivalSec]);
         initialCountdowns[`roster-${item.id}`] = item.arrivalSec;
+      }
+      for (const [sec, ids] of groupBy(delayed)) {
+        scheduleArrivalGroup(ids, sec * 1000, now + sec * 1000);
       }
       if (Object.keys(initialCountdowns).length > 0) {
         setArrivalCountdowns(initialCountdowns);
@@ -594,18 +617,40 @@ export function TokenProvider({
           return { ...t, ...update };
         })
       );
-      if (toZoneKey !== null) {
+      /*
+       * 무전 멘트 형식으로 남긴다 — docs/EVENT_LOG_PHRASING_PLAN.md §2.1
+       *   대기1단계·자원대기소로   → 「도착」(대기 박스에서) · 「복귀」(현장에서). 같은 태스크끼리 한 줄
+       *   RIT 로                  → 「임무지정」. 공간이 아니라 임무다
+       *   출동대현황·추가출동대로 → 기록하지 않고 방금 한 도착을 거둔다(§2.2)
+       *   그 밖                   → 「이동」
+       *
+       * 동승 펌프는 아래에서 moveToken 을 다시 부르므로 같은 태스크다 —
+       * 「대기1단계 도착: 진압1대, 펌프1」 한 줄이 된다.
+       */
+      const fromZoneKey = token.zoneKey ?? 'pool';
+      const kind = classifyMove(token.zoneKey, toZoneKey);
+      if (toZoneKey === null || kind === 'withdraw') {
+        retractArrival(token.id);
+      } else if (kind === 'arrive' || kind === 'return') {
+        addArrivalLog({
+          mode: kind, zoneKey: toZoneKey,
+          unit: { tokenId: token.id, label: token.label, unitType: token.unitType, fromZoneKey },
+        });
+      } else {
+        const sentence = kind === 'mission'
+          ? missionPhrase(token.label, token.unitType, 'RIT')
+          : movePhrase(token.label, token.unitType, fromZoneKey, toZoneKey);
         addLog({
           logType:    'move',
           tokenId:    token.id,
           tokenName:  token.label,
           tokenColor: token.color,
-          fromZoneId: token.zoneKey ?? 'pool',
+          fromZoneId: fromZoneKey,
           toZoneId:   toZoneKey,
-          note:       wasRescuing ? '구조 처리 중단 후 수동 이동' : undefined,
+          note:       wasRescuing ? `${sentence} (구조 처리 중단)` : sentence,
           payload:    {
             kind: 'move', tokenId: token.id, tokenLabel: token.label, unitType: token.unitType,
-            fromZoneKey: token.zoneKey ?? 'pool', toZoneKey, auto: false,
+            fromZoneKey, toZoneKey, auto: false, intent: kind,
           },
         });
       }
@@ -639,7 +684,7 @@ export function TokenProvider({
         moveTokenRef.current(id, pumpZone, undefined, { skipPairMove: true });
       }
     }
-  }, [addLog, releaseRolesFor]);
+  }, [addLog, addArrivalLog, retractArrival, releaseRolesFor]);
 
   // moveToken 이 자기 자신을 다시 부를 수 있게 참조를 들고 있는다.
   // deps 가 [] 라 함수가 다시 만들어지지 않으므로 최초 값 그대로면 충분하다.
@@ -775,7 +820,7 @@ export function TokenProvider({
     ));
   }, []);
 
-  const toggleMissionTag = useCallback((tokenId: string, tag: StatusTag) => {
+  const toggleMissionTag = useCallback((tokenId: string, tag: StatusTag, opts?: { silent?: boolean }) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
     const prev_tags = token.missionTags ?? [];
@@ -791,6 +836,8 @@ export function TokenProvider({
     setTokens(prev => prev.map(t =>
       t.id === tokenId ? { ...t, missionTags: next_tags.length > 0 ? next_tags : undefined } : t
     ));
+    // 부르는 쪽이 더 나은 문장을 이미 남겼으면 칩만 바꾼다(인터페이스 주석)
+    if (opts?.silent) return;
     const note = exists ? `임무 해제: ${tag.label}` : `임무: ${tag.label}`;
     addLog({
       logType:    'status-tag' as const,

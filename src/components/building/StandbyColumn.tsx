@@ -8,6 +8,7 @@ import { useRoleRelease } from '../../context/RoleReleaseContext';
 import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
 import { ArrivedGroupRow } from '../shared/ArrivedGroupRow';
 import { splitArrivalGroup } from '../../utils/arrivalGroup';
+import { postOpenPhrase } from '../../utils/logPhrase';
 
 import './StandbyColumn.css';
 
@@ -61,21 +62,27 @@ export function MedicalPostBox() {
     if (nextId === assignedTokenId) return;
     setAssignedTokenId(nextId);
     const label = nextId ? (tokens.find(t => t.id === nextId)?.label ?? nextId) : null;
+
+    /*
+     * 지명이 곧 설치다 — 무전 한 번이라 한 줄로 남긴다.
+     * 「임시의료소 설치, 소장: 진압1」(docs/EVENT_LOG_PHRASING_PLAN.md §2.5)
+     * 해제해도 설치는 되돌리지 않는다(위 주석).
+     */
+    if (nextId && label && !isInstalled) {
+      setIsInstalled(true);
+      addLog({
+        logType: 'post', tokenId: nextId, tokenName: label, fromZoneId: '', toZoneId: '',
+        note:    postOpenPhrase('medical', label),
+        payload: { kind: 'post-open', post: 'medical', chiefTokenId: nextId, chiefLabel: label },
+      });
+      return;
+    }
+
     addLog({
       logType: 'post', tokenId: nextId ?? '', tokenName: label ?? '', fromZoneId: '', toZoneId: '',
       note:    label ? `임시의료소장 지명: ${label}` : '임시의료소장 해제',
       payload: { kind: 'post-chief', post: 'medical', chiefTokenId: nextId, chiefLabel: label },
     });
-
-    // 지명이 곧 설치. 해제해도 되돌리지 않는다(위 주석)
-    if (nextId && !isInstalled) {
-      setIsInstalled(true);
-      addLog({
-        logType: 'post', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '',
-        note:    '임시의료소 설치',
-        payload: { kind: 'post-install', post: 'medical', installed: true },
-      });
-    }
   }
 
   const zoneKey     = 'medical-post';

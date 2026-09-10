@@ -7,7 +7,7 @@
  */
 
 const STATIC_LABELS: Record<string, string> = {
-  pool:               '대기(풀)',
+  pool:               '출동대현황',
   'medical-post':     '임시의료소',
   'standby-resource': '자원대기소',
   'standby-standby1': '대기1단계',
@@ -82,7 +82,7 @@ const STAGING_KEYS = new Set([
 export function parseZoneKey(zoneKey: string | null | undefined): ZoneRef {
   const key = zoneKey ?? 'pool';
   if (key === 'pool' || key === '') {
-    return { zoneKey: 'pool', floorId: null, face: null, part: 'pool', label: '대기(풀)' };
+    return { zoneKey: 'pool', floorId: null, face: null, part: 'pool', label: '출동대현황' };
   }
   if (key.startsWith('face-')) {
     const face = key.slice('face-'.length);

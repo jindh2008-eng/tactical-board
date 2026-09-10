@@ -59,11 +59,14 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
   }
 
   if (logType === 'water-relay') {
-    const isRelease = note?.includes('해제');
+    // 새 형식은 문장이 곧 무전 멘트라(「물탱크1 44호 소화전 점령」) 「송수」 머리말을 붙이지 않는다.
+    // 해제 판정도 문구가 아니라 payload 로 한다 — 구버전 저장분만 문자열로 본다
+    const relay     = entry.payload?.kind === 'water-relay' ? entry.payload : null;
+    const isRelease = relay ? !relay.connected : note?.includes('해제');
     return (
       <div className={`log-panel__entry log-panel__entry--water${isRelease ? ' log-panel__entry--water-release' : ''}`}>
         <span className="log-panel__time">{entry.timestamp}</span>
-        <span className="log-panel__water-prefix">송수</span>
+        {!relay && <span className="log-panel__water-prefix">송수</span>}
         <span className={`log-panel__water-note${isRelease ? ' log-panel__water-note--release' : ''}`}>{note}</span>
       </div>
     );
@@ -143,7 +146,32 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     );
   }
 
-  // move / rescue
+  // 도착·복귀 묶음 — 「대기1단계 도착: 진압1대, 구급1대, 물탱크1」
+  if (logType === 'arrival') {
+    return (
+      <div className="log-panel__entry log-panel__entry--arrival">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className="log-panel__sentence">{note}</span>
+      </div>
+    );
+  }
+
+  // 이동·임무지정 — 새 형식은 note 가 완성된 문장이다(payload.intent). 구버전은 아래에서 경로를 조립한다
+  if (logType === 'move' && entry.payload?.kind === 'move' && entry.payload.intent) {
+    return (
+      <div className="log-panel__entry">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className={[
+          'log-panel__sentence',
+          tokenColor ? `log-panel__token--${tokenColor}` : '',
+        ].filter(Boolean).join(' ')}>
+          {note}
+        </span>
+      </div>
+    );
+  }
+
+  // move(구버전 저장분) / rescue
   return (
     <div className="log-panel__entry">
       <span className="log-panel__time">{entry.timestamp}</span>

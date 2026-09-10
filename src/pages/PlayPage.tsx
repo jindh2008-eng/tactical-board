@@ -7,6 +7,7 @@ import { useNavSlot }         from '../context/NavSlotContext';
 import { DisplayOptionsContext, type DisplayOptionKey } from '../context/DisplayOptionsContext';
 import { useTokens, TokenProvider } from '../context/TokenContext';
 import { LogProvider, useLog }  from '../context/LogContext';
+import { postOpenPhrase }     from '../utils/logPhrase';
 import { VictimProvider }     from '../context/VictimContext';
 import { EventProvider }      from '../context/EventContext';
 import { ActionModeProvider, useActionMode } from '../context/ActionModeContext';
@@ -326,20 +327,26 @@ function ResourcePanel() {
   function changeChief(name: string) {
     if (name === stagingAreaChief) return;
     updateStagingAreaChief(name);
+
+    /*
+     * 첫 지명이 곧 운영 지정이다 — 무전으로는 한 번에 나가는 말이라 한 줄로 남긴다.
+     * 「자원대기소 지정, 소장: 지휘운전」(docs/EVENT_LOG_PHRASING_PLAN.md §2.5)
+     */
+    if (name && !resourceAssigned) {
+      setResourceAssigned(true);
+      addLog({
+        logType: 'post', tokenId: '', tokenName: name, fromZoneId: '', toZoneId: '',
+        note:    postOpenPhrase('resource', name),
+        payload: { kind: 'post-open', post: 'resource', chiefTokenId: null, chiefLabel: name },
+      });
+      return;
+    }
+
     addLog({
       logType: 'post', tokenId: '', tokenName: name, fromZoneId: '', toZoneId: '',
       note:    name ? `자원대기소장 지명: ${name}` : '자원대기소장 해제',
       payload: { kind: 'post-chief', post: 'resource', chiefTokenId: null, chiefLabel: name || null },
     });
-
-    if (name && !resourceAssigned) {
-      setResourceAssigned(true);
-      addLog({
-        logType: 'post', tokenId: '', tokenName: '', fromZoneId: '', toZoneId: '',
-        note:    '자원대기소 운영 지정',
-        payload: { kind: 'post-install', post: 'resource', installed: true },
-      });
-    }
   }
 
   /*

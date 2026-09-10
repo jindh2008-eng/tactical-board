@@ -74,7 +74,8 @@ function SubZone({
       if (taggedAsRit) {
         const token = tokens.find(t => t.id === tokenId);
         const alreadyTagged = token?.missionTags?.some(m => m.label === RIT_TAG.label) ?? false;
-        if (!alreadyTagged) toggleMissionTag(tokenId, RIT_TAG);
+        // 로그는 moveToken 이 「RIT 임무지정」 한 줄로 이미 남겼다 — 여기서는 칩만 붙인다
+        if (!alreadyTagged) toggleMissionTag(tokenId, RIT_TAG, { silent: true });
       }
     }
     if (victimId) moveVictim(victimId, zoneKey, { x, y });
