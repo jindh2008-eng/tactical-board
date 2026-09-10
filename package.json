@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "serve": "node scripts/serve-dist.mjs",
     "chatgpt:summary": "node scripts/summarize-chatgpt-project.mjs",
     "test:chatgpt-summary": "node --test scripts/summarize-chatgpt-project.test.mjs",
     "lint:css": "stylelint \"src/**/*.css\""
