@@ -74,8 +74,9 @@
 - [ ] **로그 패널 자동 스크롤**  
   새 로그 항목 추가 시 최신 항목으로 자동 스크롤 (`scroll-behavior: smooth` 주석 처리된 상태).
 
-- [ ] **TokenContextMenu.tsx 정리**  
-  현재 `UnitStatusBarMenu`로 대체됐으나 파일이 남아있음. 실제 사용 여부 확인 후 제거.
+- [x] **TokenContextMenu.tsx 정리** — ✅ 2026-09-10 완료  
+  `UnitStatusBarMenu`로 대체된 것이 맞았다. 같은 성격의 `RadialMenu` ·
+  `VictimContextMenu` · `BadgeManagerModal` 과 함께, 도달 불가 파일 30개를 한 번에 지웠다.
 
 ### 🟢 우선순위 낮음 (나중에 해도 되는 작업)
 

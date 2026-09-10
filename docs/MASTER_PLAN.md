@@ -297,7 +297,8 @@ W-5가 끝나면 훈련모드(무플)가 완성 상태가 되고, 그 시점에 
 
 | 항목 | 내용 |
 |---|---|
-| 파일 | `src/hooks/useTouchDrag.ts`(신규) · `shared/TokenCard.tsx`·`.css` · `shared/VictimCard.tsx`·`.css` · `events/EventTokenCard.tsx`·`.css` · `building/TacticalArea.tsx`·`.css` · `building/BFaceWithStandby.tsx` · `building/ImminentStandby.tsx` · `building/StandbyColumn.tsx` · `center/StandbyColumn.tsx` · `left/StandbyZone.tsx` · `left/UnitStatusPanel.tsx` · `left/VictimPanel.tsx` · `pages/PlayPage.tsx` |
+| 파일 | `src/hooks/useTouchDrag.ts`(신규) · `shared/TokenCard.tsx`·`.css` · `shared/VictimCard.tsx`·`.css` · `events/EventTokenCard.tsx`·`.css` · `building/TacticalArea.tsx`·`.css` · `building/BFaceWithStandby.tsx` · `building/ImminentStandby.tsx` · `building/StandbyColumn.tsx` · `left/UnitStatusPanel.tsx` · `pages/PlayPage.tsx` |
+| 목록 정정 | 2026-09-10 미사용 파일 정리로 `center/StandbyColumn.tsx` · `left/StandbyZone.tsx` · `left/VictimPanel.tsx` 세 개가 **삭제**돼 대상에서 빠졌다 |
 | 작업 | 1. `data-touch-drop-target` 또는 `data-zone-key` **누락 드롭 존 전수 확인** — `onDrop` 핸들러를 가진 요소를 모두 찾아 대조<br>2. 훅 주석에 D-1(보조 수단) 근거 명시<br>3. 단일 커밋으로 분리 |
 | 완료 기준 | 마우스 조작 회귀 0건 · 터치 환경에서 출동대/구조대상자/이벤트 토큰 이동 성공 · `tsc` 통과 · lint 신규 오류 0 |
 | 주의 | 실기기(터치 모니터 또는 S펜) 검증이 필요하다. 개발용 브라우저 패널의 합성 이벤트만으로는 판정할 수 없다 |
@@ -458,7 +459,6 @@ W-2·W-3·W-4 완료 시 [반응형 계획 §6.1](RESPONSIVE_16_9_TABLET_LAYOUT_
 | 린트 오류 56건 분류·정리 | PROJECT_PLAN §13 | 대부분 이 코드베이스의 의도된 관례(Provider+훅 동일 파일) |
 | 다중 화점층 연기 계산 | TODO_ROADMAP | `stairSmokeFloor = Math.min(...)` 한계. 현장 요구 확인 후 |
 | 규칙 이벤트 엔진 · AAR 재생 · AI 분석 | [PROJECT_PLAN.md](PROJECT_PLAN.md) 단계 3~6 | 장기 비전. 네 모드가 모두 자리를 잡은 뒤 |
-| `TokenContextMenu.tsx` 제거 | TODO_ROADMAP | 사용처 확인 필요 |
 | 태블릿에서 토큰 직접 조작(Phase 5 전면 재작성) | 반응형 §0.3 | **D-1로 범위 제외 확정.** 되살릴 조건: 교수가 태블릿으로 상황판을 직접 조작해야 할 때 |
 
 ---
@@ -591,7 +591,7 @@ tactical-board-run-{yymmdd-hhmm}.json
 | **B-4** | 도착 항목 텍스트를 **파생값으로** | 중간 | 지금은 생성 시점 문자열이라 착대 번호가 밀리면 낡는다. 2026-08-26 에 **증상만** 가렸다(`(편성없음)` 표시) — [MESSAGE_READABILITY_PLAN.md](MESSAGE_READABILITY_PLAN.md) §2.1 |
 | **B-5** | 전역 내비게이션 정비 | 중간 | 세 모드가 `app-nav` 를 공유한다. 모드가 확정된 뒤 한 번에 — **P-4** · **P-1** |
 | **B-9** | **시나리오 체크리스트 ⇄ 지휘절차 연동 + 탭 전환** | 중간 | ✋ **검토 완료·구현 대기 (08-31).** 연동 키(`sourceCommandProcedureItemId`)와 호출 통로(`ChecklistCommandContext`)가 이미 있다. 막는 것은 A-4·A-5 결정 — [CHECKLIST_PROCEDURE_LINK_PLAN.md](CHECKLIST_PROCEDURE_LINK_PLAN.md) |
-| **B-10** | `right/RightPanel.tsx` 제거 | **파일 1개** | 호출부 0건. `PlayPage` 가 `.procedure-panel` 을 직접 그린다. B-9 에서 우측 패널을 손댈 때 함께 |
+| **B-10** | `right/RightPanel.tsx` 제거 | **파일 1개** | ✅ **완료 (09-10).** 미사용 파일 전수 정리에 함께 실렸다 — 도달 불가 파일 30개 삭제. B-9 를 기다리지 않았다 |
 | **B-6** | 빈 착대 구멍 | 작음 | 압축이 **드래그 경로에만** 걸려 있다. 수량을 줄여 착대가 비면 구멍이 남는다. `(편성없음)` 으로 보이므로 급하지 않다 |
 | **B-7** | `--ui-scale` 잔재 정리 | 작음 | ✅ **완료 (08-26)** — 8개 파일 100건 제거. 값 불변(폴백이 늘 1이었다) |
 | **B-8** | `ZoneCell` 무효 CSS | **2줄** | ✅ **완료 (08-26)** — `box-shadow: inset 0 0 0 1px #7aaccc`로 교체. 파일이 이미 쓰던 안쪽 테두리 관례(279행)와 같은 형태 — **P-9 해소** |

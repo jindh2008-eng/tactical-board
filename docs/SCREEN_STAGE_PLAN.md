@@ -653,12 +653,16 @@ const NATURAL_BUILDING_H = BOARD_INNER_H - C_FACE_HEIGHT - A_FACE_MIN_HEIGHT;
 
 ### 4.1 ⚠ `createPortal` — 가장 큰 비용
 
-**10개 컴포넌트가 `document.body`로 포털한다.**
+**~~10개~~ 6개 컴포넌트가 `document.body`로 포털한다.**
 
 ```
 ChecklistPanel · UnitAddPanel · TokenCard · VictimCard · UnitStatusBarMenu
-TokenContextMenu · BadgeManagerModal · VictimContextMenu · RadialMenu · VictimContextBarMenu
+VictimContextBarMenu
 ```
+
+> 2026-09-10 미사용 파일 정리로 `TokenContextMenu` · `BadgeManagerModal` ·
+> `VictimContextMenu` · `RadialMenu` 넷이 **삭제**됐다(도달 불가 파일이었다).
+> 대응 대상이 10개에서 6개로 줄었다.
 
 `document.body`는 **스테이지 밖**이다. 상황판이 0.8배로 줄어도 컨텍스트 메뉴는 1.0배로 뜬다. 크기도 위치도 어긋난다.
 

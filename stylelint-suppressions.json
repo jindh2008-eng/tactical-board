@@ -38,10 +38,5 @@
     "shorthand-property-no-redundant-values": {
       "count": 1
     }
-  },
-  "src/components/shared/VictimContextMenu.css": {
-    "shorthand-property-no-redundant-values": {
-      "count": 1
-    }
   }
 }

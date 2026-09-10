@@ -151,8 +151,11 @@ T-3 → T-2 → T-1. 탭이 없어도 지휘절차 상자만으로 T-2 를 검�
 
 ## 6. 곁다리
 
-`src/components/right/RightPanel.tsx` 는 **호출부가 0건인 죽은 코드**다.
-`PlayPage` 가 `.procedure-panel` 을 직접 그린다. 우측 패널을 손대는 김에 정리한다.
+~~`src/components/right/RightPanel.tsx` 는 **호출부가 0건인 죽은 코드**다.
+`PlayPage` 가 `.procedure-panel` 을 직접 그린다. 우측 패널을 손대는 김에 정리한다.~~
+
+→ **2026-09-10 삭제 완료.** 미사용 파일 전수 정리(도달 불가 30개)에 함께 실려 이 문서를
+기다리지 않았다. 우측 패널을 탭으로 바꿀 때 참고할 잔재가 없다.
 
 ---
 
