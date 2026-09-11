@@ -13,7 +13,7 @@ import { nextManualArrivalOrder } from '../utils/arrivalOrder';
 import { isPoolZone, mountedPumpIds } from '../utils/unitPairing';
 import { summarizeUnits, summaryText, toUnitRefs } from '../utils/dispatchSummary';
 import { floorIdLabel } from '../utils/logLabels';
-import { classifyMove, movePhrase, missionPhrase } from '../utils/logPhrase';
+import { classifyMove, moveParts, missionParts, partsText } from '../utils/logPhrase';
 import { useResourceStatus } from './ResourceStatusContext';
 import { useLog } from './LogContext';
 import { useRoleRelease } from './RoleReleaseContext';
@@ -328,7 +328,7 @@ export function TokenProvider({
     function logAutoArrival(t: UnitToken) {
       addArrivalLog({
         mode: 'arrive', zoneKey: ARRIVAL_TARGET_ZONE, logSource: 'system',
-        unit: { tokenId: t.id, label: t.label, unitType: t.unitType, fromZoneKey: 'pool' },
+        unit: { tokenId: t.id, label: t.label, unitType: t.unitType, fromZoneKey: 'pool', color: t.color },
       });
     }
 
@@ -634,12 +634,15 @@ export function TokenProvider({
       } else if (kind === 'arrive' || kind === 'return') {
         addArrivalLog({
           mode: kind, zoneKey: toZoneKey,
-          unit: { tokenId: token.id, label: token.label, unitType: token.unitType, fromZoneKey },
+          unit: { tokenId: token.id, label: token.label, unitType: token.unitType, fromZoneKey, color: token.color },
         });
       } else {
-        const sentence = kind === 'mission'
-          ? missionPhrase(token.label, token.unitType, 'RIT')
-          : movePhrase(token.label, token.unitType, fromZoneKey, toZoneKey);
+        // 출동대명은 칩으로 그린다 — 색은 지금(기록 시점)의 토큰 색이다(§12)
+        const unit  = { tokenId: token.id, label: token.label, unitType: token.unitType, color: token.color };
+        const parts = [
+          ...(kind === 'mission' ? missionParts(unit, 'RIT') : moveParts(unit, fromZoneKey, toZoneKey)),
+          ...(wasRescuing ? [{ kind: 'text' as const, text: ' (구조 처리 중단)' }] : []),
+        ];
         addLog({
           logType:    'move',
           tokenId:    token.id,
@@ -647,7 +650,8 @@ export function TokenProvider({
           tokenColor: token.color,
           fromZoneId: fromZoneKey,
           toZoneId:   toZoneKey,
-          note:       wasRescuing ? `${sentence} (구조 처리 중단)` : sentence,
+          note:       partsText(parts),
+          parts,
           payload:    {
             kind: 'move', tokenId: token.id, tokenLabel: token.label, unitType: token.unitType,
             fromZoneKey, toZoneKey, auto: false, intent: kind,

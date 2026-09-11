@@ -311,10 +311,21 @@ export type LogPayload =
    */
   | { kind: 'post-open'; post: PostKind; chiefTokenId: string | null; chiefLabel: string };
 
-/** 도착·복귀 묶음에 든 출동대 1건 — 어디서 왔는지까지 담는다 */
+/** 도착·복귀 묶음에 든 출동대 1건 — 어디서 왔는지와 칩 색까지 담는다 */
 export interface ArrivalUnitRef extends DispatchUnitRef {
   fromZoneKey: string;
+  /** 기록 시점의 토큰 색 — 칩을 그린다. 차종으로 추정하면 수동 생성·색 변경 토큰이 틀린다 */
+  color?:      TokenColor;
 }
+
+/**
+ * 로그 문장의 한 조각 — 출동대는 칩으로, 나머지는 글자로 그린다.
+ * `note` 는 조각의 text 를 이은 것과 같다(CSV·PDF 는 note 를 읽는다).
+ * docs/EVENT_LOG_PHRASING_PLAN.md §12
+ */
+export type LogPart =
+  | { kind: 'text'; text: string }
+  | { kind: 'unit'; text: string; tokenId: string; color?: TokenColor };
 
 /** 송수 연결에 딸려 바뀐 급수 임무 1건 */
 export interface WaterMissionChange {
@@ -385,6 +396,11 @@ export interface LogEntry {
   note?:           string;
   /** 구조화 데이터 — 있으면 표시·분석이 이걸 우선한다 (없으면 note 폴백) */
   payload?:        LogPayload;
+  /**
+   * 표시용 조각 — 있으면 출동대명을 칩으로 그린다. 조각의 text 를 이으면 note 와 같다.
+   * 칩 도입(2026-09-11) 전 저장분과 조각을 만들지 않는 로그에는 없다 — note 를 그대로 보인다
+   */
+  parts?:          LogPart[];
 }
 
 // ─────────────────────────────────────────────

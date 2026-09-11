@@ -8,7 +8,7 @@ import { useRoleRelease } from '../../context/RoleReleaseContext';
 import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
 import { ArrivedGroupRow } from '../shared/ArrivedGroupRow';
 import { splitArrivalGroup } from '../../utils/arrivalGroup';
-import { postOpenPhrase } from '../../utils/logPhrase';
+import { postOpenParts, partsText } from '../../utils/logPhrase';
 
 import './StandbyColumn.css';
 
@@ -70,9 +70,14 @@ export function MedicalPostBox() {
      */
     if (nextId && label && !isInstalled) {
       setIsInstalled(true);
+      const chief = tokens.find(t => t.id === nextId);
+      const parts = postOpenParts('medical', chief
+        ? { tokenId: chief.id, label: chief.label, unitType: chief.unitType, color: chief.color }
+        : label);
       addLog({
         logType: 'post', tokenId: nextId, tokenName: label, fromZoneId: '', toZoneId: '',
-        note:    postOpenPhrase('medical', label),
+        note:    partsText(parts),
+        parts,
         payload: { kind: 'post-open', post: 'medical', chiefTokenId: nextId, chiefLabel: label },
       });
       return;

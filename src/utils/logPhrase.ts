@@ -1,4 +1,6 @@
-import type { LogEntry, ArrivalUnitRef, PostKind, WaterMissionChange } from '../types';
+import type {
+  LogEntry, LogPart, ArrivalUnitRef, PostKind, TokenColor, WaterMissionChange,
+} from '../types';
 import { zoneLabel } from './logLabels';
 import { UNIT_ADD_ZONE } from './unitAddZone';
 import {
@@ -12,8 +14,9 @@ import {
 // 현장에서 오가는 말로 바꾼다 — 무전 STT 와 시간축으로 합칠 때 어휘가 같아야
 // 대조가 된다(docs/EVENT_LOG_PHRASING_PLAN.md §0).
 //
-// 문장은 addLog 시점에 만들어 note 에 박는다. 화면·CSV·PDF 는 note 만 읽고,
-// 분석은 payload 를 읽는다 — 문장을 고쳐도 분석이 깨지지 않는다.
+// 문장은 **조각(LogPart[])** 으로 만든다 — 출동대는 칩, 나머지는 글자(§12).
+// 조각을 이은 문자열이 note 이고, 둘 다 addLog 시점에 로그에 박는다.
+// 화면은 조각으로 칩을 그리고, CSV·PDF 는 note 를, 분석은 payload 를 읽는다.
 //
 // 순수 함수만 둔다(.ts). Context 파일에 두면 react-refresh 린트 기준선이 불어난다.
 // ─────────────────────────────────────────────
@@ -51,13 +54,52 @@ export function classifyMove(fromZoneKey: string | null, toZoneKey: string | nul
   return 'move';
 }
 
-// ── 부르는 이름 ───────────────────────────────
+// ── 부르는 이름 · 칩 ──────────────────────────
 
 /** 활동대 — 무전에서는 「진압1대」처럼 「대」를 붙여 부른다. 차량은 이름 그대로(「물탱크1」) */
 const ACTIVITY_TYPES = new Set(['suppression', 'rescue', 'ems']);
 
 export function unitCallName(label: string, unitType: string): string {
   return ACTIVITY_TYPES.has(unitType) && !label.endsWith('대') ? `${label}대` : label;
+}
+
+/** 칩으로 그릴 출동대 — 색은 **기록 시점의 토큰 색**을 넘긴다 */
+export interface UnitRef {
+  tokenId:  string;
+  label:    string;
+  unitType: string;
+  color?:   TokenColor;
+}
+
+export function unitPart(u: UnitRef): LogPart {
+  return {
+    kind: 'unit', text: unitCallName(u.label, u.unitType), tokenId: u.tokenId,
+    ...(u.color ? { color: u.color } : {}),
+  };
+}
+
+function textPart(text: string): LogPart {
+  return { kind: 'text', text };
+}
+
+/** 글자와 칩을 잇는다. 이웃한 글자 조각은 하나로 합치고 빈 글자는 버린다 */
+function seq(...items: (LogPart | string)[]): LogPart[] {
+  const out: LogPart[] = [];
+  for (const item of items) {
+    const part = typeof item === 'string' ? textPart(item) : item;
+    const last = out[out.length - 1];
+    if (part.kind === 'text') {
+      if (!part.text) continue;
+      if (last?.kind === 'text') { out[out.length - 1] = textPart(last.text + part.text); continue; }
+    }
+    out.push(part);
+  }
+  return out;
+}
+
+/** 조각 → note 문자열. CSV·PDF·검색이 읽는 값이다 */
+export function partsText(parts: readonly LogPart[]): string {
+  return parts.map(p => p.text).join('');
 }
 
 /**
@@ -88,33 +130,37 @@ export function compareUnitCallOrder(
 
 // ── 이동 ─────────────────────────────────────
 
-/** 「대기1단계 도착: 진압1대, 구급1대, 물탱크1」 */
-export function arrivalPhrase(
+/** 「대기1단계 도착: [진압1대], [구급1대], [물탱크1]」 */
+export function arrivalParts(
   mode: 'arrive' | 'return', zoneKey: string, units: readonly ArrivalUnitRef[],
-): string {
-  const names = [...units].sort(compareUnitCallOrder).map(u => unitCallName(u.label, u.unitType));
-  return `${zoneLabel(zoneKey)} ${mode === 'arrive' ? '도착' : '복귀'}: ${names.join(', ')}`;
+): LogPart[] {
+  const items: (LogPart | string)[] = [`${zoneLabel(zoneKey)} ${mode === 'arrive' ? '도착' : '복귀'}: `];
+  [...units].sort(compareUnitCallOrder).forEach((u, i) => {
+    if (i > 0) items.push(', ');
+    items.push(unitPart(u));
+  });
+  return seq(...items);
 }
 
-/** 「진압1대 대기1단계 → 직전대기 이동」 */
-export function movePhrase(
-  label: string, unitType: string, fromZoneKey: string, toZoneKey: string,
-): string {
-  return `${unitCallName(label, unitType)} ${zoneLabel(fromZoneKey)} → ${zoneLabel(toZoneKey)} 이동`;
+/** 「[진압1대] 대기1단계 → 직전대기 이동」 */
+export function moveParts(u: UnitRef, fromZoneKey: string, toZoneKey: string): LogPart[] {
+  return seq(unitPart(u), ` ${zoneLabel(fromZoneKey)} → ${zoneLabel(toZoneKey)} 이동`);
 }
 
-/** 「진압1대 RIT 임무지정」 */
-export function missionPhrase(label: string, unitType: string, missionLabel: string): string {
-  return `${unitCallName(label, unitType)} ${missionLabel} 임무지정`;
+/** 「[진압1대] RIT 임무지정」 */
+export function missionParts(u: UnitRef, missionLabel: string): LogPart[] {
+  return seq(unitPart(u), ` ${missionLabel} 임무지정`);
 }
 
 // ── 거점 ─────────────────────────────────────
 
-/** 「자원대기소 지정, 소장: 지휘운전」 · 「임시의료소 설치, 소장: 진압1」 */
-export function postOpenPhrase(post: PostKind, chiefLabel: string): string {
-  return post === 'resource'
-    ? `자원대기소 지정, 소장: ${chiefLabel}`
-    : `임시의료소 설치, 소장: ${chiefLabel}`;
+/**
+ * 「자원대기소 지정, 소장: [구조1대]」 · 「임시의료소 설치, 소장: [구급1대]」.
+ * 자원대기소장은 이름 문자열로 저장돼 같은 이름표의 토큰이 없을 수 있다 — 그때는 글자다.
+ */
+export function postOpenParts(post: PostKind, chief: UnitRef | string): LogPart[] {
+  const head = post === 'resource' ? '자원대기소 지정, 소장: ' : '임시의료소 설치, 소장: ';
+  return seq(head, typeof chief === 'string' ? chief : unitPart(chief));
 }
 
 // ── 송수 ─────────────────────────────────────
@@ -136,6 +182,9 @@ export interface WaterRelayInput {
   toType:    string;
   fromName:  string;
   toName:    string;
+  /** 출동대면 칩으로 그린다. 소화전·연결송수구·옥내소화전·순환칸은 넘기지 않는다 */
+  fromUnit?: UnitRef | null;
+  toUnit?:   UnitRef | null;
 }
 
 /**
@@ -145,35 +194,40 @@ export interface WaterRelayInput {
  * 「점령」·「수관전개」는 물을 **받는** 쪽이, 「급수 지원」은 **주는** 쪽이 주어다.
  *
  * `missions` 는 이 연결로 물을 받는 차에 딸려 바뀐 급수 임무다 — 같은 줄 뒤에 붙인다.
- * 「물탱크1 44호 소화전 점령 / 중요물탱크 지정」
+ * 「[물탱크1] 44호 소화전 점령 / 중요물탱크 지정」
  */
-export function waterRelayPhrase(
+export function waterRelayParts(
   r: WaterRelayInput, missions: readonly WaterMissionChange[],
-): string | null {
+): LogPart[] | null {
   const { connected, fromType, toType, fromName, toName } = r;
-  let base: string;
+  const from: LogPart | string = r.fromUnit ? unitPart(r.fromUnit) : fromName;
+  const to:   LogPart | string = r.toUnit
+    ? unitPart(r.toUnit)
+    : (NOZZLE_UNIT_TYPES.has(toType) ? unitCallName(toName, toType) : toName);
+  const off = connected ? '' : ' 해제';
 
+  let base: LogPart[];
   if (NOZZLE_UNIT_TYPES.has(toType)) {
     if (!connected) return null;   // 수관철수는 기록하지 않는다(사용자 확정)
-    base = `${unitCallName(toName, toType)} ${fromName}에서 수관전개`;
+    base = seq(to, ' ', from, '에서 수관전개');
   } else if (fromType === 'hydrant') {
-    base = `${toName} ${fromName} 점령${connected ? '' : ' 해제'}`;
+    base = seq(to, ' ', from, ' 점령', off);
   } else if (fromType === 'circulation') {
-    base = connected ? `${toName}에 순환보수 실시` : `${toName} 순환보수 중단`;
+    base = connected ? seq(to, '에 순환보수 실시') : seq(to, ' 순환보수 중단');
   } else if (toType === 'siamese_pipe') {
-    base = `${fromName} ${toName} 점령${connected ? '' : ' 해제'}`;
+    base = seq(from, ' ', to, ' 점령', off);
   } else if (AERIAL_TYPES.has(toType)) {
-    base = connected ? `${fromName} ${toName} 급수 펌프 지정` : `${fromName} ${toName} 급수 중단`;
+    base = seq(from, ' ', to, connected ? ' 급수 펌프 지정' : ' 급수 중단');
   } else if (WATER_VEHICLE_TYPES.has(toType)) {
-    base = connected ? `${fromName} ${toName}에 급수 지원` : `${fromName} ${toName} 급수 중단`;
+    base = seq(from, ' ', to, connected ? '에 급수 지원' : ' 급수 중단');
   } else {
-    base = `${fromName} → ${toName} 송수${connected ? '' : ' 해제'}`;
+    base = seq(from, ' → ', to, ' 송수', off);
   }
 
   const tail = missions.map(m =>
-    `${MISSION_CALL_NAMES[m.missionLabel] ?? m.missionLabel} ${m.assigned ? '지정' : '해제'}`,
+    ` / ${MISSION_CALL_NAMES[m.missionLabel] ?? m.missionLabel} ${m.assigned ? '지정' : '해제'}`,
   );
-  return [base, ...tail].join(' / ');
+  return seq(...base, ...tail);
 }
 
 // ── 철회 판정 ─────────────────────────────────

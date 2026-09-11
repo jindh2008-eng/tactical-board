@@ -151,6 +151,76 @@
   flex: 1;
 }
 
+/* ─────────────────────────────────────────────
+   출동대 칩 — 문장 안의 출동대명 (EVENT_LOG_PHRASING_PLAN §12)
+
+   판 위 토큰(TokenCard.css)과 같은 색 계열이되, 로그가 수백 줄이라 원색을
+   그대로 깔면 시끄럽다 — 옅은 배경 + 밝은 글자 + 1px 테두리로 둔다.
+   차량·유관기관은 판 위 배경이 로그 바탕(#080e0e)과 거의 같아서
+   테두리가 곧 칩의 모양이다.
+   ─────────────────────────────────────────────*/
+.log-chip {
+  display:        inline-block;
+  padding:        0 5px;
+  margin:         0 1px;
+  border:         1px solid;
+  border-radius:  3px;
+  font-size:      1.1rem;
+  font-weight:    700;
+  line-height:    1.35;
+  white-space:    nowrap;
+  vertical-align: baseline;
+}
+
+.log-chip--red {
+  color:        #ffb4b0;
+  background:   rgba(229, 57, 53, 0.26);
+  border-color: rgba(229, 57, 53, 0.8);
+}
+
+.log-chip--yellow {
+  color:        #ffe08a;
+  background:   rgba(251, 192, 45, 0.2);
+  border-color: rgba(251, 192, 45, 0.75);
+}
+
+.log-chip--green {
+  color:        #a5e8aa;
+  background:   rgba(67, 160, 71, 0.26);
+  border-color: rgba(67, 160, 71, 0.8);
+}
+
+.log-chip--blue {
+  color:        #a8c8ff;
+  background:   rgba(21, 101, 192, 0.35);
+  border-color: rgba(66, 133, 244, 0.8);
+}
+
+.log-chip--white {
+  color:        #f2f2f2;
+  background:   rgba(245, 245, 245, 0.12);
+  border-color: rgba(245, 245, 245, 0.6);
+}
+
+.log-chip--vehicle {
+  color:        #ddbb77;
+  background:   #1c1408;
+  border-color: #8a7040;
+}
+
+.log-chip--agency {
+  color:        #c8a8ea;
+  background:   #140e20;
+  border-color: #7a5f9a;
+}
+
+/* 색을 모를 때 — 구버전 저장분이나 색 없이 기록된 줄 */
+.log-chip--none {
+  color:        #c0ccd8;
+  background:   rgba(170, 187, 204, 0.1);
+  border-color: rgba(170, 187, 204, 0.5);
+}
+
 
 /* ─────────────────────────────────────────────
    화재상태 로그 항목

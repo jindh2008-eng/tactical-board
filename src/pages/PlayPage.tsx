@@ -7,7 +7,7 @@ import { useNavSlot }         from '../context/NavSlotContext';
 import { DisplayOptionsContext, type DisplayOptionKey } from '../context/DisplayOptionsContext';
 import { useTokens, TokenProvider } from '../context/TokenContext';
 import { LogProvider, useLog }  from '../context/LogContext';
-import { postOpenPhrase }     from '../utils/logPhrase';
+import { postOpenParts, partsText } from '../utils/logPhrase';
 import { VictimProvider }     from '../context/VictimContext';
 import { EventProvider }      from '../context/EventContext';
 import { ActionModeProvider, useActionMode } from '../context/ActionModeContext';
@@ -334,10 +334,16 @@ function ResourcePanel() {
      */
     if (name && !resourceAssigned) {
       setResourceAssigned(true);
+      // 소장은 이름으로 저장된다 — 같은 이름표의 토큰이 있으면 칩으로 그린다(EVENT_LOG_PHRASING_PLAN §12)
+      const chief = tokens.find(t => t.label === name);
+      const parts = postOpenParts('resource', chief
+        ? { tokenId: chief.id, label: chief.label, unitType: chief.unitType, color: chief.color }
+        : name);
       addLog({
-        logType: 'post', tokenId: '', tokenName: name, fromZoneId: '', toZoneId: '',
-        note:    postOpenPhrase('resource', name),
-        payload: { kind: 'post-open', post: 'resource', chiefTokenId: null, chiefLabel: name },
+        logType: 'post', tokenId: chief?.id ?? '', tokenName: name, fromZoneId: '', toZoneId: '',
+        note:    partsText(parts),
+        parts,
+        payload: { kind: 'post-open', post: 'resource', chiefTokenId: chief?.id ?? null, chiefLabel: name },
       });
       return;
     }

@@ -3,7 +3,7 @@ import { useTokens } from '../../context/TokenContext';
 import { useWaterConnections, type WaterConnection } from '../../context/WaterConnectionContext';
 import { useHydrantCirculation } from '../../context/HydrantCirculationContext';
 import { deriveWaterMissions } from '../../utils/waterMissions';
-import { waterRelayPhrase } from '../../utils/logPhrase';
+import { waterRelayParts, partsText, type UnitRef } from '../../utils/logPhrase';
 import { DERIVED_MISSION_LABELS } from '../../config/unitMissions';
 import type { TagPreset } from '../../types/settings';
 import type { WaterMissionChange } from '../../types';
@@ -45,6 +45,9 @@ function missionTag(label: string): TagPreset {
   return { label, color: 'blue' };
 }
 
+/** 출동대가 아닌 설비 — 로그에서 칩으로 그리지 않는다(칩 = 출동대, §12) */
+const FACILITY_TYPES = new Set(['hydrant', 'indoor_hydrant', 'siamese_pipe']);
+
 export function WaterMissionBridge() {
   const { tokens, toggleMissionTag, addLog } = useTokens();
   const { connections }                      = useWaterConnections();
@@ -72,6 +75,13 @@ export function WaterMissionBridge() {
   useEffect(() => {
     const current = tokensRef.current;
     const tokenOf = (id: string) => current.find(t => t.id === id);
+    /** 칩으로 그릴 출동대 — 색은 지금(기록 시점)의 토큰 색이다 */
+    const unitOf  = (id: string): UnitRef | null => {
+      const t = tokenOf(id);
+      return t && !FACILITY_TYPES.has(t.unitType)
+        ? { tokenId: t.id, label: t.label, unitType: t.unitType, color: t.color }
+        : null;
+    };
     const derived = deriveWaterMissions(connections, circulationIds, id => tokenOf(id)?.unitType);
 
     // ── ① 임무 — 판 위 칩을 파생값에 맞추고, 바뀐 것을 모은다 ──────────
@@ -114,11 +124,11 @@ export function WaterMissionBridge() {
       // 연결 시점에 박아 둔 이름을 우선 쓴다 — 소화전·연결송수구는 tokens 에 없다
       const fromName = conn.fromName ?? tokenOf(conn.fromId)?.label ?? conn.fromId;
       const toName   = conn.toName   ?? tokenOf(conn.toId)?.label   ?? conn.toId;
-      const note = waterRelayPhrase(
-        { connected, fromType: conn.fromType, toType: conn.toType, fromName, toName },
-        mine,
-      );
-      if (note === null) continue;   // 수관철수 — 기록하지 않는다
+      const parts = waterRelayParts({
+        connected, fromType: conn.fromType, toType: conn.toType, fromName, toName,
+        fromUnit: unitOf(conn.fromId), toUnit: unitOf(conn.toId),
+      }, mine);
+      if (parts === null) continue;   // 수관철수 — 기록하지 않는다
 
       addLogRef.current({
         logType:    'water-relay',
@@ -127,7 +137,8 @@ export function WaterMissionBridge() {
         tokenColor: tokenOf(conn.fromId)?.color,
         fromZoneId: conn.fromId,
         toZoneId:   conn.toId,
-        note,
+        note:       partsText(parts),
+        parts,
         payload: {
           kind: 'water-relay', connected, connectionId: conn.id,
           fromId: conn.fromId, toId: conn.toId, fromType: conn.fromType, toType: conn.toType,

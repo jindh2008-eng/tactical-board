@@ -1,9 +1,32 @@
-import type { LogEntry } from '../../types';
+import type { LogEntry, LogPart, TokenColor } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import { useSettings } from '../../store/settingsStore';
 import { exportLogsAsCsv, exportLogsAsPdf } from '../../utils/exportLog';
 import { zoneLabel } from '../../utils/logLabels';
 import './LogPanel.css';
+
+// ─────────────────────────────────────────────
+// 출동대 칩 — 문장 안의 출동대명을 떼어, 판 위 토큰과 같은 색 계열로 그린다.
+// 로그를 보고 판에서 그 대를 바로 찾게 하려는 것이다.
+// docs/EVENT_LOG_PHRASING_PLAN.md §12
+// ─────────────────────────────────────────────
+
+function UnitChip({ text, color }: { text: string; color?: TokenColor }) {
+  return <span className={`log-chip log-chip--${color ?? 'none'}`}>{text}</span>;
+}
+
+/** 조각이 있으면 출동대는 칩으로 그린다. 없으면(구버전·조각 없는 로그) note 그대로 */
+function Sentence({ parts, fallback }: { parts?: LogPart[]; fallback?: string }) {
+  if (!parts) return <>{fallback}</>;
+  return (
+    <>
+      {parts.map((p, i) => (p.kind === 'unit'
+        ? <UnitChip key={i} text={p.text} color={p.color} />
+        : <span key={i}>{p.text}</span>
+      ))}
+    </>
+  );
+}
 
 // ─────────────────────────────────────────────
 // 개별 로그 항목 렌더
@@ -67,7 +90,9 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
       <div className={`log-panel__entry log-panel__entry--water${isRelease ? ' log-panel__entry--water-release' : ''}`}>
         <span className="log-panel__time">{entry.timestamp}</span>
         {!relay && <span className="log-panel__water-prefix">송수</span>}
-        <span className={`log-panel__water-note${isRelease ? ' log-panel__water-note--release' : ''}`}>{note}</span>
+        <span className={`log-panel__water-note${isRelease ? ' log-panel__water-note--release' : ''}`}>
+          <Sentence parts={entry.parts} fallback={note} />
+        </span>
       </div>
     );
   }
@@ -77,12 +102,7 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     return (
       <div className="log-panel__entry log-panel__entry--status">
         <span className="log-panel__time">{entry.timestamp}</span>
-        <span className={[
-          'log-panel__token',
-          tokenColor ? `log-panel__token--${tokenColor}` : '',
-        ].filter(Boolean).join(' ')}>
-          {tokenName}
-        </span>
+        <UnitChip text={tokenName} color={tokenColor} />
         <span className={`log-panel__status-tag${isRelease ? ' log-panel__status-tag--release' : ''}`}>
           {note}
         </span>
@@ -94,7 +114,9 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     return (
       <div className="log-panel__entry log-panel__entry--post">
         <span className="log-panel__time">{entry.timestamp}</span>
-        <span className="log-panel__post-note">{note}</span>
+        <span className="log-panel__post-note">
+          <Sentence parts={entry.parts} fallback={note} />
+        </span>
       </div>
     );
   }
@@ -146,12 +168,14 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     );
   }
 
-  // 도착·복귀 묶음 — 「대기1단계 도착: 진압1대, 구급1대, 물탱크1」
+  // 도착·복귀 묶음 — 「대기1단계 도착: [진압1대], [구급1대], [물탱크1]」
   if (logType === 'arrival') {
     return (
       <div className="log-panel__entry log-panel__entry--arrival">
         <span className="log-panel__time">{entry.timestamp}</span>
-        <span className="log-panel__sentence">{note}</span>
+        <span className="log-panel__sentence">
+          <Sentence parts={entry.parts} fallback={note} />
+        </span>
       </div>
     );
   }
@@ -161,12 +185,20 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     return (
       <div className="log-panel__entry">
         <span className="log-panel__time">{entry.timestamp}</span>
-        <span className={[
-          'log-panel__sentence',
-          tokenColor ? `log-panel__token--${tokenColor}` : '',
-        ].filter(Boolean).join(' ')}>
-          {note}
-        </span>
+        {entry.parts ? (
+          // 조각이 있으면 이름은 칩이 색을 갖고, 나머지 문장은 중립색이다
+          <span className="log-panel__sentence">
+            <Sentence parts={entry.parts} />
+          </span>
+        ) : (
+          // 칩 도입 전(2026-09-11) 저장분 — 문장 전체를 토큰 색으로 칠하던 모양 그대로
+          <span className={[
+            'log-panel__sentence',
+            tokenColor ? `log-panel__token--${tokenColor}` : '',
+          ].filter(Boolean).join(' ')}>
+            {note}
+          </span>
+        )}
       </div>
     );
   }
@@ -175,12 +207,7 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
   return (
     <div className="log-panel__entry">
       <span className="log-panel__time">{entry.timestamp}</span>
-      <span className={[
-        'log-panel__token',
-        tokenColor ? `log-panel__token--${tokenColor}` : '',
-      ].filter(Boolean).join(' ')}>
-        {tokenName}
-      </span>
+      <UnitChip text={tokenName} color={tokenColor} />
       {logType === 'rescue' ? (
         <span className="log-panel__rescue-note">{note}</span>
       ) : (

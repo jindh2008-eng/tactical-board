@@ -27,7 +27,7 @@ import type { LogEntry, ArrivalUnitRef } from '../types';
 import {
   saveLogSession, loadLogSession, migrateLogsFromTokenSession,
 } from '../utils/runtimeSession';
-import { arrivalPhrase, mentionsToken } from '../utils/logPhrase';
+import { arrivalParts, partsText, mentionsToken } from '../utils/logPhrase';
 
 /**
  * 로그 보관 상한.
@@ -166,16 +166,20 @@ export function LogProvider({
     pendingRef.current.clear();
     if (groups.length === 0) return;
 
-    const entries = groups.map(g => buildEntry({
-      logType:    'arrival',
-      logSource:  g.logSource,
-      tokenId:    '',
-      tokenName:  '',
-      fromZoneId: '',
-      toZoneId:   g.zoneKey,
-      note:       arrivalPhrase(g.mode, g.zoneKey, g.units),
-      payload:    { kind: 'arrival', mode: g.mode, zoneKey: g.zoneKey, units: g.units },
-    }, g.stamp));
+    const entries = groups.map(g => {
+      const parts = arrivalParts(g.mode, g.zoneKey, g.units);
+      return buildEntry({
+        logType:    'arrival',
+        logSource:  g.logSource,
+        tokenId:    '',
+        tokenName:  '',
+        fromZoneId: '',
+        toZoneId:   g.zoneKey,
+        note:       partsText(parts),
+        parts,
+        payload:    { kind: 'arrival', mode: g.mode, zoneKey: g.zoneKey, units: g.units },
+      }, g.stamp);
+    });
     setLogs(prev => prependEntries(prev, entries));
   }, []);
 
@@ -218,8 +222,12 @@ export function LogProvider({
         if (p?.kind === 'arrival' && p.mode === 'arrive' && p.units.some(u => u.tokenId === tokenId)) {
           const units = p.units.filter(u => u.tokenId !== tokenId);
           const next  = [...prev];
-          if (units.length === 0) next.splice(i, 1);
-          else next[i] = { ...e, note: arrivalPhrase(p.mode, p.zoneKey, units), payload: { ...p, units } };
+          if (units.length === 0) {
+            next.splice(i, 1);
+          } else {
+            const parts = arrivalParts(p.mode, p.zoneKey, units);
+            next[i] = { ...e, note: partsText(parts), parts, payload: { ...p, units } };
+          }
           return next;
         }
         if (mentionsToken(e, tokenId)) return prev;
