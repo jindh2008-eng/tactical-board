@@ -55,42 +55,21 @@
   flex-shrink: 0;
 }
 
-/* ── 대기1단계 [운영]·[미운영] 전환 — 제목 오른쪽 끝에 붙는 두 칸 버튼 ── */
+/* ── 대기1단계 운영 버튼 — 겉모양은 소장 자리(RoleSlot.css)를 그대로 쓴다 ──
+   회색 점선 「[미운영]」 ⇄ 보라 「운영」. 여기서는 button 기본 모양만 걷어 낸다. */
 
-.standby-op-toggle {
-  display: inline-flex;
-  margin-left: auto;
-  flex-shrink: 0;
-  border: 1px solid var(--ctr-border-soft);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.standby-op-toggle__btn {
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.4;
-  padding: 1px 8px;
+.standby-op-slot {
+  padding: 0;
   border: 0;
-  background: transparent;
-  color: var(--ctr-text-dim);
+  background: none;
+  font: inherit;
+  color: inherit;
   cursor: pointer;
 }
 
-.standby-op-toggle__btn + .standby-op-toggle__btn {
-  border-left: 1px solid var(--ctr-border-soft);
-}
-
-/* 켜진 쪽 — 운영은 대기1단계 글자색, 미운영은 직전대기와 같은 붉은 갈색 */
-.standby-op-toggle__btn--on {
-  background: #504870;
-  color: #fff;
-}
-
-.standby-op-toggle__btn--off {
-  background: #784040;
-  color: #fff;
+/* 출동대가 배치돼 잠긴 운영 — 눌러도 바뀌지 않는다(안내만 뜬다) */
+.standby-op-slot--locked {
+  cursor: not-allowed;
 }
 
 /* ── 단일 body (기존 호환) ── */

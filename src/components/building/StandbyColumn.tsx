@@ -10,6 +10,7 @@ import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
 import { ArrivedGroupRow } from '../shared/ArrivedGroupRow';
 import { splitArrivalGroup } from '../../utils/arrivalGroup';
 import { postOpenParts, partsText } from '../../utils/logPhrase';
+import { showBoardNotice } from '../../utils/boardNotice';
 
 import './StandbyColumn.css';
 
@@ -233,34 +234,53 @@ function SimpleStandbyBox({ label, zoneKey, colorMod, onTokenDoubleClick, header
 // BottomStandbyBoxes — 좌측 운영 패널의 "대기1단계" 섹션
 // 더블클릭하면 A면의 직전대기로 보낸다(차량은 여기 남는다 — 교리대로)
 //
-// 제목 옆 [운영]·[미운영] — 대기1단계를 운영할지 지휘관이 정한다(2026-09-14 사용자 정의).
-// 기본은 운영이다. 미운영이면 출동대현황·추가출동대의 출동대가 대기1단계를 거치지 않고
-// A면으로 나간다(utils/dispatchTarget). 이미 들어와 있는 대는 그대로 둔다.
+// 제목 옆 운영 버튼 — 대기1단계를 운영할지 지휘관이 정한다(2026-09-14 사용자 정의).
+// 자원대기소·임시의료소의 소장 자리와 같은 모양이다(RoleSlot 의 표기 칩을 그대로 쓴다).
+// 기본은 회색 「[미운영]」, 누르면 보라색 「운영」, 다시 누르면 「[미운영]」.
+//
+// 미운영이면 출동대현황·추가출동대의 출동대가 대기1단계를 거치지 않고 A면으로 나간다
+// (utils/dispatchTarget). 이미 들어와 있는 대는 그대로 둔다.
+//
+// **운영 중에 출동대가 배치되면 잠긴다** — 그 뒤로는 미운영으로 되돌릴 수 없고,
+// `훈련 세팅` 을 해야 미운영으로 초기화된다(세션을 비우고 Provider 가 다시 마운트된다).
 // ─────────────────────────────────────────────
 
 export function BottomStandbyBoxes() {
-  const { moveToken } = useTokens();
-  const { standby1Operating, setStandby1Operating } = useResourceStatus();
+  const { tokens, moveToken } = useTokens();
+  const { standby1Operating, setStandby1Operating, standby1Locked, lockStandby1 } = useResourceStatus();
+
+  // 운영 중 출동대가 들어오는 순간 잠근다 — 도착 경로(더블클릭·드롭·시간 도착)가 여럿이라
+  // 한 곳씩 막지 않고 결과(구역에 대가 있는가)를 본다. 한 번 잠그면 대가 떠나도 풀리지 않는다
+  const occupied = tokens.some(t => t.zoneKey === 'standby-standby1');
+  useEffect(() => {
+    if (standby1Operating && occupied && !standby1Locked) lockStandby1();
+  }, [standby1Operating, occupied, standby1Locked, lockStandby1]);
+
+  function toggleOperating(e: React.MouseEvent) {
+    if (standby1Locked) {
+      showBoardNotice('출동대가 배치된 대기1단계는 미운영으로 되돌릴 수 없습니다. 훈련 세팅을 하면 초기화됩니다.', e.clientX, e.clientY);
+      return;
+    }
+    setStandby1Operating(v => !v);
+  }
 
   const toggle = (
-    <span className="standby-op-toggle" role="group" aria-label="대기1단계 운영 여부">
-      <button
-        type="button"
-        className={`standby-op-toggle__btn${standby1Operating ? ' standby-op-toggle__btn--on' : ''}`}
-        aria-pressed={standby1Operating}
-        onClick={() => setStandby1Operating(true)}
-      >
-        운영
-      </button>
-      <button
-        type="button"
-        className={`standby-op-toggle__btn${standby1Operating ? '' : ' standby-op-toggle__btn--off'}`}
-        aria-pressed={!standby1Operating}
-        onClick={() => setStandby1Operating(false)}
-      >
-        미운영
-      </button>
-    </span>
+    <button
+      type="button"
+      className={[
+        'role-slot', 'standby-op-slot',
+        standby1Operating ? 'role-slot--filled' : '',
+        standby1Locked ? 'standby-op-slot--locked' : '',
+      ].filter(Boolean).join(' ')}
+      aria-pressed={standby1Operating}
+      aria-label={`대기1단계 ${standby1Operating ? '운영' : '미운영'}`}
+      title={standby1Locked
+        ? '대기1단계 운영 — 출동대가 배치돼 훈련 세팅 전까지 바꿀 수 없습니다'
+        : `대기1단계 ${standby1Operating ? '운영 — 누르면 미운영' : '미운영 — 누르면 운영'}`}
+      onClick={toggleOperating}
+    >
+      <span className="role-slot__tag">{standby1Operating ? '운영' : '[미운영]'}</span>
+    </button>
   );
 
   return (
