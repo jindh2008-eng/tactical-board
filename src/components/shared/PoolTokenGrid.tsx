@@ -5,7 +5,7 @@ import { isMountedPump } from '../../utils/unitPairing';
 import './PoolTokenGrid.css';
 
 // ─────────────────────────────────────────────
-// 출동대현황 · 추가출동대 · 자원대기소 · 대기1단계 공용 배열 — 종류별 6열(세로 쌓기)
+// 출동대현황 · 추가출동대 · 자원대기소 · 대기1단계 공용 배열 — 종류별 7열(세로 쌓기)
 //
 // 자원대기소·대기1단계도 이 목록을 쓴다(2026-09-15 사용자 정의). 예전에는 맨 윗줄에
 // 방금 들어온 「도착대」를 따로 두고 아래를 다른 5열 목록으로 그렸는데, 도착은 이제
@@ -17,14 +17,19 @@ import './PoolTokenGrid.css';
 // 판정(isMountedPump)이 출동대현황·추가출동대에서만 참이라 두 대기구역에서는 펌프가 보인다.
 // ─────────────────────────────────────────────
 
-type ColumnKey = 'suppression' | 'rescueEms' | 'waterTank' | 'special' | 'agency' | 'custom';
+type ColumnKey = 'suppression' | 'rescueEms' | 'pump' | 'waterTank' | 'special' | 'agency' | 'custom';
 
-/** 왼쪽부터의 열 순서. 이름표는 붙이지 않는다 — 토큰만 봐도 종류가 읽힌다 */
+/**
+ * 왼쪽부터의 열 순서. 이름표는 붙이지 않는다 — 토큰만 봐도 종류가 읽힌다.
+ *
+ * 펌프는 제 열을 갖는다(2026-09-15 사용자 정의) — 자원대기소·대기1단계에서 가장 많은 것이
+ * 펌프차라, 다른 차량과 한 줄에 섞으면 특수차가 펌프 사이에 묻힌다.
+ */
 const COLUMN_ORDER: ColumnKey[] = [
-  'suppression', 'rescueEms', 'waterTank', 'special', 'agency', 'custom',
+  'suppression', 'rescueEms', 'pump', 'waterTank', 'special', 'agency', 'custom',
 ];
 
-/** 특수차 — 물탱크를 뺀 나머지 차량 전부 */
+/** 특수차 — 펌프·물탱크를 뺀 나머지 차량 전부 */
 const SPECIAL_VEHICLE_TYPES = new Set([
   'rescue_vehicle', 'aerial', 'ladder', 'smoke_exhaust', 'hazmat', 'wildfire', 'command',
 ]);
@@ -32,8 +37,9 @@ const SPECIAL_VEHICLE_TYPES = new Set([
 function categorize(unitType: string): ColumnKey {
   if (unitType === 'suppression') return 'suppression';
   if (unitType === 'rescue' || unitType === 'ems') return 'rescueEms';
+  if (unitType === 'pump') return 'pump';
   if (unitType === 'water_tank') return 'waterTank';
-  if (unitType === 'pump' || SPECIAL_VEHICLE_TYPES.has(unitType)) return 'special';
+  if (SPECIAL_VEHICLE_TYPES.has(unitType)) return 'special';
   if (unitType === 'agency') return 'agency';
   return 'custom';
 }
