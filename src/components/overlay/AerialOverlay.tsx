@@ -4,7 +4,7 @@ import type { UnitToken } from '../../types';
 import { useTokens } from '../../context/TokenContext';
 import type { TokenPos } from '../../context/TokenContext';
 import { useVictims } from '../../context/VictimContext';
-import { victimDisplayName } from '../../utils/logLabels';
+import { rescueTripOf, aerialRescueLog } from '../../utils/logPhrase';
 import { VictimCard } from '../shared/VictimCard';
 import { useHandleDrag } from '../../hooks/useHandleDrag';
 import { resolveSprayTarget } from '../../utils/sprayTarget';
@@ -472,17 +472,15 @@ export function AerialOverlay() {
     if (carried.length === 0) return;
 
     const token = tokensRef.current.find(t => t.id === tokenId);
-    addLogRef.current({
-      logType:    'rescue',
-      tokenId,
-      tokenName:  token?.label ?? tokenId,
-      tokenColor: token?.color,
-      fromZoneId: token?.zoneKey ?? 'pool',
-      toZoneId:   'medical-post',
-      note:       `${carried.map(victimDisplayName).join(', ')} 구조대상자 → 구조, 임시의료소 이동`,
-    });
+    // 「[고가1] 옥상 구조대상자 2명 구조완료」 한 줄(2026-09-14 사용자 정의).
+    // 층은 구조대상자가 처음 놓였던 구역이다 — 바스켓에 태우며 차가 선 면으로 옮겨졌어도 옥상이다
+    addLogRef.current(aerialRescueLog(
+      { tokenId, label: token?.label ?? tokenId, unitType: token?.unitType ?? 'aerial', color: token?.color },
+      token?.zoneKey ?? null, rescueTripOf(carried),
+    ));
+    // 구조대상자 이동 줄은 남기지 않는다 — 위 줄이 이미 말한다.
     // keepCarrier 없음 → 연결이 함께 끊긴다(활동대 도착과 같은 경로)
-    for (const v of carried) moveVictim(v.id, 'medical-post');
+    for (const v of carried) moveVictim(v.id, 'medical-post', undefined, { silent: true });
   }
 
   useEffect(() => { tokensRef.current = tokens; }, [tokens]);

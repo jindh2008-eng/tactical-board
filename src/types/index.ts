@@ -315,6 +315,12 @@ export type LogPayload =
    * 「몇 분에 몇 층에서 몇 명을 옮겼는가」가 평가 항목이다. count 는 묶음 인원까지 센 사람 수
    */
   | { kind: 'rescue-done'; tokenId: string; tokenLabel: string;
+      victimIds: string[]; floorLabels: string[]; count: number | null }
+  /**
+   * 고가·굴절차 구조 — 차는 제자리에서 사다리로 구조하므로 이송이 없고 구조 순간이 곧 완료다.
+   * 「[고가1] 옥상 구조대상자 2명 구조완료」(2026-09-14 사용자 정의)
+   */
+  | { kind: 'aerial-rescue'; tokenId: string; tokenLabel: string;
       victimIds: string[]; floorLabels: string[]; count: number | null };
 
 /** 도착·복귀 묶음에 든 출동대 1건 — 어디서 왔는지와 칩 색까지 담는다 */

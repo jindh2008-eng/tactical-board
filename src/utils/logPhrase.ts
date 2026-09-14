@@ -224,9 +224,46 @@ export function mergeRescueTrips(a?: RescueTrip, b?: RescueTrip): RescueTrip {
  * 「구조중」은 임시의료소로 옮기는 중이라는 뜻이다(2026-09-14 사용자 정의).
  */
 export function rescueDoneParts(u: UnitRef, trip?: RescueTrip): LogPart[] {
+  return seq(unitPart(u), ` ${tripText(trip)} 임시의료소 이송완료`);
+}
+
+/**
+ * 「[고가1] 옥상 구조대상자 2명 구조완료」 — 고가·굴절차 구조(2026-09-14 사용자 정의).
+ * 차는 제자리에서 사다리로 구조하므로 이송(「구조중」)이 없고, 구조 순간이 곧 완료다.
+ */
+export function aerialRescueParts(u: UnitRef, trip: RescueTrip): LogPart[] {
+  return seq(unitPart(u), ` ${tripText(trip)} 구조완료`);
+}
+
+/**
+ * 고가·굴절차 구조 한 줄 — 우클릭 구조 · 드롭 확인 · 바스켓 접기가 모두 이 줄을 남긴다.
+ * 구조대상자 이동 줄은 따로 남기지 않는다(부르는 쪽이 moveVictim 을 silent 로 부른다).
+ */
+export function aerialRescueLog(
+  u: UnitRef, fromZoneKey: string | null, trip: RescueTrip,
+): Omit<LogEntry, 'id' | 'timestamp' | 'elapsedSec' | 'wallClockMs'> {
+  const parts = aerialRescueParts(u, trip);
+  return {
+    logType:    'rescue',
+    tokenId:    u.tokenId,
+    tokenName:  u.label,
+    ...(u.color ? { tokenColor: u.color } : {}),
+    fromZoneId: fromZoneKey ?? '',
+    toZoneId:   'medical-post',
+    note:       partsText(parts),
+    parts,
+    payload: {
+      kind: 'aerial-rescue', tokenId: u.tokenId, tokenLabel: u.label,
+      victimIds: trip.victimIds, floorLabels: trip.floorLabels, count: trip.count,
+    },
+  };
+}
+
+/** 「옥상 구조대상자 2명」 — 이송완료·구조완료가 함께 쓴다. 층이나 인원을 모르면 뺀다 */
+function tripText(trip?: RescueTrip): string {
   const where = trip && trip.floorLabels.length > 0 ? `${trip.floorLabels.join('·')} ` : '';
   const who   = trip?.count != null ? `구조대상자 ${trip.count}명` : '구조대상자';
-  return seq(unitPart(u), ` ${where}${who} 임시의료소 이송완료`);
+  return `${where}${who}`;
 }
 
 // ── 송수 ─────────────────────────────────────

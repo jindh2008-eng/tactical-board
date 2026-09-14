@@ -9,7 +9,7 @@ import type { UnitToken } from '../../types';
 import type { VictimToken, VictimCondition } from '../../types/victim';
 import { VictimContextBarMenu, type AnchorRect } from './VictimContextBarMenu';
 import { zoneKeyToFullLabel, buildVictimDisplayLine, canUnitRescueVictim } from '../../utils/victimUtils';
-import { rescueTripOf } from '../../utils/logPhrase';
+import { rescueTripOf, aerialRescueLog } from '../../utils/logPhrase';
 import { setDragGrabOffset } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import './VictimCard.css';
@@ -47,7 +47,7 @@ function GroupPersonIcon() {
 
 export function VictimCard({ victim, absPos, attached }: Props) {
   const { updateVictim, moveVictim } = useVictims();
-  const { tokens, rescueUnit }       = useTokens();
+  const { tokens, rescueUnit, addLog } = useTokens();
   const { mode, clearMode }          = useActionMode();
   const [ctxMenu,     setCtxMenu]     = useState<AnchorRect | null>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
@@ -94,14 +94,34 @@ export function VictimCard({ victim, absPos, attached }: Props) {
     setRescueAsk({ unit, x: e.clientX, y: e.clientY });
   }
 
+  /**
+   * 구조 한 번 — 누가 구조하느냐로 갈린다.
+   *
+   *   고가·굴절차 → 차는 제자리다(사다리 구조). 「[고가1] 옥상 구조대상자 1명 구조완료」 한 줄
+   *   그 밖       → 임시의료소로 옮기며 「구조중」을 건다(rescueUnit). 끝나면 이송완료 줄이다
+   *
+   * 어느 쪽이든 구조대상자 이동 줄은 남기지 않는다 — 위 줄이 이미 말한다.
+   * 드롭 확인 팝업 · 구조 모드 · 우클릭 구조가 모두 여기로 온다. 예전에는 드롭 팝업이
+   * 고가차에도 rescueUnit 을 불러, 사다리를 편 차가 임시의료소로 옮겨졌다.
+   */
+  const rescueBy = useCallback((unit: UnitToken) => {
+    const trip = rescueTripOf([victim]);
+    if (unit.unitType === 'aerial' || unit.unitType === 'ladder') {
+      addLog(aerialRescueLog(
+        { tokenId: unit.id, label: unit.label, unitType: unit.unitType, color: unit.color },
+        unit.zoneKey, trip,
+      ));
+    } else {
+      const locationLabel  = zoneKeyToFullLabel(victim.zoneKey);
+      const rescueLocLabel = [locationLabel, victim.subLocation].filter(Boolean).join(' ') || '위치미상';
+      rescueUnit(unit.id, rescueLocLabel, trip);
+    }
+    moveVictim(victim.id, 'medical-post', undefined, { silent: true });
+  }, [victim, addLog, rescueUnit, moveVictim]);
+
   function confirmRescue() {
     if (!rescueAsk) return;
-    const locationLabel  = zoneKeyToFullLabel(victim.zoneKey);
-    const rescueLocLabel = [locationLabel, victim.subLocation].filter(Boolean).join(' ') || '위치미상';
-    // 이송 내용(층·인원)을 함께 넘긴다 — 「구조중」이 끝날 때 이송완료 줄이 된다.
-    // 구조대상자 이동은 조용히 — 출동대의 구조 줄이 이미 「임시의료소 이동」을 말한다
-    rescueUnit(rescueAsk.unit.id, rescueLocLabel, rescueTripOf([victim]));
-    moveVictim(victim.id, 'medical-post', undefined, { silent: true });
+    rescueBy(rescueAsk.unit);
     setRescueAsk(null);
   }
 
@@ -109,11 +129,7 @@ export function VictimCard({ victim, absPos, attached }: Props) {
   function handleRescueClick(e: React.MouseEvent) {
     if (!isRescueTarget || !sourceToken) return;
     e.stopPropagation();
-    const locationLabel = zoneKeyToFullLabel(victim.zoneKey);
-    const rescueLocLabel = [locationLabel, victim.subLocation]
-      .filter(Boolean).join(' ') || '위치미상';
-    rescueUnit(sourceToken.id, rescueLocLabel, rescueTripOf([victim]));
-    moveVictim(victim.id, 'medical-post', undefined, { silent: true });
+    rescueBy(sourceToken);
     clearMode();
   }
 
@@ -159,19 +175,11 @@ export function VictimCard({ victim, absPos, attached }: Props) {
     [updateVictim, victim.id],
   );
 
+  // 우클릭 구조 — 고가·굴절차면 차는 제자리에서 사다리 구조다(rescueBy 주석)
   const handleRescue = useCallback((unit: UnitToken) => {
-    const locationLabel = zoneKeyToFullLabel(victim.zoneKey);
-    const rescueLocLabel = [locationLabel, victim.subLocation]
-      .filter(Boolean)
-      .join(' ') || '위치미상';
-
-    // 굴절차/고가차는 현장에서 사다리 전개 구조 — 차량 위치 변경 없음.
-    // 그때는 출동대 쪽 구조 줄이 없으므로 구조대상자 이동 로그를 그대로 남긴다
-    const byUnit = unit.unitType !== 'ladder' && unit.unitType !== 'aerial';
-    if (byUnit) rescueUnit(unit.id, rescueLocLabel, rescueTripOf([victim]));
-    moveVictim(victim.id, 'medical-post', undefined, { silent: byUnit });
+    rescueBy(unit);
     setCtxMenu(null);
-  }, [rescueUnit, moveVictim, victim]);
+  }, [rescueBy]);
 
   /**
    * 이송 연결 해제 — 자리는 그대로 두고 연결만 끊는다.
