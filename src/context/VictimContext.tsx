@@ -560,14 +560,11 @@ export function VictimProvider({
     const victim = victimsRef.current.find(v => v.id === victimId);
     if (!token || !victim) return;
 
-    addLog({
-      logType:    'move',
-      tokenId:    victimId,
-      tokenName:  victimDisplayName(victim),
-      fromZoneId: victim.zoneKey ?? 'pool',
-      toZoneId:   token.zoneKey ?? 'pool',
-      note:       `${token.label} 이송 연결`,
-    });
+    /*
+     * 로그는 남기지 않는다(2026-09-14 사용자 결정). 이송 연결은 판 위에서
+     * 구조대상자를 출동대에 붙이는 조작이지 무전 교신이 아니다 — 누가 누구를
+     * 옮겼는지는 임시의료소에 들어갈 때 구조 줄(rescueUnit)이 말한다.
+     */
 
     // 출동대와 같은 구역으로 옮기고 연결한다. 위치는 출동대 옆에 두기 위해
     // 좌표를 지우고 흐름 배치에 맡긴다(구역 좌표계가 서로 달라 그대로 쓰면 어긋남).
@@ -581,7 +578,7 @@ export function VictimProvider({
       delete next[victimId];
       return next;
     });
-  }, [tokens, addLog]);
+  }, [tokens]);
 
   // ── 연결된 구조대상자 동반 이동 ───────────────────────────────────
   //
