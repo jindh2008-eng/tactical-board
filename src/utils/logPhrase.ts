@@ -142,8 +142,24 @@ export function arrivalParts(
   return seq(...items);
 }
 
-/** 「[진압1대] 대기1단계 → 직전대기 이동」 */
+/** 받침에 따라 「로」·「으로」 — 받침이 없거나 ㄹ 받침이면 「로」(「직전대기로」·「A면으로」) */
+function roParticle(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  if (Number.isNaN(code) || code < 0 || code > 11171) return '(으)로';
+  const jong = code % 28;
+  return jong === 0 || jong === 8 ? '로' : '으로';
+}
+
+/**
+ * 「[진압1대] 대기1단계 → 직전대기 이동」.
+ * 임시의료소를 떠날 때는 「[진압3대] 임시의료소에서 직전대기로 이동」(2026-09-14 사용자 정의) —
+ * 구조를 마치고 다시 투입되는 순간이라 무전 멘트 그대로 적는다.
+ */
 export function moveParts(u: UnitRef, fromZoneKey: string, toZoneKey: string): LogPart[] {
+  if (fromZoneKey === 'medical-post') {
+    const dest = zoneLabel(toZoneKey);
+    return seq(unitPart(u), ` 임시의료소에서 ${dest}${roParticle(dest)} 이동`);
+  }
   return seq(unitPart(u), ` ${zoneLabel(fromZoneKey)} → ${zoneLabel(toZoneKey)} 이동`);
 }
 
@@ -167,7 +183,7 @@ export function postOpenParts(post: PostKind, chief: UnitRef | string): LogPart[
 
 /**
  * 이송 한 번 — 누구를, 몇 층에서, 몇 명 옮기는가(TokenContext.rescueUnit).
- * 「구조중」 카운트다운이 끝나면 이 내용으로 이송완료 한 줄을 남긴다.
+ * 「구조중」 카운트다운이 끝나거나 그 전에 임시의료소를 떠나면 이 내용으로 구조완료 한 줄을 남긴다.
  */
 export interface RescueTrip {
   victimIds:   string[];
@@ -220,11 +236,28 @@ export function mergeRescueTrips(a?: RescueTrip, b?: RescueTrip): RescueTrip {
 }
 
 /**
- * 「[진압3대] 2층 구조대상자 1명 임시의료소 이송완료」 — 「구조중」 카운트다운이 끝났을 때.
- * 「구조중」은 임시의료소로 옮기는 중이라는 뜻이다(2026-09-14 사용자 정의).
+ * 「[진압3대] 2층 구조대상자 1명 구조완료」 — 「구조중」 카운트다운이 끝났을 때,
+ * 또는 끝나기 전에 임시의료소를 떠났을 때(2026-09-14 사용자 정의).
+ * 「구조중」은 임시의료소로 옮기는 중이라는 뜻이다.
  */
 export function rescueDoneParts(u: UnitRef, trip?: RescueTrip): LogPart[] {
-  return seq(unitPart(u), ` ${tripText(trip)} 임시의료소 이송완료`);
+  return seq(unitPart(u), ` ${tripText(trip)} 구조완료`);
+}
+
+/**
+ * 바스켓에서 이 대원에게 넘어온 구조대상자 — 땅에 닿을 때 이미
+ * 「[진압1대] 옥상 구조대상자 1명 고가차 이용 구조완료」가 남았다.
+ * 대원이 임시의료소에 들어갈 때 이송에서 빼 같은 사람을 두 번 구조완료로 세지 않는다.
+ */
+export function aerialCreditedVictimIds(logs: readonly LogEntry[], riderTokenId: string): Set<string> {
+  const ids = new Set<string>();
+  for (const e of logs) {
+    const p = e.payload;
+    if (p?.kind === 'aerial-rescue' && p.riderTokenId === riderTokenId) {
+      for (const id of p.victimIds) ids.add(id);
+    }
+  }
+  return ids;
 }
 
 /**
@@ -250,7 +283,8 @@ export function aerialRescueParts(
  * 구조대상자 이동 줄은 따로 남기지 않는다(부르는 쪽이 moveVictim 을 silent 로 부른다).
  *
  * 바스켓에 탄 활동대(`rider`)가 있으면 그 대가 줄의 주인이다. 구조대상자는 그 대원에게
- * 넘어가 함께 임시의료소로 가므로(이송완료 줄은 그때 따로 남는다) 아직 임시의료소가 아니다.
+ * 넘어가 함께 임시의료소로 가므로 아직 임시의료소가 아니다. 그때는 구조완료 줄을 다시 남기지
+ * 않는다(aerialCreditedVictimIds).
  */
 export function aerialRescueLog(
   vehicle: UnitRef, fromZoneKey: string | null, trip: RescueTrip, rider?: UnitRef | null,
@@ -274,7 +308,7 @@ export function aerialRescueLog(
   };
 }
 
-/** 「옥상 구조대상자 2명」 — 이송완료·구조완료가 함께 쓴다. 층이나 인원을 모르면 뺀다 */
+/** 「옥상 구조대상자 2명」 — 활동대·고가차 구조완료가 함께 쓴다. 층이나 인원을 모르면 뺀다 */
 function tripText(trip?: RescueTrip): string {
   const where = trip && trip.floorLabels.length > 0 ? `${trip.floorLabels.join('·')} ` : '';
   const who   = trip?.count != null ? `구조대상자 ${trip.count}명` : '구조대상자';

@@ -14,7 +14,7 @@ import {
 } from '../utils/victimPlacement';
 import { buildValidVictimZoneKeys } from '../data/buildingData';
 import { floorIdLabel, zoneLabel, victimDisplayName } from '../utils/logLabels';
-import { rescueTripOf } from '../utils/logPhrase';
+import { rescueTripOf, aerialCreditedVictimIds } from '../utils/logPhrase';
 import {
   saveVictimSession, loadVictimSession,
   saveVictimSearchSession, loadVictimSearchSession,
@@ -131,7 +131,7 @@ export function VictimProvider({
   buildingConfig?:     BuildingConfig;
   fireFloor?:          number;
 }) {
-  const { addLog, tokens, rescueUnit } = useTokens();
+  const { addLog, tokens, rescueUnit, logs } = useTokens();
 
   const validZoneKeysRef = useRef<Set<string>>(
     buildingConfig !== undefined
@@ -586,6 +586,9 @@ export function VictimProvider({
   // 그래서 "출동대가 움직이면 따라간다"를 여기서 토큰 변화를 관찰해 처리한다.
   // 임시의료소에 도착하면 자동으로 구조 처리하고 연결을 끊는다.
   const prevTokenZonesRef = useRef<Map<string, string | null> | null>(null);
+  // 로그는 읽기만 한다 — 효과 의존성에 넣으면 로그가 쌓일 때마다 다시 돈다
+  const logsRef = useRef(logs);
+  useEffect(() => { logsRef.current = logs; }, [logs]);
   useEffect(() => {
     const nextZones = new Map(tokens.map(t => [t.id, t.zoneKey]));
     const prevZones = prevTokenZonesRef.current;
@@ -604,9 +607,11 @@ export function VictimProvider({
         // rescue 로그(누가 구조했는지)를 남기고 처치 카운트다운을 시작한다.
         const token = tokens.find(t => t.id === tokenId);
         const names = carried.map(victimDisplayName).join(', ');
-        // 이송 내용(층·인원)을 함께 넘긴다 — 「구조중」이 끝날 때 이송완료 줄이 된다.
+        // 이송 내용(층·인원)을 함께 넘긴다 — 「구조중」이 끝나거나 그 전에 떠날 때 구조완료 줄이 된다.
+        // 바스켓에서 넘겨받은 구조대상자는 땅에 닿을 때 이미 구조완료가 남아 이송에서 뺀다.
         // 구조대상자 이동은 조용히 — 출동대의 구조 줄이 이미 「임시의료소 이동」을 말한다
-        if (token) rescueUnit(tokenId, names, rescueTripOf(carried));
+        const credited = aerialCreditedVictimIds(logsRef.current, tokenId);
+        if (token) rescueUnit(tokenId, names, rescueTripOf(carried.filter(v => !credited.has(v.id))));
         for (const v of carried) {
           moveVictim(v.id, 'medical-post', undefined, { silent: !!token });  // keepCarrier 없음 → 연결 해제
         }

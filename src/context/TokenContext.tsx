@@ -93,7 +93,7 @@ interface TokenContextValue {
   removeToken: (tokenId: string) => void;
   /**
    * 구조 — 임시의료소로 옮기며 「구조중」 카운트다운을 건다.
-   * `trip` 은 이송 내용(층·인원) — 카운트다운이 끝나면 이송완료 줄이 된다(utils/logPhrase rescueTripOf).
+   * `trip` 은 이송 내용(층·인원) — 카운트다운이 끝나거나 그 전에 떠나면 구조완료 줄이 된다(utils/logPhrase rescueTripOf).
    */
   rescueUnit:  (tokenId: string, victimLabel: string, trip?: RescueTrip) => void;
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
@@ -556,6 +556,43 @@ export function TokenProvider({
     });
   }, []);
 
+  // ── 구조완료 한 줄 ───────────────────────────
+  /*
+   * 이송 한 번의 내용 — 누구를, 몇 층에서, 몇 명 옮기는가.
+   * 「구조중」 카운트다운은 **임시의료소로 옮기는 시간**이다(2026-09-14 사용자 정의).
+   * 그래서 0이 되는 순간, 또는 그 전에 임시의료소를 떠나는 순간 이 내용으로
+   * 「[진압3대] 2층 구조대상자 1명 구조완료」를 남긴다. 구조대상자는 VictimProvider(안쪽)가
+   * 알고 있어 부르는 쪽이 넘긴다(utils/logPhrase rescueTripOf).
+   */
+  const rescueTripsRef = useRef<Record<string, RescueTrip>>({});
+
+  const logRescueDone = useCallback((
+    token: { id: string; label: string; unitType: string; color: TokenColor },
+    trip:  RescueTrip | undefined,
+  ) => {
+    // 넘긴 이송이 비었다 — 데려온 구조대상자가 모두 이미 구조완료 줄에 들었다(바스켓 인계)
+    if (trip && trip.victimIds.length === 0) return;
+    // 출동대명은 칩으로 그린다. 이동이 없으므로 `rescue` 로 남긴다(`move` 로 남기면
+    // 로그판이 출발지→도착지 경로를 그리려 든다 — LogPanel.tsx)
+    const unit  = { tokenId: token.id, label: token.label, unitType: token.unitType, color: token.color };
+    const parts = rescueDoneParts(unit, trip);
+    addLog({
+      logSource:  'system',
+      logType:    'rescue',
+      tokenId:    token.id,
+      tokenName:  token.label,
+      tokenColor: token.color,
+      fromZoneId: 'medical-post',
+      toZoneId:   '',
+      note:       partsText(parts),
+      parts,
+      payload:    {
+        kind: 'rescue-done', tokenId: token.id, tokenLabel: token.label,
+        victimIds: trip?.victimIds ?? [], floorLabels: trip?.floorLabels ?? [], count: trip?.count ?? null,
+      },
+    });
+  }, [addLog]);
+
   // ── 토큰 이동 ───────────────────────────────
   const moveToken = useCallback((
     tokenId:   string,
@@ -632,7 +669,16 @@ export function TokenProvider({
        *
        * 동승 펌프는 아래에서 moveToken 을 다시 부르므로 같은 태스크다 —
        * 「대기1단계 도착: 진압1대, 펌프1」 한 줄이 된다.
+       *
+       * 임시의료소를 떠나면 「[진압3대] 임시의료소에서 직전대기로 이동」이다(moveParts).
+       * 「구조중」이 끝나기 전에 떠나도 구조는 한 것이라, 그 앞에 구조완료 줄을 먼저
+       * 남긴다(2026-09-14 사용자 정의). 예전에는 「(구조 처리 중단)」을 붙이고 말았다.
        */
+      if (wasRescuing) {
+        const trip = rescueTripsRef.current[tokenId];
+        delete rescueTripsRef.current[tokenId];
+        logRescueDone(token, trip);
+      }
       const fromZoneKey = token.zoneKey ?? 'pool';
       const kind = classifyMove(token.zoneKey, toZoneKey);
       if (toZoneKey === null || kind === 'withdraw') {
@@ -645,10 +691,7 @@ export function TokenProvider({
       } else {
         // 출동대명은 칩으로 그린다 — 색은 지금(기록 시점)의 토큰 색이다(§12)
         const unit  = { tokenId: token.id, label: token.label, unitType: token.unitType, color: token.color };
-        const parts = [
-          ...(kind === 'mission' ? missionParts(unit, 'RIT') : moveParts(unit, fromZoneKey, toZoneKey)),
-          ...(wasRescuing ? [{ kind: 'text' as const, text: ' (구조 처리 중단)' }] : []),
-        ];
+        const parts = kind === 'mission' ? missionParts(unit, 'RIT') : moveParts(unit, fromZoneKey, toZoneKey);
         addLog({
           logType:    'move',
           tokenId:    token.id,
@@ -694,22 +737,13 @@ export function TokenProvider({
         moveTokenRef.current(id, pumpZone, undefined, { skipPairMove: true });
       }
     }
-  }, [addLog, addArrivalLog, retractArrival, releaseRolesFor]);
+  }, [addLog, addArrivalLog, retractArrival, releaseRolesFor, logRescueDone]);
 
   // moveToken 이 자기 자신을 다시 부를 수 있게 참조를 들고 있는다.
   // deps 가 [] 라 함수가 다시 만들어지지 않으므로 최초 값 그대로면 충분하다.
   const moveTokenRef = useRef(moveToken);
 
   // ── 구조 처리 ────────────────────────────────
-  /*
-   * 이송 한 번의 내용 — 누구를, 몇 층에서, 몇 명 옮기는가.
-   * 「구조중」 카운트다운은 **임시의료소로 옮기는 시간**이다(2026-09-14 사용자 정의).
-   * 그래서 0이 되는 순간 이 내용으로 「[진압3대] 2층 구조대상자 1명 임시의료소
-   * 이송완료」를 남긴다. 구조대상자는 VictimProvider(안쪽)가 알고 있어 부르는 쪽이
-   * 넘긴다(utils/logPhrase rescueTripOf).
-   */
-  const rescueTripsRef = useRef<Record<string, RescueTrip>>({});
-
   const rescueUnit = useCallback((tokenId: string, victimLabel: string, trip?: RescueTrip) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
@@ -765,9 +799,8 @@ export function TokenProvider({
      * (StandbyColumn.tsx — 직전대기로 보낸다).
      *
      * 완료 로그는 남긴다 — 「구조중」은 임시의료소로 옮기는 중이라는 뜻이라
-     * 끝난 순간이 곧 **이송완료**다. 「몇 분에 몇 층에서 몇 명을 옮겼는가」가
-     * 평가 항목이다. 이동이 없으므로 `rescue` 로 남긴다(`move` 로 남기면
-     * 로그판이 출발지→도착지 경로를 그리려 든다 — LogPanel.tsx).
+     * 끝난 순간이 곧 **구조완료**다. 「몇 분에 몇 층에서 몇 명을 옮겼는가」가
+     * 평가 항목이다(logRescueDone). 그 전에 떠나면 moveToken 이 같은 줄을 남긴다.
      */
     if (medicalTimers.current[tokenId]) clearTimeout(medicalTimers.current[tokenId]);
     medicalTimers.current[tokenId] = setTimeout(() => {
@@ -789,26 +822,10 @@ export function TokenProvider({
         if (t.id !== tokenId || t.zoneKey !== 'medical-post') return t;
         return { ...t, badges: t.badges.filter(b => b.line1 !== '구조중') };
       }));
-      // 「[진압3대] 2층 구조대상자 1명 임시의료소 이송완료」 — 출동대명은 칩으로 그린다
-      const unit  = { tokenId: stillHere.id, label: stillHere.label, unitType: stillHere.unitType, color: stillHere.color };
-      const parts = rescueDoneParts(unit, done);
-      addLog({
-        logSource:  'system',
-        logType:    'rescue',
-        tokenId:    stillHere.id,
-        tokenName:  stillHere.label,
-        tokenColor: stillHere.color,
-        fromZoneId: 'medical-post',
-        toZoneId:   '',
-        note:       partsText(parts),
-        parts,
-        payload:    {
-          kind: 'rescue-done', tokenId: stillHere.id, tokenLabel: stillHere.label,
-          victimIds: done?.victimIds ?? [], floorLabels: done?.floorLabels ?? [], count: done?.count ?? null,
-        },
-      });
+      // 「[진압3대] 2층 구조대상자 1명 구조완료」
+      logRescueDone(stillHere, done);
     }, rescueSec * 1000);
-  }, [addLog, releaseRolesFor]);
+  }, [addLog, releaseRolesFor, logRescueDone]);
 
   // ── 배지 ────────────────────────────────────
   const addBadge = useCallback((tokenId: string, badge: Omit<TokenBadge, 'id'>) => {
@@ -982,26 +999,24 @@ export function TokenProvider({
       // 남는다. 여기서 같이 지워 "전개 태그가 있는데 전개는 안 된 상태"가
       // 아예 생기지 않게 한다.
       //
-      // setStatusTag 를 따로 부르지 않는 이유는 로그가 겹치기 때문이다 —
-      // 그쪽은 "… 해제"를 한 줄 더 남기는데, 아래에서 이미 "전개 해제"를 남긴다.
+      // setStatusTag 를 따로 부르지 않는 이유는 로그 때문이다 — 그쪽은 "… 해제"를
+      // 남기는데, 전개 해제는 로그를 남기지 않는다(2026-09-14 사용자 결정).
       const cleared = target === null ? { statusTag: undefined } : {};
       return { ...t, aerialTarget: target ?? undefined, aerialSprayTarget: null, ...cleared };
     }));
-    if (token) {
-      const note = target === null
-        ? '전개 해제'
-        : `${target.deployLabel} 전개 (${floorIdLabel(target.floorId)})`;
+    // 전개만 남긴다 — 전개 해제는 기록하지 않는다(2026-09-14 사용자 결정)
+    if (token && target) {
       addLog({
         logType:    'status-tag' as const,
         tokenId,
         tokenName:  token.label,
         tokenColor: token.color,
         fromZoneId: token.zoneKey ?? '',
-        toZoneId:   target?.floorId ?? '',
-        note,
+        toZoneId:   target.floorId,
+        note:       `${target.deployLabel} 전개 (${floorIdLabel(target.floorId)})`,
         payload:    {
           kind: 'aerial-deploy', tokenId, tokenLabel: token.label,
-          floorId: target?.floorId ?? null, deployLabel: target?.deployLabel ?? null,
+          floorId: target.floorId, deployLabel: target.deployLabel,
         },
       });
     }
@@ -1032,13 +1047,14 @@ export function TokenProvider({
       t.id === tokenId ? { ...t, ridingOn: aerialTokenId ?? undefined } : t
     ));
 
-    addLog({
-      logType: 'post', tokenId, tokenName: rider.label, tokenColor: rider.color,
-      fromZoneId: rider.zoneKey ?? '', toZoneId: rider.zoneKey ?? '',
-      note: aerialTokenId
-        ? `${aerial?.label ?? '고가차'} 바스켓 탑승: ${rider.label}`
-        : `${aerial?.label ?? '고가차'} 바스켓 하차: ${rider.label}`,
-    });
+    // 탑승만 남긴다 — 하차는 기록하지 않는다(2026-09-14 사용자 결정)
+    if (aerialTokenId) {
+      addLog({
+        logType: 'post', tokenId, tokenName: rider.label, tokenColor: rider.color,
+        fromZoneId: rider.zoneKey ?? '', toZoneId: rider.zoneKey ?? '',
+        note: `${aerial?.label ?? '고가차'} 바스켓 탑승: ${rider.label}`,
+      });
+    }
   }, [addLog]);
 
   const changeTokenColor = useCallback((tokenId: string, color: TokenColor) => {

@@ -602,8 +602,9 @@ export function AerialOverlay() {
    * 로그는 두 번에 나뉜다. **땅에 닿는 이 순간이 구조완료**다 — 탄 대원이
    * 주어가 되어 「[진압1대] 옥상 구조대상자 1명 고가차 이용 구조완료」가 남는다
    * (2026-09-14 사용자 정의 — 구조한 것은 대원이고 차는 수단이다). 그 뒤 대원이
-   * 임시의료소에 들어가면 활동대처럼 구조 줄과 이송완료 줄이 따른다.
-   * 인계(이송 연결) 자체는 로그를 남기지 않는다.
+   * 임시의료소에 들어가면 「구조중」은 걸리지만 **구조완료 줄은 다시 남기지 않는다**
+   * (VictimContext 가 aerialCreditedVictimIds 로 뺀다). 인계(이송 연결)·바스켓 하차·
+   * 전개 해제는 로그를 남기지 않는다(사용자 결정).
    *
    * 대원이 안 탔으면 예전 그대로 즉시 구조 완료다(completeBasketRescue) —
    * 「[고가1] 옥상 구조대상자 1명 구조완료」. 고가차 운영은 탑승과 무관하게
@@ -703,7 +704,7 @@ export function AerialOverlay() {
 
       if (!target) {
         // A면(또는 그 아래)까지 내려오면 회수 — 그 외 무효 지점(판 밖 등)은 스냅백.
-        // setAerialTarget(null) 이 aerialSprayTarget 도 함께 지우고 "전개 해제" 로그를 남긴다.
+        // setAerialTarget(null) 이 aerialSprayTarget 도 함께 지운다(전개 해제는 로그를 남기지 않는다).
         if (isAerialRetractZone(ev.clientX, ev.clientY)) {
           landRef.current(tokenId);         // 인계·하차·정렬을 한 자리에서 (landBasket)
           setAerialTarget(tokenId, null);
