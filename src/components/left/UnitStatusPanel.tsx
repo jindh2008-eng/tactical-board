@@ -90,7 +90,7 @@ export function UnitStatusPanel() {
   }
 
   // 착대 라벨 더블클릭 — 그 차수 전체를 한꺼번에 도착시킨다.
-  // 같은 순간에 옮기므로 도착지에서 하나의 "도착대"로 묶인다(utils/arrivalGroup).
+  // 같은 순간에 옮기므로 이벤트 로그에서 한 줄(「대기1단계 도착: …」)로 묶인다(LogContext).
   const canDispatchByOrder = arrivalMode === 'order';
 
   function handleOrderDoubleClick(items: UnitToken[]) {

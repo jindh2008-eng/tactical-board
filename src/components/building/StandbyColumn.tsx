@@ -6,9 +6,7 @@ import { useMedicalPost } from '../../context/MedicalPostContext';
 import { TokenCard } from '../shared/TokenCard';
 import { RoleSlot } from '../shared/RoleSlot';
 import { useRoleRelease } from '../../context/RoleReleaseContext';
-import { CategorizedTokenGrid } from '../shared/CategorizedTokenGrid';
-import { ArrivedGroupRow } from '../shared/ArrivedGroupRow';
-import { splitArrivalGroup } from '../../utils/arrivalGroup';
+import { PoolTokenGrid } from '../shared/PoolTokenGrid';
 import { postOpenParts, partsText } from '../../utils/logPhrase';
 import { showBoardNotice } from '../../utils/boardNotice';
 
@@ -190,8 +188,6 @@ interface SimpleStandbyBoxProps {
 function SimpleStandbyBox({ label, zoneKey, colorMod, onTokenDoubleClick, headerAside }: SimpleStandbyBoxProps) {
   const { tokens, moveToken } = useTokens();
   const zoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
-  // 맨 윗줄은 "도착대" — 방금 들어온 한 무리. 나머지는 아래에서 종류별로 정렬한다.
-  const { arrived, rest } = splitArrivalGroup(zoneTokens);
   const panel = useDropPanel();
 
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -213,17 +209,12 @@ function SimpleStandbyBox({ label, zoneKey, colorMod, onTokenDoubleClick, header
         onDragOver={panel.onDragOver}
         onDrop={onDrop}
       >
+        {/* 출동대현황 모드1 과 같은 종류별 목록(2026-09-15 사용자 정의).
+            맨 윗줄 「도착대」는 뺐다 — 도착은 이벤트 로그가 알려 준다 */}
         {zoneTokens.length === 0 ? (
           <span className="standby-box__placeholder">―</span>
         ) : (
-          <>
-            <ArrivedGroupRow tokens={arrived} onTokenDoubleClick={onTokenDoubleClick} />
-            {rest.length > 0 && (
-              <div className="standby-box__rest">
-                <CategorizedTokenGrid tokens={rest} onTokenDoubleClick={onTokenDoubleClick} />
-              </div>
-            )}
-          </>
+          <PoolTokenGrid tokens={zoneTokens} onTokenDoubleClick={onTokenDoubleClick} />
         )}
       </div>
     </div>

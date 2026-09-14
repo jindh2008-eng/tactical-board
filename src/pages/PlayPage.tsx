@@ -34,9 +34,7 @@ import { SprayOverlay }            from '../components/overlay/SprayOverlay';
 import { AerialOverlay }          from '../components/overlay/AerialOverlay';
 import { UnitStatusPanel as UnitInfoPanel } from '../components/left/UnitStatusPanel';
 import { UnitAddPanel }       from '../components/left/UnitAddPanel';
-import { ArrivedGroupRow }    from '../components/shared/ArrivedGroupRow';
-import { splitArrivalGroup }  from '../utils/arrivalGroup';
-import { CategorizedTokenGrid } from '../components/shared/CategorizedTokenGrid';
+import { PoolTokenGrid }      from '../components/shared/PoolTokenGrid';
 import { TacticalArea }       from '../components/building/TacticalArea';
 import { BottomStandbyBoxes } from '../components/building/StandbyColumn';
 import { WaterConnectionOverlay } from '../components/overlay/WaterConnectionOverlay';
@@ -374,8 +372,6 @@ function ResourcePanel() {
   const chiefToken = allZoneTokens.find(t => t.label === stagingAreaChief) ?? null;
   // 소장은 슬롯이 그린다 — 박스에도 그리면 한 토큰이 두 번 보인다
   const zoneTokens = chiefToken ? allZoneTokens.filter(t => t.id !== chiefToken.id) : allZoneTokens;
-  // 맨 윗줄은 "도착대" — 방금 들어온 한 무리
-  const { arrived, rest } = splitArrivalGroup(zoneTokens);
 
   function onDragOver(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -411,23 +407,12 @@ function ResourcePanel() {
         onDragOver={onDragOver}
         onDrop={onDrop}
       >
+        {/* 출동대현황 모드1 과 같은 종류별 목록(2026-09-15 사용자 정의).
+            맨 윗줄 「도착대」는 뺐다 — 도착은 이벤트 로그가 알려 준다 */}
         {zoneTokens.length === 0 ? (
           <span className="resource-panel__placeholder">―</span>
         ) : (
-          <>
-          <ArrivedGroupRow
-            tokens={arrived}
-            onTokenDoubleClick={forward}
-          />
-          {rest.length > 0 && (
-            <div className="resource-panel__rest">
-              <CategorizedTokenGrid
-                tokens={rest}
-                onTokenDoubleClick={forward}
-              />
-            </div>
-          )}
-          </>
+          <PoolTokenGrid tokens={zoneTokens} onTokenDoubleClick={forward} />
         )}
       </div>
     </div>

@@ -74,17 +74,9 @@
 
 /* ── 단일 body (기존 호환) ── */
 
-/* 도착대 줄 + 아래 목록 — 세로로 나눠 담는다 */
-.standby-box__rest {
-  flex:       1;
-  min-height: 0;
-  overflow:   hidden;
-  padding:    4px 6px;
-}
-
 .standby-box__body {
-  /* 도착대 줄(고정) + 아래 목록(스크롤) 을 세로로 쌓는다.
-     스크롤은 아래 목록이 맡으므로 여기서는 넘치지 않게만 한다 */
+  /* 종류별 목록(PoolTokenGrid) 하나를 담는다.
+     스크롤은 목록의 열이 맡으므로 여기서는 넘치지 않게만 한다 */
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -94,8 +86,8 @@
   gap: 0;
 }
 
-/* CategorizedTokenGrid가 body를 채울 때 — 자체 행 전체를 차지하고 늘어남 */
-.standby-box__body > .ctg {
+/* 종류별 목록이 body 를 채운다 */
+.standby-box__body > .ptg {
   flex: 1 1 100%;
   min-height: 0;
 }

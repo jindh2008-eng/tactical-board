@@ -190,7 +190,7 @@ export function UnitAddPanel() {
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           // 메뉴가 열려 있을 때만 우클릭 삭제 — 평소에는 기존 상태 메뉴가 열린다.
-          // 토큰마다 감싸지 않고 여기서 위임 처리한다(정렬을 CategorizedTokenGrid 에 맡기려면
+          // 토큰마다 감싸지 않고 여기서 위임 처리한다(정렬을 PoolTokenGrid 에 맡기려면
           // 토큰 사이에 래퍼를 끼울 수 없다).
           onContextMenu={open ? handleContextMenuDelete : undefined}
         >
