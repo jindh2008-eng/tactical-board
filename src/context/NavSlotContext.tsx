@@ -29,7 +29,6 @@ export function useNavSlot(content: ReactNode): void {
   const setSlot = useContext(WriteCtx);
 
   // deps 없음: 호출 컴포넌트가 재렌더될 때마다 슬롯 갱신 (타이머·상태 변경 반영)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useLayoutEffect(() => { setSlot(content); });
 
   // 언마운트 시 슬롯 초기화

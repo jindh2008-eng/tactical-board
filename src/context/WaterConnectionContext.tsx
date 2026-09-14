@@ -160,7 +160,7 @@ export function WaterConnectionProvider({ children }: { children: ReactNode }) {
       );
       for (const conn of toRemove) removeConnRef.current(conn.id);
     }
-  }, [tokens]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tokens]);
 
   return (
     <WaterConnectionContext.Provider value={{ connections, addConnection, removeConnection }}>

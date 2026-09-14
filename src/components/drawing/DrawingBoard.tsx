@@ -142,7 +142,6 @@ export function DrawingBoard() {
     } catch {
       // 손상된 저장값은 무시하고 기본 위치를 사용한다.
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -151,7 +150,6 @@ export function DrawingBoard() {
     }
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**

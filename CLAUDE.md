@@ -27,7 +27,11 @@ npx tsc -b --force   # 타입체크만 (빠른 확인용)
 
 `npm run dev`를 Bash로 실행하지 말고 `.claude/launch.json`의 `tactical-board-dev` 설정으로 preview 도구를 쓴다.
 
-**린트 기준선**: **오류 55건 · 경고 9건**이 이미 존재한다(2026-09-10 실측).
+**린트 기준선**: **오류 55건 · 경고 2건**이 이미 존재한다(2026-09-15 실측).
+경고는 9건이었는데 쓸모없어진 `eslint-disable` 주석 6건을 걷고 `BuildingStateContext` 의
+`onDoorChange` 를 ref 로 부르게 해 2건이 남았다. 남은 2건은 `TokenContext` 의 타이머 ref
+정리(`medicalTimers`·`arrivalTimers`) 경고로, 두 ref 는 한 번 만든 객체를 끝까지 쓰고 다시
+대입하지 않아 결함이 아니다.
 
 | 건수 | 규칙 | 성격 |
 |---|---|---|

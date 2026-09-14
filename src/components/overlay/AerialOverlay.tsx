@@ -733,7 +733,6 @@ export function AerialOverlay() {
     document.addEventListener('mouseup',   onMouseUp);
   // completeBasketRescue 는 ref 만 읽어 최신 클로저가 필요 없다. deps 에 넣으면
   // 매 렌더 함수가 새로 만들어져 이 콜백까지 함께 갈린다 — ref 로 고정한다.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moveAerialTarget, setAerialTarget, setStatusTag]);
 
   // rAF 루프: 토큰·층 위치를 매 프레임 추적

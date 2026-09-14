@@ -44,7 +44,6 @@ export class ErrorBoundary extends Component<Props, State> {
     // React가 자체적으로도 콘솔에 출력하지만, 스택을 state에 담아
     // 화면에서 바로 복사할 수 있도록 보관한다.
     this.setState({ componentStack: info.componentStack ?? '' });
-    // eslint-disable-next-line no-console
     console.error('[ErrorBoundary]', error, info.componentStack);
   }
 

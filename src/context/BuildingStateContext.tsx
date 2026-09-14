@@ -201,6 +201,11 @@ export function BuildingStateProvider({
   useEffect(() => { doorStatesRef.current = doorStates; },           [doorStates]);
   useEffect(() => { stairSmokeFloorRef.current = stairSmokeFloor; }, [stairSmokeFloor]);
 
+  // setDoorState 는 deps 없이 한 번만 만들어진다 — 콜백은 ref 로 최신 것을 부른다.
+  // 직접 부르면 첫 렌더의 onDoorChange 가 굳어, 부모가 콜백을 바꿔도 옛 것이 불린다.
+  const onDoorChangeRef = useRef(onDoorChange);
+  useEffect(() => { onDoorChangeRef.current = onDoorChange; }, [onDoorChange]);
+
   // 상태 변경 시 sessionStorage 저장
   useEffect(() => {
     saveBuildingSession({ doorStates, fireStates, firePercentages, stairSmokeFloor, smokeConcentration });
@@ -221,7 +226,7 @@ export function BuildingStateProvider({
   const setDoorState = useCallback((floorId: string, state: DoorState) => {
     if (doorStatesRef.current[floorId] === state) return;
     setDoorStates(prev => prev[floorId] === state ? prev : { ...prev, [floorId]: state });
-    onDoorChange?.(floorId, state);
+    onDoorChangeRef.current?.(floorId, state);
 
     const fire   = fireStatesRef.current;
     const doors  = doorStatesRef.current;
