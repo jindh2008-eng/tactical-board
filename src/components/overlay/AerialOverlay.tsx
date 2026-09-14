@@ -599,12 +599,15 @@ export function AerialOverlay() {
    * 대원이 임시의료소로 걸어가 도착하면 `rescueUnit` 이 구조중 배지·처치
    * 카운트다운·구조 로그를 남긴다(VictimContext 동반 이동 감시자).
    *
-   * 그래서 **구조 시각이 사다리를 접는 순간에서 임시의료소 도착으로 밀린다.**
-   * 실제 활동과는 이쪽이 맞다(사용자 확인). 접는 순간에는 인계 성격의 이송
-   * 연결 로그만 남는다.
+   * 로그는 두 번에 나뉜다. **땅에 닿는 이 순간이 구조완료**다 — 탄 대원이
+   * 주어가 되어 「[진압1대] 옥상 구조대상자 1명 고가차 이용 구조완료」가 남는다
+   * (2026-09-14 사용자 정의 — 구조한 것은 대원이고 차는 수단이다). 그 뒤 대원이
+   * 임시의료소에 들어가면 활동대처럼 구조 줄과 이송완료 줄이 따른다.
+   * 인계(이송 연결) 자체는 로그를 남기지 않는다.
    *
    * 대원이 안 탔으면 예전 그대로 즉시 구조 완료다(completeBasketRescue) —
-   * 고가차 운영은 탑승과 무관하게 되므로 그 경우가 여전히 성립한다.
+   * 「[고가1] 옥상 구조대상자 1명 구조완료」. 고가차 운영은 탑승과 무관하게
+   * 되므로 그 경우가 여전히 성립한다.
    *
    * 하차를 따로 부르지 않는 것에 주의. `moveToken` 이 이동마다 역할 해제
    * 등록부를 거치고 그것이 바스켓 하차를 태운다 — **한 번의 이동이 자리와
@@ -618,9 +621,17 @@ export function AerialOverlay() {
       return;
     }
 
-    for (const v of victimsRef.current) {
-      if (v.carriedBy === aerialId) attachVictimToUnit(v.id, rider.id);
+    const carried = victimsRef.current.filter(v => v.carriedBy === aerialId);
+    if (carried.length > 0) {
+      const aerial = tokensRef.current.find(t => t.id === aerialId);
+      addLogRef.current(aerialRescueLog(
+        { tokenId: aerialId, label: aerial?.label ?? aerialId, unitType: aerial?.unitType ?? 'aerial', color: aerial?.color },
+        aerial?.zoneKey ?? null,
+        rescueTripOf(carried),
+        { tokenId: rider.id, label: rider.label, unitType: rider.unitType, color: rider.color },
+      ));
     }
+    for (const v of carried) attachVictimToUnit(v.id, rider.id);
     moveToken(rider.id, rider.zoneKey, rightOfVehiclePos(aerialId));
   // rightOfVehiclePos 는 DOM 만 읽어 의존성이 없다(매 렌더 새로 만들어져도 같다)
   }, [attachVictimToUnit, moveToken, dismountFrom]);

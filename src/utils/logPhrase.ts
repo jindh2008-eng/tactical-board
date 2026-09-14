@@ -228,32 +228,47 @@ export function rescueDoneParts(u: UnitRef, trip?: RescueTrip): LogPart[] {
 }
 
 /**
- * 「[고가1] 옥상 구조대상자 2명 구조완료」 — 고가·굴절차 구조(2026-09-14 사용자 정의).
+ * 고가·굴절차 구조 문장(2026-09-14 사용자 정의).
  * 차는 제자리에서 사다리로 구조하므로 이송(「구조중」)이 없고, 구조 순간이 곧 완료다.
+ *
+ *   바스켓에 탄 활동대가 없다 → 「[고가1] 옥상 구조대상자 2명 구조완료」
+ *   탄 활동대가 있다         → 「[진압1대] 옥상 구조대상자 2명 고가차 이용 구조완료」
+ *                               구조한 것은 그 대원이고 차는 수단이다
  */
-export function aerialRescueParts(u: UnitRef, trip: RescueTrip): LogPart[] {
-  return seq(unitPart(u), ` ${tripText(trip)} 구조완료`);
+export function aerialRescueParts(
+  vehicle: UnitRef, trip: RescueTrip, rider?: UnitRef | null,
+): LogPart[] {
+  if (rider) {
+    const via = vehicle.unitType === 'ladder' ? '굴절차' : '고가차';
+    return seq(unitPart(rider), ` ${tripText(trip)} ${via} 이용 구조완료`);
+  }
+  return seq(unitPart(vehicle), ` ${tripText(trip)} 구조완료`);
 }
 
 /**
  * 고가·굴절차 구조 한 줄 — 우클릭 구조 · 드롭 확인 · 바스켓 접기가 모두 이 줄을 남긴다.
  * 구조대상자 이동 줄은 따로 남기지 않는다(부르는 쪽이 moveVictim 을 silent 로 부른다).
+ *
+ * 바스켓에 탄 활동대(`rider`)가 있으면 그 대가 줄의 주인이다. 구조대상자는 그 대원에게
+ * 넘어가 함께 임시의료소로 가므로(이송완료 줄은 그때 따로 남는다) 아직 임시의료소가 아니다.
  */
 export function aerialRescueLog(
-  u: UnitRef, fromZoneKey: string | null, trip: RescueTrip,
+  vehicle: UnitRef, fromZoneKey: string | null, trip: RescueTrip, rider?: UnitRef | null,
 ): Omit<LogEntry, 'id' | 'timestamp' | 'elapsedSec' | 'wallClockMs'> {
-  const parts = aerialRescueParts(u, trip);
+  const parts = aerialRescueParts(vehicle, trip, rider);
+  const who   = rider ?? vehicle;
   return {
     logType:    'rescue',
-    tokenId:    u.tokenId,
-    tokenName:  u.label,
-    ...(u.color ? { tokenColor: u.color } : {}),
+    tokenId:    who.tokenId,
+    tokenName:  who.label,
+    ...(who.color ? { tokenColor: who.color } : {}),
     fromZoneId: fromZoneKey ?? '',
-    toZoneId:   'medical-post',
+    toZoneId:   rider ? (fromZoneKey ?? '') : 'medical-post',
     note:       partsText(parts),
     parts,
     payload: {
-      kind: 'aerial-rescue', tokenId: u.tokenId, tokenLabel: u.label,
+      kind: 'aerial-rescue', tokenId: vehicle.tokenId, tokenLabel: vehicle.label,
+      riderTokenId: rider?.tokenId ?? null, riderLabel: rider?.label ?? null,
       victimIds: trip.victimIds, floorLabels: trip.floorLabels, count: trip.count,
     },
   };

@@ -321,6 +321,11 @@ export type LogPayload =
    * 「[고가1] 옥상 구조대상자 2명 구조완료」(2026-09-14 사용자 정의)
    */
   | { kind: 'aerial-rescue'; tokenId: string; tokenLabel: string;
+      /**
+       * 바스켓에 탄 활동대 — 있으면 문장의 주어가 그 대다
+       * (「[진압1대] 옥상 구조대상자 1명 고가차 이용 구조완료」). 없으면 null
+       */
+      riderTokenId: string | null; riderLabel: string | null;
       victimIds: string[]; floorLabels: string[]; count: number | null };
 
 /** 도착·복귀 묶음에 든 출동대 1건 — 어디서 왔는지와 칩 색까지 담는다 */
