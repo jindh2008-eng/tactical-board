@@ -203,6 +203,18 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     );
   }
 
+  // 구조 이송완료 — 「[진압3대] 2층 구조대상자 1명 임시의료소 이송완료」(조각이 곧 문장이다)
+  if (logType === 'rescue' && entry.parts) {
+    return (
+      <div className="log-panel__entry">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className="log-panel__rescue-note">
+          <Sentence parts={entry.parts} />
+        </span>
+      </div>
+    );
+  }
+
   // move(구버전 저장분) / rescue
   return (
     <div className="log-panel__entry">

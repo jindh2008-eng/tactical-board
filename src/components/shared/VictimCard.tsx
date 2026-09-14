@@ -9,6 +9,7 @@ import type { UnitToken } from '../../types';
 import type { VictimToken, VictimCondition } from '../../types/victim';
 import { VictimContextBarMenu, type AnchorRect } from './VictimContextBarMenu';
 import { zoneKeyToFullLabel, buildVictimDisplayLine, canUnitRescueVictim } from '../../utils/victimUtils';
+import { rescueTripOf } from '../../utils/logPhrase';
 import { setDragGrabOffset } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import './VictimCard.css';
@@ -97,8 +98,10 @@ export function VictimCard({ victim, absPos, attached }: Props) {
     if (!rescueAsk) return;
     const locationLabel  = zoneKeyToFullLabel(victim.zoneKey);
     const rescueLocLabel = [locationLabel, victim.subLocation].filter(Boolean).join(' ') || '위치미상';
-    rescueUnit(rescueAsk.unit.id, rescueLocLabel);
-    moveVictim(victim.id, 'medical-post');
+    // 이송 내용(층·인원)을 함께 넘긴다 — 「구조중」이 끝날 때 이송완료 줄이 된다.
+    // 구조대상자 이동은 조용히 — 출동대의 구조 줄이 이미 「임시의료소 이동」을 말한다
+    rescueUnit(rescueAsk.unit.id, rescueLocLabel, rescueTripOf([victim]));
+    moveVictim(victim.id, 'medical-post', undefined, { silent: true });
     setRescueAsk(null);
   }
 
@@ -109,8 +112,8 @@ export function VictimCard({ victim, absPos, attached }: Props) {
     const locationLabel = zoneKeyToFullLabel(victim.zoneKey);
     const rescueLocLabel = [locationLabel, victim.subLocation]
       .filter(Boolean).join(' ') || '위치미상';
-    rescueUnit(sourceToken.id, rescueLocLabel);
-    moveVictim(victim.id, 'medical-post');
+    rescueUnit(sourceToken.id, rescueLocLabel, rescueTripOf([victim]));
+    moveVictim(victim.id, 'medical-post', undefined, { silent: true });
     clearMode();
   }
 
@@ -162,11 +165,11 @@ export function VictimCard({ victim, absPos, attached }: Props) {
       .filter(Boolean)
       .join(' ') || '위치미상';
 
-    // 굴절차/고가차는 현장에서 사다리 전개 구조 — 차량 위치 변경 없음
-    if (unit.unitType !== 'ladder' && unit.unitType !== 'aerial') {
-      rescueUnit(unit.id, rescueLocLabel);
-    }
-    moveVictim(victim.id, 'medical-post');
+    // 굴절차/고가차는 현장에서 사다리 전개 구조 — 차량 위치 변경 없음.
+    // 그때는 출동대 쪽 구조 줄이 없으므로 구조대상자 이동 로그를 그대로 남긴다
+    const byUnit = unit.unitType !== 'ladder' && unit.unitType !== 'aerial';
+    if (byUnit) rescueUnit(unit.id, rescueLocLabel, rescueTripOf([victim]));
+    moveVictim(victim.id, 'medical-post', undefined, { silent: byUnit });
     setCtxMenu(null);
   }, [rescueUnit, moveVictim, victim]);
 

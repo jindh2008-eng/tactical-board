@@ -309,7 +309,13 @@ export type LogPayload =
    * 거점 설치(지정)와 소장 지명을 한 번에 — 첫 지명이 곧 설치다.
    * 「자원대기소 지정, 소장: 지휘운전」(EVENT_LOG_PHRASING_PLAN §2.5)
    */
-  | { kind: 'post-open'; post: PostKind; chiefTokenId: string | null; chiefLabel: string };
+  | { kind: 'post-open'; post: PostKind; chiefTokenId: string | null; chiefLabel: string }
+  /**
+   * 구조 이송완료 — 「구조중」 카운트다운(= 임시의료소로 옮기는 시간)이 끝난 순간.
+   * 「몇 분에 몇 층에서 몇 명을 옮겼는가」가 평가 항목이다. count 는 묶음 인원까지 센 사람 수
+   */
+  | { kind: 'rescue-done'; tokenId: string; tokenLabel: string;
+      victimIds: string[]; floorLabels: string[]; count: number | null };
 
 /** 도착·복귀 묶음에 든 출동대 1건 — 어디서 왔는지와 칩 색까지 담는다 */
 export interface ArrivalUnitRef extends DispatchUnitRef {

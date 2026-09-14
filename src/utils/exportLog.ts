@@ -36,6 +36,8 @@ function entryContent(entry: LogEntry): string {
 
   // 무전 멘트로 남긴 것(도착·이동·임무지정·송수)은 note 가 곧 내용이다 — EVENT_LOG_PHRASING_PLAN §4
   const p = entry.payload;
+  // 조각이 있는 줄은 note 가 출동대명까지 담은 완성 문장이다 — 앞에 이름을 또 붙이면 두 번 찍힌다
+  if (entry.parts)                    return note ?? '';
   if (logType === 'arrival')          return note ?? '';
   if (p?.kind === 'move' && p.intent) return note ?? '';
   if (p?.kind === 'water-relay')      return note ?? '';

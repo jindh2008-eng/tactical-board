@@ -13,7 +13,9 @@ import { nextManualArrivalOrder } from '../utils/arrivalOrder';
 import { isPoolZone, mountedPumpIds } from '../utils/unitPairing';
 import { summarizeUnits, summaryText, toUnitRefs } from '../utils/dispatchSummary';
 import { floorIdLabel } from '../utils/logLabels';
-import { classifyMove, moveParts, missionParts, partsText } from '../utils/logPhrase';
+import {
+  classifyMove, moveParts, missionParts, partsText, rescueDoneParts, mergeRescueTrips, type RescueTrip,
+} from '../utils/logPhrase';
 import { useResourceStatus } from './ResourceStatusContext';
 import { useLog } from './LogContext';
 import { useRoleRelease } from './RoleReleaseContext';
@@ -89,7 +91,11 @@ interface TokenContextValue {
   /** 착대를 바꾼다. 동승 중인 펌프도 함께 옮겨진다 → utils/arrivalOrder.ts */
   setArrivalOrder: (tokenId: string, order: number) => void;
   removeToken: (tokenId: string) => void;
-  rescueUnit:  (tokenId: string, victimLabel: string) => void;
+  /**
+   * 구조 — 임시의료소로 옮기며 「구조중」 카운트다운을 건다.
+   * `trip` 은 이송 내용(층·인원) — 카운트다운이 끝나면 이송완료 줄이 된다(utils/logPhrase rescueTripOf).
+   */
+  rescueUnit:  (tokenId: string, victimLabel: string, trip?: RescueTrip) => void;
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
   removeBadge:       (tokenId: string, badgeId: string) => void;
   clearBadges:       (tokenId: string) => void;
@@ -695,9 +701,26 @@ export function TokenProvider({
   const moveTokenRef = useRef(moveToken);
 
   // ── 구조 처리 ────────────────────────────────
-  const rescueUnit = useCallback((tokenId: string, victimLabel: string) => {
+  /*
+   * 이송 한 번의 내용 — 누구를, 몇 층에서, 몇 명 옮기는가.
+   * 「구조중」 카운트다운은 **임시의료소로 옮기는 시간**이다(2026-09-14 사용자 정의).
+   * 그래서 0이 되는 순간 이 내용으로 「[진압3대] 2층 구조대상자 1명 임시의료소
+   * 이송완료」를 남긴다. 구조대상자는 VictimProvider(안쪽)가 알고 있어 부르는 쪽이
+   * 넘긴다(utils/logPhrase rescueTripOf).
+   */
+  const rescueTripsRef = useRef<Record<string, RescueTrip>>({});
+
+  const rescueUnit = useCallback((tokenId: string, victimLabel: string, trip?: RescueTrip) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
+
+    /*
+     * 카운트다운 중에 또 데려오면 같은 이송에 더한다(타이머는 아래에서 다시 시작한다).
+     * 타이머가 없으면 새 이송이다 — 도중에 임시의료소를 떠났다면 moveToken 이 타이머를
+     * 지웠으므로, 그때 남은 내용은 끝나지 않은 이전 이송이라 버린다.
+     */
+    const ongoing = medicalTimers.current[tokenId] ? rescueTripsRef.current[tokenId] : undefined;
+    rescueTripsRef.current[tokenId] = mergeRescueTrips(ongoing, trip);
 
     /*
      * 여기서 자리를 옮기는 것은 `moveToken` 이 아니라 아래 setTokens 다
@@ -736,14 +759,15 @@ export function TokenProvider({
     setMedicalCountdowns(prev => ({ ...prev, [tokenId]: rescueSec }));
 
     /*
-     * 처치 시간이 끝나면 **「구조중」 배지만 걷는다.** 예전에는 직전대기로
+     * 카운트다운이 끝나면 **「구조중」 배지만 걷는다.** 예전에는 직전대기로
      * 자동 이동시켰는데, 그 자리를 뜨는 것은 지휘관의 판단이지 시계가 정할
      * 일이 아니다(2026-09-02). 옮길 때는 임시의료소에서 토큰을 더블클릭한다
      * (StandbyColumn.tsx — 직전대기로 보낸다).
      *
-     * 완료 로그는 남긴다 — 「몇 분에 처치가 끝났는가」가 평가 항목이다.
-     * 이동이 없으므로 `rescue` 로 남긴다(`move` 로 남기면 로그판이 출발지→
-     * 도착지 경로를 그리려 든다 — LogPanel.tsx).
+     * 완료 로그는 남긴다 — 「구조중」은 임시의료소로 옮기는 중이라는 뜻이라
+     * 끝난 순간이 곧 **이송완료**다. 「몇 분에 몇 층에서 몇 명을 옮겼는가」가
+     * 평가 항목이다. 이동이 없으므로 `rescue` 로 남긴다(`move` 로 남기면
+     * 로그판이 출발지→도착지 경로를 그리려 든다 — LogPanel.tsx).
      */
     if (medicalTimers.current[tokenId]) clearTimeout(medicalTimers.current[tokenId]);
     medicalTimers.current[tokenId] = setTimeout(() => {
@@ -753,6 +777,8 @@ export function TokenProvider({
         delete next[tokenId];
         return next;
       });
+      const done = rescueTripsRef.current[tokenId];
+      delete rescueTripsRef.current[tokenId];
       // 임시의료소를 이미 떠났으면 손대지 않는다 — 그쪽은 moveToken 이 정리했다
       const stillHere = tokensRef.current.find(
         tk => tk.id === tokenId && tk.zoneKey === 'medical-post',
@@ -763,6 +789,9 @@ export function TokenProvider({
         if (t.id !== tokenId || t.zoneKey !== 'medical-post') return t;
         return { ...t, badges: t.badges.filter(b => b.line1 !== '구조중') };
       }));
+      // 「[진압3대] 2층 구조대상자 1명 임시의료소 이송완료」 — 출동대명은 칩으로 그린다
+      const unit  = { tokenId: stillHere.id, label: stillHere.label, unitType: stillHere.unitType, color: stillHere.color };
+      const parts = rescueDoneParts(unit, done);
       addLog({
         logSource:  'system',
         logType:    'rescue',
@@ -771,7 +800,12 @@ export function TokenProvider({
         tokenColor: stillHere.color,
         fromZoneId: 'medical-post',
         toZoneId:   '',
-        note:       '임시의료소 처치 완료',
+        note:       partsText(parts),
+        parts,
+        payload:    {
+          kind: 'rescue-done', tokenId: stillHere.id, tokenLabel: stillHere.label,
+          victimIds: done?.victimIds ?? [], floorLabels: done?.floorLabels ?? [], count: done?.count ?? null,
+        },
       });
     }, rescueSec * 1000);
   }, [addLog, releaseRolesFor]);

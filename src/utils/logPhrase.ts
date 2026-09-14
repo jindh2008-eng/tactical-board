@@ -1,7 +1,7 @@
 import type {
   LogEntry, LogPart, ArrivalUnitRef, PostKind, TokenColor, WaterMissionChange,
 } from '../types';
-import { zoneLabel } from './logLabels';
+import { zoneLabel, parseZoneKey, floorIdLabel } from './logLabels';
 import { UNIT_ADD_ZONE } from './unitAddZone';
 import {
   MISSION_CIRCULATION, MISSION_FIRST_LINE, MISSION_KEY_WATER_TANK,
@@ -161,6 +161,72 @@ export function missionParts(u: UnitRef, missionLabel: string): LogPart[] {
 export function postOpenParts(post: PostKind, chief: UnitRef | string): LogPart[] {
   const head = post === 'resource' ? '자원대기소 지정, 소장: ' : '임시의료소 설치, 소장: ';
   return seq(head, typeof chief === 'string' ? chief : unitPart(chief));
+}
+
+// ── 구조 이송 ─────────────────────────────────
+
+/**
+ * 이송 한 번 — 누구를, 몇 층에서, 몇 명 옮기는가(TokenContext.rescueUnit).
+ * 「구조중」 카운트다운이 끝나면 이 내용으로 이송완료 한 줄을 남긴다.
+ */
+export interface RescueTrip {
+  victimIds:   string[];
+  /** 「2층」·「옥상」·「A면」 — 구조대상자가 있던 자리. 여러 곳이면 여럿 */
+  floorLabels: string[];
+  /** 사람 수 — 묶음 구조대상자는 그 인원만큼 센다. 모르면 null */
+  count:       number | null;
+}
+
+/** 구역 키 → 「2층」 · 「옥상」 · 「A면」. 층도 면도 아니면 null */
+function victimPlaceLabel(zoneKey: string | null | undefined): string | null {
+  if (!zoneKey) return null;
+  const z = parseZoneKey(zoneKey);
+  if (z.floorId) return floorIdLabel(z.floorId);
+  if (z.face)    return `${z.face}면`;
+  return null;
+}
+
+/**
+ * 옮길 구조대상자들 → 이송 한 번.
+ *
+ * 자리는 **처음 놓였던 구역(originZoneKey)** 을 먼저 본다 — 데려오는 동안 구조대상자는
+ * 출동대를 따라 움직여 지금 구역은 거쳐 가는 자리일 수 있다. 구조 현황판(RescueBoard)도
+ * 같은 기준으로 센다.
+ */
+export function rescueTripOf(victims: readonly {
+  id: string; kind?: string; groupCount?: number;
+  zoneKey: string | null; originZoneKey?: string;
+}[]): RescueTrip {
+  const floorLabels: string[] = [];
+  for (const v of victims) {
+    const label = victimPlaceLabel(v.originZoneKey ?? v.zoneKey);
+    if (label && !floorLabels.includes(label)) floorLabels.push(label);
+  }
+  return {
+    victimIds: victims.map(v => v.id),
+    floorLabels,
+    count: victims.reduce((n, v) => n + (v.kind === 'group' ? (v.groupCount ?? 1) : 1), 0),
+  };
+}
+
+/** 카운트다운 중에 또 데려오면 같은 이송에 더한다 */
+export function mergeRescueTrips(a?: RescueTrip, b?: RescueTrip): RescueTrip {
+  const known = [a?.count, b?.count].filter((c): c is number => c != null);
+  return {
+    victimIds:   [...new Set([...(a?.victimIds ?? []), ...(b?.victimIds ?? [])])],
+    floorLabels: [...new Set([...(a?.floorLabels ?? []), ...(b?.floorLabels ?? [])])],
+    count:       known.length > 0 ? known.reduce((x, y) => x + y, 0) : null,
+  };
+}
+
+/**
+ * 「[진압3대] 2층 구조대상자 1명 임시의료소 이송완료」 — 「구조중」 카운트다운이 끝났을 때.
+ * 「구조중」은 임시의료소로 옮기는 중이라는 뜻이다(2026-09-14 사용자 정의).
+ */
+export function rescueDoneParts(u: UnitRef, trip?: RescueTrip): LogPart[] {
+  const where = trip && trip.floorLabels.length > 0 ? `${trip.floorLabels.join('·')} ` : '';
+  const who   = trip?.count != null ? `구조대상자 ${trip.count}명` : '구조대상자';
+  return seq(unitPart(u), ` ${where}${who} 임시의료소 이송완료`);
 }
 
 // ── 송수 ─────────────────────────────────────

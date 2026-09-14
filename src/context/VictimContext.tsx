@@ -14,6 +14,7 @@ import {
 } from '../utils/victimPlacement';
 import { buildValidVictimZoneKeys } from '../data/buildingData';
 import { floorIdLabel, zoneLabel, victimDisplayName } from '../utils/logLabels';
+import { rescueTripOf } from '../utils/logPhrase';
 import {
   saveVictimSession, loadVictimSession,
   saveVictimSearchSession, loadVictimSearchSession,
@@ -47,7 +48,11 @@ interface VictimContextValue {
    * opts.keepCarrier — 연결(carriedBy)을 유지한 채 옮긴다. 연결된 출동대를 따라
    * 움직이는 내부 호출에서만 쓴다. 사용자가 직접 옮기면(기본값) 연결이 끊긴다.
    */
-  moveVictim:          (victimId: string, toZoneKey: string | null, pos?: VictimPos, opts?: { keepCarrier?: boolean }) => void;
+  /**
+   * `opts.silent` — 이동 로그를 남기지 않는다. 구조 이송은 출동대 쪽 구조 줄
+   * (「진압3 … 구조대상자 → 구조, 임시의료소 이동」)이 이미 말하므로 겹친다(2026-09-14).
+   */
+  moveVictim:          (victimId: string, toZoneKey: string | null, pos?: VictimPos, opts?: { keepCarrier?: boolean; silent?: boolean }) => void;
   /** 구조대상자를 출동대에 연결(이송 시작). 같은 구역으로 옮기며 붙인다. */
   attachVictimToUnit:  (victimId: string, tokenId: string) => void;
   updateVictim:        (victimId: string, update: VictimUpdate) => void;
@@ -480,9 +485,10 @@ export function VictimProvider({
     victimId:  string,
     toZoneKey: string | null,
     pos?:      VictimPos,
-    opts?:     { keepCarrier?: boolean },
+    opts?:     { keepCarrier?: boolean; silent?: boolean },
   ) => {
-    if (toZoneKey !== null) {
+    // 구조 이송(silent)은 출동대 쪽 구조 줄이 이미 말한다 — 여기서 또 적으면 겹친다
+    if (toZoneKey !== null && !opts?.silent) {
       const v = victimsRef.current.find(vic => vic.id === victimId);
       if (v && v.zoneKey !== toZoneKey) {
         addLog({
@@ -601,8 +607,12 @@ export function VictimProvider({
         // rescue 로그(누가 구조했는지)를 남기고 처치 카운트다운을 시작한다.
         const token = tokens.find(t => t.id === tokenId);
         const names = carried.map(victimDisplayName).join(', ');
-        if (token) rescueUnit(tokenId, names);
-        for (const v of carried) moveVictim(v.id, 'medical-post');  // keepCarrier 없음 → 연결 해제
+        // 이송 내용(층·인원)을 함께 넘긴다 — 「구조중」이 끝날 때 이송완료 줄이 된다.
+        // 구조대상자 이동은 조용히 — 출동대의 구조 줄이 이미 「임시의료소 이동」을 말한다
+        if (token) rescueUnit(tokenId, names, rescueTripOf(carried));
+        for (const v of carried) {
+          moveVictim(v.id, 'medical-post', undefined, { silent: !!token });  // keepCarrier 없음 → 연결 해제
+        }
       } else {
         for (const v of carried) moveVictim(v.id, zoneKey, undefined, { keepCarrier: true });
       }
