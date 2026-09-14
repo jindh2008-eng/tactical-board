@@ -149,6 +149,8 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
   const [supplyPopup,  setSupplyPopup]  = useState<{ connId: string; x: number; y: number } | null>(null);
   // 「대 N」 칩에서 연 소속대 목록
   const [memberPopup,  setMemberPopup]  = useState<{ x: number; y: number } | null>(null);
+  // 「RIT」 칩을 누르면 해제를 묻는 창 — 「단위」 칩과 같은 팝업(BoardListPopup)
+  const [ritPopup,     setRitPopup]     = useState<{ x: number; y: number } | null>(null);
   // 마우스를 올린 번호 배지의 연결 id
   const [hoverConnId,  setHoverConnId]  = useState<string | null>(null);
   // 뷰포트 상단 근접 시 오버레이를 아래쪽으로 전환 (좌표 추적 없이 boolean만)
@@ -671,8 +673,8 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
               「단위」를 누르면 그 밑의 소속대와 「단위지휘관 해제」가 함께 열린다
               (2026-09-09 사용자 결정). 지휘 관계를 보고 푸는 자리를 그 표시
               위에 둔 것이라, 무리를 확인하러 다른 데를 뒤질 일이 없다.
-              「RIT」는 누르면 바로 떨어진다 — RIT 칸에 놓으면 붙기만 하고 떼는
-              길이 없었다(2026-09-14 사용자 결정). 해제는 로그를 남기지 않는다.
+              「RIT」를 누르면 해제를 묻는 창이 뜬다 — RIT 칸에 놓으면 붙기만 하고
+              떼는 길이 없었다(2026-09-14 사용자 결정). 해제는 로그를 남기지 않는다.
             */}
             {token.missionTags?.map(m => (
               m.label === MISSION_RIT.label ? (
@@ -685,7 +687,7 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
                   aria-label="RIT 해제"
                   onMouseDown={e => {
                     e.stopPropagation();
-                    toggleMissionTag(token.id, m, { silent: true });
+                    setRitPopup({ x: e.clientX, y: e.clientY });
                   }}
                 >{m.label}</button>
               ) : m.label === MISSION_UNIT_COMMANDER.label && isUnitCommander ? (
@@ -815,6 +817,29 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
           footerLabel="단위지휘관 해제"
           onFooter={() => { peekMember(null); releaseCommander(); setMemberPopup(null); }}
           onClose={() => { peekMember(null); setMemberPopup(null); }}
+        />
+      )}
+
+      {/*
+        「RIT」 칩을 누르면 해제를 묻는다 — 목록 없이 제목과 아래 단추 하나.
+        바깥을 누르면 그냥 닫힌다(취소). 떼기 직전에 아직 붙어 있는지 다시 본다 —
+        toggleMissionTag 는 토글이라, 창이 떠 있는 사이 이미 떨어졌다면 도로 붙는다.
+      */}
+      {ritPopup && (
+        <BoardListPopup
+          x={ritPopup.x} y={ritPopup.y}
+          title="RIT 임무를 해제할까요?"
+          items={[]}
+          actionLabel=""
+          onPick={() => {}}
+          footerLabel="RIT 해제"
+          onFooter={() => {
+            if (token.missionTags?.some(m => m.label === MISSION_RIT.label)) {
+              toggleMissionTag(token.id, MISSION_RIT, { silent: true });
+            }
+            setRitPopup(null);
+          }}
+          onClose={() => setRitPopup(null)}
         />
       )}
     </>

@@ -646,7 +646,7 @@
 }
 
 /* **눌리는** 임무 칩 — 「단위」와 「RIT」.
-   「단위」는 소속대 목록과 지휘관 해제를 열고, 「RIT」는 눌러서 뗀다(TokenCard).
+   「단위」는 소속대 목록과 지휘관 해제를, 「RIT」는 해제를 묻는 창을 연다(TokenCard).
    나머지 임무 칩은 장식이라 부모가 꺼 둔 `pointer-events` 를 그대로 물려받는다. */
 .token-mission-label--action {
   font-family:    inherit;
