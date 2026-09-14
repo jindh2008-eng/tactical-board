@@ -5,6 +5,7 @@ import { VictimCard } from '../shared/VictimCard';
 import { MedicalPostBox } from './StandbyColumn';
 import { RescueBoard } from './RescueBoard';
 import { computeDropCenter } from '../../utils/dragDrop';
+import { MISSION_RIT } from '../../config/unitMissions';
 import './AFaceBottomZones.css';
 
 // ─────────────────────────────────────────────
@@ -27,7 +28,8 @@ import './AFaceBottomZones.css';
 const ZONE_KEY_IMMINENT = 'standby-imminent';
 const ZONE_KEY_RIT      = 'standby-rit';
 const ZONE_KEY_COMMAND  = 'command-post';
-const RIT_TAG           = { label: 'RIT', color: 'red' } as const;
+// 정의는 config/unitMissions.ts 한 곳 — 떼는 쪽(TokenCard 칩)과 같은 값을 쓴다
+const RIT_TAG           = MISSION_RIT;
 
 function SubZone({
   zoneKey,

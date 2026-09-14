@@ -49,6 +49,16 @@ export const MISSION_FIRST_LINE:     TagPreset = { label: '1선', color: 'blue' 
 export const MISSION_KEY_WATER_TANK: TagPreset = { label: '중요', color: 'blue' };
 /** 순환보수 */
 export const MISSION_CIRCULATION:    TagPreset = { label: '순환급수', color: 'blue' };
+/**
+ * RIT — 신속동료구조팀. **RIT 칸에 떨어뜨리면 붙는다**(AFaceBottomZones).
+ *
+ * 떼는 길은 **칩을 누르는 것 하나**다(TokenCard). 칸을 떠나도 떨어지지 않는다 —
+ * RIT 는 공간이 아니라 임무라, 구조에 투입돼 칸을 떠나도 여전히 RIT 다.
+ * 언제 푸는지는 지휘관이 정한다(2026-09-14 사용자 결정). 해제는 로그를 남기지 않는다.
+ *
+ * 우클릭 임무 메뉴(missionPresetsFor)에는 넣지 않는다 — 붙이는 길은 칸 하나로 둔다.
+ */
+export const MISSION_RIT:            TagPreset = { label: 'RIT', color: 'red' };
 
 /**
  * 함께 가질 수 없는 임무 — **급수 임무 셋**.

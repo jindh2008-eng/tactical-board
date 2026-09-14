@@ -11,7 +11,7 @@ import { useWaterLinePeek } from '../../context/waterLinePeek';
 import { useVictims } from '../../context/VictimContext';
 import type { UnitToken } from '../../types';
 import { PRESET_COLORS } from '../../types/presets';
-import { MISSION_UNIT_COMMANDER } from '../../config/unitMissions';
+import { MISSION_UNIT_COMMANDER, MISSION_RIT } from '../../config/unitMissions';
 import { secsToMmss } from '../../utils/dispatchRoster';
 import { setDragGrabOffset } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
@@ -667,13 +667,28 @@ export function TokenCard({ token, absPos, selectMode, selected, onToggleSelect,
         {hasMission && (
           <div className="token-mission-labels">
             {/*
-              임무 칩은 장식이다 — 딱 하나, **「단위」만 누를 수 있다.**
-              누르면 그 밑의 소속대와 「단위지휘관 해제」가 함께 열린다
+              임무 칩은 장식이다 — **「단위」와 「RIT」만 누를 수 있다.**
+              「단위」를 누르면 그 밑의 소속대와 「단위지휘관 해제」가 함께 열린다
               (2026-09-09 사용자 결정). 지휘 관계를 보고 푸는 자리를 그 표시
               위에 둔 것이라, 무리를 확인하러 다른 데를 뒤질 일이 없다.
+              「RIT」는 누르면 바로 떨어진다 — RIT 칸에 놓으면 붙기만 하고 떼는
+              길이 없었다(2026-09-14 사용자 결정). 해제는 로그를 남기지 않는다.
             */}
             {token.missionTags?.map(m => (
-              m.label === MISSION_UNIT_COMMANDER.label && isUnitCommander ? (
+              m.label === MISSION_RIT.label ? (
+                <button
+                  key={m.label}
+                  type="button"
+                  className="token-mission-label token-mission-label--action"
+                  data-mission={m.label}
+                  title="RIT — 눌러서 해제"
+                  aria-label="RIT 해제"
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    toggleMissionTag(token.id, m, { silent: true });
+                  }}
+                >{m.label}</button>
+              ) : m.label === MISSION_UNIT_COMMANDER.label && isUnitCommander ? (
                 <button
                   key={m.label}
                   type="button"
