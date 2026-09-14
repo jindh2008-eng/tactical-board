@@ -131,7 +131,7 @@ export function VictimProvider({
   buildingConfig?:     BuildingConfig;
   fireFloor?:          number;
 }) {
-  const { addLog, tokens, rescueUnit, logs } = useTokens();
+  const { addLog, tokens, rescueUnit, logs, registerCarryCheck } = useTokens();
 
   const validZoneKeysRef = useRef<Set<string>>(
     buildingConfig !== undefined
@@ -586,6 +586,11 @@ export function VictimProvider({
   // 그래서 "출동대가 움직이면 따라간다"를 여기서 토큰 변화를 관찰해 처리한다.
   // 임시의료소에 도착하면 자동으로 구조 처리하고 연결을 끊는다.
   const prevTokenZonesRef = useRef<Map<string, string | null> | null>(null);
+  // 데리고 임시의료소로 들어가는 이동은 아래 구조 줄이 말한다 — 이동 줄을 거르도록 알려 준다
+  useEffect(() => {
+    registerCarryCheck(tokenId => victimsRef.current.some(v => v.carriedBy === tokenId));
+    return () => registerCarryCheck(null);
+  }, [registerCarryCheck]);
   // 로그는 읽기만 한다 — 효과 의존성에 넣으면 로그가 쌓일 때마다 다시 돈다
   const logsRef = useRef(logs);
   useEffect(() => { logsRef.current = logs; }, [logs]);

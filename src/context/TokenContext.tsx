@@ -124,6 +124,12 @@ interface TokenContextValue {
   setBasketRider:    (tokenId: string, aerialTokenId: string | null) => void;
   changeTokenColor:  (tokenId: string, color: TokenColor) => void;
   addLog:            (entry: Omit<LogEntry, 'id' | 'timestamp' | 'elapsedSec' | 'wallClockMs'>) => void;
+  /**
+   * 「이 출동대가 구조대상자를 데리고 있는가」를 묻는 함수를 등록한다(VictimProvider 가 부른다).
+   * 구조대상자는 TokenProvider 안쪽에 있어 여기서는 보이지 않는다 — register/call 패턴이다.
+   * 데리고 임시의료소로 들어가는 이동은 구조 줄이 이미 말하므로 이동 줄을 남기지 않는 데 쓴다.
+   */
+  registerCarryCheck: (fn: ((tokenId: string) => boolean) | null) => void;
 }
 
 const TokenContext = createContext<TokenContextValue | null>(null);
@@ -566,6 +572,12 @@ export function TokenProvider({
    */
   const rescueTripsRef = useRef<Record<string, RescueTrip>>({});
 
+  // 구조대상자를 데리고 있는가 — VictimProvider 가 등록한다(registerCarryCheck)
+  const carryCheckRef = useRef<((tokenId: string) => boolean) | null>(null);
+  const registerCarryCheck = useCallback((fn: ((tokenId: string) => boolean) | null) => {
+    carryCheckRef.current = fn;
+  }, []);
+
   const logRescueDone = useCallback((
     token: { id: string; label: string; unitType: string; color: TokenColor },
     trip:  RescueTrip | undefined,
@@ -681,7 +693,15 @@ export function TokenProvider({
       }
       const fromZoneKey = token.zoneKey ?? 'pool';
       const kind = classifyMove(token.zoneKey, toZoneKey);
-      if (toZoneKey === null || kind === 'withdraw') {
+      /*
+       * 구조대상자를 데리고 임시의료소로 들어가면 이동 줄을 남기지 않는다(2026-09-14 사용자 결정).
+       * 들어가는 순간 VictimContext 가 rescueUnit 을 불러 「… 구조대상자 → 구조, 임시의료소 이동」을
+       * 남기므로, 「[진압1대] A면 → 임시의료소 이동」은 같은 말을 한 번 더 하는 셈이다.
+       */
+      const carryingIn = toZoneKey === 'medical-post' && !!carryCheckRef.current?.(tokenId);
+      if (carryingIn) {
+        // 구조 줄이 대신한다
+      } else if (toZoneKey === null || kind === 'withdraw') {
         retractArrival(token.id);
       } else if (kind === 'arrive' || kind === 'return') {
         addArrivalLog({
@@ -1098,6 +1118,7 @@ export function TokenProvider({
       tokens, logs, positions, medicalCountdowns, arrivalCountdowns,
       createToken, moveToken, setArrivalOrder, removeToken, rescueUnit,
       addBadge, removeBadge, clearBadges, toggleMissionTag, setStatusTag, setCustomNote, setSprayState, setAerialTarget, moveAerialTarget, setAerialSprayTarget, setBasketRider, changeTokenColor, addLog,
+      registerCarryCheck,
     }}>
       {children}
     </TokenContext.Provider>
