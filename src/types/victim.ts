@@ -96,6 +96,12 @@ export interface VictimToken {
    * 이쪽은 parseZoneKey() 로 floorId·face 를 그대로 뽑을 수 있는 원본 키다.
    */
   originZoneKey?: string;
+  /**
+   * 추락한 방면 — 건물 층에서 방면(A~D)으로 끌어 옮기면 추락이다(2026-09-14 사용자 정의).
+   * 한 번 잡히면 유지한다. 로그에서 이 사람을 「2층/A면추락 구조대상자」로 부르는 데 쓴다.
+   * 출동대가 데리고 면으로 나가는 것(keepCarrier)은 추락이 아니다.
+   */
+  fellToFace?:    VictimFace;
   zoneKey:      string | null;
 }
 

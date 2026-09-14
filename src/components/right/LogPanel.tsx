@@ -203,7 +203,19 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
     );
   }
 
-  // 구조완료 — 「[진압3대] 2층 구조대상자 1명 구조완료」(조각이 곧 문장이다)
+  // 구조대상자 이동·추락 — 「2층 구조대상자(여/30대) A면 지상으로 추락」. 출동대가 아니라 칩이 없다
+  if (logType === 'move' && entry.payload?.kind === 'victim-move' && entry.parts) {
+    return (
+      <div className="log-panel__entry">
+        <span className="log-panel__time">{entry.timestamp}</span>
+        <span className="log-panel__sentence">
+          <Sentence parts={entry.parts} />
+        </span>
+      </div>
+    );
+  }
+
+  // 구조 시작 · 구조완료 — 「[진압1대] 2층 구조대상자(여/30대) → 구조, 임시의료소로 이동」(조각이 곧 문장이다)
   if (logType === 'rescue' && entry.parts) {
     return (
       <div className="log-panel__entry">

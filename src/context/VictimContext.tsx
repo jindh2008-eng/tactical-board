@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-import type { VictimToken, CreateVictimInput, VictimCondition, VictimTriage } from '../types/victim';
+import type { VictimToken, CreateVictimInput, VictimCondition, VictimTriage, VictimFace } from '../types/victim';
 import { classifyTriage } from '../types/victim';
 import type { VictimSetupItem } from '../types/settings';
 import type { BuildingConfig, Pos, SearchPhase } from '../types';
@@ -14,7 +14,9 @@ import {
 } from '../utils/victimPlacement';
 import { buildValidVictimZoneKeys } from '../data/buildingData';
 import { floorIdLabel, zoneLabel, victimDisplayName } from '../utils/logLabels';
-import { rescueTripOf, aerialCreditedVictimIds } from '../utils/logPhrase';
+import {
+  rescueTripOf, aerialCreditedVictimIds, victimsRefText, victimMoveParts, victimFallFace, partsText,
+} from '../utils/logPhrase';
 import {
   saveVictimSession, loadVictimSession,
   saveVictimSearchSession, loadVictimSearchSession,
@@ -50,7 +52,11 @@ interface VictimContextValue {
    */
   /**
    * `opts.silent` — 이동 로그를 남기지 않는다. 구조 이송은 출동대 쪽 구조 줄
-   * (「진압3 … 구조대상자 → 구조, 임시의료소 이동」)이 이미 말하므로 겹친다(2026-09-14).
+   * (「[진압3대] 2층 구조대상자(여/30대) → 구조, 임시의료소로 이동」)이 이미 말하므로 겹친다(2026-09-14).
+   * `keepCarrier` 이동도 남기지 않는다 — 출동대 이동 줄이 말한다.
+   *
+   * 손으로 옮기면 「1층 구조대상자(여/30대) 1층에서 2층으로 이동」, 건물 층에서 방면으로
+   * 옮기면 추락이다 — 「2층 구조대상자(여/30대) A면 지상으로 추락」, 그 뒤로 fellToFace 가 남는다.
    */
   moveVictim:          (victimId: string, toZoneKey: string | null, pos?: VictimPos, opts?: { keepCarrier?: boolean; silent?: boolean }) => void;
   /** 구조대상자를 출동대에 연결(이송 시작). 같은 구역으로 옮기며 붙인다. */
@@ -487,18 +493,29 @@ export function VictimProvider({
     pos?:      VictimPos,
     opts?:     { keepCarrier?: boolean; silent?: boolean },
   ) => {
-    // 구조 이송(silent)은 출동대 쪽 구조 줄이 이미 말한다 — 여기서 또 적으면 겹친다
-    if (toZoneKey !== null && !opts?.silent) {
-      const v = victimsRef.current.find(vic => vic.id === victimId);
-      if (v && v.zoneKey !== toZoneKey) {
-        addLog({
-          logType:    'move',
-          tokenId:    victimId,
-          tokenName:  victimDisplayName(v),
-          fromZoneId: v.zoneKey ?? 'pool',
-          toZoneId:   toZoneKey,
-        });
-      }
+    /*
+     * 손으로 옮긴 것만 적는다(2026-09-14 사용자 정의).
+     *   구조 이송(silent)        → 출동대 쪽 구조 줄이 이미 말한다
+     *   출동대를 따라감(keepCarrier) → 출동대 이동 줄이 말한다. 면으로 나가도 추락이 아니다
+     * 문장은 옮기기 **전** 모습으로 부른다 — 떨어지는 순간엔 아직 「2층 구조대상자」다.
+     */
+    const before   = victimsRef.current.find(vic => vic.id === victimId);
+    const fallFace = opts?.keepCarrier ? null : victimFallFace(before?.zoneKey ?? null, toZoneKey);
+    if (toZoneKey !== null && !opts?.silent && !opts?.keepCarrier && before && before.zoneKey !== toZoneKey) {
+      const parts = victimMoveParts(before, before.zoneKey, toZoneKey);
+      addLog({
+        logType:    'move',
+        tokenId:    victimId,
+        tokenName:  victimDisplayName(before),
+        fromZoneId: before.zoneKey ?? 'pool',
+        toZoneId:   toZoneKey,
+        note:       partsText(parts),
+        parts,
+        payload:    {
+          kind: 'victim-move', victimId, victimLabel: victimDisplayName(before),
+          fromZoneKey: before.zoneKey ?? 'pool', toZoneKey, fell: fallFace !== null,
+        },
+      });
     }
 
     setVictims(prev => prev.map(v => {
@@ -541,7 +558,10 @@ export function VictimProvider({
       // 연결된 출동대를 따라가는 이동만 keepCarrier 로 연결을 유지한다.
       const carriedBy = opts?.keepCarrier ? v.carriedBy : undefined;
 
-      return { ...v, zoneKey: toZoneKey, rescueLocation, triage, carriedBy, originDisplayBottom, originZoneKey };
+      // 추락 — 한 번 떨어진 사람은 끝까지 「2층/A면추락」으로 부른다
+      const fellToFace = v.fellToFace ?? ((fallFace as VictimFace | null) ?? undefined);
+
+      return { ...v, zoneKey: toZoneKey, rescueLocation, triage, carriedBy, originDisplayBottom, originZoneKey, fellToFace };
     }));
 
     setVictimPositions(prev => {
@@ -611,7 +631,8 @@ export function VictimProvider({
         // 도착 — 연결된 전원을 구조 처리한다. rescueUnit 은 출동대에 구조중 배지와
         // rescue 로그(누가 구조했는지)를 남기고 처치 카운트다운을 시작한다.
         const token = tokens.find(t => t.id === tokenId);
-        const names = carried.map(victimDisplayName).join(', ');
+        // 「2층 구조대상자(여/30대)」 — 처음 놓였던 자리로 부른다(추락했으면 「2층/A면추락」)
+        const names = victimsRefText(carried);
         // 이송 내용(층·인원)을 함께 넘긴다 — 「구조중」이 끝나거나 그 전에 떠날 때 구조완료 줄이 된다.
         // 바스켓에서 넘겨받은 구조대상자는 땅에 닿을 때 이미 구조완료가 남아 이송에서 뺀다.
         // 구조대상자 이동은 조용히 — 출동대의 구조 줄이 이미 「임시의료소 이동」을 말한다

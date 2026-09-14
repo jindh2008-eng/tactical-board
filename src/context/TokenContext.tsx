@@ -15,6 +15,7 @@ import { summarizeUnits, summaryText, toUnitRefs } from '../utils/dispatchSummar
 import { floorIdLabel } from '../utils/logLabels';
 import {
   classifyMove, moveParts, missionParts, partsText, rescueDoneParts, mergeRescueTrips, type RescueTrip,
+  rescueStartParts,
 } from '../utils/logPhrase';
 import { useResourceStatus } from './ResourceStatusContext';
 import { useLog } from './LogContext';
@@ -94,7 +95,7 @@ interface TokenContextValue {
    * 구조 — 임시의료소로 옮기며 「구조중」 카운트다운을 건다.
    * `trip` 은 이송 내용(층·인원) — 카운트다운이 끝나거나 그 전에 떠나면 구조완료 줄이 된다(utils/logPhrase rescueTripOf).
    */
-  rescueUnit:  (tokenId: string, victimLabel: string, trip?: RescueTrip) => void;
+  rescueUnit:  (tokenId: string, victimText: string, trip?: RescueTrip) => void;
   addBadge:          (tokenId: string, badge: Omit<TokenBadge, 'id'>) => void;
   removeBadge:       (tokenId: string, badgeId: string) => void;
   clearBadges:       (tokenId: string) => void;
@@ -771,7 +772,11 @@ export function TokenProvider({
   const moveTokenRef = useRef(moveToken);
 
   // ── 구조 처리 ────────────────────────────────
-  const rescueUnit = useCallback((tokenId: string, victimLabel: string, trip?: RescueTrip) => {
+  /*
+   * `victimText` — 「2층 구조대상자(여/30대)」·「2층/A면추락 구조대상자(여/30대)」.
+   * 부르는 쪽이 utils/logPhrase victimsRefText 로 만든다(구조대상자는 VictimProvider 가 안다).
+   */
+  const rescueUnit = useCallback((tokenId: string, victimText: string, trip?: RescueTrip) => {
     const token = tokensRef.current.find(t => t.id === tokenId);
     if (!token) return;
 
@@ -806,6 +811,10 @@ export function TokenProvider({
       return next;
     });
 
+    // 「[진압1대] 2층 구조대상자(여/30대) → 구조, 임시의료소로 이동」(2026-09-14 사용자 정의)
+    const startParts = rescueStartParts(
+      { tokenId: token.id, label: token.label, unitType: token.unitType, color: token.color }, victimText,
+    );
     addLog({
       logType:    'rescue',
       tokenId:    token.id,
@@ -813,7 +822,8 @@ export function TokenProvider({
       tokenColor: token.color,
       fromZoneId: token.zoneKey ?? 'pool',
       toZoneId:   'medical-post',
-      note:       `${victimLabel} 구조대상자 → 구조, 임시의료소 이동`,
+      note:       partsText(startParts),
+      parts:      startParts,
     });
 
     const rescueSec = timingRef.current.rescueTimeSec;

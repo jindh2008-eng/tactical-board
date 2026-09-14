@@ -311,7 +311,13 @@ export type LogPayload =
    */
   | { kind: 'post-open'; post: PostKind; chiefTokenId: string | null; chiefLabel: string }
   /**
-   * 활동대 구조완료 — 「구조중」 카운트다운(= 임시의료소로 옮기는 시간)이 끝난 순간,
+   * 구조대상자 이동 — 손으로 옮긴 것만 남는다(출동대를 따라가는 이동·구조 이송은 빠진다).
+   * `fell` 이면 건물 층에서 방면으로 떨어진 것이다 — 「2층 구조대상자(여/30대) A면 지상으로 추락」
+   */
+  | { kind: 'victim-move'; victimId: string; victimLabel: string;
+      fromZoneKey: string; toZoneKey: string; fell: boolean }
+  /**
+   * 활동대 구조완료 —「구조중」 카운트다운(= 임시의료소로 옮기는 시간)이 끝난 순간,
    * 또는 그 전에 임시의료소를 떠난 순간. 「[진압3대] 2층 구조대상자 1명 구조완료」.
    * 「몇 분에 몇 층에서 몇 명을 옮겼는가」가 평가 항목이다. count 는 묶음 인원까지 센 사람 수
    */

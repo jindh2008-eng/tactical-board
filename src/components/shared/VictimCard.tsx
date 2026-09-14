@@ -8,8 +8,8 @@ import { useActionMode } from '../../context/ActionModeContext';
 import type { UnitToken } from '../../types';
 import type { VictimToken, VictimCondition } from '../../types/victim';
 import { VictimContextBarMenu, type AnchorRect } from './VictimContextBarMenu';
-import { zoneKeyToFullLabel, buildVictimDisplayLine, canUnitRescueVictim } from '../../utils/victimUtils';
-import { rescueTripOf, aerialRescueLog } from '../../utils/logPhrase';
+import { buildVictimDisplayLine, canUnitRescueVictim } from '../../utils/victimUtils';
+import { rescueTripOf, aerialRescueLog, victimsRefText } from '../../utils/logPhrase';
 import { setDragGrabOffset } from '../../utils/dragDrop';
 import { logDragEvent } from '../../utils/dragDiagnostics';
 import './VictimCard.css';
@@ -112,9 +112,8 @@ export function VictimCard({ victim, absPos, attached }: Props) {
         unit.zoneKey, trip,
       ));
     } else {
-      const locationLabel  = zoneKeyToFullLabel(victim.zoneKey);
-      const rescueLocLabel = [locationLabel, victim.subLocation].filter(Boolean).join(' ') || '위치미상';
-      rescueUnit(unit.id, rescueLocLabel, trip);
+      // 「[진압1대] 2층 구조대상자(여/30대) → 구조, 임시의료소로 이동」 — 데리고 들어가기와 같은 이름
+      rescueUnit(unit.id, victimsRefText([victim]), trip);
     }
     moveVictim(victim.id, 'medical-post', undefined, { silent: true });
   }, [victim, addLog, rescueUnit, moveVictim]);

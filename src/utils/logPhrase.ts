@@ -211,13 +211,11 @@ function victimPlaceLabel(zoneKey: string | null | undefined): string | null {
  * 출동대를 따라 움직여 지금 구역은 거쳐 가는 자리일 수 있다. 구조 현황판(RescueBoard)도
  * 같은 기준으로 센다.
  */
-export function rescueTripOf(victims: readonly {
-  id: string; kind?: string; groupCount?: number;
-  zoneKey: string | null; originZoneKey?: string;
-}[]): RescueTrip {
+export function rescueTripOf(victims: readonly VictimLike[]): RescueTrip {
   const floorLabels: string[] = [];
   for (const v of victims) {
-    const label = victimPlaceLabel(v.originZoneKey ?? v.zoneKey);
+    // 추락한 사람은 「2층/A면추락」 — 구조 시작 줄과 같은 이름으로 센다
+    const label = victimOriginLabel(v);
     if (label && !floorLabels.includes(label)) floorLabels.push(label);
   }
   return {
@@ -225,6 +223,113 @@ export function rescueTripOf(victims: readonly {
     floorLabels,
     count: victims.reduce((n, v) => n + (v.kind === 'group' ? (v.groupCount ?? 1) : 1), 0),
   };
+}
+
+// ── 구조대상자 — 이름 · 이동 · 추락 ───────────────
+//
+// 구조대상자는 **처음 놓였던 자리**로 부른다 — 「2층 구조대상자(여/30대)」(2026-09-14 사용자 정의).
+// 옮겨 다녀도 이름은 그대로라, 이동 줄 · 구조 줄 · 구조완료 줄이 같은 사람을 같은 이름으로 가리킨다.
+// 건물 층에서 방면으로 옮기면 추락이고, 그 뒤로는 「2층/A면추락 구조대상자」다.
+
+/** 구조대상자 이름을 만드는 데 필요한 필드 — VictimToken 의 일부 */
+export interface VictimLike {
+  id:             string;
+  kind?:          string;
+  groupCount?:    number;
+  customLabel?:   string;
+  gender?:        string;
+  ageGroup?:      string;
+  age?:           number;
+  zoneKey:        string | null;
+  originZoneKey?: string;
+  fellToFace?:    string | null;
+}
+
+/** 나이 → 연령대 — 34 → 「30대」, 10살 미만은 「소아」(VictimAgeGroup 과 같은 칸) */
+function ageGroupOf(age: number): string {
+  return age < 10 ? '소아' : `${Math.floor(age / 10) * 10}대`;
+}
+
+/**
+ * 「여/30대」 — 성별/연령대. 직접입력은 그 이름, 묶음은 인원. 모르면 빈 문자열.
+ * 훈련 중 만든 구조대상자는 나이만 있고 연령대가 없다 — 나이에서 연령대를 낸다.
+ */
+export function victimDesc(v: VictimLike): string {
+  if (v.customLabel) return v.customLabel;
+  if (v.kind === 'group') return v.groupCount != null ? `${v.groupCount}명` : '';
+  return [v.gender, v.ageGroup ?? (v.age != null ? ageGroupOf(v.age) : undefined)].filter(Boolean).join('/');
+}
+
+/** 어디 사람인가 — 「2층」·「A면」, 추락했으면 「2층/A면추락」. 모르면 null */
+export function victimOriginLabel(v: VictimLike): string | null {
+  const place = victimPlaceLabel(v.originZoneKey ?? v.zoneKey);
+  if (!v.fellToFace) return place;
+  return place ? `${place}/${v.fellToFace}면추락` : `${v.fellToFace}면추락`;
+}
+
+/** 「2층 구조대상자(여/30대)」 */
+export function victimRefText(v: VictimLike): string {
+  const origin = victimOriginLabel(v);
+  const desc   = victimDesc(v);
+  return `${origin ? `${origin} ` : ''}구조대상자${desc ? `(${desc})` : ''}`;
+}
+
+/** 여러 명 — 같은 자리끼리 괄호를 합친다. 「2층 구조대상자(여/30대, 남/40대), A면 구조대상자(남/20대)」 */
+export function victimsRefText(victims: readonly VictimLike[]): string {
+  const groups = new Map<string, string[]>();
+  for (const v of victims) {
+    const key  = victimOriginLabel(v) ?? '';
+    const list = groups.get(key) ?? [];
+    const desc = victimDesc(v);
+    if (desc) list.push(desc);
+    groups.set(key, list);
+  }
+  const text = [...groups]
+    .map(([origin, descs]) => `${origin ? `${origin} ` : ''}구조대상자${descs.length > 0 ? `(${descs.join(', ')})` : ''}`)
+    .join(', ');
+  return text || '구조대상자';
+}
+
+/** 층에서 방면으로 옮겼으면 그 방면(「A」) — 추락이다. 아니면 null */
+export function victimFallFace(fromZoneKey: string | null, toZoneKey: string | null): string | null {
+  if (!fromZoneKey || !toZoneKey) return null;
+  const from = parseZoneKey(fromZoneKey).part;
+  if (from !== 'floor-inside' && from !== 'floor-stair') return null;
+  return parseZoneKey(toZoneKey).face;
+}
+
+/** 이동 문장의 자리 이름 — 층이 다르면 층만(「1층에서 2층으로」), 같은 층 안이면 내부·계단실까지 */
+function victimMovePlaces(fromZoneKey: string, toZoneKey: string): [string, string] {
+  const a = parseZoneKey(fromZoneKey);
+  const b = parseZoneKey(toZoneKey);
+  if (a.floorId && b.floorId && a.floorId !== b.floorId) return [floorIdLabel(a.floorId), floorIdLabel(b.floorId)];
+  return [a.label, b.label];
+}
+
+/**
+ * 구조대상자 이동 한 줄 — `v` 는 **옮기기 전** 모습이다(추락 순간에는 아직 추락 전 이름으로 부른다).
+ *
+ *   층 → 층        「1층 구조대상자(여/30대) 1층에서 2층으로 이동」
+ *   층 → 방면      「2층 구조대상자(여/30대) A면 지상으로 추락」
+ *   처음 놓임      「구조대상자(여/30대) 2층 내부 배치」
+ *
+ * 구조대상자는 출동대가 아니라 칩이 없다 — 글자 한 조각이다(§12 칩 = 출동대).
+ */
+export function victimMoveParts(v: VictimLike, fromZoneKey: string | null, toZoneKey: string): LogPart[] {
+  const ref = victimRefText(v);
+  if (!fromZoneKey) return seq(`${ref} ${zoneLabel(toZoneKey)} 배치`);
+  const face = victimFallFace(fromZoneKey, toZoneKey);
+  if (face) return seq(`${ref} ${face}면 지상으로 추락`);
+  const [a, b] = victimMovePlaces(fromZoneKey, toZoneKey);
+  return seq(`${ref} ${a}에서 ${b}${roParticle(b)} 이동`);
+}
+
+/**
+ * 활동대가 구조대상자를 데리고 임시의료소로 — 「[진압1대] 2층 구조대상자(여/30대) → 구조, 임시의료소로 이동」.
+ * 추락한 사람이면 「2층/A면추락 구조대상자(여/30대)」다. `victimText` 는 victimsRefText 가 만든다.
+ */
+export function rescueStartParts(u: UnitRef, victimText: string): LogPart[] {
+  return seq(unitPart(u), ` ${victimText} → 구조, 임시의료소로 이동`);
 }
 
 /** 카운트다운 중에 또 데려오면 같은 이송에 더한다 */
