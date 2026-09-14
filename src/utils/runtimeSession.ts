@@ -529,6 +529,8 @@ export interface PostsSessionState {
   medicalInstalled:    boolean;
   medicalChiefTokenId: string | null;
   resourceAssigned:    boolean;
+  /** 대기1단계 운영 여부. 이 필드가 생기기 전 저장분에는 없다 — 없으면 운영(true)으로 읽는다 */
+  standby1Operating?:  boolean;
 }
 
 export function savePostsSession(state: PostsSessionState): void {

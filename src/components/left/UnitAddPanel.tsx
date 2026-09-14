@@ -8,6 +8,7 @@ import { PoolTokenGrid } from '../shared/PoolTokenGrid';
 import { ArrivalOrderList, PoolModeToggle } from '../shared/ArrivalOrderList';
 import { UNIT_ADD_ZONE } from '../../utils/unitAddZone';
 import { summarizeUnits, summaryText, toUnitRefs } from '../../utils/dispatchSummary';
+import { dispatchTarget } from '../../utils/dispatchTarget';
 import './UnitAddPanel.css';
 import { rectToStage, stageBounds, stagePortalTarget } from '../../utils/stagePortal';
 
@@ -22,12 +23,9 @@ import { rectToStage, stageBounds, stagePortalTarget } from '../../utils/stagePo
  *   - 만든 출동대는 이 박스(zoneKey: 'unit-add')에 담기고, 이후에는 옮긴 자리에 표시된다.
  *   - 메뉴가 열려 있는 동안 이 박스의 출동대를 우클릭하면 바로 삭제된다.
  */
-const ZONE_STANDBY1 = 'standby-standby1';
-const ZONE_RESOURCE = 'standby-resource';
-
 export function UnitAddPanel() {
   const { tokens, moveToken, removeToken, addLog } = useTokens();
-  const { resourceAssigned } = useResourceStatus();
+  const { resourceAssigned, standby1Operating } = useResourceStatus();
   const [open, setOpen] = useState(false);
   // 나열 방식 — 출동대현황과 같은 두 모드. 여기서 만든 대도 착대를 갖는다.
   const [listMode, setListMode] = useState<'category' | 'arrival'>('category');
@@ -129,12 +127,13 @@ export function UnitAddPanel() {
   }, [open]);
 
   /**
-   * 더블클릭 — 자원대기소가 「지정」이면 그리로, 아니면 대기1단계로.
+   * 더블클릭 — 자원대기소가 「지정」이면 그리로, 아니면 대기1단계로, 대기1단계도
+   * 미운영이면 A면으로(utils/dispatchTarget).
    * 출동대현황(UnitStatusPanel)과 같은 규칙이다. 동승 펌프를 함께 내보내는
    * 일은 moveToken 이 맡는다 — 추가출동대도 대기 박스라 동승이 유지된다.
    */
   function handleTokenDoubleClick(tokenId: string) {
-    moveToken(tokenId, resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1);
+    moveToken(tokenId, dispatchTarget(resourceAssigned, standby1Operating));
   }
 
   /**
@@ -147,7 +146,7 @@ export function UnitAddPanel() {
    * 그래서 모드와 무관하게 늘 열어 둔다.
    */
   function handleOrderDoubleClick(items: UnitToken[]) {
-    const target = resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1;
+    const target = dispatchTarget(resourceAssigned, standby1Operating);
     for (const t of items) moveToken(t.id, target);
   }
 

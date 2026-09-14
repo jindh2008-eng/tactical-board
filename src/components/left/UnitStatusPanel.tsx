@@ -6,16 +6,14 @@ import { useResourceStatus } from '../../context/ResourceStatusContext';
 import { PoolTokenGrid } from '../shared/PoolTokenGrid';
 import { ArrivalOrderList, PoolModeToggle } from '../shared/ArrivalOrderList';
 import { buildRosterOrderMap, effectiveOrder, typePriority } from '../../utils/arrivalOrder';
+import { dispatchTarget } from '../../utils/dispatchTarget';
 import './UnitStatusPanel.css';
-
-const ZONE_STANDBY1 = 'standby-standby1';
-const ZONE_RESOURCE = 'standby-resource';
 
 /** 출동대현황 — pool(미배치) 토큰 목록 + 반환 드롭 영역 */
 export function UnitStatusPanel() {
   const { tokens, moveToken, removeToken, arrivalCountdowns } = useTokens();
   const { arrivalMode, dispatchRoster }          = useSettings();
-  const { resourceAssigned }        = useResourceStatus();
+  const { resourceAssigned, standby1Operating } = useResourceStatus();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected]     = useState<Set<string>>(new Set());
   // 나열 방식 — 모드1: 종류별 컬럼(기존) / 모드2: 설정한 착대 순서
@@ -80,6 +78,7 @@ export function UnitStatusPanel() {
 
   // ── 더블클릭 이동 ────────────────────────────
   // 자원대기소가 "지정"(운영) 상태면 자원대기소로, 아니면 대기1단계로 바로 이동.
+  // 대기1단계도 미운영이면 A면으로 나간다(utils/dispatchTarget).
   // 동승 중인 펌프를 함께 내보내는 일은 TokenContext.moveToken 이 맡는다 —
   // 여기서 또 옮기면 로스터 짝만 처리돼 훈련 중 만든 짝과 규칙이 갈린다.
   function handleButtonMove(tokenId: string, zoneKey: string) {
@@ -87,7 +86,7 @@ export function UnitStatusPanel() {
   }
 
   function handleTokenDoubleClick(tokenId: string) {
-    handleButtonMove(tokenId, resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1);
+    handleButtonMove(tokenId, dispatchTarget(resourceAssigned, standby1Operating));
   }
 
   // 착대 라벨 더블클릭 — 그 차수 전체를 한꺼번에 도착시킨다.
@@ -95,7 +94,7 @@ export function UnitStatusPanel() {
   const canDispatchByOrder = arrivalMode === 'order';
 
   function handleOrderDoubleClick(items: UnitToken[]) {
-    const target = resourceAssigned ? ZONE_RESOURCE : ZONE_STANDBY1;
+    const target = dispatchTarget(resourceAssigned, standby1Operating);
     for (const t of items) moveToken(t.id, target);
   }
 

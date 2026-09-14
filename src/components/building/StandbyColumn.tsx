@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useTokens } from '../../context/TokenContext';
+import { useResourceStatus } from '../../context/ResourceStatusContext';
 import { useVictims } from '../../context/VictimContext';
 import { useMedicalPost } from '../../context/MedicalPostContext';
 import { TokenCard } from '../shared/TokenCard';
@@ -181,9 +182,11 @@ interface SimpleStandbyBoxProps {
   zoneKey:             string;
   colorMod:            string;
   onTokenDoubleClick?: (tokenId: string) => void;
+  /** 제목 오른쪽에 붙는 조작 — 대기1단계의 [운영]·[미운영] */
+  headerAside?:        ReactNode;
 }
 
-function SimpleStandbyBox({ label, zoneKey, colorMod, onTokenDoubleClick }: SimpleStandbyBoxProps) {
+function SimpleStandbyBox({ label, zoneKey, colorMod, onTokenDoubleClick, headerAside }: SimpleStandbyBoxProps) {
   const { tokens, moveToken } = useTokens();
   const zoneTokens = tokens.filter(t => t.zoneKey === zoneKey);
   // 맨 윗줄은 "도착대" — 방금 들어온 한 무리. 나머지는 아래에서 종류별로 정렬한다.
@@ -200,6 +203,7 @@ function SimpleStandbyBox({ label, zoneKey, colorMod, onTokenDoubleClick }: Simp
     <div className={`standby-box standby-box--${colorMod}`}>
       <div className="standby-box__header standby-box__header--chief">
         <span className="standby-box__title">{label}</span>
+        {headerAside}
       </div>
 
       <div
@@ -228,10 +232,37 @@ function SimpleStandbyBox({ label, zoneKey, colorMod, onTokenDoubleClick }: Simp
 // ─────────────────────────────────────────────
 // BottomStandbyBoxes — 좌측 운영 패널의 "대기1단계" 섹션
 // 더블클릭하면 A면의 직전대기로 보낸다(차량은 여기 남는다 — 교리대로)
+//
+// 제목 옆 [운영]·[미운영] — 대기1단계를 운영할지 지휘관이 정한다(2026-09-14 사용자 정의).
+// 기본은 운영이다. 미운영이면 출동대현황·추가출동대의 출동대가 대기1단계를 거치지 않고
+// A면으로 나간다(utils/dispatchTarget). 이미 들어와 있는 대는 그대로 둔다.
 // ─────────────────────────────────────────────
 
 export function BottomStandbyBoxes() {
   const { moveToken } = useTokens();
+  const { standby1Operating, setStandby1Operating } = useResourceStatus();
+
+  const toggle = (
+    <span className="standby-op-toggle" role="group" aria-label="대기1단계 운영 여부">
+      <button
+        type="button"
+        className={`standby-op-toggle__btn${standby1Operating ? ' standby-op-toggle__btn--on' : ''}`}
+        aria-pressed={standby1Operating}
+        onClick={() => setStandby1Operating(true)}
+      >
+        운영
+      </button>
+      <button
+        type="button"
+        className={`standby-op-toggle__btn${standby1Operating ? '' : ' standby-op-toggle__btn--off'}`}
+        aria-pressed={!standby1Operating}
+        onClick={() => setStandby1Operating(false)}
+      >
+        미운영
+      </button>
+    </span>
+  );
+
   return (
     <div className="bottom-standby-boxes">
       <SimpleStandbyBox
@@ -239,6 +270,7 @@ export function BottomStandbyBoxes() {
         zoneKey="standby-standby1"
         colorMod="standby1"
         onTokenDoubleClick={id => moveToken(id, 'standby-imminent')}
+        headerAside={toggle}
       />
     </div>
   );

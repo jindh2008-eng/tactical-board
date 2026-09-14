@@ -8,6 +8,7 @@ import { DisplayOptionsContext, type DisplayOptionKey } from '../context/Display
 import { useTokens, TokenProvider } from '../context/TokenContext';
 import { LogProvider, useLog }  from '../context/LogContext';
 import { postOpenParts, partsText } from '../utils/logPhrase';
+import { standby1OrFace }     from '../utils/dispatchTarget';
 import { VictimProvider }     from '../context/VictimContext';
 import { EventProvider }      from '../context/EventContext';
 import { ActionModeProvider, useActionMode } from '../context/ActionModeContext';
@@ -312,8 +313,10 @@ function AerialSprayTargetOverlay() {
 function ResourcePanel() {
   const { tokens, moveToken, addLog }                = useTokens();
   const { stagingAreaChief, updateStagingAreaChief } = useSettings();
-  const { resourceAssigned, setResourceAssigned }    = useResourceStatus();
+  const { resourceAssigned, setResourceAssigned, standby1Operating } = useResourceStatus();
   const { registerReleaser }                         = useRoleRelease();
+  // 더블클릭하면 다음 단계로 — 대기1단계를 운영하지 않으면 A면이다(utils/dispatchTarget)
+  const forward = (id: string) => moveToken(id, standby1OrFace(standby1Operating));
 
   /*
    * 운영 지정 토글을 없앴다 — 소장을 지명하면 그것이 곧 운영 지정이다.
@@ -414,13 +417,13 @@ function ResourcePanel() {
           <>
           <ArrivedGroupRow
             tokens={arrived}
-            onTokenDoubleClick={id => moveToken(id, 'standby-standby1')}
+            onTokenDoubleClick={forward}
           />
           {rest.length > 0 && (
             <div className="resource-panel__rest">
               <CategorizedTokenGrid
                 tokens={rest}
-                onTokenDoubleClick={id => moveToken(id, 'standby-standby1')}
+                onTokenDoubleClick={forward}
               />
             </div>
           )}

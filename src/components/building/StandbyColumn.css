@@ -55,6 +55,44 @@
   flex-shrink: 0;
 }
 
+/* ── 대기1단계 [운영]·[미운영] 전환 — 제목 오른쪽 끝에 붙는 두 칸 버튼 ── */
+
+.standby-op-toggle {
+  display: inline-flex;
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid var(--ctr-border-soft);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.standby-op-toggle__btn {
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 1px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ctr-text-dim);
+  cursor: pointer;
+}
+
+.standby-op-toggle__btn + .standby-op-toggle__btn {
+  border-left: 1px solid var(--ctr-border-soft);
+}
+
+/* 켜진 쪽 — 운영은 대기1단계 글자색, 미운영은 직전대기와 같은 붉은 갈색 */
+.standby-op-toggle__btn--on {
+  background: #504870;
+  color: #fff;
+}
+
+.standby-op-toggle__btn--off {
+  background: #784040;
+  color: #fff;
+}
+
 /* ── 단일 body (기존 호환) ── */
 
 /* 도착대 줄 + 아래 목록 — 세로로 나눠 담는다 */

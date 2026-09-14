@@ -20,6 +20,7 @@ import { useResourceStatus } from './ResourceStatusContext';
 import { useLog } from './LogContext';
 import { useRoleRelease } from './RoleReleaseContext';
 import { conflictingMissionLabels } from '../config/unitMissions';
+import { dispatchTarget, standby1OrFace } from '../utils/dispatchTarget';
 
 const ZONE_RESOURCE = 'standby-resource';
 const ZONE_STANDBY1 = 'standby-standby1';
@@ -31,8 +32,6 @@ const ZONE_STANDBY1 = 'standby-standby1';
  */
 const DISMOUNT_ZONES = new Set<string>([ZONE_RESOURCE, ZONE_STANDBY1]);
 import { generateId } from '../utils/settingsStorage';
-
-const ARRIVAL_TARGET_ZONE = 'standby-standby1';
 
 // ─────────────────────────────────────────────
 // 타이밍 설정
@@ -176,7 +175,7 @@ export function TokenProvider({
   /**
    * 훈련 시작 여부 (TrainingContext.status === 'running').
    * false: 출동대 전원 pool 대기, 도착 타이머 미작동.
-   * true:  도착 타이머 작동, arrivalSec 경과 시 대기1단계 자동 이동.
+   * true:  도착 타이머 작동, arrivalSec 경과 시 대기1단계 자동 이동(대기1단계 미운영이면 A면).
    */
   started?: boolean;
   /** 도착설정 방식. 'order' 모드에서는 타이머 자동 이동 비활성화. */
@@ -208,9 +207,12 @@ export function TokenProvider({
   useEffect(() => { initialRosterRef.current = initialRoster ?? []; }, [initialRoster]);
 
   // 동승 펌프를 어디에 내려놓을지 정할 때 자원대기소 운영 여부를 본다
-  const { resourceAssigned } = useResourceStatus();
+  const { resourceAssigned, standby1Operating } = useResourceStatus();
   const resourceAssignedRef  = useRef(resourceAssigned);
   useEffect(() => { resourceAssignedRef.current = resourceAssigned; }, [resourceAssigned]);
+  // 시간 도착이 대기1단계로 들어올지 A면으로 들어올지 — 타이머 콜백이 그 순간의 값을 읽는다
+  const standby1OperatingRef = useRef(standby1Operating);
+  useEffect(() => { standby1OperatingRef.current = standby1Operating; }, [standby1Operating]);
 
   // counters: 세션 복원 > roster 기반 초기화 순
   const counters = useRef<Record<string, number>>({});
@@ -325,11 +327,13 @@ export function TokenProvider({
           .filter((t): t is UnitToken => !!t && t.zoneKey === null);
         if (arriving.length === 0) return;
 
+        // 대기1단계를 운영하지 않으면 A면으로 들어온다 — 도착하는 순간의 값을 본다
+        const zone = standby1OrFace(standby1OperatingRef.current);
         const arrivingIds = new Set(arriving.map(t => t.id));
         setTokens(prev => prev.map(t =>
-          arrivingIds.has(t.id) ? { ...t, zoneKey: ARRIVAL_TARGET_ZONE } : t,
+          arrivingIds.has(t.id) ? { ...t, zoneKey: zone } : t,
         ));
-        for (const t of arriving) logAutoArrival(t);
+        for (const t of arriving) logAutoArrival(t, zone);
       }, delayMs);
 
       // 무리 전체가 한 타이머를 나눠 쓴다 — 언마운트 정리의 중복 clearTimeout 은 무해하다
@@ -337,9 +341,9 @@ export function TokenProvider({
     }
 
     /** 자동 도착 1건 — 같은 태스크 안의 것끼리 LogContext 가 한 줄로 묶는다 */
-    function logAutoArrival(t: UnitToken) {
+    function logAutoArrival(t: UnitToken, zone: string) {
       addArrivalLog({
-        mode: 'arrive', zoneKey: ARRIVAL_TARGET_ZONE, logSource: 'system',
+        mode: 'arrive', zoneKey: zone, logSource: 'system',
         unit: { tokenId: t.id, label: t.label, unitType: t.unitType, fromZoneKey: 'pool', color: t.color },
       });
     }
@@ -360,7 +364,9 @@ export function TokenProvider({
         if (delayMs <= 0) {
           // 이미 도착했어야 함 → 즉시 처리
           setTokens(prev => prev.map(t =>
-            t.id === tokenId && t.zoneKey === null ? { ...t, zoneKey: ARRIVAL_TARGET_ZONE } : t,
+            t.id === tokenId && t.zoneKey === null
+              ? { ...t, zoneKey: standby1OrFace(standby1OperatingRef.current) }
+              : t,
           ));
           setArrivalCountdowns(prev => {
             const next = { ...prev };
@@ -402,15 +408,16 @@ export function TokenProvider({
         if (item.arrivalSec <= 0) immediateIds.push(`roster-${item.id}`);
       }
       if (immediateIds.length > 0) {
+        const zone = standby1OrFace(standby1OperatingRef.current);
         setTokens(prev => prev.map(t =>
           immediateIds.includes(t.id) && t.zoneKey === null
-            ? { ...t, zoneKey: ARRIVAL_TARGET_ZONE }
+            ? { ...t, zoneKey: zone }
             : t,
         ));
         // 한 루프 안이라 전부 한 줄이 된다 — 「대기1단계 도착: …」
         for (const tokenId of immediateIds) {
           const token = tokensRef.current.find(t => t.id === tokenId);
-          if (token && token.zoneKey === null) logAutoArrival(token);
+          if (token && token.zoneKey === null) logAutoArrival(token, zone);
         }
       }
 
@@ -752,7 +759,7 @@ export function TokenProvider({
       const pumpIds = mountedPumpIds(token, tokensRef.current, initialRosterRef.current);
       const pumpZone = (isPoolZone(toZoneKey) || DISMOUNT_ZONES.has(toZoneKey!))
         ? toZoneKey
-        : (resourceAssignedRef.current ? ZONE_RESOURCE : ZONE_STANDBY1);
+        : dispatchTarget(resourceAssignedRef.current, standby1OperatingRef.current);
       for (const id of pumpIds) {
         moveTokenRef.current(id, pumpZone, undefined, { skipPairMove: true });
       }

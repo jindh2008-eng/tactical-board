@@ -35,7 +35,8 @@ function isStandbyBox(zoneKey: string | null): boolean {
 /**
  * 이동의 성격 — 목적지(와 출발지)에서 파생한다. 따로 저장하는 값이 아니다.
  *
- *   arrive   대기 박스 → 대기1단계·자원대기소. 같은 태스크끼리 한 줄로 묶는다
+ *   arrive   대기 박스 → 대기1단계·자원대기소 · 면. 같은 태스크끼리 한 줄로 묶는다.
+ *            면으로 곧장 나가는 것은 대기1단계를 운영하지 않을 때의 도착이다(「A면 도착: …」)
  *   return   현장 → 대기1단계·자원대기소. 되돌아옴
  *   mission  → RIT 칸. 임무지정이다
  *   withdraw → 대기 박스. 기록하지 않고 방금 한 도착을 거둔다(§2.2)
@@ -46,6 +47,7 @@ export type MoveKind = 'arrive' | 'return' | 'mission' | 'withdraw' | 'move';
 export function classifyMove(fromZoneKey: string | null, toZoneKey: string | null): MoveKind {
   if (toZoneKey === null || isStandbyBox(toZoneKey)) return 'withdraw';
   if (toZoneKey === RIT_ZONE) return 'mission';
+  if (isStandbyBox(fromZoneKey) && toZoneKey.startsWith('face-')) return 'arrive';
   if (ARRIVAL_ZONES.has(toZoneKey)) {
     if (isStandbyBox(fromZoneKey)) return 'arrive';
     if (fromZoneKey !== null && ARRIVAL_ZONES.has(fromZoneKey)) return 'move';

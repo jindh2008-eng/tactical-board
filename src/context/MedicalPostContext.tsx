@@ -25,14 +25,15 @@ export function MedicalPostProvider({ children }: { children: ReactNode }) {
   const [assignedTokenId, setAssignedTokenId] = useState<string | null>(() => loadPostsSession()?.medicalChiefTokenId ?? null);
 
   // 자원대기소와 한 키에 함께 담는다 — 둘 다 '현장에 무엇을 세웠는가'라는 같은 성격이다
-  const { resourceAssigned } = useResourceStatus();
+  const { resourceAssigned, standby1Operating } = useResourceStatus();
   useEffect(() => {
     savePostsSession({
       medicalInstalled:    isInstalled,
       medicalChiefTokenId: assignedTokenId,
       resourceAssigned,
+      standby1Operating,
     });
-  }, [isInstalled, assignedTokenId, resourceAssigned]);
+  }, [isInstalled, assignedTokenId, resourceAssigned, standby1Operating]);
 
   return (
     <MedicalPostContext.Provider value={{ isInstalled, setIsInstalled, assignedTokenId, setAssignedTokenId }}>
