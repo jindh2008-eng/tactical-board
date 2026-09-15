@@ -21,7 +21,16 @@ npm run lint    # eslint .
 npx tsc -b --force   # 타입체크만 (빠른 확인용)
 ```
 
-`npm run test:chatgpt-summary`(`node --test`)는 `scripts/summarize-chatgpt-project.mjs` 전용이며 앱과 무관하다. **앱에는 테스트가 없다** — 검증은 브라우저에서 직접 한다.
+```bash
+npm test   # 이벤트 로그 문장 시험 (tests/logPhrase.test.mjs)
+```
+
+**앱의 자동 시험은 로그 문장(`src/utils/logPhrase.ts`) 하나뿐이다** — 사용자가 한 줄씩 정한 무전 멘트 형식을
+못 박아, 문구를 고칠 때 다른 문장이 흔들리면 바로 드러나게 한다. 문장을 바꿔야 하면 기대값도 **사용자 결정과 함께**
+고친다. 추가 도구 없이 Node 24 가 `.ts` 의 타입을 지워 돌린다(`tests/ts-resolve.mjs` 가 확장자 없는 import 를 푼다) —
+tsconfig 의 `verbatimModuleSyntax` · `erasableSyntaxOnly` 가 이것을 보장한다. **나머지 동작 검증은 브라우저에서 직접 한다.**
+
+`npm run test:chatgpt-summary`(`node --test`)는 `scripts/summarize-chatgpt-project.mjs` 전용이며 앱과 무관하다.
 
 ### 개발 서버
 
