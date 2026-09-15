@@ -26,6 +26,9 @@ dist-ssr
 # Claude Code 워크트리 (로컬 전용)
 .claude/worktrees/
 
+# Claude Code 개인 권한 설정 — 기기마다 다르다(경로·명령 허용 목록). 공유 설정은 settings.json
+.claude/settings.local.json
+
 # settings-ui-audit.mjs 산출물 — 스크린샷은 커밋하지 않는다.
 # 기준선은 커밋된 스크립트 + audit.json/.md 이며, 이미지는 그 커밋을
 # 체크아웃해 스크립트를 다시 돌리면 언제든 재생성된다.
