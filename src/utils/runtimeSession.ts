@@ -10,6 +10,7 @@
 import type { UnitToken, LogEntry, Pos, DoorState, FireStatus } from '../types';
 import type { VictimToken } from '../types/victim';
 import type { EventStatus } from '../types/events';
+import { reportSaveFailure } from './saveFailure';
 
 // ─────────────────────────────────────────────
 // 저장 키
@@ -17,6 +18,20 @@ import type { EventStatus } from '../types/events';
 
 const KEY_TOKENS  = 'tactical-board.runtime.tokens';
 const KEY_VICTIMS = 'tactical-board.runtime.victims';
+
+/**
+ * 모든 save* 가 이 한 곳으로 쓴다 — 실패하면 조용히 넘기지 않고 알린다(utils/saveFailure).
+ * 저장 공간이 넘치거나 사생활 보호 모드면 setItem 이 던진다. 예전에는 save* 마다 catch 로
+ * 삼켜, 새로고침하면 기록이 사라지는데도 훈련 중에는 아무도 몰랐다(2026-09-15).
+ * 이 함수는 던지지 않으므로 호출부의 try/catch 는 이제 실제로 걸리지 않는다.
+ */
+function setSession(key: string, value: string): void {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch (e) {
+    reportSaveFailure(key, e);
+  }
+}
 
 // ─────────────────────────────────────────────
 // 복원 형태 검증 헬퍼
@@ -96,7 +111,7 @@ export interface VictimSessionState {
 
 export function saveTokenSession(state: TokenSessionState): void {
   try {
-    sessionStorage.setItem(KEY_TOKENS, JSON.stringify({ ...state, posFormat: 'norm' }));
+    setSession(KEY_TOKENS, JSON.stringify({ ...state, posFormat: 'norm' }));
   } catch {
     // quota exceeded 또는 private mode — 무시
   }
@@ -143,7 +158,7 @@ export function loadTokenSession(): TokenSessionState | null {
 
 export function saveVictimSession(state: VictimSessionState): void {
   try {
-    sessionStorage.setItem(KEY_VICTIMS, JSON.stringify({ ...state, posFormat: 'norm' }));
+    setSession(KEY_VICTIMS, JSON.stringify({ ...state, posFormat: 'norm' }));
   } catch { /* ignore */ }
 }
 
@@ -181,7 +196,7 @@ export interface TrainingSessionState {
 
 export function saveTrainingSession(state: TrainingSessionState): void {
   try {
-    sessionStorage.setItem(KEY_TRAINING, JSON.stringify(state));
+    setSession(KEY_TRAINING, JSON.stringify(state));
   } catch { /* ignore */ }
 }
 
@@ -226,7 +241,7 @@ export interface EventSessionState {
 
 export function saveEventSession(state: EventSessionState): void {
   try {
-    sessionStorage.setItem(KEY_EVENTS, JSON.stringify({ ...state, posFormat: 'norm-center' }));
+    setSession(KEY_EVENTS, JSON.stringify({ ...state, posFormat: 'norm-center' }));
   } catch { /* ignore */ }
 }
 
@@ -266,7 +281,7 @@ export interface BuildingSessionState {
 
 export function saveBuildingSession(state: BuildingSessionState): void {
   try {
-    sessionStorage.setItem(KEY_BUILDING, JSON.stringify(state));
+    setSession(KEY_BUILDING, JSON.stringify(state));
   } catch { /* ignore */ }
 }
 
@@ -300,7 +315,7 @@ export interface WaterConnSessionItem {
 
 export function saveWaterConnSession(connections: WaterConnSessionItem[]): void {
   try {
-    sessionStorage.setItem(KEY_WATERCONN, JSON.stringify(connections));
+    setSession(KEY_WATERCONN, JSON.stringify(connections));
   } catch { /* ignore */ }
 }
 
@@ -321,7 +336,7 @@ const KEY_HYDRANT = 'tactical-board.runtime.hydrant';
 
 export function saveHydrantSession(brokenIds: ReadonlySet<string>): void {
   try {
-    sessionStorage.setItem(KEY_HYDRANT, JSON.stringify([...brokenIds]));
+    setSession(KEY_HYDRANT, JSON.stringify([...brokenIds]));
   } catch { /* ignore */ }
 }
 
@@ -342,7 +357,7 @@ const KEY_EQUIP_MSG = 'tactical-board.runtime.equip-msg';
 
 export function saveEquipMsgSession(msgs: Record<string, string>): void {
   try {
-    sessionStorage.setItem(KEY_EQUIP_MSG, JSON.stringify(msgs));
+    setSession(KEY_EQUIP_MSG, JSON.stringify(msgs));
   } catch { /* ignore */ }
 }
 
@@ -369,7 +384,7 @@ export interface WaterLevelSessionState {
 
 export function saveWaterLevelSession(state: WaterLevelSessionState): void {
   try {
-    sessionStorage.setItem(KEY_WATER_LEVELS, JSON.stringify(state));
+    setSession(KEY_WATER_LEVELS, JSON.stringify(state));
   } catch { /* ignore */ }
 }
 
@@ -414,7 +429,7 @@ export interface VictimSearchSessionState {
 
 export function saveVictimSearchSession(state: VictimSearchSessionState): void {
   try {
-    sessionStorage.setItem(KEY_VICTIM_SEARCH, JSON.stringify(state));
+    setSession(KEY_VICTIM_SEARCH, JSON.stringify(state));
   } catch { /* ignore */ }
 }
 
@@ -451,7 +466,7 @@ export interface ChecklistSessionState {
 
 export function saveChecklistSession(state: ChecklistSessionState): void {
   try {
-    sessionStorage.setItem(KEY_CHECKLIST, JSON.stringify(state));
+    setSession(KEY_CHECKLIST, JSON.stringify(state));
   } catch { /* ignore */ }
 }
 
@@ -486,7 +501,7 @@ export interface LogSessionState {
 
 export function saveLogSession(state: LogSessionState): void {
   try {
-    sessionStorage.setItem(KEY_LOGS, JSON.stringify(state));
+    setSession(KEY_LOGS, JSON.stringify(state));
   } catch { /* ignore */ }
 }
 
@@ -537,7 +552,7 @@ export interface PostsSessionState {
 
 export function savePostsSession(state: PostsSessionState): void {
   try {
-    sessionStorage.setItem(KEY_POSTS, JSON.stringify(state));
+    setSession(KEY_POSTS, JSON.stringify(state));
   } catch { /* ignore */ }
 }
 
@@ -602,7 +617,7 @@ function toScope(zoneKey: string): string {
 
 export function saveUnitCommanderSession(state: UnitCommandSessionState): void {
   try {
-    sessionStorage.setItem(KEY_UNIT_COMMANDER, JSON.stringify(state));
+    setSession(KEY_UNIT_COMMANDER, JSON.stringify(state));
   } catch { /* ignore */ }
 }
 
@@ -676,7 +691,7 @@ export type CirculationMap = Record<string, string[]>;
 
 export function saveCirculationSession(slots: CirculationMap): void {
   try {
-    sessionStorage.setItem(KEY_CIRCULATION, JSON.stringify(slots));
+    setSession(KEY_CIRCULATION, JSON.stringify(slots));
   } catch { /* ignore */ }
 }
 

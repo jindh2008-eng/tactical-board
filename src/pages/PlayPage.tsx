@@ -26,6 +26,7 @@ import { HydrantCirculationProvider } from '../context/HydrantCirculationContext
 import { UnitCommanderBridge } from '../components/shared/UnitCommanderBridge';
 import { WaterMissionBridge }  from '../components/shared/WaterMissionBridge';
 import { BoardNoticeHost }    from '../components/shared/BoardNoticeHost';
+import { SaveFailureBanner }  from '../components/shared/SaveFailureBanner';
 import { FireCommandProvider }     from '../context/FireCommandContext';
 import { ChecklistCommandProvider } from '../context/ChecklistCommandContext';
 import { StageRoot }               from '../components/stage/StageRoot';
@@ -684,6 +685,9 @@ export function PlayPage() {
                   부르는 쪽(우클릭 메뉴·관창 핸들)은 부르자마자 사라지기도 해서
                   표시는 오래 사는 이 자리 하나가 맡는다 — utils/boardNotice.ts */}
               <BoardNoticeHost />
+
+              {/* ── 훈련 상태 저장 실패 경고 — 조용히 넘기면 새로고침 때 기록이 사라진다 ── */}
+              <SaveFailureBanner />
 
               {/* ── 드래그 진단 패널 (개발 모드 전용) ── */}
               <DragDiagnosticsPanel />

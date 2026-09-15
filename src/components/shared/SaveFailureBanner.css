@@ -1,0 +1,50 @@
+/* ─────────────────────────────────────────────
+   훈련 상태 저장 실패 경고 — 아래쪽 가운데 고정
+   위쪽은 작업 모드 배너(.action-mode-banner) 자리라 겹치지 않게 아래로 둔다.
+   ─────────────────────────────────────────────*/
+
+.save-failure-banner {
+  position:      fixed;
+  bottom:        24px;
+  left:          50%;
+  transform:     translateX(-50%);
+  z-index:       9995;
+  display:       flex;
+  align-items:   center;
+  gap:           12px;
+  max-width:     min(92vw, 1100px);
+  padding:       10px 12px 10px 16px;
+  background:    rgba(48, 8, 8, 0.97);
+  border:        2px solid #ff5a4a;
+  border-radius: 12px;
+  box-shadow:    0 4px 24px rgba(255, 90, 74, 0.35), 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.save-failure-banner__title {
+  flex-shrink: 0;
+  font-size:   1.05rem;
+  font-weight: 800;
+  color:       #ffb3aa;
+}
+
+.save-failure-banner__msg {
+  font-size:   0.9rem;
+  color:       #ffe4e0;
+  line-height: 1.35;
+}
+
+.save-failure-banner__close {
+  flex-shrink:   0;
+  padding:       5px 14px;
+  border:        0;
+  border-radius: 8px;
+  background:    #ff5a4a;
+  color:         #1a0404;
+  font-size:     0.9rem;
+  font-weight:   800;
+  cursor:        pointer;
+}
+
+.save-failure-banner__close:hover {
+  background: #ff7a6d;
+}
