@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSettings } from '../../store/settingsStore';
 import { exportSettings, importSettings, exportScenario, importScenario } from '../../utils/settingsStorage';
+import { useSettingsSyncStatus } from '../../utils/settingsSync';
 import type { SettingsSet } from '../../utils/settingsStorage';
 import {
   SetButton, SetMenu, SetMenuItem, SetMenuSeparator,
@@ -9,6 +10,32 @@ import {
   IconExport, IconImport, IconTrash, IconTrashFilled, IconReset,
 } from './ui';
 import './SettingsLibraryPanel.css';
+
+/**
+ * 설정이 어디에 저장되는가 — PC 파일(data/settings.json)인가, 이 브라우저뿐인가(2026-09-16).
+ * 브라우저뿐이면 다른 주소 · 기기에서는 보이지 않으므로 경고색으로 알린다.
+ */
+function SettingsSyncChip() {
+  const sync = useSettingsSyncStatus();
+  if (sync === 'checking') return null;
+  return sync === 'server' ? (
+    <span
+      className="set-status-chip set-status-chip--saved"
+      title="설정이 이 PC 의 data/settings.json 에 저장됩니다 — 어느 브라우저 · 태블릿에서 열어도 같습니다"
+    >
+      <span className="set-status-chip__dot" aria-hidden="true" />
+      PC 파일에 저장
+    </span>
+  ) : (
+    <span
+      className="set-status-chip set-status-chip--dirty"
+      title="설정 서버에 연결되지 않아 이 브라우저에만 저장됩니다 — 다른 주소 · 기기에서는 보이지 않습니다. 백업을 받아 두세요"
+    >
+      <span className="set-status-chip__dot" aria-hidden="true" />
+      이 브라우저에만 저장
+    </span>
+  );
+}
 
 /** 삭제 되돌리기 유예 시간(§7.4 F-4) */
 const DELETE_UNDO_MS = 5000;
@@ -350,6 +377,7 @@ export function SettingsLibraryPanel() {
           status={resolveSaveStatus(isDirty, isApplied)}
           appliedAtLabel={lastAppliedAt ? formatClock(lastAppliedAt) : undefined}
         />
+        <SettingsSyncChip />
         <div className="slp__actions">
           {/*
             이름을 고친 순간에만 갈림길을 보여 준다.

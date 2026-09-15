@@ -1,7 +1,25 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { createSettingsStore } from './scripts/settings-store.mjs';
+
+/**
+ * 설정 파일 저장(/api/settings) — 훈련장 서버(scripts/serve-dist.mjs)와 같은 처리기를 쓴다.
+ * 개발 중에도 설정이 이 저장소의 data/settings.json 에 쌓인다(.gitignore 대상).
+ */
+function settingsFileStore(): Plugin {
+  const store = createSettingsStore({ dataDir: resolve(process.cwd(), 'data') });
+  const middleware = (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => {
+    store.handle(req, res).then(done => { if (!done) next(); }, next);
+  };
+  return {
+    name: 'settings-file-store',
+    configureServer(server)        { server.middlewares.use(middleware); },
+    configurePreviewServer(server) { server.middlewares.use(middleware); },
+  };
+}
 
 const ICON_DIR    = resolve(process.cwd(), 'public/event-icon');
 const VIRTUAL_ID  = 'virtual:event-icons';
@@ -23,10 +41,13 @@ export default defineConfig({
   // (패널이 프레임을 합성하지 않아 ResizeObserver 가 안 돈다) 실기기 확인이 필요하다.
   server: {
     host: true,
+    // 설정 파일이 저장될 때마다 감시자가 깨지 않게 뺀다
+    watch: { ignored: ['**/data/**'] },
   },
 
   plugins: [
     react(),
+    settingsFileStore(),
     {
       name: 'event-icons',
 

@@ -4,10 +4,15 @@
 // dist 정적 서버 — 훈련장 PC 배포용
 //
 // **의존성이 없다.** Node 표준 모듈만 쓰므로 훈련장에서는 `npm install` 이 필요 없고
-// Node.js 설치와 `dist/` 폴더만 있으면 된다. 옮길 것은 두 가지다.
+// Node.js 설치와 아래 파일만 있으면 된다.
 //
-//   dist/                    (npm run build 결과)
-//   scripts/serve-dist.mjs   (이 파일)
+//   dist/                        (npm run build 결과)
+//   scripts/serve-dist.mjs       (이 파일)
+//   scripts/settings-store.mjs   (설정 파일 저장 — 아래 §설정)
+//
+// 설정 — 설정모드의 시나리오 · 공통 설정을 **이 PC 의 파일에 저장한다**(2026-09-16).
+// 기본 위치는 `data/settings.json`(dist 와 나란히), 백업은 `data/backups/`. 어느 브라우저 ·
+// 태블릿에서 열어도 같은 설정을 본다. 옮기거나 백업할 때는 `data/` 폴더를 통째로 복사한다.
 //
 // 왜 `file://` 더블클릭이 아니라 서버인가
 //  - 번들이 `type="module"` 이라 `file://` 에서는 CORS(origin null)로 차단된다.
@@ -20,6 +25,7 @@
 //   node scripts/serve-dist.mjs --port 8080
 //   node scripts/serve-dist.mjs --host 127.0.0.1  (같은 PC에서만)
 //   node scripts/serve-dist.mjs --root ../dist
+//   node scripts/serve-dist.mjs --data D:/훈련설정   (설정 파일 위치를 바꿀 때)
 // ─────────────────────────────────────────────
 
 import { createServer } from 'node:http';
@@ -28,6 +34,7 @@ import { stat } from 'node:fs/promises';
 import { networkInterfaces } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createSettingsStore } from './settings-store.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -45,6 +52,7 @@ const PORT = Number(arg('port', process.env.PORT ?? 4173));
  */
 const HOST = arg('host', '0.0.0.0');
 const ROOT = path.resolve(HERE, arg('root', '../dist'));
+const settingsStore = createSettingsStore({ dataDir: path.resolve(HERE, arg('data', '../data')) });
 
 // ── MIME ─────────────────────────────────────
 // dist 에 실제로 들어가는 확장자만 적는다. 모르는 것은 다운로드로 떨어뜨린다.
@@ -108,6 +116,9 @@ function send(res, status, headers, stream) {
 
 // ── 요청 처리 ────────────────────────────────
 const server = createServer(async (req, res) => {
+  // 설정 파일 저장(/api/settings) — 정적 파일보다 먼저 본다
+  if (await settingsStore.handle(req, res)) return;
+
   const urlPath = new URL(req.url, 'http://localhost').pathname;
   const isHead  = req.method === 'HEAD';
 
@@ -172,6 +183,7 @@ server.on('error', err => {
 
 server.listen(PORT, HOST, () => {
   console.log(`전술상황판  ${ROOT}`);
+  console.log(`  설정 파일 ${settingsStore.file}`);
   console.log(`  로컬    http://localhost:${PORT}`);
   if (HOST === '0.0.0.0') {
     for (const list of Object.values(networkInterfaces())) {

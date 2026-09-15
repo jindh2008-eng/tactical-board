@@ -106,6 +106,59 @@ const SETTINGS_LIST_KEY   = 'tacticalBoardSettingsList';
 const WORKING_PRESETS_KEY = 'tacticalBoardWorkingPresets';
 
 // ─────────────────────────────────────────────
+// PC 파일 저장과의 연결 (2026-09-16 사용자 결정)
+//
+// 설정의 본거지는 PC 의 파일(data/settings.json)이다 — utils/settingsSync 가 서버와 주고받는다.
+// localStorage 는 빠른 사본으로 남긴다: 설정 화면이 동기적으로 읽기 때문이다.
+//
+// 모든 save* 는 writeLocal() 한 곳으로 쓴다. 실제로 값이 바뀌었을 때만 「마지막 수정 시각」을
+// 찍고 구독자(settingsSync)에게 알린다 — 같은 값을 다시 쓰는 것(마운트 직후 저장 등)은
+// 수정이 아니다. 시각은 어느 쪽이 더 새것인지 가르는 기준이다(utils/settingsSyncPlan).
+// ─────────────────────────────────────────────
+
+const SETTINGS_UPDATED_AT_KEY = 'tacticalBoardSettingsUpdatedAt';
+
+const changeListeners = new Set<() => void>();
+
+/** 설정이 바뀔 때마다 부른다(settingsSync 가 서버로 올리는 데 쓴다). 해제 함수를 돌려준다 */
+export function onSettingsChanged(fn: () => void): () => void {
+  changeListeners.add(fn);
+  return () => { changeListeners.delete(fn); };
+}
+
+/** 사용자가 설정을 바꿨다 — 수정 시각을 찍고 알린다 */
+export function markSettingsChanged(): void {
+  try { localStorage.setItem(SETTINGS_UPDATED_AT_KEY, String(Date.now())); } catch { /* 시각만 못 남긴다 */ }
+  for (const fn of changeListeners) fn();
+}
+
+/** 수정 시각만 지금으로 찍는다 — 알리지 않는다(도입 전 사본을 처음 올릴 때 settingsSync 가 쓴다) */
+export function touchLocalSettingsUpdatedAt(): void {
+  try { localStorage.setItem(SETTINGS_UPDATED_AT_KEY, String(Date.now())); } catch { /* 시각만 못 남긴다 */ }
+}
+
+/** 이 브라우저 사본의 마지막 수정 시각(ms). 파일 저장 도입 전부터 쓰던 브라우저는 0 */
+export function loadLocalSettingsUpdatedAt(): number {
+  try {
+    const n = Number(localStorage.getItem(SETTINGS_UPDATED_AT_KEY));
+    return Number.isFinite(n) ? n : 0;
+  } catch { return 0; }
+}
+
+/** 값이 바뀌었을 때만 쓰고 알린다. 브라우저 저장이 실패해도 서버로는 올라간다 */
+function writeLocal(key: string, value: string): void {
+  let prev: string | null = null;
+  try { prev = localStorage.getItem(key); } catch { /* 못 읽으면 바뀐 것으로 본다 */ }
+  if (prev === value) return;
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.error('[settingsStorage] 브라우저 저장 실패:', key, e);
+  }
+  markSettingsChanged();
+}
+
+// ─────────────────────────────────────────────
 // 헬퍼
 // ─────────────────────────────────────────────
 
@@ -143,17 +196,13 @@ export function upsertSettingsSet(list: SettingsSet[], set: SettingsSet): Settin
   const idx = list.findIndex(s => s.id === entry.id);
   const next = [...list];
   if (idx >= 0) { next[idx] = entry; } else { next.push(entry); }
-  try {
-    localStorage.setItem(SETTINGS_LIST_KEY, JSON.stringify(next));
-  } catch (e) {
-    console.error('[settingsStorage] 설정 목록 저장 실패:', e);
-  }
+  writeLocal(SETTINGS_LIST_KEY, JSON.stringify(next));
   return next;
 }
 
 export function removeSettingsSet(list: SettingsSet[], id: string): SettingsSet[] {
   const next = list.filter(s => s.id !== id);
-  localStorage.setItem(SETTINGS_LIST_KEY, JSON.stringify(next));
+  writeLocal(SETTINGS_LIST_KEY, JSON.stringify(next));
   return next;
 }
 
@@ -250,7 +299,7 @@ export function loadWorkingPresets(): WorkingPresets {
 }
 
 export function saveWorkingPresets(presets: WorkingPresets): void {
-  localStorage.setItem(WORKING_PRESETS_KEY, JSON.stringify(presets));
+  writeLocal(WORKING_PRESETS_KEY, JSON.stringify(presets));
 }
 
 // ─────────────────────────────────────────────
@@ -271,7 +320,7 @@ export function loadCommandProcedureConfigs(): CommandProcedureConfigs {
   } catch { return {}; }
 }
 export function saveCommandProcedureConfigs(cfg: CommandProcedureConfigs): void {
-  localStorage.setItem(COMMAND_PROCEDURE_KEY, JSON.stringify(cfg));
+  writeLocal(COMMAND_PROCEDURE_KEY, JSON.stringify(cfg));
 }
 
 export function loadUnitStatusConfig(): UnitStatusConfig {
@@ -282,7 +331,7 @@ export function loadUnitStatusConfig(): UnitStatusConfig {
   } catch { return {}; }
 }
 export function saveUnitStatusConfig(cfg: UnitStatusConfig): void {
-  localStorage.setItem(UNIT_STATUS_KEY, JSON.stringify(cfg));
+  writeLocal(UNIT_STATUS_KEY, JSON.stringify(cfg));
 }
 
 export function loadUnitTagPresetConfig(): UnitTagPresetConfig {
@@ -293,7 +342,7 @@ export function loadUnitTagPresetConfig(): UnitTagPresetConfig {
   } catch { return {}; }
 }
 export function saveUnitTagPresetConfig(cfg: UnitTagPresetConfig): void {
-  localStorage.setItem(TAG_PRESET_KEY, JSON.stringify(cfg));
+  writeLocal(TAG_PRESET_KEY, JSON.stringify(cfg));
 }
 
 /**
@@ -307,7 +356,7 @@ export function loadActiveCommandProcedureLevel(): CommandProcedureLevel {
   return raw === 'beginner' || raw === 'intermediate' || raw === 'advanced' ? raw : 'beginner';
 }
 export function saveActiveCommandProcedureLevel(level: CommandProcedureLevel): void {
-  localStorage.setItem(ACTIVE_COMMAND_PROCEDURE_LEVEL_KEY, level);
+  writeLocal(ACTIVE_COMMAND_PROCEDURE_LEVEL_KEY, level);
 }
 
 // ─────────────────────────────────────────────
@@ -327,6 +376,8 @@ export function saveActiveCommandProcedureLevel(level: CommandProcedureLevel): v
 export interface SettingsExport {
   version: 1;
   exportedAt: string;
+  /** 마지막 수정 시각(ms) — PC 파일 동기화가 어느 쪽이 새것인지 가른다. 옛 백업 파일에는 없다 */
+  updatedAt?: number;
   settingsList: SettingsSet[];
   workingPresets: WorkingPresets;
   commandProcedureConfigs?: CommandProcedureConfigs;
@@ -361,11 +412,16 @@ function downloadJson(data: unknown, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
-/** 백업 — 저장된 시나리오 전부 + 공통 설정 */
-export function exportSettings(): void {
-  const data: SettingsExport = {
+/**
+ * 설정 전체 묶음 — 백업 파일과 PC 파일(data/settings.json)이 같은 모양이다.
+ * 백업 파일을 그대로 data/settings.json 자리에 두어도 되고, 그 반대도 된다.
+ */
+export function buildSettingsBundle(): SettingsExport {
+  const updatedAt = loadLocalSettingsUpdatedAt();
+  return {
     version: 1,
     exportedAt: new Date().toISOString(),
+    ...(updatedAt > 0 ? { updatedAt } : {}),
     settingsList: loadSettingsList(),
     workingPresets: loadWorkingPresets(),
     commandProcedureConfigs: loadCommandProcedureConfigs(),
@@ -373,7 +429,37 @@ export function exportSettings(): void {
     unitStatusConfig: loadUnitStatusConfig(),
     unitTagPresetConfig: loadUnitTagPresetConfig(),
   };
-  downloadJson(data, `tactical-board-백업-${new Date().toISOString().slice(0, 10)}.json`);
+}
+
+/**
+ * 묶음을 브라우저 사본에 그대로 깐다 — 수정으로 치지 않는다(알리지 않는다).
+ * 수정 시각은 묶음의 것을 따른다. 백업 복원처럼 「사용자가 바꾼 것」이면 부르는 쪽이
+ * markSettingsChanged() 를 따로 부른다.
+ */
+export function applySettingsBundle(data: SettingsExport): void {
+  localStorage.setItem(SETTINGS_LIST_KEY, JSON.stringify(data.settingsList));
+  localStorage.setItem(WORKING_PRESETS_KEY, JSON.stringify(data.workingPresets));
+  if (data.commandProcedureConfigs)
+    localStorage.setItem(COMMAND_PROCEDURE_KEY, JSON.stringify(data.commandProcedureConfigs));
+  if (data.activeCommandProcedureLevel)
+    localStorage.setItem(ACTIVE_COMMAND_PROCEDURE_LEVEL_KEY, data.activeCommandProcedureLevel);
+  if (data.unitStatusConfig)
+    localStorage.setItem(UNIT_STATUS_KEY, JSON.stringify(data.unitStatusConfig));
+  if (data.unitTagPresetConfig)
+    localStorage.setItem(TAG_PRESET_KEY, JSON.stringify(data.unitTagPresetConfig));
+  localStorage.setItem(SETTINGS_UPDATED_AT_KEY, String(data.updatedAt ?? Date.now()));
+}
+
+/** 이 브라우저에 설정이 있는가 — 시나리오가 있거나, 한 번이라도 설정 화면을 연 적이 있다 */
+export function hasLocalSettings(): boolean {
+  try {
+    return loadSettingsList().length > 0 || localStorage.getItem(WORKING_PRESETS_KEY) !== null;
+  } catch { return false; }
+}
+
+/** 백업 — 저장된 시나리오 전부 + 공통 설정 */
+export function exportSettings(): void {
+  downloadJson(buildSettingsBundle(), `tactical-board-백업-${new Date().toISOString().slice(0, 10)}.json`);
 }
 
 /** 시나리오 한 건만 내보낸다 */
@@ -437,16 +523,9 @@ export function importSettings(file: File): Promise<number> {
           reject(new Error('올바른 설정 파일이 아닙니다.'));
           return;
         }
-        localStorage.setItem(SETTINGS_LIST_KEY, JSON.stringify(data.settingsList));
-        localStorage.setItem(WORKING_PRESETS_KEY, JSON.stringify(data.workingPresets));
-        if (data.commandProcedureConfigs)
-          localStorage.setItem(COMMAND_PROCEDURE_KEY, JSON.stringify(data.commandProcedureConfigs));
-        if (data.activeCommandProcedureLevel)
-          localStorage.setItem(ACTIVE_COMMAND_PROCEDURE_LEVEL_KEY, data.activeCommandProcedureLevel);
-        if (data.unitStatusConfig)
-          localStorage.setItem(UNIT_STATUS_KEY, JSON.stringify(data.unitStatusConfig));
-        if (data.unitTagPresetConfig)
-          localStorage.setItem(TAG_PRESET_KEY, JSON.stringify(data.unitTagPresetConfig));
+        applySettingsBundle(data);
+        // 복원은 사용자가 바꾼 것이다 — 지금 시각으로 찍어 PC 파일로도 올라가게 한다
+        markSettingsChanged();
         resolve(data.settingsList.length);
       } catch {
         reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));

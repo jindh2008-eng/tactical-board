@@ -26,6 +26,9 @@ dist-ssr
 # Claude Code 워크트리 (로컬 전용)
 .claude/worktrees/
 
+# 설정 파일 저장(scripts/settings-store.mjs) — 이 PC 의 시나리오 · 백업. 저장소에 올리지 않는다
+data/
+
 # Claude Code 개인 권한 설정 — 기기마다 다르다(경로·명령 허용 목록). 공유 설정은 settings.json
 .claude/settings.local.json
 
