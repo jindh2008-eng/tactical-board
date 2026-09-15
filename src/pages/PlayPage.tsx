@@ -9,6 +9,7 @@ import { useTokens, TokenProvider } from '../context/TokenContext';
 import { LogProvider, useLog }  from '../context/LogContext';
 import { postOpenParts, partsText } from '../utils/logPhrase';
 import { standby1OrFace }     from '../utils/dispatchTarget';
+import { ACTION_MODE_NAMES, ACTION_MODE_HINTS, blockedDragNotice } from '../utils/actionModeLabel';
 import { VictimProvider }     from '../context/VictimContext';
 import { EventProvider }      from '../context/EventContext';
 import { ActionModeProvider, useActionMode } from '../context/ActionModeContext';
@@ -100,37 +101,55 @@ function TrainingLogBridge() {
 // (ActionModeProvider 내부에서만 동작)
 // ─────────────────────────────────────────────
 
+/*
+ * 작업 모드가 켜져 있으면 모든 출동대 토큰의 끌기가 꺼진다(TokenCard draggable).
+ * 모드를 켜 둔 채 잊으면 「토큰이 안 움직인다」로 보인다(2026-09-15 현장 보고).
+ * 그래서 배너가 **무슨 모드인지 · 출동대 이동이 잠겼다는 것 · 푸는 법**을 함께 말한다.
+ *
+ * 모드 중 출동대를 끌려고 하면 손 끝에 안내를 띄운다. 끌기가 꺼진 카드에는 dragstart 가
+ * 오지 않아 카드 쪽에서는 알 수 없다 — 문서에서 포인터를 보고 카드 위에서 시작해
+ * 몇 픽셀 이상 움직였으면 끌기 시도로 본다(마우스·터치 공통). 한 번 누를 때 한 번만 띄운다.
+ */
 function ActionModeBanner() {
   const { mode, clearMode } = useActionMode();
-  if (mode.type === null) return null;
+  const modeType = mode.type;
 
-  let message = '';
-  if (mode.type === 'rescue') {
-    message = '구조대상자를 클릭하세요  (같은 구역의 피해자만 선택 가능)';
-  } else if (mode.type === 'select-floor') {
-    message = '층·구역을 클릭하세요';
-  } else if (mode.type === 'select-pump') {
-    message = '부서 위치를 클릭하세요';
-  } else if (mode.type === 'water-connect') {
-    message = '송수 대상 토큰을 클릭하세요  (ESC 취소)';
-  } else if (mode.type === 'spray-target') {
-    message = '방수 지점을 클릭하세요  (ESC 취소)';
-  } else if (mode.type === 'aerial-floor-select') {
-    message = `전개 지점을 클릭하세요  (ESC 취소)`;
-  } else if (mode.type === 'aerial-spray-target') {
-    message = '방수 지점을 클릭하세요  (ESC 취소)';
-  } else if (mode.type === 'drawing') {
-    message = '전술상황판에 선을 그리세요  (우클릭 또는 ESC 취소)';
-  } else if (mode.type === 'drawing-erase') {
-    message = '삭제할 선을 클릭하거나 드래그하세요  (우클릭 또는 ESC 취소)';
-  }
+  useEffect(() => {
+    if (modeType === null) return;
+    let start: { x: number; y: number } | null = null;
+    let shown = false;
+    function onDown(e: PointerEvent) {
+      const onCard = e.target instanceof Element && e.target.closest('.token-card');
+      start = onCard ? { x: e.clientX, y: e.clientY } : null;
+      shown = false;
+    }
+    function onMove(e: PointerEvent) {
+      if (!start || shown || modeType === null) return;
+      if (Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8) return;
+      shown = true;
+      showBoardNotice(blockedDragNotice(modeType), e.clientX, e.clientY);
+    }
+    function onUp() { start = null; }
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('pointermove', onMove, true);
+    document.addEventListener('pointerup', onUp, true);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('pointermove', onMove, true);
+      document.removeEventListener('pointerup', onUp, true);
+    };
+  }, [modeType]);
+
+  if (modeType === null) return null;
 
   return (
-    <div className="action-mode-banner">
-      <span className="action-mode-banner__icon">⬤</span>
-      <span className="action-mode-banner__msg">{message}</span>
-      <button className="action-mode-banner__cancel" onClick={clearMode}>
-        ESC 취소
+    <div className="action-mode-banner" role="status">
+      <span className="action-mode-banner__icon" aria-hidden>⬤</span>
+      <span className="action-mode-banner__name">{ACTION_MODE_NAMES[modeType]} 모드</span>
+      <span className="action-mode-banner__msg">{ACTION_MODE_HINTS[modeType]}</span>
+      <span className="action-mode-banner__lock">출동대 이동 잠김</span>
+      <button className="action-mode-banner__cancel" onClick={clearMode} title="Esc 키 · 화면 우클릭으로도 풀린다">
+        해제 (Esc)
       </button>
     </div>
   );
