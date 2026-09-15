@@ -1,7 +1,7 @@
 # PROJECT_OVERVIEW.md — 전술상황판 프로젝트 개요
 
-> 최종 갱신: 2026-08-26 · **코드를 읽어 다시 쓴 것이다**(이전 판은 2026-05-05 기준이라 화면 구성부터 달랐다)
-> 스택: React 19 + TypeScript + Vite 8 + react-router-dom v7 · 소스 145파일 / 약 28,800행
+> 최종 갱신: 2026-09-15 · **코드를 읽어 맞춘 것이다**(2026-08-26 판 이후 바뀐 화면 구성·저장 키·시험을 반영)
+> 스택: React 19 + TypeScript + Vite 8 + react-router-dom v7 · 소스 약 217파일 / 약 48,000행
 
 ---
 
@@ -43,7 +43,8 @@
 두 저장소가 만나는 곳은 **`훈련 세팅` 버튼 하나뿐이다.** 설정을 고쳐도 훈련 화면에 자동으로 반영되지 않는다.
 
 - `src/utils/settingsStorage.ts` — localStorage 단일 창구. 키 6종.
-- `src/utils/runtimeSession.ts` — sessionStorage 단일 창구. `tactical-board.runtime.*` 키 13종.
+- `src/utils/runtimeSession.ts` — sessionStorage 단일 창구. `tactical-board.runtime.*` 키 15종.
+  저장이 실패하면(저장 공간 초과 등) 훈련창에 붉은 경고가 뜬다 — 예전에는 조용히 넘어갔다.
 
 자세한 것은 [DATA_FLOW.md](DATA_FLOW.md).
 
@@ -73,17 +74,30 @@
 ## 5. 훈련모드(무플) `/play`
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│ 상단 nav — 대상명 · 타이머 · 훈련 세팅 / 시작 / 종료      │
-├───────────────┬──────────────────────────┬───────────────┤
-│ OperationPanel│  TacticalArea            │ RightPanel    │
-│ ResourcePanel │  · A~D면 외곽 작전구역   │ · CommandInfo │
-│ UnitAddPanel  │  · 층별 구역 · 계단실    │ · 지휘절차    │
-│ UnitInfoPanel │  · 소화전 · 이벤트 토큰  │ · 이벤트 로그 │
-│               │  · 송수·방수 오버레이    │               │
-└───────────────┴──────────────────────────┴───────────────┘
-                    전체가 StageRoot 안에 있다
+┌──────────────────────────────────────────────────────────────────┐
+│ 상단 nav — 메뉴 · 대상명 · 타이머 · 훈련 세팅 / 시작 / 종료       │
+├──────────────────┬────────────────────────────┬──────────────────┤
+│ OperationPanel   │  TacticalArea              │ procedure-panel  │
+│ · 추가출동대     │  · 층별 구역 · 계단실       │ · 지휘절차 훈련  │
+│ · 출동대현황     │  · B·C·D면 외곽 작전구역    │   (Command       │
+│ · 자원대기소     │  · A면 + 하단 밴드          │    Procedure     │
+│ · 대기1단계      │    직전대기 · RIT ·         │    TrainingBox)  │
+│   [미운영]⇄운영  │    현장지휘소 · 임시의료소  │                  │
+├──────────────────┤  · 소화전 · 현장요소 토큰   │                  │
+│ LogColumn        │  · 송수 · 방수 · 고가 오버레이│                 │
+│ · 이벤트 로그    │                            │                  │
+└──────────────────┴────────────────────────────┴──────────────────┘
+      전체가 StageRoot 안에 있다 (세로 화면이면 이벤트 로그가 독립 열이 된다)
 ```
+
+- **대기구역 목록** — 출동대현황 · 추가출동대 · 자원대기소 · 대기1단계가 같은 종류별 목록(`PoolTokenGrid`)을 쓴다.
+  열은 진압 · 구조/구급 · 펌프 · 물탱크 · 특수차 · 유관기관 · 직접입력. 맨 윗줄 「도착대」는 없앴다 — 도착은 이벤트 로그가 알려 준다.
+- **대기1단계 운영** — 제목 옆 버튼. 기본은 미운영이고, 미운영이면 대기 박스의 출동대가 A면으로 나간다(의도한 동작).
+  운영 중 출동대가 배치되면 잠기고 `훈련 세팅` 으로만 풀린다(`utils/dispatchTarget.ts`).
+- **작업 모드 배너** — 구조 · 송수 연결 · 방수 지점 같은 모드가 켜지면 위쪽에 「○○ 모드 · 출동대 이동 잠김 · [해제 (Esc)]」가 뜬다.
+  모드 중에는 모든 출동대 끌기가 꺼지므로, 켜 둔 채 잊으면 토큰이 안 움직이는 것으로 보인다.
+- **이벤트 로그** — 무전 멘트 형식의 문장(「대기1단계 도착: [진압1대], [펌프1]」)이고 출동대는 칩으로 그린다.
+  문장의 단일 출처는 `utils/logPhrase.ts` — [EVENT_LOG_PHRASING_PLAN.md](EVENT_LOG_PHRASING_PLAN.md).
 
 **배율은 `StageRoot` 한 곳에서만 건다.** 고정 논리 캔버스에 그리고 뷰포트에 맞춰 `transform: scale()`을 한 번 적용한다. 안쪽은 전부 px로 그려도 되고, 그 px들이 서로 어긋날 방법이 없다. `--ui-scale`은 제거됐다 — 근거는 [SCREEN_STAGE_PLAN.md](SCREEN_STAGE_PLAN.md) §2.1.
 
@@ -93,28 +107,33 @@
 
 ## 6. 폴더 구조
 
+숫자는 `.ts`·`.tsx` 파일 수다(2026-09-15 실측).
+
 ```
 src/
-├── types/          도메인 타입 (index · victim · events · settings · presets)
-├── context/        런타임 상태 20종 — TokenContext 가 핵심
+├── types/          도메인 타입 5 (index · victim · events · settings · presets)
+├── context/        런타임 상태 25 — TokenContext 가 핵심
 ├── store/          settingsStore.tsx — 설정모드 전역 상태
-├── utils/          settingsStorage · runtimeSession · dispatchRoster · dragDrop …
-├── hooks/          useTouchDrag 등
+├── config/         unitMissions.ts — 임무 칩 정의
+├── utils/          순수 헬퍼 33 — logPhrase(로그 문장) · runtimeSession · settingsStorage ·
+│                   dispatchTarget · actionModeLabel · saveFailure · dragDrop …
+├── hooks/          useTouchDrag 등 3
+├── sync/           protocol.ts — 화면 분리(지휘교수 태블릿) 메시지 계약, 아직 미사용
 ├── pages/          SettingsPage · PlayPage
 └── components/
     ├── stage/      StageRoot · canvas.ts   ← 훈련창 배율의 단일 지점
-    ├── building/   TacticalArea 계열 18
-    ├── left/       좌측 패널 7
-    ├── right/      우측 패널 4
-    ├── center/     2
-    ├── events/     이벤트 토큰 2
-    ├── panels/     ChecklistView/Panel 계열 4 (현재 무플에 미렌더)
-    ├── overlays/   모달 5
-    ├── overlay/    보드 위 오버레이 3
-    ├── settings/   설정 패널 9 + ui/ 공용 컴포넌트
-    ├── shared/     토큰 카드 등 17
+    ├── building/   TacticalArea 계열 19
+    ├── left/       좌측 운영 패널 3 (추가출동대 · 출동대현황 · 상태)
+    ├── right/      로그 · 지휘절차 3
+    ├── events/     현장요소 토큰 2
+    ├── panels/     ChecklistView/Panel 2 (현재 무플에 미렌더 — 의도적으로 보존)
+    ├── overlays/   모달 4
+    ├── overlay/    보드 위 오버레이 3 (송수 · 방수 · 고가)
+    ├── settings/   설정 패널 14 + ui/ 공용 컴포넌트
+    ├── shared/     토큰 카드 · 목록 · 배너 등 19
     ├── drawing/    1
     └── dev/        1
+tests/              logPhrase · dispatchTarget · actionModeLabel 시험 (npm test)
 ```
 
 ---
@@ -129,7 +148,11 @@ src/
 
 **Context 경계를 넘는 호출은 register/call 패턴을 쓴다** (`FireCommandContext`, `ChecklistCommandContext`).
 
-**앱에는 테스트가 없다.** 검증은 브라우저에서 직접 한다. `npm run test:chatgpt-summary`는 스크립트 전용이고 앱과 무관하다.
+**자동 시험은 순수 함수만 있다 — `npm test`.** 로그 문장(`logPhrase`) · 출동대 내보낼 자리(`dispatchTarget`) ·
+작업 모드 문구(`actionModeLabel`). 추가 도구 없이 Node 24 가 `.ts` 를 바로 돌린다. **나머지 동작은 브라우저에서 직접 검증한다.**
+`npm run test:chatgpt-summary`는 스크립트 전용이고 앱과 무관하다.
+
+**sessionStorage 에 직접 쓰지 않는다.** `runtimeSession.ts` 의 `setSession()` 을 거쳐야 저장 실패가 경고로 올라온다.
 
 ---
 
@@ -140,6 +163,8 @@ src/
 | [MASTER_PLAN.md](MASTER_PLAN.md) | ★ **작업 순서의 단일 출처.** 다른 문서와 어긋나면 이쪽. **다음에 할 일은 §7-A** |
 | [DEFERRED_PROPAGATION.md](DEFERRED_PROPAGATION.md) | ★ 범위 밖 파급 기록부 (P-n) |
 | [DATA_FLOW.md](DATA_FLOW.md) | 저장소·Provider·데이터 흐름 |
+| [EVENT_LOG_PHRASING_PLAN.md](EVENT_LOG_PHRASING_PLAN.md) | 이벤트 로그 무전 멘트 형식 — 사용자가 정한 문장 전부와 변경 이력 |
+| [WATER_SUPPLY_MISSION_PLAN.md](WATER_SUPPLY_MISSION_PLAN.md) | 송수 임무 자동지정 · 순환보수 칸 |
 | [FEATURE_STATUS.md](FEATURE_STATUS.md) | 기능별 구현 상태 (네 모드 기준) |
 | [SCREEN_STAGE_PLAN.md](SCREEN_STAGE_PLAN.md) | 화면 배율 설계 근거·실측 |
 | [SETTINGS_MODE_UI_PLAN.md](SETTINGS_MODE_UI_PLAN.md) | 설정모드 UI 재설계 |

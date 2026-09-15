@@ -150,8 +150,9 @@ Context 경계를 넘어 동작을 호출해야 할 때 이 패턴을 쓴다(`Fi
 | **[MASTER_PLAN.md](docs/MASTER_PLAN.md)** ★ | **작업 순서의 단일 출처. 다음에 할 일은 §7-A 에 전수로 모아 뒀다.** 확정된 결정(§1), 코드로 검증한 진행 상태(§2), W-0~W-5 작업 순서(§4), 향후 단계(§7). 다른 문서와 우선순위가 어긋나면 이 문서를 따른다 |
 | **[DEFERRED_PROPAGATION.md](docs/DEFERRED_PROPAGATION.md)** ★ | **파급 기록부.** 현재 범위는 훈련모드(무플) 하나뿐이다. 작업 중 설정모드·지휘모드·분석창 수정이 필요해지면 **고치지 말고 여기 §3에 적는다** |
 | [CHECKLIST_PROCEDURE_LINK_PLAN.md](docs/CHECKLIST_PROCEDURE_LINK_PLAN.md) | 시나리오 체크리스트 ⇄ 지휘절차 연동 — **검토만 끝났고 구현 대기.** 착수 전 §5 의 결정 3건 확인 |
-| [PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | 프로그램 목적·화면 구성 (⚠ 2026-05-06 기준, 낙후) |
-| [DATA_FLOW.md](docs/DATA_FLOW.md) | 저장소 구조, 각 기능의 데이터 흐름, Provider 순서 (⚠ 2026-05-06 기준, 낙후) |
+| [PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) | 프로그램 목적·화면 구성·폴더 구조 (2026-09-15 코드로 맞춤) |
+| [DATA_FLOW.md](docs/DATA_FLOW.md) | 저장소 15종, Provider 순서 20단, 이벤트 로그 흐름 (2026-09-15 코드로 맞춤) |
+| [EVENT_LOG_PHRASING_PLAN.md](docs/EVENT_LOG_PHRASING_PLAN.md) | 이벤트 로그 무전 멘트 형식 — 사용자가 정한 문장 전부. `npm test` 가 이것을 못 박는다 |
 | [RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md](docs/RESPONSIVE_16_9_TABLET_LAYOUT_PLAN.md) | 반응형 **설계 근거·실측 기록** — §0 실측값, §3 설계, §6 검증기준 |
 | [DUAL_SCREEN_SYNC_PLAN.md](docs/DUAL_SCREEN_SYNC_PLAN.md) | 화면 분리 **설계 근거** — §4.1 권한모델, §5 프로토콜, §5.6 무상태 미러 |
 | [DUAL_SCREEN_PARALLEL_WORKPLAN.md](docs/DUAL_SCREEN_PARALLEL_WORKPLAN.md) | 화면 분리를 다중 에이전트로 나눌 때의 파일 소유권 |
