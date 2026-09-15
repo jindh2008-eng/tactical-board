@@ -82,7 +82,7 @@ npm run lint:css   # stylelint — 설정모드 토큰 강제
 
 | | 설정창 `/settings` | 훈련창 `/play` |
 |---|---|---|
-| 저장소 | `localStorage` | `sessionStorage` |
+| 저장소 | **PC 파일** `data/settings.json` + `localStorage` 사본 | `sessionStorage` |
 | 성격 | 시나리오 정의, 자유 편집 | 훈련 실행, 설정은 읽기 전용 |
 | 수명 | 영구 | 탭 생명주기 |
 
@@ -91,6 +91,13 @@ npm run lint:css   # stylelint — 설정모드 토큰 강제
 **모드 구분은 라우트보다 넓다.** 저장소는 위 이원 구조가 맞지만, 화면은 네 모드로 나눈다 — 설정모드(`/settings`) · 훈련모드(무플)(`/play`) · 훈련모드(지휘)(미구현) · 분석(창)(`/play` 내부 모달). **현재 작업 범위는 훈련모드(무플) 하나다.** 근거와 경계는 [MASTER_PLAN.md](docs/MASTER_PLAN.md) D-4 참고.
 
 - `src/utils/settingsStorage.ts` — localStorage 단일 창구. `SettingsExport` 인터페이스가 전체 설정 번들 형식이다.
+  모든 `save*` 는 `writeLocal()` 을 거쳐 **값이 바뀔 때만** 수정 시각을 찍고 `utils/settingsSync.ts` 에 알린다.
+- **설정의 본거지는 PC 파일이다(2026-09-16 사용자 결정).** 서버(`scripts/serve-dist.mjs` · 개발 서버)가
+  `scripts/settings-store.mjs` 로 `/api/settings` 를 열고 `data/settings.json` 에 둔다(`data/` 는 .gitignore).
+  앱을 열면 `main.tsx` 가 `initSettingsSync()` 로 서버 것을 받아 localStorage 사본에 깐 **뒤에** 그린다 —
+  설정 화면이 사본을 동기적으로 읽기 때문이다. 더 새것을 따르고, 덮기 전에 브라우저 것을 서버 백업으로 남긴다
+  (`utils/settingsSyncPlan.ts`, `tests/settingsSync.test.mjs`). 서버가 없으면 브라우저에만 두고 설정 화면 칩이 알린다.
+  **localStorage 를 직접 쓰는 새 설정 저장을 만들지 않는다** — `settingsStorage` 를 거쳐야 PC 파일로 올라간다.
 - `src/utils/runtimeSession.ts` — sessionStorage 단일 창구. `tactical-board.runtime.*` 키 **15종**을 여기서만 읽고 쓴다(하이픈이 든 `equip-msg` · `victim-search` 를 빠뜨려 오래도록 11종으로 적혀 있었다. 14번째는 층별 단위지휘관 `unit-commander`, 15번째는 소화전 순환보수 줄 `hydrant-circulation`). 새 런타임 상태를 영속화할 때는 반드시 여기에 `save*`/`load*` 쌍을 추가한다. **`clearRuntimeSession()` 에도 함께 넣는다** — `equip-msg` 가 빠져 있어 지난 훈련의 설비 상태메시지가 새 훈련까지 살아남았다(2026-09-09 해소).
 
 ### runKey — Provider 재마운트로 상태 초기화

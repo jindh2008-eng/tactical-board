@@ -32,6 +32,26 @@ npm run lint
 npm run lint:css
 ```
 
+```bash
+npm test
+```
+
+### 훈련장 PC 에서 돌리기
+
+`npm run build` 로 만든 `dist/` 를 의존성 없는 서버로 띄운다. 훈련장 PC 에는 Node.js 만 있으면 된다.
+
+```bash
+npm run serve
+```
+
+옮길 파일은 `dist/` · `scripts/serve-dist.mjs` · `scripts/settings-store.mjs` 셋이다.
+
+**설정(시나리오 · 공통 설정)은 이 PC 의 `data/settings.json` 에 저장된다.** 어느 브라우저 · 태블릿에서 열어도
+같은 설정을 보고, 브라우저 기록을 지워도 남는다. 덮어쓰기 직전 판은 `data/backups/` 에 10분 간격으로 30개까지
+남는다. 다른 PC 로 옮기거나 백업할 때는 **`data/` 폴더를 통째로 복사한다.** 위치를 바꾸려면 `--data <폴더>`.
+설정 화면 저장 칩 옆에 「PC 파일에 저장」이 보이면 파일로 저장되고 있는 것이고, 「이 브라우저에만 저장」이면
+서버에 연결되지 않은 것이다.
+
 ---
 
 ## 화면

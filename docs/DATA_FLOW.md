@@ -30,7 +30,30 @@
 
 ---
 
-## 2. localStorage — 설정모드
+## 2. 설정모드 — PC 파일이 본거지, localStorage 는 사본
+
+**설정의 본거지는 PC 파일이다(2026-09-16 사용자 결정).** localStorage 는 주소(포트 · IP)마다 따로라서
+태블릿이나 다른 포트로 들어오면 목록이 비어 보이고, 사이트 데이터를 지우면 영구히 사라졌다.
+
+```
+ 브라우저                                      서버(serve-dist.mjs · 개발 서버)
+ localStorage 사본 ──save* → writeLocal ──0.5초 모아 PUT /api/settings──▶  data/settings.json
+       ▲                                                                       │ 10분 간격 백업 30개
+       └──── 앱을 열 때 main.tsx → initSettingsSync()  ◀── GET /api/settings ──┘ data/backups/
+             (그린 뒤가 아니라 **그리기 전에** 받는다 — 설정 화면이 사본을 동기적으로 읽는다)
+```
+
+| 여는 순간 | 한 일 (`utils/settingsSyncPlan.ts`) |
+|---|---|
+| PC 파일이 없다 | 브라우저에 설정이 있으면 올린다(처음 쓰는 PC) |
+| 수정 시각이 같다 | 그대로 |
+| 브라우저가 더 새것 | 올린다(서버가 없던 사이 고친 것) |
+| PC 파일이 더 새것 · 브라우저 시각 모름 | 받는다. 내용이 다르면 **덮기 전에 브라우저 것을 `backups/browser-*.json` 으로** 남긴다 — 이 백업이 실패하면 덮지 않는다 |
+
+- 수정 시각은 localStorage `tacticalBoardSettingsUpdatedAt`(7번째 키) · 묶음의 `updatedAt`. 값이 **실제로 바뀐 저장**만 시각을 찍는다 — 화면을 여는 것만으로는 바뀌지 않는다
+- 서버가 없으면 브라우저에만 둔다. 설정 화면 칩이 「PC 파일에 저장」 / 「이 브라우저에만 저장」으로 알린다
+- 여러 기기가 동시에 고치면 나중에 올린 쪽이 이긴다 — 설정은 교관 한 사람이 고친다고 본다
+- `data/settings.json` 은 백업 파일(`SettingsExport`)과 같은 모양이다. 백업 파일을 그 자리에 두어도 된다
 
 | 키 | 내용 |
 |---|---|
@@ -40,6 +63,9 @@
 | `tacticalBoardActiveCommandProcedureLevel` | 선택된 훈련 표시 레벨 — **시나리오 값이다** |
 | `tacticalBoardUnitStatus` | 출동대 상태 메시지 |
 | `tacticalBoardTagPresets` | 임무·상태 배지 프리셋 |
+| `tacticalBoardSettingsUpdatedAt` | 위 여섯의 마지막 수정 시각(ms) — PC 파일 동기화 기준 |
+
+설정과 무관한 화면 선호 두 가지(그리기 도구 위치 · 건물 높이 비율)도 localStorage 에 있다. 이것은 기기마다 달라도 되는 값이라 PC 파일로 올리지 않는다.
 
 ### 내보내기 형식
 

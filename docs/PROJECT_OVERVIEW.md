@@ -42,7 +42,9 @@
 
 두 저장소가 만나는 곳은 **`훈련 세팅` 버튼 하나뿐이다.** 설정을 고쳐도 훈련 화면에 자동으로 반영되지 않는다.
 
-- `src/utils/settingsStorage.ts` — localStorage 단일 창구. 키 6종.
+- `src/utils/settingsStorage.ts` — localStorage 단일 창구. 키 6종(+ 수정 시각).
+  **설정의 본거지는 PC 파일 `data/settings.json` 이다**(2026-09-16) — 서버가 `/api/settings` 로 열고,
+  앱을 열 때 받아 사본에 깐다(`utils/settingsSync.ts`). 어느 브라우저 · 태블릿에서 열어도 같은 설정을 본다.
 - `src/utils/runtimeSession.ts` — sessionStorage 단일 창구. `tactical-board.runtime.*` 키 15종.
   저장이 실패하면(저장 공간 초과 등) 훈련창에 붉은 경고가 뜬다 — 예전에는 조용히 넘어갔다.
 
